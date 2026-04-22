@@ -109,10 +109,10 @@ export default function FullMap() {
   });
 
   return (
-    <div className="flex flex-col md:flex-row flex-grow h-full min-h-[calc(100vh-72px)] bg-[#0f1115] overflow-hidden">
+    <div className="flex flex-col md:flex-row flex-grow h-[calc(100vh-72px)] bg-[#0f1115] overflow-hidden">
 
       {/* Sidebar Panel */}
-      <div className="w-full md:w-[400px] bg-[#1a1d24] border-r border-white/10 flex flex-col z-20 shadow-2xl relative h-full">
+      <div className="w-full md:w-[400px] bg-[#1a1d24] md:border-r border-b md:border-b-0 border-white/10 flex flex-col z-20 shadow-2xl relative flex-1 md:flex-none md:h-full min-h-[45vh] md:min-h-0">
         <div className="p-6 border-b border-white/10">
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
             <Navigation className="text-blue-400" />

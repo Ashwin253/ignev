@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { APIProvider, Map, AdvancedMarker, Pin, InfoWindow } from '@vis.gl/react-google-maps';
 import { motion } from 'framer-motion';
-import { Zap, Wrench, MapPin } from 'lucide-react';
+import { Zap, Wrench, MapPin, Navigation, Share2 } from 'lucide-react';
 
 const locations = [
   { id: '1', type: 'charging', position: { lat: 28.638807475938854, lng: 77.08571577423803 }, name: 'EV Fast Charger ', address: 'West Delhi' },
@@ -16,11 +16,36 @@ const locations = [
 
   const filteredLocations = locations.filter(loc => filter === 'all' || loc.type === filter);
 
+  const handleGetDirections = (lat: number, lng: number) => {
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+    window.open(url, '_blank');
+  };
+
+  const handleShareLocation = async (loc: typeof locations[0]) => {
+    const url = `https://www.google.com/maps/search/?api=1&query=${loc.position.lat},${loc.position.lng}`;
+    const shareData = {
+      title: loc.name,
+      text: `Check out ${loc.name} at ${loc.address}`,
+      url: url,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.error('Error sharing:', err);
+      }
+    } else {
+      navigator.clipboard.writeText(url);
+      alert('Location link copied to clipboard!');
+    }
+  };
+
   // Fallback map ID for demo purposes, you should generate your own in Google Cloud Console
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
   return (
-    <section className="py-24 bg-gradient-to-b from-[#1a1d24] to-[#0f1115] text-white relative overflow-hidden" id="locations-map">
+    <section className="py-16 md:py-24 bg-gradient-to-b from-[#1a1d24] to-[#0f1115] text-white relative overflow-hidden" id="locations-map">
       {/* Background elements */}
       <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-blue-500/5 rounded-full blur-[120px] pointer-events-none translate-x-1/3 -translate-y-1/3" />
       <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-emerald-500/5 rounded-full blur-[100px] pointer-events-none -translate-x-1/3 translate-y-1/3" />
@@ -40,7 +65,7 @@ const locations = [
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-4xl md:text-5xl font-bold mb-6"
+            className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6"
           >
             Locate Charging & <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">Spare Parts</span>
           </motion.h2>
@@ -55,33 +80,9 @@ const locations = [
           </motion.p>
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="flex flex-wrap justify-center gap-4 mb-12"
-        >
-          <button
-            onClick={() => { setFilter('all'); setSelectedLocation(null); }}
-            className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${filter === 'all' ? 'bg-white text-black shadow-lg scale-105' : 'bg-white/5 border border-white/10 hover:bg-white/10 text-gray-300'}`}
-          >
-            All Locations
-          </button>
-          <button
-            onClick={() => { setFilter('charging'); setSelectedLocation(null); }}
-            className={`px-6 py-2.5 rounded-full text-sm font-medium flex items-center gap-2 transition-all duration-300 ${filter === 'charging' ? 'bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.3)] scale-105' : 'bg-white/5 border border-white/10 hover:bg-white/10 text-gray-300'}`}
-          >
-            <Zap size={16} /> Charging Stations
-          </button>
-          <button
-            onClick={() => { setFilter('spare'); setSelectedLocation(null); }}
-            className={`px-6 py-2.5 rounded-full text-sm font-medium flex items-center gap-2 transition-all duration-300 ${filter === 'spare' ? 'bg-amber-500 text-white shadow-[0_0_20px_rgba(245,158,11,0.3)] scale-105' : 'bg-white/5 border border-white/10 hover:bg-white/10 text-gray-300'}`}
-          >
-            <Wrench size={16} /> Spare Parts
-          </button>
-        </motion.div>
 
-        <div className="flex flex-col lg:flex-row gap-8">
+
+        <div className="flex flex-col-reverse lg:flex-row gap-6 lg:gap-8">
           {/* Map Legend & List */}
           <div className="w-full lg:w-1/3 flex flex-col gap-6">
             {/* <motion.div
@@ -114,8 +115,30 @@ const locations = [
               transition={{ delay: 0.1 }}
               className="bg-[#1e222b]/80 backdrop-blur-xl p-6 rounded-3xl border border-white/5 shadow-xl flex-grow flex flex-col"
             >
-              <h3 className="text-xl font-semibold mb-5">Nearby Locations</h3>
-              <div className="space-y-3 overflow-y-auto pr-2 custom-scrollbar flex-grow min-h-[200px] max-h-[300px]">
+              <div className="flex flex-col mb-6">
+                <h3 className="text-lg sm:text-xl font-semibold mb-4">Explore Locations</h3>
+                <div className="flex bg-black/20 p-1 rounded-xl border border-white/5">
+                  <button
+                    onClick={() => { setFilter('all'); setSelectedLocation(null); }}
+                    className={`flex-1 py-2 text-xs font-medium rounded-lg transition-all ${filter === 'all' ? 'bg-white text-black shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                  >
+                    All
+                  </button>
+                  <button
+                    onClick={() => { setFilter('charging'); setSelectedLocation(null); }}
+                    className={`flex-1 py-2 text-xs font-medium rounded-lg transition-all flex items-center justify-center gap-1.5 ${filter === 'charging' ? 'bg-emerald-500 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                  >
+                    <Zap size={14} /> Charging
+                  </button>
+                  <button
+                    onClick={() => { setFilter('spare'); setSelectedLocation(null); }}
+                    className={`flex-1 py-2 text-xs font-medium rounded-lg transition-all flex items-center justify-center gap-1.5 ${filter === 'spare' ? 'bg-amber-500 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                  >
+                    <Wrench size={14} /> Spares
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-3 overflow-y-auto pr-2 custom-scrollbar flex-grow min-h-[250px] max-h-[350px] lg:max-h-[500px]">
                 {filteredLocations.length > 0 ? (
                   filteredLocations.map(loc => (
                     <div
@@ -142,18 +165,18 @@ const locations = [
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="w-full lg:w-2/3 h-[500px] lg:h-[650px] rounded-3xl overflow-hidden border border-white/10 shadow-2xl relative bg-[#1e222b]/80 backdrop-blur-xl"
+            className="w-full lg:w-2/3 h-[400px] sm:h-[500px] lg:h-[650px] rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 shadow-2xl relative bg-[#1e222b]/80 backdrop-blur-xl"
           >
             {!apiKey ? (
-              <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center z-10">
-                <div className="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 mb-6 border border-red-500/20">
-                  <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="absolute inset-0 flex flex-col items-center justify-center p-6 sm:p-12 text-center z-10">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 mb-4 sm:mb-6 border border-red-500/20">
+                  <svg className="w-8 h-8 sm:w-10 sm:h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
                 </div>
-                <h3 className="text-2xl font-bold mb-4">Google Maps API Key Required</h3>
-                <p className="text-gray-400 max-w-lg mb-6 leading-relaxed">
-                  To view the interactive map, you need to provide a Google Maps API Key. Please add <code className="bg-black/50 px-2 py-1 rounded text-red-300 mx-1">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> to your <code className="bg-black/50 px-2 py-1 rounded mx-1">.env.local</code> file.
+                <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-4">Google Maps API Key Required</h3>
+                <p className="text-sm sm:text-base text-gray-400 max-w-lg mb-4 sm:mb-6 leading-relaxed">
+                  To view the interactive map, you need to provide a Google Maps API Key. Please add <code className="bg-black/50 px-1.5 py-0.5 rounded text-red-300 mx-1">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> to your <code className="bg-black/50 px-1.5 py-0.5 rounded mx-1">.env.local</code> file.
                 </p>
                 <div className="bg-black/30 p-4 rounded-xl border border-white/5 w-full max-w-lg text-left">
                   <p className="text-sm text-gray-400 mb-2">Example .env.local:</p>
@@ -198,9 +221,22 @@ const locations = [
                           {selectedLocation.type === 'charging' ? 'Charging Station' : 'Spare Parts Hub'}
                         </p>
                         <p className="text-sm text-gray-700 mb-4">{selectedLocation.address}</p>
-                        <button className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm py-2.5 rounded-lg transition-colors font-semibold shadow-md shadow-blue-500/20">
-                          Get Directions
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button 
+                            onClick={() => handleGetDirections(selectedLocation.position.lat, selectedLocation.position.lng)}
+                            className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm py-2.5 rounded-lg transition-colors font-semibold shadow-md shadow-blue-500/20"
+                          >
+                            <Navigation size={16} />
+                            Directions
+                          </button>
+                          <button 
+                            onClick={() => handleShareLocation(selectedLocation)}
+                            className="flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-700 p-2.5 rounded-lg transition-colors shadow-sm"
+                            title="Share Location"
+                          >
+                            <Share2 size={18} />
+                          </button>
+                        </div>
                       </div>
                     </InfoWindow>
                   )}

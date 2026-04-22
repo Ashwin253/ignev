@@ -18,7 +18,7 @@ export default function Home() {
       <PopularTypes />
       <PopularBrands />
       <WhyEVPULSE />
-      <StationsMap />
+      {/* <StationsMap /> */}
       {/* <Testimonials /> */}
       <Footer />
       <AssistPopup />

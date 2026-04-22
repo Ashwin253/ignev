@@ -140,9 +140,9 @@ export default function ShopPage() {
                 </div>
                 <p className="text-gray-400 text-sm mb-6 flex-grow leading-relaxed">{product.description}</p>
 
-                <div className="flex items-center gap-2 text-xs text-emerald-400 mb-6 bg-emerald-500/10 w-fit px-3 py-1 rounded-full border border-emerald-500/20">
+                {/* <div className="flex items-center gap-2 text-xs text-emerald-400 mb-6 bg-emerald-500/10 w-fit px-3 py-1 rounded-full border border-emerald-500/20">
                   <Shield size={12} /> Certified Part
-                </div>
+                </div> */}
 
                 <div className="flex items-end justify-between mt-auto">
                   <div>

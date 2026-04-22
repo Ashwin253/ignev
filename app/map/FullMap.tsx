@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { APIProvider, Map, AdvancedMarker, Pin, InfoWindow, useMap, useMapsLibrary } from '@vis.gl/react-google-maps';
 import { motion } from 'framer-motion';
-import { Zap, Wrench, Navigation, MapPin, Search, Filter } from 'lucide-react';
+import { Zap, Wrench, Navigation, MapPin, Search, Filter, Share2 } from 'lucide-react';
 
 const allLocations = [
   { id: '1', type: 'charging', position: { lat: 28.638807475938854, lng: 77.08571577423803 }, name: 'EV Fast Charger ', address: 'West Delhi' },
@@ -100,6 +100,31 @@ export default function FullMap() {
     setOriginInput('');
     setDestInput('');
     setRouteFilterActive(false);
+  };
+
+  const handleGetDirections = (lat: number, lng: number) => {
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+    window.open(url, '_blank');
+  };
+
+  const handleShareLocation = async (loc: typeof allLocations[0]) => {
+    const url = `https://www.google.com/maps/search/?api=1&query=${loc.position.lat},${loc.position.lng}`;
+    const shareData = {
+      title: loc.name,
+      text: `Check out ${loc.name} at ${loc.address}`,
+      url: url,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.error('Error sharing:', err);
+      }
+    } else {
+      navigator.clipboard.writeText(url);
+      alert('Location link copied to clipboard!');
+    }
   };
 
   // Filter logic: Filter by type AND (if route filter is active, filter by onRoute)
@@ -360,9 +385,22 @@ export default function FullMap() {
                       {selectedLocation.type === 'charging' ? 'Charging Station' : 'Spare Parts Hub'}
                     </p>
                     <p className="text-sm text-gray-700 mb-4">{selectedLocation.address}</p>
-                    <button className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm py-2.5 rounded-lg transition-colors font-semibold shadow-md shadow-blue-500/20">
-                      View Details
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={() => handleGetDirections(selectedLocation.position.lat, selectedLocation.position.lng)}
+                        className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm py-2.5 rounded-lg transition-colors font-semibold shadow-md shadow-blue-500/20"
+                      >
+                        <Navigation size={16} />
+                        Directions
+                      </button>
+                      <button 
+                        onClick={() => handleShareLocation(selectedLocation)}
+                        className="flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-700 p-2.5 rounded-lg transition-colors shadow-sm"
+                        title="Share Location"
+                      >
+                        <Share2 size={18} />
+                      </button>
+                    </div>
                   </div>
                 </InfoWindow>
               )}

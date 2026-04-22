@@ -7,7 +7,7 @@ export async function POST(req: Request) {
 
     // WARNING: In production, never expose your key_secret in client or logs.
     const instance = new Razorpay({
-      key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder',
+      key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_placeholder',
       key_secret: process.env.RAZORPAY_KEY_SECRET || 'secret_placeholder',
     });
 

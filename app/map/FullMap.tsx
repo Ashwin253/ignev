@@ -76,6 +76,7 @@ function DirectionsRendererComponent({
 }
 
 export default function FullMap() {
+  const [activeTab, setActiveTab] = useState<'route' | 'filters'>('route');
   const [selectedLocation, setSelectedLocation] = useState<typeof allLocations[0] | null>(null);
   const [filterType, setFilterType] = useState<'all' | 'charging' | 'spare'>('all');
   const [routeFilterActive, setRouteFilterActive] = useState(false);
@@ -113,13 +114,27 @@ export default function FullMap() {
 
       {/* Sidebar Panel */}
       <div className="w-full md:w-[400px] bg-[#1a1d24] md:border-r border-b md:border-b-0 border-white/10 flex flex-col z-20 shadow-2xl relative flex-1 md:flex-none md:h-full min-h-[45vh] md:min-h-0">
-        <div className="p-6 border-b border-white/10">
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-            <Navigation className="text-blue-400" />
-            Route Planner
-          </h2>
+        {/* Tabs */}
+        <div className="flex border-b border-white/10 flex-shrink-0">
+          <button 
+            className={`flex-1 py-4 text-center text-sm font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'route' ? 'text-blue-400 border-b-2 border-blue-400 bg-blue-500/5' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+            onClick={() => setActiveTab('route')}
+          >
+            <Navigation size={16} /> Route Planner
+          </button>
+          <button 
+            className={`flex-1 py-4 text-center text-sm font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'filters' ? 'text-emerald-400 border-b-2 border-emerald-400 bg-emerald-500/5' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+            onClick={() => setActiveTab('filters')}
+          >
+            <Filter size={16} /> Filters & Stations
+          </button>
+        </div>
 
-          <div className="space-y-4 mb-6">
+        <div className="flex-grow overflow-y-auto custom-scrollbar">
+          {/* Route Section */}
+          {activeTab === 'route' && (
+            <div className="p-6 border-b border-white/10">
+              <div className="space-y-4 mb-6">
             <div>
               <label className="flex text-sm text-gray-400 mb-1.5 ml-1 justify-between items-center">
                 <span>Starting Point</span>
@@ -187,11 +202,13 @@ export default function FullMap() {
               </button>
             )}
           </div>
-        </div>
+            </div>
+          )}
 
-        {/* Filters */}
-        <div className="p-6 border-b border-white/10 bg-[#1e222b]/50">
-          <div className="flex items-center justify-between mb-4">
+          {/* Filters Section */}
+          {activeTab === 'filters' && (
+            <div className="p-6 border-b border-white/10 bg-[#1e222b]/50">
+              <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-gray-300 flex items-center gap-2">
               <Filter size={16} /> Filters
             </h3>
@@ -229,10 +246,11 @@ export default function FullMap() {
               <Wrench size={14} /> Parts
             </button>
           </div>
-        </div>
+            </div>
+          )}
 
-        {/* Results List */}
-        <div className="flex-grow overflow-y-auto p-6 space-y-3 custom-scrollbar">
+          {/* Results List */}
+          <div className="p-6 space-y-3 relative">
           <h3 className="text-sm font-medium text-gray-500 mb-3 uppercase tracking-wider">
             {displayedLocations.length} Locations Found
           </h3>
@@ -264,6 +282,7 @@ export default function FullMap() {
               <p>No locations match your filters.</p>
             </div>
           )}
+        </div>
         </div>
       </div>
 

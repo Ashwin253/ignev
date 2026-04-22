@@ -27,7 +27,7 @@ const features = [
   }
 ];
 
-export default function WhyIgnev() {
+export default function WhyEVPULSE() {
   return (
     <section className="py-24 bg-[#0f1115] relative overflow-hidden">
       {/* Background glow */}
@@ -35,7 +35,7 @@ export default function WhyIgnev() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-5xl font-bold mb-6">Why Choose <span className="text-gradient">Ignev</span></h2>
+          <h2 className="text-3xl md:text-5xl font-bold mb-6">Why Choose <span className="text-gradient">EVPULSE</span></h2>
           <p className="text-gray-400 max-w-2xl mx-auto text-lg">We are India's first dedicated platform solving the unique challenges of buying, owning, and selling electric vehicles.</p>
         </div>
 

@@ -14,7 +14,7 @@ const categories = [
     id: 2,
     title: "3 Wheeler EV",
     desc: "Perfect for commercial needs.",
-    image: "https://images.unsplash.com/photo-1620914902172-e1c01e37bc16?auto=format&fit=crop&q=80&w=800", // using auto rickshaw proxy image
+    image: "https://mahindralastmilemobility.com/assets/front/images/treo-metal/slider/1.png", // using auto rickshaw proxy image
   },
   {
     id: 3,
@@ -63,7 +63,7 @@ export default function PopularTypes() {
             </motion.div>
           ))}
         </div>
-        
+
         <button className="md:hidden w-full mt-8 flex items-center justify-center text-secondary font-medium py-4 border border-secondary/20 rounded-full">
           View All Categories <ArrowRight size={20} className="ml-2" />
         </button>

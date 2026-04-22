@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Search, MapPin, SlidersHorizontal } from "lucide-react";
+import { Search, MapPin, SlidersHorizontal, Timer } from "lucide-react";
 
 export default function Hero() {
   return (
@@ -23,9 +23,18 @@ export default function Hero() {
           transition={{ duration: 0.8 }}
           className="max-w-4xl"
         >
-          <span className="inline-block py-1 px-3 rounded-full bg-glass text-secondary border border-secondary/30 text-sm font-medium mb-6">
-            The Future of Mobility is Here
-          </span>
+          <div className="flex flex-wrap items-center justify-center gap-3 mb-6">
+            <span className="inline-block py-1.5 px-4 rounded-full bg-glass text-secondary border border-secondary/30 text-sm font-medium">
+              The Future of Mobility is Here
+            </span>
+            {/* <a 
+              href="/quick" 
+              className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-gradient-to-r from-orange-500/20 to-red-500/20 text-orange-400 border border-orange-500/30 text-sm font-medium hover:bg-orange-500/30 transition-all shadow-[0_0_15px_rgba(249,115,22,0.15)]"
+            >
+              <Timer size={16} className="animate-pulse" />
+              Quick: Delivery under 60 mins
+            </a> */}
+          </div>
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-tight">
             Drive <span className="text-primary">Electric.</span> <br className="hidden md:block" />
             Buy <span className="text-secondary">Smart.</span>

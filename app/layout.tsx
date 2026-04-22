@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Ignev | Drive Electric. Buy Smart.",
+  title: "EVPULSE | Drive Electric. Buy Smart.",
   description: "Buy, rent, sell and service EV & Hybrid vehicles in one place. Your trusted EV marketplace in India.",
   keywords: "EV, Hybrid, Buy EV, Rent EV, Sell EV, Electric Vehicles India",
 };

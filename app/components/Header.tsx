@@ -6,14 +6,15 @@ import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navLinks = [
-  { name: "Home", href: "#home" },
-  { name: "Buy", href: "#buy" },
-  { name: "Rent", href: "#rent" },
-  { name: "Sell", href: "#sell" },
-  { name: "Insurance", href: "#insurance" },
-  { name: "Service", href: "#service" },
-  { name: "About", href: "#about" },
-  { name: "Contact", href: "#contact" },
+  { name: "Home", href: "/" },
+  { name: "Buy", href: "/#buy" },
+  { name: "Rent", href: "/#rent" },
+  { name: "Sell", href: "/#sell" },
+  { name: "Insurance", href: "/#insurance" },
+  { name: "Map", href: "/map" },
+  { name: "Shop", href: "/shop" },
+  // { name: "About", href: "/#about" },
+  // { name: "Contact", href: "/#contact" },
 ];
 
 export default function Header() {
@@ -30,9 +31,8 @@ export default function Header() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b border-transparent ${
-        isScrolled ? "bg-dark/80 backdrop-blur-md border-glass-border shadow-lg" : "bg-transparent py-2"
-      }`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b border-transparent ${isScrolled ? "bg-dark/80 backdrop-blur-md border-glass-border shadow-lg" : "bg-transparent py-2"
+        }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">

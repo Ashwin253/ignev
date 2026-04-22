@@ -67,14 +67,14 @@ export default function Footer() {
               </li>
               <li className="flex items-center">
                 <Mail size={20} className="text-primary mr-3 shrink-0" />
-                <span className="text-gray-400">support@ignev.com</span>
+                <span className="text-gray-400">support@EVPULSE.com</span>
               </li>
             </ul>
           </div>
         </div>
 
         <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-500">
-          <p>&copy; {new Date().getFullYear()} Ignev Mobility. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} EVPULSE Mobility. All rights reserved.</p>
           <p className="mt-4 md:mt-0">Designed for the future.</p>
         </div>
       </div>

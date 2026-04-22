@@ -8,7 +8,7 @@ const testimonials = [
     id: 1,
     name: "Rahul Sharma",
     role: "Nexon EV Owner",
-    text: "Ignev made buying my first EV a breeze. Their expert advice on home charging setup was invaluable. Highly recommended for first-time buyers!",
+    text: "EVPULSE made buying my first EV a breeze. Their expert advice on home charging setup was invaluable. Highly recommended for first-time buyers!",
     rating: 5,
   },
   {
@@ -22,7 +22,7 @@ const testimonials = [
     id: 3,
     name: "Vikram Singh",
     role: "EV Fleet Operator",
-    text: "We source our commercial 3-wheelers exclusively through Ignev. Their financing options and dedicated service support keep our fleet running.",
+    text: "We source our commercial 3-wheelers exclusively through EVPULSE. Their financing options and dedicated service support keep our fleet running.",
     rating: 5,
   }
 ];
@@ -33,7 +33,7 @@ export default function Testimonials() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-5xl font-bold mb-6">Hear from our <span className="text-secondary">Community</span></h2>
-          <p className="text-gray-400 max-w-2xl mx-auto text-lg">Join thousands of satisfied customers who have made the switch to electric with Ignev.</p>
+          <p className="text-gray-400 max-w-2xl mx-auto text-lg">Join thousands of satisfied customers who have made the switch to electric with EVPULSE.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

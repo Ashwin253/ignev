@@ -134,7 +134,7 @@ export default function FullMap() {
                 <div className={`absolute left-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full ${selectingPoint === 'origin' ? 'bg-blue-400 animate-pulse' : 'bg-blue-500'}`} />
                 <input
                   type="text"
-                  placeholder="e.g. San Francisco, CA"
+                  placeholder="e.g. New Delhi Railway Station"
                   value={originInput}
                   onChange={e => setOriginInput(e.target.value)}
                   className={`w-full bg-black/30 border rounded-xl py-3 pl-8 pr-4 text-white focus:outline-none focus:border-blue-500 transition-colors ${selectingPoint === 'origin' ? 'border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.2)]' : 'border-white/10'}`}
@@ -162,7 +162,7 @@ export default function FullMap() {
                 <div className={`absolute left-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full ${selectingPoint === 'dest' ? 'bg-emerald-400 animate-pulse' : 'bg-emerald-500'}`} />
                 <input
                   type="text"
-                  placeholder="e.g. San Jose, CA"
+                  placeholder="e.g. Noida, Uttar Pradesh"
                   value={destInput}
                   onChange={e => setDestInput(e.target.value)}
                   className={`w-full bg-black/30 border rounded-xl py-3 pl-8 pr-4 text-white focus:outline-none focus:border-emerald-500 transition-colors ${selectingPoint === 'dest' ? 'border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'border-white/10'}`}

@@ -5,6 +5,7 @@ import PopularTypes from "./components/PopularTypes";
 import PopularBrands from "./components/PopularBrands";
 import WhyEVPULSE from "./components/WhyIgnev";
 import Testimonials from "./components/Testimonials";
+import ContactForm from "./components/ContactForm";
 import Footer from "./components/Footer";
 import AssistPopup from "./components/AssistPopup";
 import StationsMap from "./components/StationsMap";
@@ -20,6 +21,11 @@ export default function Home() {
       <WhyEVPULSE />
       {/* <StationsMap /> */}
       {/* <Testimonials /> */}
+      
+      <section className="container mx-auto px-6 py-20 max-w-4xl">
+        <ContactForm />
+      </section>
+
       <Footer />
       <AssistPopup />
     </main>

@@ -72,7 +72,7 @@ type TabId = (typeof tabs)[number]["id"];
 
 export default function ElectricCore3D() {
   const [activeId, setActiveId] = useState<TabId>(1);
-  const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const sectionRefs = useRef<(HTMLElement | null)[]>([]);
   const railRef = useRef<HTMLDivElement | null>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
 
@@ -137,35 +137,7 @@ export default function ElectricCore3D() {
   return (
     <section className={`py-20 transition-colors duration-700 ${active.accentBg}`}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* <div className="sticky top-16 z-30 mb-4 rounded-2xl border border-white/70 bg-white/75 p-3 shadow-[0_10px_30px_rgba(15,23,42,0.08)] backdrop-blur-xl lg:hidden">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
-              Modules
-            </p>
-            <p className="truncate text-lg font-bold text-slate-900">{active.label}</p>
-          </div>
-          <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {tabs.map((tab) => {
-              const isActive = tab.id === activeId;
-              const Icon = tab.icon;
 
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => scrollToTab(tab.id)}
-                  className={`flex flex-shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold transition-all duration-300 ${
-                    isActive
-                      ? "border-slate-900 bg-slate-900 text-white shadow-[0_10px_24px_rgba(15,23,42,0.16)]"
-                      : "border-white/70 bg-white/80 text-slate-600 shadow-sm backdrop-blur"
-                  }`}
-                >
-                  <Icon size={14} />
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div> */}
 
         <div className="mb-4 flex items-center justify-center gap-2 lg:hidden">
           <span className={`h-1.5 rounded-full transition-all duration-300 ${progressIndex === 0 ? "w-12 bg-sky-500" : "w-8 bg-slate-200"}`} />
@@ -235,8 +207,8 @@ export default function ElectricCore3D() {
                     transition={{ duration: 0.55, ease: "easeOut" }}
                     viewport={{ once: true, margin: "-80px" }}
                     className={`rounded-3xl border p-7 transition-all duration-500 ${tab.id === activeId
-                        ? `bg-white ${tab.accentBorder} shadow-[0_18px_48px_rgba(15,23,42,0.12)]`
-                        : "border-white/60 bg-white/50 shadow-[0_8px_24px_rgba(15,23,42,0.04)]"
+                      ? `bg-white ${tab.accentBorder} shadow-[0_18px_48px_rgba(15,23,42,0.12)]`
+                      : "border-white/60 bg-white/50 shadow-[0_8px_24px_rgba(15,23,42,0.04)]"
                       }`}
                   >
                     <div className="mb-5 inline-flex items-center gap-3">

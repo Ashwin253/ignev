@@ -1,18 +1,14 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { account } from '@/app/lib/appwrite';
-import { motion, AnimatePresence } from 'framer-motion';
-import { LogIn, Phone, Lock, Eye, EyeOff, Loader2, ShieldCheck, ArrowRight } from 'lucide-react';
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { LogIn, Phone, Lock, Eye, EyeOff, Loader2, ShieldCheck, ArrowRight } from "lucide-react";
 
 export default function MISLogin() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading]           = useState(false);
+  const [error, setError]               = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    mobile: '',
-    password: '',
-  });
+  const [formData, setFormData]         = useState({ mobile: "", password: "" });
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,23 +16,22 @@ export default function MISLogin() {
     setError(null);
 
     try {
-      // For Appwrite, we treat the mobile as the 'email' for email/password auth
-      // If the user didn't provide a domain, we can append a default one for internal MIS use
-      // OR we just expect them to use their email. 
-      // But to fulfill "mobile and password", we'll format it.
-      let identifier = formData.mobile;
-      if (!identifier.includes('@')) {
-        // Simple heuristic: if it looks like a phone number, treat it as one
-        identifier = `${formData.mobile.replace(/\+/g, '')}@mis.system`;
+      const res = await fetch("/api/team/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mobile: formData.mobile, password: formData.password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data?.error ?? "Login failed.");
       }
 
-      await account.createEmailPasswordSession(identifier, formData.password);
-      
-      // Success - Redirect or refresh
-      window.location.href = '/dashboard';
-    } catch (err: any) {
-      console.error('Login error:', err);
-      setError(err.message || 'Invalid mobile number or password');
+      window.location.href = "/team";
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Invalid credentials.";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -44,19 +39,18 @@ export default function MISLogin() {
 
   return (
     <div className="flex items-center justify-center min-h-[600px] p-4">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         className="w-full max-w-md"
       >
         <div className="glass-panel p-8 md:p-10 rounded-[32px] relative border border-white/10 shadow-2xl overflow-hidden">
-          {/* Background Glows */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 blur-[60px] -mr-16 -mt-16" />
           <div className="absolute bottom-0 left-0 w-32 h-32 bg-secondary/10 blur-[60px] -ml-16 -mb-16" />
 
           <div className="relative z-10">
             <div className="flex justify-center mb-8">
-              <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center shadow-lg transform -rotate-3">
+              <div className="w-16 h-16 bg-linear-to-br from-primary to-secondary rounded-2xl flex items-center justify-center shadow-lg -rotate-3">
                 <ShieldCheck className="w-10 h-10 text-white" />
               </div>
             </div>
@@ -65,12 +59,11 @@ export default function MISLogin() {
               <h1 className="text-3xl font-bold tracking-tight mb-2">
                 MIS <span className="text-gradient">Portal</span>
               </h1>
-              <p className="text-white/50 text-sm">
-                Management Information System Access
-              </p>
+              <p className="text-white/50 text-sm">Management Information System Access</p>
             </div>
 
             <form onSubmit={handleLogin} className="space-y-6">
+              {/* Mobile */}
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-white/40 uppercase tracking-wider ml-1">
                   Mobile Number / ID
@@ -90,14 +83,12 @@ export default function MISLogin() {
                 </div>
               </div>
 
+              {/* Password */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center px-1">
                   <label className="text-xs font-semibold text-white/40 uppercase tracking-wider">
                     Password
                   </label>
-                  <a href="#" className="text-xs text-primary/70 hover:text-primary transition-colors">
-                    Forgot?
-                  </a>
                 </div>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-white/30 group-focus-within:text-primary transition-colors">
@@ -123,9 +114,9 @@ export default function MISLogin() {
 
               <AnimatePresence>
                 {error && (
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
+                    animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}
                     className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-red-400 text-xs flex items-center gap-2"
                   >
@@ -153,15 +144,17 @@ export default function MISLogin() {
 
             <div className="mt-8 pt-8 border-t border-white/5 text-center">
               <p className="text-white/30 text-sm">
-                Need an account? <a href="#" className="text-primary font-semibold hover:underline">Contact Admin</a>
+                Need an account?{" "}
+                <a href="#" className="text-primary font-semibold hover:underline">
+                  Contact Admin
+                </a>
               </p>
             </div>
           </div>
         </div>
 
-        {/* Footer text */}
         <p className="text-center mt-6 text-white/20 text-xs uppercase tracking-[0.2em]">
-          Secure Infrastructure &copy; 2024
+          Secure Infrastructure &copy; {new Date().getFullYear()}
         </p>
       </motion.div>
     </div>

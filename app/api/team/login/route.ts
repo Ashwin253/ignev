@@ -1,36 +1,29 @@
 import { NextResponse } from "next/server";
-import { Query } from "appwrite";
-import { getServerDatabases } from "@/app/lib/appwrite-server";
+import { verifyWPTeamMember, wpEnabled } from "@/app/lib/wordpress";
 import { createTeamSessionToken } from "@/app/lib/team-session";
-
-const databaseId = process.env.APPWRITE_DATABASE_ID || "";
-const teamCollectionId = process.env.APPWRITE_TEAM_COLLECTION_ID || "";
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const mobile = String(body?.mobile || "").trim();
-    const password = String(body?.password || "").trim();
+    const body     = await req.json();
+    const mobile   = String(body?.mobile   ?? "").trim();
+    const password = String(body?.password ?? "").trim();
 
     if (!mobile || !password) {
-      return NextResponse.json({ error: "Mobile and password are required." }, { status: 400 });
-    }
-
-    if (!databaseId || !teamCollectionId) {
       return NextResponse.json(
-        { error: "Missing APPWRITE_DATABASE_ID or APPWRITE_TEAM_COLLECTION_ID in environment." },
-        { status: 500 }
+        { error: "Mobile and password are required." },
+        { status: 400 }
       );
     }
 
-    const databases = getServerDatabases();
-    const result = await databases.listDocuments(databaseId, teamCollectionId, [
-      Query.equal("mobile", mobile),
-      Query.equal("password", password),
-      Query.limit(1),
-    ]);
+    if (!wpEnabled()) {
+      return NextResponse.json(
+        { error: "Backend not configured. Set WP_BASE_URL, WP_APP_USERNAME, and WP_APP_PASSWORD." },
+        { status: 503 }
+      );
+    }
 
-    if (!result.total) {
+    const valid = await verifyWPTeamMember(mobile, password);
+    if (!valid) {
       return NextResponse.json({ error: "Invalid mobile or password." }, { status: 401 });
     }
 
@@ -40,7 +33,7 @@ export async function POST(req: Request) {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 60 * 60 * 8,
+      maxAge: 60 * 60 * 8, // 8 hours
       path: "/",
     });
     return response;

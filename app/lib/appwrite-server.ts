@@ -12,6 +12,6 @@ export function getServerDatabases() {
     );
   }
 
-  const client = new Client().setEndpoint(endpoint).setProject(projectId).setKey(apiKey);
-  return new Databases(client);
+  // const client = new Client().setEndpoint(endpoint).setProject(projectId).setKey(apiKey);
+  // return new Databases(client);
 }

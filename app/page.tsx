@@ -12,7 +12,8 @@ export default async function Home() {
   return (
     <>
       <Hero products={content.products} />
-      {/* <QuickActions /> */}
+      {/* <QuickActions />
+       */}
       <ComingSoonCars comingSoon={{ coming_soon: content.comingSoon }} />
       <PopularBrands />
       <ElectricCore3D />

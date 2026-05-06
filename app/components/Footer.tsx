@@ -26,7 +26,7 @@ export default function Footer() {
           </div>
 
           {/* Quick Links */}
-          <div>
+          {/* <div>
             <h3 className="text-lg font-bold text-white mb-6">Quick Links</h3>
             <ul className="space-y-3">
               {['Buy', 'Rent', 'Sell', 'Insurance', 'Service'].map((link) => (
@@ -37,10 +37,10 @@ export default function Footer() {
                 </li>
               ))}
             </ul>
-          </div>
+          </div> */}
 
           {/* Support */}
-          <div>
+          {/* <div>
             <h3 className="text-lg font-bold text-white mb-6">Support</h3>
             <ul className="space-y-3">
               {['About Us', 'Contact Us', 'FAQs', 'Privacy Policy', 'Terms of Service'].map((link) => (
@@ -51,10 +51,10 @@ export default function Footer() {
                 </li>
               ))}
             </ul>
-          </div>
+          </div> */}
 
           {/* Contact */}
-          <div>
+          {/* <div>
             <h3 className="text-lg font-bold text-white mb-6">Contact Info</h3>
             <ul className="space-y-4">
               <li className="flex items-start">
@@ -70,7 +70,7 @@ export default function Footer() {
                 <span className="text-gray-400">support@EVPULSE.com</span>
               </li>
             </ul>
-          </div>
+          </div> */}
         </div>
 
         <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-500">

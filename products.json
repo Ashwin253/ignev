@@ -1,0 +1,115 @@
+{
+  "electric_cars": [
+    {
+      "name": "Nexon EV",
+      "brand": "Tata",
+      "type": "Electric Car",
+      "pricing": "₹14 - 19 lakh",
+      "photo": "/vehicles/tatanexonev.webp"
+    },
+    {
+      "name": "Punch EV",
+      "brand": "Tata",
+      "type": "Electric Car",
+      "pricing": "₹10 - 14 lakh",
+      "photo": "/vehicles/tatapunchev.jpg"
+    },
+    {
+      "name": "Comet EV",
+      "brand": "MG",
+      "type": "Electric Car",
+      "pricing": "₹8 - 10 lakh",
+      "photo": "/vehicles/mgcometev.jpg"
+    },
+    {
+      "name": "XUV400 EV",
+      "brand": "Mahindra",
+      "type": "Electric Car",
+      "pricing": "₹16 - 18 lakh",
+      "photo": "https://imgd.aeplcdn.com/664x374/n/cw/ec/124839/xuv400-exterior-right-front-three-quarter.jpeg"
+    },
+    {
+      "name": "Ioniq 5",
+      "brand": "Hyundai",
+      "type": "Electric Car",
+      "pricing": "₹60+ lakh",
+      "photo": "https://imgd.aeplcdn.com/664x374/n/cw/ec/106815/ioniq-5-exterior-right-front-three-quarter.jpeg"
+    }
+  ],
+
+  "electric_two_wheelers": [
+    {
+      "name": "S1 Pro",
+      "brand": "Ola Electric",
+      "type": "Electric Scooter",
+      "pricing": "₹1.1 - 1.4 lakh",
+      "photo": "/vehicles/olas1.webp"
+    },
+    {
+      "name": "450X",
+      "brand": "Ather",
+      "type": "Electric Scooter",
+      "pricing": "₹1.3 - 1.6 lakh",
+      "photo": "/vehicles/ather450x.jpg"
+    },
+    {
+      "name": "iQube",
+      "brand": "TVS",
+      "type": "Electric Scooter",
+      "pricing": "₹1.1 - 1.3 lakh",
+      "photo": "https://imgd.aeplcdn.com/664x374/n/cw/ec/44866/iqube-right-front-three-quarter.jpeg"
+    },
+    {
+      "name": "Chetak",
+      "brand": "Bajaj",
+      "type": "Electric Scooter",
+      "pricing": "₹1.0 - 1.2 lakh",
+      "photo": "https://imgd.aeplcdn.com/664x374/n/cw/ec/107183/chetak-right-front-three-quarter.jpeg"
+    },
+    {
+      "name": "Activa e",
+      "brand": "Honda",
+      "type": "Electric Scooter",
+      "pricing": "₹1.1 - 1.3 lakh",
+      "photo": "https://imgd.aeplcdn.com/664x374/n/cw/ec/145825/activa-electric-right-front-three-quarter.jpeg"
+    }
+  ],
+
+  "electric_autos": [
+    {
+      "name": "Treo",
+      "brand": "Mahindra Electric",
+      "type": "Electric Auto",
+      "pricing": "₹3 - 4 lakh",
+      "photo": "/vehicles/mahindratreo.jpg"
+    },
+    {
+      "name": "Treo Zor",
+      "brand": "Mahindra Electric",
+      "type": "Electric Cargo Auto",
+      "pricing": "₹3.5 - 4.5 lakh",
+      "photo": "https://www.mahindraelectric.com/images/treo-zor/treo-zor.png"
+    },
+    {
+      "name": "E Alfa Mini",
+      "brand": "Mahindra Electric",
+      "type": "Electric Auto",
+      "pricing": "₹2.5 - 3 lakh",
+      "photo": "https://www.mahindraelectric.com/images/e-alfa-mini/e-alfa-mini.png"
+    },
+    {
+      "name": "RE E-TEC 9.0",
+      "brand": "Bajaj",
+      "type": "Electric Auto",
+      "pricing": "₹3 - 4 lakh",
+      "photo": "https://cdn.bajajauto.com/-/media/bajajauto/auto/threewheelers/re-electric/re-electric.png"
+    },
+    {
+      "name": "Kyorro+",
+      "brand": "Terra Motors",
+      "type": "Electric Auto",
+      "pricing": "₹3 - 4 lakh",
+      "photo": "https://www.terramotorsindia.com/images/kyoroplus.png"
+    }
+  ]
+}

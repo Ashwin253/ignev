@@ -10,9 +10,9 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
           {/* Brand */}
           <div className="space-y-6">
-            <Link href="/" className="flex items-center gap-1 font-bold text-3xl tracking-tight">
-              <span className="text-primary">Ign</span>
-              <span className="text-secondary">EV</span>
+            <Link href="/" className="flex items-center font-bold text-3xl tracking-tight">
+              <span className="text-primary">EV</span>
+              <span className="text-secondary">Plse</span>
             </Link>
             <p className="text-gray-400">
               India's premier marketplace for electric and hybrid vehicles. Making sustainable mobility accessible to everyone.

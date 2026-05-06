@@ -1,0 +1,132 @@
+{
+  "coming_soon": {
+    "electric_cars": [
+      {
+        "name": "Safari EV",
+        "brand": "Tata",
+        "type": "Electric Car",
+        "pricing": "₹30 - 32 lakh (est.)",
+        "launch": "May 2026",
+        "photo": "/vehicles/Tatasafariev.jpg"
+      },
+      {
+        "name": "Sierra EV",
+        "brand": "Tata",
+        "type": "Electric Car",
+        "pricing": "₹15 - 20 lakh (est.)",
+        "launch": "May 2026",
+        "photo": "/vehicles/Tatasierraev.jpg"
+      },
+      {
+        "name": "Urban Cruiser EV",
+        "brand": "Toyota",
+        "type": "Electric Car",
+        "pricing": "₹18 - 21 lakh (est.)",
+        "launch": "May 2026",
+        "photo": "https://stimg.cardekho.com/images/carexteriorimages/630x420/Toyota/Urban-Cruiser-EV/9999/1692088456789/front-left-side-47.jpg"
+      },
+      {
+        "name": "Avinya",
+        "brand": "Tata",
+        "type": "Electric Car",
+        "pricing": "₹35 - 40 lakh (est.)",
+        "launch": "June 2026",
+        "photo": "https://stimg.cardekho.com/images/carexteriorimages/630x420/Tata/Avinya/9999/1692088504321/front-left-side-47.jpg"
+      },
+      {
+        "name": "Inster",
+        "brand": "Hyundai",
+        "type": "Electric Car",
+        "pricing": "₹10 - 12 lakh (est.)",
+        "launch": "June 2026",
+        "photo": "https://stimg.cardekho.com/images/carexteriorimages/630x420/Hyundai/Inster/9999/1692088609876/front-left-side-47.jpg"
+      }
+    ],
+
+    "electric_two_wheelers": [
+      {
+        "name": "Activa Electric",
+        "brand": "Honda",
+        "type": "Electric Scooter",
+        "pricing": "₹1 - 1.2 lakh (est.)",
+        "launch": "2026",
+        "photo": "/vehicles/activaev.jpg"
+      },
+      {
+        "name": "AEROX-E",
+        "brand": "Yamaha",
+        "type": "Electric Scooter",
+        "pricing": "₹2.5 - 3 lakh (est.)",
+        "launch": "May 2026",
+        "photo": "https://imgd.aeplcdn.com/664x374/n/cw/ec/150000/aerox-electric-right-front-three-quarter.jpeg"
+      },
+      {
+        "name": "EL01",
+        "brand": "Ather",
+        "type": "Electric Scooter",
+        "pricing": "₹90,000 - 1 lakh (est.)",
+        "launch": "June 2026",
+        "photo": "https://imgd.aeplcdn.com/664x374/n/cw/ec/150001/ather-el01-right-front-three-quarter.jpeg"
+      },
+      {
+        "name": "Burgman Electric",
+        "brand": "Suzuki",
+        "type": "Electric Scooter",
+        "pricing": "₹1.1 - 1.3 lakh (est.)",
+        "launch": "Aug 2026",
+        "photo": "https://imgd.aeplcdn.com/664x374/n/cw/ec/150002/burgman-electric-right-front-three-quarter.jpeg"
+      },
+      {
+        "name": "Jupiter Electric",
+        "brand": "TVS",
+        "type": "Electric Scooter",
+        "pricing": "₹1.1 - 1.3 lakh (est.)",
+        "launch": "2026",
+        "photo": "https://imgd.aeplcdn.com/664x374/n/cw/ec/150003/jupiter-electric-right-front-three-quarter.jpeg"
+      }
+    ],
+
+    "electric_autos": [
+      {
+        "name": "Treo Plus",
+        "brand": "Mahindra Electric",
+        "type": "Electric Auto",
+        "pricing": "₹3.5 - 4.5 lakh (est.)",
+        "launch": "2026",
+        "photo": "/vehicles/treoplus.jpg"
+      },
+      {
+        "name": "E-Alfa Cargo",
+        "brand": "Mahindra Electric",
+        "type": "Electric Cargo Auto",
+        "pricing": "₹3 - 4 lakh (est.)",
+        "launch": "2026",
+        "photo": "https://www.mahindraelectric.com/images/e-alfa-mini/e-alfa-mini.png"
+      },
+      {
+        "name": "RE Electric New Gen",
+        "brand": "Bajaj",
+        "type": "Electric Auto",
+        "pricing": "₹3 - 4.5 lakh (est.)",
+        "launch": "2026",
+        "photo": "https://cdn.bajajauto.com/-/media/bajajauto/auto/threewheelers/re-electric/re-electric.png"
+      },
+      {
+        "name": "Piaggio Ape E-City Next",
+        "brand": "Piaggio",
+        "type": "Electric Auto",
+        "pricing": "₹3 - 4 lakh (est.)",
+        "launch": "2026",
+        "photo": "https://www.piaggio-cv.co.in/-/media/piaggio/vehicles/ape-e-city/ape-e-city.png"
+      },
+      {
+        "name": "Euler HiLoad EV",
+        "brand": "Euler Motors",
+        "type": "Electric Cargo Auto",
+        "pricing": "₹4 - 5 lakh (est.)",
+        "launch": "2026",
+        "photo": "https://eulermotors.com/images/vehicles/hiload.png"
+      }
+    ]
+  }
+}

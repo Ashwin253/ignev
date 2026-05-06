@@ -12,8 +12,8 @@
 }
 
 :root {
-  --background: #0f1115;
-  --foreground: #ffffff;
+  --background: #ffffff;
+  --foreground: #0f172a;
 }
 
 html {
@@ -45,10 +45,10 @@ body {
 
 /* Utilities */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(148, 163, 184, 0.18);
 }
 
 .text-gradient {
@@ -56,4 +56,13 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

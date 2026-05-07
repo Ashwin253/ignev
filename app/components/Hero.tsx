@@ -247,12 +247,12 @@ export default function Hero({
                         transition={{ duration: 0.15 }}
                         className="absolute right-0 top-10 w-64 rounded-2xl bg-white shadow-2xl border border-slate-200 p-4 text-left"
                       >
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                        {/* <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
                           Banner {activeSlide + 1} of {slides.length}
                           {banners.length > 0 && <span className="ml-1.5 text-sky-500">· WordPress</span>}
-                        </p>
+                        </p> */}
 
-                        <p className="text-sm font-semibold text-slate-900 mb-1">{slide.cta}</p>
+                        {/* <p className="text-sm font-semibold text-slate-900 mb-1">{slide.cta}</p> */}
 
                         {slide.href && slide.href !== "/catalog" && (
                           <a href={slide.href} className="text-xs text-sky-600 hover:underline break-all block mb-2">

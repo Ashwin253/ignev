@@ -39,36 +39,43 @@ export default function Header() {
   const headerBg = isLightPage
     ? isScrolled
       ? "bg-white/95 backdrop-blur-md border-slate-200 shadow-sm"
-      : "bg-white border-slate-100"
+      : "bg-white/80 backdrop-blur-sm border-slate-100"
     : isScrolled
-      ? "bg-dark/80 backdrop-blur-md border-glass-border shadow-lg"
+      ? "bg-slate-900/90 backdrop-blur-md border-white/10 shadow-lg"
       : "bg-transparent border-transparent";
 
-  const linkBase =
-    "text-sm lg:text-base font-medium px-3 py-2 rounded-md transition-colors";
+  const linkBase = "text-sm lg:text-base font-medium px-3 py-2 rounded-md transition-colors";
 
+  // On dark pages before scroll: text is transparent (hidden), fades in on scroll
   const linkColor = isLightPage
     ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-    : "text-gray-600 hover:text-white hover:bg-white/5";
+    : isScrolled
+      ? "text-white/90 hover:text-white hover:bg-white/10"
+      : "text-transparent hover:text-white/20";
 
   const activeLinkColor = isLightPage
     ? "text-sky-600 bg-sky-50"
-    : "text-black bg-white/10";
+    : isScrolled
+      ? "text-white bg-white/15"
+      : "text-transparent";
 
   const mobileLinkColor = isLightPage
     ? "text-slate-700 hover:text-slate-900"
-    : "text-black hover:text-white";
+    : "text-white/90 hover:text-white";
 
   const mobileBg = isLightPage
     ? "bg-white border-slate-200"
-    : "bg-dark/95 backdrop-blur-lg border-glass-border";
+    : "bg-slate-900/95 backdrop-blur-lg border-white/10";
 
-  const mobileToggleColor = isLightPage ? "text-slate-600 hover:text-slate-900" : "text-gray-300 hover:text-white";
+  const mobileToggleColor = isLightPage
+    ? "text-slate-600 hover:text-slate-900"
+    : isScrolled
+      ? "text-white hover:text-white/80"
+      : "text-transparent";
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${headerBg} ${!isScrolled && !isLightPage ? "py-2" : ""
-        }`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${headerBg}`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
@@ -103,8 +110,11 @@ export default function Header() {
               onClick={() =>
                 window.dispatchEvent(new CustomEvent("open-assist"))
               }
-              className="hidden md:block bg-sky-600 hover:bg-sky-700 text-white font-semibold px-5 py-2.5 rounded-full text-sm transition-all shadow-sm hover:shadow-md active:scale-95"
-            >
+              className={`hidden md:block font-semibold px-5 py-2.5 rounded-full text-sm transition-all shadow-sm hover:shadow-md active:scale-95 ${
+              !isLightPage && !isScrolled
+                ? "bg-transparent text-transparent pointer-events-none"
+                : "bg-sky-600 hover:bg-sky-700 text-white"
+            }`}            >
               Get Assist
             </button>
             <button
@@ -140,12 +150,13 @@ export default function Header() {
                     key={link.name}
                     href={link.href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`text-base px-4 py-3 rounded-xl transition-colors font-medium ${isActive
-                      ? isLightPage
-                        ? "text-sky-600 bg-sky-50"
-                        : "text-white bg-white/10"
-                      : mobileLinkColor
-                      }`}
+                    className={`text-base px-4 py-3 rounded-xl transition-colors font-medium ${
+                      isActive
+                        ? isLightPage
+                          ? "text-sky-600 bg-sky-50"
+                          : "text-white bg-white/15"
+                        : mobileLinkColor
+                    }`}
                   >
                     {link.name}
                   </Link>

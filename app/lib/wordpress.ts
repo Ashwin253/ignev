@@ -376,11 +376,12 @@ export async function verifyWPTeamMember(mobile: string, password: string): Prom
 
 export type HeroBanner = {
   id: string;
-  cta: string;           // post title → button label
-  href: string;          // post content (stripped) → link URL, fallback "/catalog"
-  imageHorizontal: string; // featured image of the "Banner" post
-  imageVertical: string;   // featured image of the "Mobile" post
-  accent: string;          // colour gradient — cycled from a preset list
+  cta: string;
+  href: string;
+  details: string;           // ACF details field — shown in info popover
+  imageHorizontal: string;
+  imageVertical: string;
+  accent: string;
 };
 
 const BANNER_ACCENTS = [
@@ -414,7 +415,7 @@ export async function fetchHeroBanners(): Promise<HeroBanner[]> {
         nodes {
           id
           title
-          banner { link }
+          bannerfield { link details }
           featuredImage { node { sourceUrl altText } }
         }
       }
@@ -425,7 +426,7 @@ export async function fetchHeroBanners(): Promise<HeroBanner[]> {
     type BannerNode = {
       id: string;
       title: string;
-      banner: { link: string | null } | null;
+      bannerfield: { link: string | null; details: string | null } | null;
       featuredImage: { node: { sourceUrl: string; altText: string } } | null;
     };
 
@@ -443,11 +444,12 @@ export async function fetchHeroBanners(): Promise<HeroBanner[]> {
 
     return desktop.map((d, i): HeroBanner => {
       const mob = mobile[i] ?? null;
-      const rawLink = d.banner?.link?.trim() ?? "";
+      const rawLink = d.bannerfield?.link?.trim() ?? "";
       return {
         id:              d.id,
         cta:             d.title,
         href:            rawLink.startsWith("http") || rawLink.startsWith("/") ? rawLink : "/catalog",
+        details:         d.bannerfield?.details?.trim() ?? "",
         imageHorizontal: d.featuredImage?.node?.sourceUrl ?? "",
         imageVertical:   mob?.featuredImage?.node?.sourceUrl ?? d.featuredImage?.node?.sourceUrl ?? "",
         accent:          BANNER_ACCENTS[i % BANNER_ACCENTS.length],

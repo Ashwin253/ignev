@@ -57,15 +57,15 @@ export default async function CatalogPage() {
             <h1 className="mt-4 text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
               EV Catalog
             </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 md:text-base">
+            {/* <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 md:text-base">
               Every listing is live from WordPress — specs, pricing, launch dates, pros and cons all in one place.
-            </p>
+            </p> */}
           </div>
 
-          <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-500 shadow-sm shrink-0">
+          {/* <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-500 shadow-sm shrink-0">
             <Zap size={15} className="text-sky-500" />
             {items.length} listings
-          </div>
+          </div> */}
         </div>
 
         <CatalogBrowser items={items} />

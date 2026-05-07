@@ -8,15 +8,16 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const navLinks = [
   { name: "Home", href: "/" },
-  { name: "Buy", href: "/#buy" },
-  { name: "Sell", href: "/#sell" },
+  // { name: "Buy", href: "/#buy" },
+  // { name: "Sell", href: "/#sell" },
   { name: "Catalog", href: "/catalog" },
+  { name: "Updates", href: "/updates" },
   { name: "Map", href: "/map" },
   { name: "Shop", href: "/shop" },
 ];
 
 // Pages that have a white/light background — nav text should be dark
-const lightBgRoutes = ["/catalog", "/product", "/map", "/shop", "/team", "/mis"];
+const lightBgRoutes = ["/catalog", "/product", "/updates", "/map", "/shop", "/team", "/mis"];
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);

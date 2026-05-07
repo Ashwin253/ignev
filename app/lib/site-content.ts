@@ -1,16 +1,20 @@
 import { cache } from "react";
 import localProducts from "../../products.json";
 import localComingSoon from "../../comingsoon.json";
+import { fetchEvListings } from "./wordpress";
 
-type Product = {
+export type Product = {
   name: string;
   brand: string;
   type: string;
   pricing: string;
   photo: string;
+  slug?: string;
+  topSpeed?: number | null;
+  commercial?: boolean;
 };
 
-type ComingSoonItem = {
+export type ComingSoonItem = {
   name: string;
   brand: string;
   type: string;
@@ -32,134 +36,82 @@ export type SiteContent = {
   };
 };
 
-type WordPressGraphQLResponse = {
-  data?: {
-    products?: {
-      electricCars?: Product[];
-      electricTwoWheelers?: Product[];
-      electricAutos?: Product[];
-    };
-    comingSoon?: {
-      electricCars?: ComingSoonItem[];
-      electricTwoWheelers?: ComingSoonItem[];
-      electricAutos?: ComingSoonItem[];
-    };
-  };
-};
+// ── Source selector ──────────────────────────────────────────────────────────
 
 function contentSource() {
+  // Set CONTENT_SOURCE=graphql in .env.local to pull from WordPress
   return (process.env.CONTENT_SOURCE || "local").toLowerCase();
 }
 
-function wpEndpoint() {
-  return process.env.WP_GRAPHQL_ENDPOINT?.trim();
+// ── WordPress / GraphQL loader ───────────────────────────────────────────────
+
+/**
+ * EV type keywords used to bucket listings into the three categories.
+ * Matches against the ACF `type` field on each evlisting.
+ */
+const CAR_KEYWORDS    = ["car", "suv", "sedan", "hatchback", "crossover", "mpv"];
+const SCOOTER_KEYWORDS = ["scooter", "bike", "motorcycle", "two", "2 wheel", "moped"];
+const AUTO_KEYWORDS   = ["auto", "rickshaw", "three", "3 wheel", "cargo", "loader"];
+
+function bucketType(type: string): "car" | "two_wheeler" | "auto" | null {
+  const t = type.toLowerCase();
+  if (CAR_KEYWORDS.some((k) => t.includes(k)))     return "car";
+  if (SCOOTER_KEYWORDS.some((k) => t.includes(k))) return "two_wheeler";
+  if (AUTO_KEYWORDS.some((k) => t.includes(k)))    return "auto";
+  return null;
 }
 
 async function loadFromWordPress(): Promise<SiteContent> {
-  const endpoint = wpEndpoint();
+  const listings = await fetchEvListings(200);
 
-  if (!endpoint) {
-    throw new Error("CONTENT_SOURCE is set to graphql but WP_GRAPHQL_ENDPOINT is missing.");
-  }
+  const cars:        Product[] = [];
+  const twoWheelers: Product[] = [];
+  const autos:       Product[] = [];
 
-  const query = `
-    query SiteContent {
-      products {
-        electricCars {
-          name
-          brand
-          type
-          pricing
-          photo
-        }
-        electricTwoWheelers {
-          name
-          brand
-          type
-          pricing
-          photo
-        }
-        electricAutos {
-          name
-          brand
-          type
-          pricing
-          photo
-        }
-      }
-      comingSoon {
-        electricCars {
-          name
-          brand
-          type
-          pricing
-          launch
-          photo
-        }
-        electricTwoWheelers {
-          name
-          brand
-          type
-          pricing
-          launch
-          photo
-        }
-        electricAutos {
-          name
-          brand
-          type
-          pricing
-          launch
-          photo
-        }
-      }
-    }
-  `;
+  for (const l of listings) {
+    const product: Product = {
+      name:       l.title,
+      brand:      l.brand,
+      type:       l.types[0] ?? "",
+      pricing:    l.prices.length ? `₹${l.prices.join(" - ")} lakh` : "",
+      photo:      l.photo,
+      slug:       l.slug,
+      topSpeed:   l.topSpeed,
+      commercial: l.commercial,
+    };
 
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ query }),
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
-    throw new Error(`GraphQL request failed with status ${response.status}.`);
-  }
-
-  const json = (await response.json()) as WordPressGraphQLResponse;
-
-  if (!json.data?.products || !json.data?.comingSoon) {
-    throw new Error("GraphQL response did not include the expected content payload.");
+    const bucket = bucketType(l.type);
+    if (bucket === "car")         cars.push(product);
+    else if (bucket === "two_wheeler") twoWheelers.push(product);
+    else if (bucket === "auto")   autos.push(product);
+    else                          cars.push(product); // default bucket
   }
 
   return {
     products: {
-      electric_cars: json.data.products.electricCars ?? [],
-      electric_two_wheelers: json.data.products.electricTwoWheelers ?? [],
-      electric_autos: json.data.products.electricAutos ?? [],
+      electric_cars:          cars,
+      electric_two_wheelers:  twoWheelers,
+      electric_autos:         autos,
     },
-    comingSoon: {
-      electric_cars: json.data.comingSoon.electricCars ?? [],
-      electric_two_wheelers: json.data.comingSoon.electricTwoWheelers ?? [],
-      electric_autos: json.data.comingSoon.electricAutos ?? [],
-    },
-  };
-}
-
-function loadLocalContent(): SiteContent {
-  return {
-    products: localProducts,
+    // Coming-soon data still comes from local JSON until a WP CPT is set up
     comingSoon: localComingSoon.coming_soon,
   };
 }
+
+// ── Local JSON loader ────────────────────────────────────────────────────────
+
+function loadLocalContent(): SiteContent {
+  return {
+    products:  localProducts,
+    comingSoon: localComingSoon.coming_soon,
+  };
+}
+
+// ── Public API ───────────────────────────────────────────────────────────────
 
 export const getSiteContent = cache(async (): Promise<SiteContent> => {
   if (contentSource() === "graphql") {
     return loadFromWordPress();
   }
-
   return loadLocalContent();
 });

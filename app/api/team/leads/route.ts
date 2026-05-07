@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
 
     if (!wpEnabled()) {
       return NextResponse.json(
-        { error: "Backend not configured. Set WP_BASE_URL, WP_APP_USERNAME, and WP_APP_PASSWORD." },
+        { error: "Backend not configured. Set WP_GRAPHQL_ENDPOINT, WP_APP_USERNAME, and WP_APP_PASSWORD." },
         { status: 503 }
       );
     }

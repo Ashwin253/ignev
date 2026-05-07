@@ -9,7 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@cashfreepayments/cashfree-js": "1.0.7",
     "@formspree/react": "^3.0.0",
+    "@microsoft/clarity": "^1.0.2",
+    "@tailwindcss/typography": "0.5.19",
     "@vis.gl/react-google-maps": "^1.8.3",
     "clsx": "^2.1.1",
     "framer-motion": "^12.38.0",

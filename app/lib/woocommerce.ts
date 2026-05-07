@@ -1,29 +1,60 @@
 /**
- * WooCommerce REST API client
+ * WooCommerce REST API v3 client
  *
- * Set these env vars to enable WooCommerce:
- *   WC_BASE_URL        e.g. https://yourstore.com
- *   WC_CONSUMER_KEY    wc_...
- *   WC_CONSUMER_SECRET cs_...
+ * WooCommerce uses its own REST API (not WPGraphQL) for product data.
+ * Authentication uses Consumer Key + Secret via query params (safe over HTTPS).
  *
- * When the vars are absent the shop falls back to the local product list.
+ * Required env vars:
+ *   WC_BASE_URL          e.g. https://evplse.online
+ *   WC_CONSUMER_KEY      wc_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ *   WC_CONSUMER_SECRET   cs_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ *
+ * Optional:
+ *   NEXT_PUBLIC_WC_STORE_URL   Public store URL shown as "Visit full store" link
+ *
+ * Generate keys: WP Admin → WooCommerce → Settings → Advanced → REST API → Add key
+ * Permission needed: Read
  */
 
 export type WooProduct = {
   id: number;
   name: string;
   slug: string;
-  price: string;          // WC returns price as a string
+  permalink: string;
+  price: string;
   regular_price: string;
   sale_price: string;
+  on_sale: boolean;
+  purchasable: boolean;
+  stock_status: "instock" | "outofstock" | "onbackorder";
   short_description: string;
   description: string;
-  images: { src: string; alt: string }[];
-  permalink: string;
-  stock_status: "instock" | "outofstock" | "onbackorder";
+  categories: { id: number; name: string; slug: string }[];
+  images: { id: number; src: string; alt: string }[];
+  attributes: { name: string; options: string[] }[];
 };
 
-function wcEnabled() {
+export type WooCategory = {
+  id: number;
+  name: string;
+  slug: string;
+  count: number;
+};
+
+// ── Config ────────────────────────────────────────────────────────────────────
+
+function wcBase(): string {
+  return (process.env.WC_BASE_URL ?? "").replace(/\/$/, "");
+}
+
+function wcAuth(): URLSearchParams {
+  return new URLSearchParams({
+    consumer_key:    process.env.WC_CONSUMER_KEY    ?? "",
+    consumer_secret: process.env.WC_CONSUMER_SECRET ?? "",
+  });
+}
+
+export function wcEnabled(): boolean {
   return !!(
     process.env.WC_BASE_URL &&
     process.env.WC_CONSUMER_KEY &&
@@ -31,58 +62,71 @@ function wcEnabled() {
   );
 }
 
-function wcAuthParams() {
-  return new URLSearchParams({
-    consumer_key: process.env.WC_CONSUMER_KEY ?? "",
-    consumer_secret: process.env.WC_CONSUMER_SECRET ?? "",
-  });
+// ── Core fetch ────────────────────────────────────────────────────────────────
+
+async function wcFetch<T>(path: string, params: Record<string, string> = {}): Promise<T | null> {
+  if (!wcEnabled()) return null;
+
+  const auth = wcAuth();
+  Object.entries(params).forEach(([k, v]) => auth.set(k, v));
+
+  const url = `${wcBase()}/wp-json/wc/v3/${path}?${auth.toString()}`;
+
+  try {
+    const res = await fetch(url, { next: { revalidate: 60 } });
+    if (!res.ok) {
+      console.error(`[WooCommerce] ${path} → HTTP ${res.status}`);
+      return null;
+    }
+    return res.json() as Promise<T>;
+  } catch (err) {
+    console.error(`[WooCommerce] ${path} fetch error:`, err);
+    return null;
+  }
 }
 
+// ── Products ──────────────────────────────────────────────────────────────────
+
 /**
- * Fetch products from WooCommerce REST API v3.
- * Returns null when WC is not configured so the caller can fall back.
+ * Fetch published products. Returns null when WC is not configured.
  */
 export async function fetchWooProducts(
   perPage = 20,
-  page = 1
+  page = 1,
+  categorySlug?: string
 ): Promise<WooProduct[] | null> {
-  if (!wcEnabled()) return null;
+  const params: Record<string, string> = {
+    per_page: String(perPage),
+    page:     String(page),
+    status:   "publish",
+  };
+  if (categorySlug) params.category = categorySlug;
 
-  const base = process.env.WC_BASE_URL!.replace(/\/$/, "");
-  const params = wcAuthParams();
-  params.set("per_page", String(perPage));
-  params.set("page", String(page));
-  params.set("status", "publish");
-
-  const url = `${base}/wp-json/wc/v3/products?${params.toString()}`;
-
-  const res = await fetch(url, {
-    next: { revalidate: 60 }, // ISR — refresh every 60 s
-  });
-
-  if (!res.ok) {
-    console.error(`[WooCommerce] Failed to fetch products: ${res.status}`);
-    return null;
-  }
-
-  return res.json() as Promise<WooProduct[]>;
+  return wcFetch<WooProduct[]>("products", params);
 }
 
 /**
- * Fetch a single WooCommerce product by ID.
+ * Fetch a single product by ID.
  */
 export async function fetchWooProduct(id: number): Promise<WooProduct | null> {
-  if (!wcEnabled()) return null;
-
-  const base = process.env.WC_BASE_URL!.replace(/\/$/, "");
-  const params = wcAuthParams();
-
-  const url = `${base}/wp-json/wc/v3/products/${id}?${params.toString()}`;
-
-  const res = await fetch(url, { next: { revalidate: 60 } });
-  if (!res.ok) return null;
-
-  return res.json() as Promise<WooProduct>;
+  return wcFetch<WooProduct>(`products/${id}`);
 }
 
-export { wcEnabled };
+/**
+ * Fetch all product categories.
+ */
+export async function fetchWooCategories(): Promise<WooCategory[] | null> {
+  return wcFetch<WooCategory[]>("products/categories", {
+    per_page: "100",
+    hide_empty: "true",
+  });
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/** Format WC price string to Indian locale */
+export function formatWooPrice(price: string): string {
+  const n = parseFloat(price);
+  if (isNaN(n)) return price;
+  return `₹${n.toLocaleString("en-IN")}`;
+}

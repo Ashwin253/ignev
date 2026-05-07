@@ -11,6 +11,11 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "www.piaggio-cv.co.in" },
       { protocol: "https", hostname: "eulermotors.com" },
       { protocol: "https", hostname: "images.unsplash.com" },
+      { protocol: "https", hostname: "evplse.online" },
+      // WooCommerce product images (same domain or CDN)
+      { protocol: "https", hostname: "*.evplse.online" },
+      // Local fallback product images
+      { protocol: "https", hostname: "m.media-amazon.com" },
     ],
   },
 };

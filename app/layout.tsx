@@ -23,6 +23,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import AssistPopup from "./components/AssistPopup";
 import EnquiryModal from "./components/EnquiryModal";
+import ClarityScript from "./components/ClarityScript";
 
 export default function RootLayout({
   children,
@@ -35,6 +36,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-[#0f1115] text-white">
+        <ClarityScript />
         <Header />
         <main className="flex-grow">
           {children}

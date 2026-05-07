@@ -371,3 +371,88 @@ export async function verifyWPTeamMember(mobile: string, password: string): Prom
     return !!data.login?.authToken;
   } catch { return false; }
 }
+
+// ── Hero Banners ──────────────────────────────────────────────────────────────
+
+export type HeroBanner = {
+  id: string;
+  cta: string;           // post title → button label
+  href: string;          // post content (stripped) → link URL, fallback "/catalog"
+  imageHorizontal: string; // featured image of the "Banner" post
+  imageVertical: string;   // featured image of the "Mobile" post
+  accent: string;          // colour gradient — cycled from a preset list
+};
+
+const BANNER_ACCENTS = [
+  "from-sky-600/90 via-sky-500/80 to-cyan-400/80",
+  "from-emerald-600/90 via-emerald-500/80 to-lime-400/80",
+  "from-violet-600/90 via-fuchsia-500/80 to-pink-400/80",
+  "from-amber-600/90 via-orange-500/80 to-rose-400/80",
+];
+
+/**
+ * Fetch hero banners from the Banner CPT.
+ *
+ * WP structure (per slide):
+ *   - One post with title = slide CTA text (e.g. "Explore catalog")
+ *     → featuredImage = desktop/horizontal image
+ *     → content       = destination URL (optional)
+ *   - One post with title = "Mobile"
+ *     → featuredImage = mobile/vertical image
+ *
+ * Posts are ordered by menuOrder. Desktop and Mobile posts are paired
+ * by their position in the list (index 0 desktop + index 0 mobile = slide 1).
+ *
+ * Falls back to an empty array so the Hero uses its hardcoded slides.
+ */
+export async function fetchHeroBanners(): Promise<HeroBanner[]> {
+  const query = /* GraphQL */ `
+    query FetchBanners {
+      banners(first: 20, where: { orderby: { field: MENU_ORDER, order: ASC } }) {
+        nodes {
+          id
+          title
+          content
+          featuredImage { node { sourceUrl } }
+        }
+      }
+    }
+  `;
+
+  try {
+    type BannerNode = {
+      id: string;
+      title: string;
+      content: string | null;
+      featuredImage: { node: { sourceUrl: string } } | null;
+    };
+
+    const data = await gql<{ banners: { nodes: BannerNode[] } }>(
+      query, {}, { revalidate: 300 }
+    );
+
+    const nodes = data.banners.nodes;
+
+    // Separate desktop (non-"Mobile" title) and mobile posts
+    const desktop = nodes.filter((n) => n.title.toLowerCase() !== "mobile");
+    const mobile  = nodes.filter((n) => n.title.toLowerCase() === "mobile");
+
+    if (!desktop.length) return [];
+
+    return desktop.map((d, i): HeroBanner => {
+      const mob = mobile[i] ?? null;
+      const rawHref = d.content?.replace(/<[^>]+>/g, "").trim() ?? "";
+      return {
+        id:              d.id,
+        cta:             d.title,
+        href:            rawHref.startsWith("http") || rawHref.startsWith("/") ? rawHref : "/catalog",
+        imageHorizontal: d.featuredImage?.node?.sourceUrl ?? "",
+        imageVertical:   mob?.featuredImage?.node?.sourceUrl ?? d.featuredImage?.node?.sourceUrl ?? "",
+        accent:          BANNER_ACCENTS[i % BANNER_ACCENTS.length],
+      };
+    });
+  } catch (err) {
+    console.warn("[WP] fetchHeroBanners failed:", err);
+    return [];
+  }
+}

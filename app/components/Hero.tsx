@@ -7,10 +7,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight, CarFront, Bike, Truck, Sparkles, Send,
   ChevronLeft, ChevronRight, Star, BatteryCharging,
-  MapPin, CalendarDays, BadgeCheck, CheckCircle2, Gauge,
+  MapPin, CalendarDays, BadgeCheck, CheckCircle2, Gauge, Info,
 } from "lucide-react";
 import { triggerEnquiryModal } from "./EnquiryModal";
-import type { EvListing } from "../lib/wordpress";
+import type { EvListing, HeroBanner } from "../lib/wordpress";
 import { formatLaunchDate, isLaunched } from "../lib/wordpress";
 
 type Product = {
@@ -209,13 +209,19 @@ function ProductCard({ product, index, tabKey }: { product: Product; index: numb
 export default function Hero({
   products,
   featured = [],
+  banners = [],
 }: {
   products: ProductsPayload;
   featured?: EvListing[];
+  banners?: HeroBanner[];
 }) {
   const [activeTab, setActiveTab] = useState<TabKey>(featured.length ? "featured" : "buy");
   const [activeSlide, setActiveSlide] = useState(0);
+  const [showInfo, setShowInfo] = useState(false);
   const railRef = useRef<HTMLDivElement | null>(null);
+
+  // Use WP banners when available, fall back to hardcoded slides
+  const slides = banners.length > 0 ? banners : heroSlides;
 
   const visibleTabs = featured.length ? tabs : tabs.filter((t) => t.key !== "featured");
 
@@ -237,12 +243,12 @@ export default function Hero({
   }, [activeTab]);
 
   useEffect(() => {
-    const t = window.setInterval(() => setActiveSlide((c) => (c + 1) % heroSlides.length), 6000);
+    const t = window.setInterval(() => setActiveSlide((c) => (c + 1) % slides.length), 6000);
     return () => window.clearInterval(t);
-  }, []);
+  }, [slides.length]);
 
-  const prevSlide = () => setActiveSlide((c) => (c - 1 + heroSlides.length) % heroSlides.length);
-  const nextSlide = () => setActiveSlide((c) => (c + 1) % heroSlides.length);
+  const prevSlide = () => setActiveSlide((c) => (c - 1 + slides.length) % slides.length);
+  const nextSlide = () => setActiveSlide((c) => (c + 1) % slides.length);
   const activeCategoryLabel = visibleTabs.find((t) => t.key === activeTab)?.label ?? "All";
 
   return (
@@ -268,24 +274,68 @@ export default function Hero({
                 className="relative min-h-96 overflow-hidden md:min-h-[34rem]"
               >
                 <div className="absolute inset-0">
-                  <Image src={heroSlides[activeSlide].imageHorizontal} alt="Banner" fill sizes="100vw" className="hidden object-cover md:block" priority />
-                  <Image src={heroSlides[activeSlide].imageVertical} alt="Banner" fill sizes="100vw" className="object-cover md:hidden" priority />
+                  <Image src={slides[activeSlide].imageHorizontal} alt="Banner" fill sizes="100vw" className="hidden object-cover md:block" priority />
+                  <Image src={slides[activeSlide].imageVertical} alt="Banner" fill sizes="100vw" className="object-cover md:hidden" priority />
                 </div>
-                <div className={`absolute inset-0 bg-linear-to-r ${heroSlides[activeSlide].accent}`} />
+                <div className={`absolute inset-0 bg-linear-to-r ${slides[activeSlide].accent}`} />
                 <div className="absolute inset-0 bg-black/20" />
+
+                {/* CTA */}
                 <div className="relative z-10 flex min-h-96 items-end md:min-h-[34rem]">
                   <div className="p-6 sm:p-8 md:p-10">
-                    <a href={heroSlides[activeSlide].href} className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-900 shadow-lg transition hover:scale-[1.01] hover:bg-slate-50">
-                      {heroSlides[activeSlide].cta} <ArrowRight size={16} />
+                    <a href={slides[activeSlide].href} className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-900 shadow-lg transition hover:scale-[1.01] hover:bg-slate-50">
+                      {slides[activeSlide].cta} <ArrowRight size={16} />
                     </a>
                   </div>
                 </div>
+
+                {/* Info badge — top right, shows banner details on click */}
+                <div className="absolute top-4 right-16 z-20">
+                  <button
+                    onClick={() => setShowInfo((v) => !v)}
+                    aria-label="Banner info"
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/35 transition-colors"
+                  >
+                    <Info size={15} />
+                  </button>
+                  <AnimatePresence>
+                    {showInfo && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.92, y: -4 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.92, y: -4 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute right-0 top-10 w-56 rounded-2xl bg-white/95 backdrop-blur-md shadow-xl border border-slate-200 p-4 text-left"
+                      >
+                        <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Banner details</p>
+                        <p className="text-sm font-semibold text-slate-900 mb-1">{slides[activeSlide].cta}</p>
+                        <p className="text-xs text-sky-600 break-all">{slides[activeSlide].href}</p>
+                        <p className="text-[10px] text-slate-400 mt-2 pt-2 border-t border-slate-100">
+                          Slide {activeSlide + 1} of {slides.length}
+                          {banners.length > 0 && " · from WordPress"}
+                        </p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Prev / Next */}
                 <button onClick={prevSlide} aria-label="Previous" className="absolute left-4 top-1/2 z-20 -translate-y-1/2 rounded-full border border-white/20 bg-white/15 p-3 text-white backdrop-blur-md transition hover:bg-white/25">
                   <ChevronLeft size={18} />
                 </button>
                 <button onClick={nextSlide} aria-label="Next" className="absolute right-4 top-1/2 z-20 -translate-y-1/2 rounded-full border border-white/20 bg-white/15 p-3 text-white backdrop-blur-md transition hover:bg-white/25">
                   <ChevronRight size={18} />
                 </button>
+
+                {/* Slide dots */}
+                {slides.length > 1 && (
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                    {slides.map((_, i) => (
+                      <button key={i} onClick={() => setActiveSlide(i)} aria-label={`Slide ${i + 1}`}
+                        className={`h-1.5 rounded-full transition-all duration-300 ${i === activeSlide ? "w-6 bg-white" : "w-1.5 bg-white/40 hover:bg-white/70"}`} />
+                    ))}
+                  </div>
+                )}
               </motion.div>
             </AnimatePresence>
           </div>

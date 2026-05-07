@@ -1,411 +1,403 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { APIProvider, Map, AdvancedMarker, Pin, InfoWindow, useMap, useMapsLibrary } from '@vis.gl/react-google-maps';
-import { motion } from 'framer-motion';
-import { Zap, Wrench, Navigation, MapPin, Search, Filter, Share2 } from 'lucide-react';
+import { useEffect, useRef, useState, useCallback } from "react";
+import { motion } from "framer-motion";
+import {
+  Zap, Wrench, Navigation, MapPin, Search, Filter, Share2, X,
+} from "lucide-react";
+
+// ── Location data ─────────────────────────────────────────────────────────────
 
 const allLocations = [
-  { id: '1', type: 'charging', position: { lat: 28.638807475938854, lng: 77.08571577423803 }, name: 'EV Fast Charger ', address: 'West Delhi' },
-  // { id: '2', type: 'spare', position: { lat: 37.7849, lng: -122.4094 }, name: 'Auto EV Parts Hub', address: '456 Market St, San Francisco, CA' },
-  { id: '3', type: 'charging', position: { lat: 28.60084344690758, lng: 77.08761399823456 }, name: 'Supercharger IndianOil Station', address: 'North Delhi' },
-  { id: '4', type: 'spare', position: { lat: 28.62720444733246, lng: 77.0715540440098 }, name: 'EV Repair and Spare', address: 'West Delhi' },
+  { id: "1", type: "charging", lat: 28.638807, lng: 77.085715, name: "EV Fast Charger",           address: "West Delhi" },
+  { id: "3", type: "charging", lat: 28.600843, lng: 77.087613, name: "Supercharger IndianOil",     address: "North Delhi" },
+  { id: "4", type: "spare",    lat: 28.627204, lng: 77.071554, name: "EV Repair and Spare",        address: "West Delhi" },
 ];
 
-// const allLocations = [
-//   { id: '1', type: 'charging', position: { lat: 37.7749, lng: -122.4194 }, name: 'EV Fast Charger Downtown', address: '123 Main St, San Francisco, CA', onRoute: true },
-//   { id: '2', type: 'spare', position: { lat: 37.7849, lng: -122.4094 }, name: 'Auto EV Parts Hub', address: '456 Market St, San Francisco, CA', onRoute: false },
-//   { id: '3', type: 'charging', position: { lat: 37.7649, lng: -122.4294 }, name: 'Supercharger SF Station', address: '789 Mission St, San Francisco, CA', onRoute: true },
-//   { id: '4', type: 'spare', position: { lat: 37.7949, lng: -122.3994 }, name: 'Performance EV Spares', address: '101 Embarcadero, San Francisco, CA', onRoute: false },
-//   { id: '5', type: 'charging', position: { lat: 37.6849, lng: -122.4094 }, name: 'Daly City Supercharger', address: '200 Serramonte Center, Daly City, CA', onRoute: true },
-//   { id: '6', type: 'charging', position: { lat: 37.5849, lng: -122.3094 }, name: 'San Mateo Fast Charger', address: '123 Hillsdale Blvd, San Mateo, CA', onRoute: true },
-//   { id: '7', type: 'spare', position: { lat: 37.8049, lng: -122.2794 }, name: 'Oakland EV Parts', address: '456 Broadway, Oakland, CA', onRoute: false },
-//   { id: '8', type: 'charging', position: { lat: 37.3382, lng: -121.8863 }, name: 'San Jose Mega Station', address: '100 W San Fernando St, San Jose, CA', onRoute: true },
-// ];
+type Location = typeof allLocations[0];
 
-function DirectionsRendererComponent({
-  origin,
-  destination,
-  onRouteCalculated
-}: {
-  origin: string,
-  destination: string,
-  onRouteCalculated: (success: boolean) => void
-}) {
-  const map = useMap();
-  const routesLibrary = useMapsLibrary('routes');
-  const [directionsService, setDirectionsService] = useState<google.maps.DirectionsService | null>(null);
-  const [directionsRenderer, setDirectionsRenderer] = useState<google.maps.DirectionsRenderer | null>(null);
+// ── Leaflet map (loaded dynamically — SSR safe) ───────────────────────────────
 
+function useLeaflet(
+  containerRef: React.RefObject<HTMLDivElement | null>,
+  locations: Location[],
+  selectedId: string | null,
+  onSelect: (loc: Location) => void,
+  onMapClick: (lat: number, lng: number) => void,
+) {
+  const mapRef    = useRef<import("leaflet").Map | null>(null);
+  const markersRef = useRef<Map<string, import("leaflet").Marker>>(new Map());
+  const routeRef  = useRef<import("leaflet").Polyline | null>(null);
+
+  // Init map once
   useEffect(() => {
-    if (!routesLibrary || !map) return;
-    setDirectionsService(new routesLibrary.DirectionsService());
-    setDirectionsRenderer(new routesLibrary.DirectionsRenderer({ map }));
-  }, [routesLibrary, map]);
+    if (mapRef.current || !containerRef.current) return;
 
-  useEffect(() => {
-    if (!directionsService || !directionsRenderer || !origin || !destination) {
-      if (directionsRenderer) directionsRenderer.setMap(null);
-      return;
+    // Guard against React strict-mode double-invoke: if Leaflet already
+    // stamped this node, remove the old instance first.
+    const container = containerRef.current as HTMLDivElement & { _leaflet_id?: number };
+    if (container._leaflet_id) {
+      // Previous instance wasn't cleaned up — remove it
+      try { (window as Window & { L?: { map: (el: HTMLElement) => { remove: () => void } } }).L?.map(container).remove(); } catch { /* ignore */ }
+      delete container._leaflet_id;
     }
 
-    directionsRenderer.setMap(map);
+    import("leaflet").then((L) => {
+      if (mapRef.current) return; // another render beat us to it
+      if (!containerRef.current) return;
 
-    directionsService
-      .route({
-        origin: origin,
-        destination: destination,
-        travelMode: google.maps.TravelMode.DRIVING,
-      })
-      .then((response) => {
-        directionsRenderer.setDirections(response);
-        onRouteCalculated(true);
-      })
-      .catch((e) => {
-        console.error('Directions request failed due to ', e);
-        if (directionsRenderer) directionsRenderer.setMap(null);
-        onRouteCalculated(false);
+      // Fix default icon paths broken by webpack
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      delete (L.Icon.Default.prototype as any)._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+        iconUrl:       "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+        shadowUrl:     "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
       });
 
-    return () => {
-      if (directionsRenderer) directionsRenderer.setMap(null);
-    };
-  }, [directionsService, directionsRenderer, origin, destination, map, onRouteCalculated]);
+      const map = L.map(containerRef.current!, {
+        center: [28.603, 77.072],
+        zoom: 13,
+        zoomControl: false,
+      });
 
-  return null;
+      L.control.zoom({ position: "bottomright" }).addTo(map);
+
+      // OSM tiles — completely free, no key
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19,
+      }).addTo(map);
+
+      map.on("click", (e) => onMapClick(e.latlng.lat, e.latlng.lng));
+
+      mapRef.current = map;
+    });
+
+    return () => {
+      mapRef.current?.remove();
+      mapRef.current = null;
+      markersRef.current.clear();
+      routeRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Sync markers
+  useEffect(() => {
+    if (!mapRef.current) return;
+    import("leaflet").then((L) => {
+      const map = mapRef.current!;
+
+      // Remove old markers not in current list
+      markersRef.current.forEach((m, id) => {
+        if (!locations.find((l) => l.id === id)) {
+          m.remove();
+          markersRef.current.delete(id);
+        }
+      });
+
+      locations.forEach((loc) => {
+        const isSelected = loc.id === selectedId;
+        const color = loc.type === "charging" ? "#10b981" : "#f59e0b";
+        const size  = isSelected ? 36 : 28;
+
+        const icon = L.divIcon({
+          className: "",
+          html: `<div style="
+            width:${size}px;height:${size}px;border-radius:50% 50% 50% 0;
+            background:${color};border:3px solid white;
+            transform:rotate(-45deg);
+            box-shadow:0 2px 8px rgba(0,0,0,0.35);
+            transition:all 0.2s;
+          "></div>`,
+          iconSize:   [size, size],
+          iconAnchor: [size / 2, size],
+        });
+
+        const existing = markersRef.current.get(loc.id);
+        if (existing) {
+          existing.setIcon(icon);
+        } else {
+          const marker = L.marker([loc.lat, loc.lng], { icon })
+            .addTo(map)
+            .on("click", () => onSelect(loc));
+          markersRef.current.set(loc.id, marker);
+        }
+      });
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locations, selectedId]);
+
+  // Pan to selected
+  useEffect(() => {
+    if (!selectedId || !mapRef.current) return;
+    const loc = allLocations.find((l) => l.id === selectedId);
+    if (loc) mapRef.current.panTo([loc.lat, loc.lng], { animate: true });
+  }, [selectedId]);
+
+  // Draw route polyline
+  const drawRoute = useCallback(async (originStr: string, destStr: string) => {
+    if (!mapRef.current) return false;
+    const L = await import("leaflet");
+
+    // Parse "lat, lng" strings or geocode via Nominatim
+    const parseCoord = async (s: string): Promise<[number, number] | null> => {
+      const m = s.match(/^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)$/);
+      if (m) return [parseFloat(m[1]), parseFloat(m[2])];
+      // Nominatim geocoding (OSM, free)
+      const r = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(s)}&format=json&limit=1`,
+        { headers: { "Accept-Language": "en" } }
+      );
+      const data = await r.json() as { lat: string; lon: string }[];
+      if (!data[0]) return null;
+      return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+    };
+
+    const [origin, dest] = await Promise.all([parseCoord(originStr), parseCoord(destStr)]);
+    if (!origin || !dest) return false;
+
+    // OSRM routing (free, no key)
+    const url = `https://router.project-osrm.org/route/v1/driving/${origin[1]},${origin[0]};${dest[1]},${dest[0]}?overview=full&geometries=geojson`;
+    const res = await fetch(url);
+    const data = await res.json() as { routes?: { geometry: { coordinates: [number, number][] } }[] };
+    if (!data.routes?.[0]) return false;
+
+    routeRef.current?.remove();
+    const coords = data.routes[0].geometry.coordinates.map(([lng, lat]) => [lat, lng] as [number, number]);
+    routeRef.current = L.polyline(coords, { color: "#3b82f6", weight: 5, opacity: 0.8 }).addTo(mapRef.current);
+    mapRef.current.fitBounds(routeRef.current.getBounds(), { padding: [40, 40] });
+    return true;
+  }, []);
+
+  const clearRoute = useCallback(() => {
+    routeRef.current?.remove();
+    routeRef.current = null;
+  }, []);
+
+  return { drawRoute, clearRoute };
 }
 
+// ── Component ─────────────────────────────────────────────────────────────────
+
 export default function FullMap() {
-  const [activeTab, setActiveTab] = useState<'route' | 'filters'>('route');
-  const [selectedLocation, setSelectedLocation] = useState<typeof allLocations[0] | null>(null);
-  const [filterType, setFilterType] = useState<'all' | 'charging' | 'spare'>('all');
-  const [routeFilterActive, setRouteFilterActive] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [activeTab, setActiveTab]           = useState<"route" | "filters">("route");
+  const [selectedId, setSelectedId]         = useState<string | null>(null);
+  const [filterType, setFilterType]         = useState<"all" | "charging" | "spare">("all");
+  const [originInput, setOriginInput]       = useState("");
+  const [destInput, setDestInput]           = useState("");
+  const [selectingPoint, setSelectingPoint] = useState<"origin" | "dest" | null>(null);
+  const [routeActive, setRouteActive]       = useState(false);
+  const [routeError, setRouteError]         = useState("");
 
-  const [originInput, setOriginInput] = useState('');
-  const [destInput, setDestInput] = useState('');
-  const [activeRoute, setActiveRoute] = useState<{ origin: string, dest: string } | null>(null);
-  const [selectingPoint, setSelectingPoint] = useState<'origin' | 'dest' | null>(null);
+  const selectedLoc = allLocations.find((l) => l.id === selectedId) ?? null;
 
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
+  const displayedLocations = allLocations.filter(
+    (l) => filterType === "all" || l.type === filterType
+  );
 
-  const handleFindRoute = () => {
-    if (originInput && destInput) {
-      setActiveRoute({ origin: originInput, dest: destInput });
-      setRouteFilterActive(true);
-    }
+  const handleMapClick = useCallback((lat: number, lng: number) => {
+    if (!selectingPoint) return;
+    const coord = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+    if (selectingPoint === "origin") setOriginInput(coord);
+    else setDestInput(coord);
+    setSelectingPoint(null);
+  }, [selectingPoint]);
+
+  const { drawRoute, clearRoute } = useLeaflet(
+    containerRef, displayedLocations, selectedId,
+    (loc) => setSelectedId(loc.id),
+    handleMapClick,
+  );
+
+  const handleFindRoute = async () => {
+    if (!originInput || !destInput) return;
+    setRouteError("");
+    const ok = await drawRoute(originInput, destInput);
+    if (ok) setRouteActive(true);
+    else setRouteError("Could not find a route. Check your inputs.");
   };
 
   const handleClearRoute = () => {
-    setActiveRoute(null);
-    setOriginInput('');
-    setDestInput('');
-    setRouteFilterActive(false);
+    clearRoute();
+    setRouteActive(false);
+    setOriginInput("");
+    setDestInput("");
+    setRouteError("");
   };
 
-  const handleGetDirections = (lat: number, lng: number) => {
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-    window.open(url, '_blank');
-  };
-
-  const handleShareLocation = async (loc: typeof allLocations[0]) => {
-    const url = `https://www.google.com/maps/search/?api=1&query=${loc.position.lat},${loc.position.lng}`;
-    const shareData = {
-      title: loc.name,
-      text: `Check out ${loc.name} at ${loc.address}`,
-      url: url,
-    };
-
+  const handleShare = async (loc: Location) => {
+    const url = `https://www.openstreetmap.org/?mlat=${loc.lat}&mlon=${loc.lng}&zoom=16`;
     if (navigator.share) {
-      try {
-        await navigator.share(shareData);
-      } catch (err) {
-        console.error('Error sharing:', err);
-      }
+      await navigator.share({ title: loc.name, text: loc.address, url }).catch(() => {});
     } else {
-      navigator.clipboard.writeText(url);
-      alert('Location link copied to clipboard!');
+      await navigator.clipboard.writeText(url);
+      alert("Location link copied!");
     }
   };
-
-  // Filter logic: Filter by type AND (if route filter is active, filter by onRoute)
-  const displayedLocations = allLocations.filter(loc => {
-    const matchesType = filterType === 'all' || loc.type === filterType;
-    const matchesRoute = routeFilterActive ? ((loc as any).onRoute ?? false) : true;
-    return matchesType && matchesRoute;
-  });
 
   return (
     <div className="flex flex-col md:flex-row flex-grow h-[calc(100vh-72px)] bg-[#0f1115] overflow-hidden">
 
-      {/* Sidebar Panel */}
-      <div className="w-full md:w-[400px] bg-[#1a1d24] md:border-r border-b md:border-b-0 border-white/10 flex flex-col z-20 shadow-2xl relative flex-1 md:flex-none md:h-full min-h-[45vh] md:min-h-0">
+      {/* ── Sidebar ── */}
+      <div className="w-full md:w-[380px] bg-[#1a1d24] md:border-r border-b md:border-b-0 border-white/10 flex flex-col z-20 shadow-2xl flex-shrink-0">
         {/* Tabs */}
-        <div className="flex border-b border-white/10 flex-shrink-0">
-          <button 
-            className={`flex-1 py-4 text-center text-sm font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'route' ? 'text-blue-400 border-b-2 border-blue-400 bg-blue-500/5' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
-            onClick={() => setActiveTab('route')}
-          >
-            <Navigation size={16} /> Route Planner
-          </button>
-          <button 
-            className={`flex-1 py-4 text-center text-sm font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === 'filters' ? 'text-emerald-400 border-b-2 border-emerald-400 bg-emerald-500/5' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
-            onClick={() => setActiveTab('filters')}
-          >
-            <Filter size={16} /> Filters & Stations
-          </button>
+        <div className="flex border-b border-white/10 shrink-0">
+          {(["route", "filters"] as const).map((tab) => (
+            <button key={tab} onClick={() => setActiveTab(tab)}
+              className={`flex-1 py-4 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
+                activeTab === tab
+                  ? tab === "route"
+                    ? "text-blue-400 border-b-2 border-blue-400 bg-blue-500/5"
+                    : "text-emerald-400 border-b-2 border-emerald-400 bg-emerald-500/5"
+                  : "text-gray-400 hover:text-white hover:bg-white/5"
+              }`}>
+              {tab === "route" ? <><Navigation size={15} /> Route</> : <><Filter size={15} /> Filters</>}
+            </button>
+          ))}
         </div>
 
-        <div className="flex-grow overflow-y-auto custom-scrollbar">
-          {/* Route Section */}
-          {activeTab === 'route' && (
-            <div className="p-6 border-b border-white/10">
-              <div className="space-y-4 mb-6">
-            <div>
-              <label className="flex text-sm text-gray-400 mb-1.5 ml-1 justify-between items-center">
-                <span>Starting Point</span>
-                <button
-                  onClick={() => setSelectingPoint(selectingPoint === 'origin' ? null : 'origin')}
-                  className={`text-xs px-2 py-0.5 rounded transition-colors ${selectingPoint === 'origin' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-white/5 text-gray-400 hover:text-white border border-transparent'}`}
-                >
-                  {selectingPoint === 'origin' ? 'Click map to select...' : 'Select on map'}
+        <div className="flex-1 overflow-y-auto">
+          {/* Route planner */}
+          {activeTab === "route" && (
+            <div className="p-5 border-b border-white/10 space-y-4">
+              {/* Origin */}
+              <div>
+                <label className="flex justify-between text-xs text-gray-400 mb-1.5">
+                  <span>Starting point</span>
+                  <button onClick={() => setSelectingPoint(selectingPoint === "origin" ? null : "origin")}
+                    className={`px-2 py-0.5 rounded text-xs transition-colors ${selectingPoint === "origin" ? "bg-blue-500/20 text-blue-400 border border-blue-500/30" : "bg-white/5 text-gray-400 hover:text-white"}`}>
+                    {selectingPoint === "origin" ? "Click map…" : "Pick on map"}
+                  </button>
+                </label>
+                <div className="relative">
+                  <div className={`absolute left-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full ${selectingPoint === "origin" ? "bg-blue-400 animate-pulse" : "bg-blue-500"}`} />
+                  <input value={originInput} onChange={(e) => setOriginInput(e.target.value)}
+                    placeholder="e.g. Connaught Place, Delhi"
+                    className={`w-full bg-black/30 border rounded-xl py-3 pl-8 pr-4 text-sm text-white placeholder:text-gray-600 focus:outline-none transition-colors ${selectingPoint === "origin" ? "border-blue-500" : "border-white/10 focus:border-blue-500/50"}`} />
+                </div>
+              </div>
+
+              {/* Dest */}
+              <div>
+                <label className="flex justify-between text-xs text-gray-400 mb-1.5">
+                  <span>Destination</span>
+                  <button onClick={() => setSelectingPoint(selectingPoint === "dest" ? null : "dest")}
+                    className={`px-2 py-0.5 rounded text-xs transition-colors ${selectingPoint === "dest" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-white/5 text-gray-400 hover:text-white"}`}>
+                    {selectingPoint === "dest" ? "Click map…" : "Pick on map"}
+                  </button>
+                </label>
+                <div className="relative">
+                  <div className={`absolute left-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full ${selectingPoint === "dest" ? "bg-emerald-400 animate-pulse" : "bg-emerald-500"}`} />
+                  <input value={destInput} onChange={(e) => setDestInput(e.target.value)}
+                    placeholder="e.g. Noida Sector 18"
+                    className={`w-full bg-black/30 border rounded-xl py-3 pl-8 pr-4 text-sm text-white placeholder:text-gray-600 focus:outline-none transition-colors ${selectingPoint === "dest" ? "border-emerald-500" : "border-white/10 focus:border-emerald-500/50"}`} />
+                </div>
+              </div>
+
+              {routeError && <p className="text-xs text-rose-400">{routeError}</p>}
+
+              <div className="flex gap-2">
+                <button onClick={handleFindRoute}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors shadow-lg shadow-blue-500/20">
+                  <Search size={16} /> Find Route
                 </button>
-              </label>
-              <div className="relative">
-                <div className={`absolute left-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full ${selectingPoint === 'origin' ? 'bg-blue-400 animate-pulse' : 'bg-blue-500'}`} />
-                <input
-                  type="text"
-                  placeholder="e.g. New Delhi Railway Station"
-                  value={originInput}
-                  onChange={e => setOriginInput(e.target.value)}
-                  className={`w-full bg-black/30 border rounded-xl py-3 pl-8 pr-4 text-white focus:outline-none focus:border-blue-500 transition-colors ${selectingPoint === 'origin' ? 'border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.2)]' : 'border-white/10'}`}
-                />
+                {routeActive && (
+                  <button onClick={handleClearRoute}
+                    className="px-4 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl border border-red-500/20 transition-colors">
+                    <X size={16} />
+                  </button>
+                )}
               </div>
-            </div>
-
-            <div className="flex justify-center -my-2 relative z-10">
-              <div className="bg-[#1a1d24] p-1 rounded-full border border-white/10">
-                <div className="w-1 h-6 border-l-2 border-dashed border-white/20 mx-auto" />
-              </div>
-            </div>
-
-            <div>
-              <label className="flex text-sm text-gray-400 mb-1.5 ml-1 justify-between items-center">
-                <span>Destination</span>
-                <button
-                  onClick={() => setSelectingPoint(selectingPoint === 'dest' ? null : 'dest')}
-                  className={`text-xs px-2 py-0.5 rounded transition-colors ${selectingPoint === 'dest' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-white/5 text-gray-400 hover:text-white border border-transparent'}`}
-                >
-                  {selectingPoint === 'dest' ? 'Click map to select...' : 'Select on map'}
-                </button>
-              </label>
-              <div className="relative">
-                <div className={`absolute left-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full ${selectingPoint === 'dest' ? 'bg-emerald-400 animate-pulse' : 'bg-emerald-500'}`} />
-                <input
-                  type="text"
-                  placeholder="e.g. Noida, Uttar Pradesh"
-                  value={destInput}
-                  onChange={e => setDestInput(e.target.value)}
-                  className={`w-full bg-black/30 border rounded-xl py-3 pl-8 pr-4 text-white focus:outline-none focus:border-emerald-500 transition-colors ${selectingPoint === 'dest' ? 'border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'border-white/10'}`}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="flex gap-3">
-            <button
-              onClick={handleFindRoute}
-              className="flex-grow bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20"
-            >
-              <Search size={18} /> Find Route
-            </button>
-            {activeRoute && (
-              <button
-                onClick={handleClearRoute}
-                className="px-4 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-medium rounded-xl transition-colors border border-red-500/20"
-              >
-                Clear
-              </button>
-            )}
-          </div>
             </div>
           )}
 
-          {/* Filters Section */}
-          {activeTab === 'filters' && (
-            <div className="p-6 border-b border-white/10 bg-[#1e222b]/50">
-              <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-gray-300 flex items-center gap-2">
-              <Filter size={16} /> Filters
-            </h3>
-            {activeRoute && (
-              <label className="flex items-center gap-2 text-sm cursor-pointer group">
-                <span className={`transition-colors ${routeFilterActive ? 'text-emerald-400 font-medium' : 'text-gray-400 group-hover:text-gray-300'}`}>
-                  Along Route
-                </span>
-                <div className={`w-10 h-5 rounded-full p-1 transition-colors ${routeFilterActive ? 'bg-emerald-500' : 'bg-white/10'}`}
-                  onClick={() => setRouteFilterActive(!routeFilterActive)}
-                >
-                  <div className={`w-3 h-3 rounded-full bg-white transition-transform ${routeFilterActive ? 'translate-x-5' : 'translate-x-0'}`} />
-                </div>
-              </label>
-            )}
-          </div>
-
-          <div className="flex gap-2 bg-black/40 p-1 rounded-xl border border-white/5">
-            <button
-              onClick={() => { setFilterType('all'); setSelectedLocation(null); }}
-              className={`flex-grow py-2 rounded-lg text-sm font-medium transition-all ${filterType === 'all' ? 'bg-white/10 text-white shadow' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
-            >
-              All
-            </button>
-            <button
-              onClick={() => { setFilterType('charging'); setSelectedLocation(null); }}
-              className={`flex-grow py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1.5 ${filterType === 'charging' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'}`}
-            >
-              <Zap size={14} /> Charge
-            </button>
-            <button
-              onClick={() => { setFilterType('spare'); setSelectedLocation(null); }}
-              className={`flex-grow py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1.5 ${filterType === 'spare' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'}`}
-            >
-              <Wrench size={14} /> Parts
-            </button>
-          </div>
+          {/* Filters */}
+          {activeTab === "filters" && (
+            <div className="p-5 border-b border-white/10">
+              <div className="flex gap-1.5 bg-black/40 p-1 rounded-xl border border-white/5">
+                {(["all", "charging", "spare"] as const).map((t) => (
+                  <button key={t} onClick={() => { setFilterType(t); setSelectedId(null); }}
+                    className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-1 ${
+                      filterType === t
+                        ? t === "charging" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                          : t === "spare"   ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                          : "bg-white/10 text-white"
+                        : "text-gray-400 hover:text-white hover:bg-white/5"
+                    }`}>
+                    {t === "charging" && <Zap size={12} />}
+                    {t === "spare"    && <Wrench size={12} />}
+                    {t === "all" ? "All" : t === "charging" ? "Charging" : "Spare Parts"}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
-          {/* Results List */}
-          <div className="p-6 space-y-3 relative">
-          <h3 className="text-sm font-medium text-gray-500 mb-3 uppercase tracking-wider">
-            {displayedLocations.length} Locations Found
-          </h3>
-
-          {displayedLocations.length > 0 ? (
-            displayedLocations.map(loc => (
-              <div
-                key={loc.id}
-                className={`p-4 rounded-xl cursor-pointer transition-all duration-300 ${selectedLocation?.id === loc.id ? 'bg-white/10 border-white/20 shadow-lg' : 'bg-white/5 border-transparent hover:bg-white/10'} border`}
-                onClick={() => setSelectedLocation(loc)}
-              >
-                <div className="font-medium text-white mb-1 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    {loc.type === 'charging' ? <Zap size={16} className="text-emerald-400" /> : <Wrench size={16} className="text-amber-400" />}
-                    <span className="truncate">{loc.name}</span>
-                  </div>
+          {/* Location list */}
+          <div className="p-5 space-y-2">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
+              {displayedLocations.length} location{displayedLocations.length !== 1 ? "s" : ""}
+            </p>
+            {displayedLocations.length === 0 ? (
+              <div className="text-center py-10 text-gray-600">
+                <MapPin className="mx-auto h-7 w-7 mb-2 opacity-30" />
+                <p className="text-sm">No locations match.</p>
+              </div>
+            ) : displayedLocations.map((loc) => (
+              <div key={loc.id} onClick={() => setSelectedId(loc.id === selectedId ? null : loc.id)}
+                className={`p-4 rounded-xl cursor-pointer transition-all border ${
+                  selectedId === loc.id
+                    ? "bg-white/10 border-white/20 shadow-lg"
+                    : "bg-white/5 border-transparent hover:bg-white/8"
+                }`}>
+                <div className="flex items-center gap-2 font-medium text-white mb-1">
+                  {loc.type === "charging"
+                    ? <Zap size={15} className="text-emerald-400 shrink-0" />
+                    : <Wrench size={15} className="text-amber-400 shrink-0" />}
+                  <span className="truncate text-sm">{loc.name}</span>
                 </div>
-                <div className="text-sm text-gray-400 mt-1.5 leading-relaxed">{loc.address}</div>
-                {activeRoute && (loc as any).onRoute && routeFilterActive && (
-                  <div className="mt-3 inline-block px-2.5 py-1 rounded bg-blue-500/20 text-blue-400 text-xs font-medium border border-blue-500/20">
-                    On your route
+                <p className="text-xs text-gray-400 ml-5">{loc.address}</p>
+
+                {selectedId === loc.id && (
+                  <div className="flex gap-2 mt-3 ml-5">
+                    <a href={`https://www.google.com/maps/dir/?api=1&destination=${loc.lat},${loc.lng}`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="flex-1 flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2 rounded-lg transition-colors">
+                      <Navigation size={13} /> Directions
+                    </a>
+                    <button onClick={() => handleShare(loc)}
+                      className="px-3 bg-white/10 hover:bg-white/15 text-gray-300 rounded-lg transition-colors">
+                      <Share2 size={14} />
+                    </button>
                   </div>
                 )}
               </div>
-            ))
-          ) : (
-            <div className="text-center py-12 text-gray-500">
-              <MapPin className="mx-auto h-8 w-8 mb-3 opacity-20" />
-              <p>No locations match your filters.</p>
-            </div>
-          )}
+            ))}
+          </div>
         </div>
+
+        {/* OSM attribution note */}
+        <div className="px-5 py-3 border-t border-white/5 text-[10px] text-gray-600">
+          Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" className="hover:text-gray-400 underline">OpenStreetMap</a> contributors · Routing by OSRM
         </div>
       </div>
 
-      {/* Map Area */}
-      <div className="flex-grow relative bg-[#1a1d24]">
-        {!apiKey ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center z-10 bg-[#0f1115]">
-            <div className="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 mb-6 border border-red-500/20">
-              <MapPin size={32} />
-            </div>
-            <h3 className="text-2xl font-bold mb-4">Google Maps API Key Required</h3>
-            <p className="text-gray-400 max-w-lg mb-6 leading-relaxed">
-              To view the interactive map and use the routing features, please add <code className="bg-black/50 px-2 py-1 rounded text-red-300 mx-1">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> to your <code className="bg-black/50 px-2 py-1 rounded mx-1">.env.local</code> file.
-            </p>
-          </div>
-        ) : (
-          <APIProvider apiKey={apiKey}>
-            <Map
-              defaultZoom={10}
-              defaultCenter={{ lat: 28.597934860102033, lng: 77.0866680728605 }}
-              mapId="DEMO_MAP_ID"
-              disableDefaultUI={true}
-              className={`w-full h-full absolute inset-0 ${selectingPoint ? 'cursor-crosshair' : ''}`}
-              onClick={(e) => {
-                if (!selectingPoint || !e.detail.latLng) return;
-                const coordStr = `${e.detail.latLng.lat.toFixed(5)}, ${e.detail.latLng.lng.toFixed(5)}`;
-                if (selectingPoint === 'origin') {
-                  setOriginInput(coordStr);
-                  setSelectingPoint(null);
-                } else if (selectingPoint === 'dest') {
-                  setDestInput(coordStr);
-                  setSelectingPoint(null);
-                }
-              }}
-            >
-              {activeRoute && (
-                <DirectionsRendererComponent
-                  origin={activeRoute.origin}
-                  destination={activeRoute.dest}
-                  onRouteCalculated={(success) => {
-                    if (!success) {
-                      // Fallback/Mock for demo if API route fails (e.g. quota, bad input)
-                      console.log("Using mock route filtering since API failed or no directions available.");
-                    }
-                  }}
-                />
-              )}
+      {/* ── Map ── */}
+      <div className="flex-1 relative">
+        {/* Leaflet CSS */}
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
-              {displayedLocations.map((loc) => (
-                <AdvancedMarker
-                  key={loc.id}
-                  position={loc.position}
-                  onClick={() => setSelectedLocation(loc)}
-                >
-                  <Pin
-                    background={loc.type === 'charging' ? '#10b981' : '#f59e0b'}
-                    borderColor={loc.type === 'charging' ? '#047857' : '#b45309'}
-                    glyphColor="#ffffff"
-                    scale={selectedLocation?.id === loc.id ? 1.3 : 1}
-                  />
-                </AdvancedMarker>
-              ))}
+        <div ref={containerRef} className="absolute inset-0 z-0" />
 
-              {selectedLocation && (
-                <InfoWindow
-                  position={selectedLocation.position}
-                  onCloseClick={() => setSelectedLocation(null)}
-                  className="rounded-xl overflow-hidden shadow-2xl"
-                >
-                  <div className="p-4 text-black min-w-[220px]">
-                    <h3 className="font-bold text-lg flex items-center gap-2 mb-1">
-                      {selectedLocation.type === 'charging' ? '⚡' : '🔧'} {selectedLocation.name}
-                    </h3>
-                    <p className="text-sm font-semibold text-gray-500 mb-3 uppercase tracking-wider">
-                      {selectedLocation.type === 'charging' ? 'Charging Station' : 'Spare Parts Hub'}
-                    </p>
-                    <p className="text-sm text-gray-700 mb-4">{selectedLocation.address}</p>
-                    <div className="flex items-center gap-2">
-                      <button 
-                        onClick={() => handleGetDirections(selectedLocation.position.lat, selectedLocation.position.lng)}
-                        className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm py-2.5 rounded-lg transition-colors font-semibold shadow-md shadow-blue-500/20"
-                      >
-                        <Navigation size={16} />
-                        Directions
-                      </button>
-                      <button 
-                        onClick={() => handleShareLocation(selectedLocation)}
-                        className="flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-700 p-2.5 rounded-lg transition-colors shadow-sm"
-                        title="Share Location"
-                      >
-                        <Share2 size={18} />
-                      </button>
-                    </div>
-                  </div>
-                </InfoWindow>
-              )}
-            </Map>
-          </APIProvider>
+        {/* Selecting point overlay */}
+        {selectingPoint && (
+          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+            className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-slate-900/90 backdrop-blur-sm text-white text-sm font-medium px-5 py-2.5 rounded-full border border-white/20 shadow-xl pointer-events-none">
+            Click anywhere on the map to set {selectingPoint === "origin" ? "starting point" : "destination"}
+          </motion.div>
         )}
       </div>
     </div>

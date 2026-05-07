@@ -44,20 +44,20 @@ export default function Header() {
       ? "bg-slate-900/90 backdrop-blur-md border-white/10 shadow-lg"
       : "bg-transparent border-transparent";
 
-  const linkBase = "text-sm lg:text-base font-medium px-3 py-2 rounded-md transition-colors";
+  const linkBase = "text-sm text-black lg:text-base font-medium px-3 py-2 rounded-md transition-colors";
 
-  // On dark pages before scroll: text is transparent (hidden), fades in on scroll
+  // On dark pages before scroll: soft dark text readable against the light hero gradient
   const linkColor = isLightPage
     ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
     : isScrolled
       ? "text-white/90 hover:text-white hover:bg-white/10"
-      : "text-transparent hover:text-white/20";
+      : "text-slate-700 hover:text-slate-900 hover:bg-black/5";
 
   const activeLinkColor = isLightPage
     ? "text-sky-600 bg-sky-50"
     : isScrolled
       ? "text-white bg-white/15"
-      : "text-transparent";
+      : "text-sky-700 bg-sky-50/80";
 
   const mobileLinkColor = isLightPage
     ? "text-slate-700 hover:text-slate-900"
@@ -71,7 +71,7 @@ export default function Header() {
     ? "text-slate-600 hover:text-slate-900"
     : isScrolled
       ? "text-white hover:text-white/80"
-      : "text-transparent";
+      : "text-slate-700 hover:text-slate-900";
 
   return (
     <header
@@ -112,7 +112,7 @@ export default function Header() {
               }
               className={`hidden md:block font-semibold px-5 py-2.5 rounded-full text-sm transition-all shadow-sm hover:shadow-md active:scale-95 ${
               !isLightPage && !isScrolled
-                ? "bg-transparent text-transparent pointer-events-none"
+                ? "bg-slate-900/10 hover:bg-slate-900/15 text-slate-800 border border-slate-300/60"
                 : "bg-sky-600 hover:bg-sky-700 text-white"
             }`}            >
               Get Assist
@@ -129,7 +129,7 @@ export default function Header() {
       </div>
 
       {/* Mobile Menu */}
-      <AnimatePresence>
+      {/* <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
             initial={{ opacity: 0, y: -12 }}
@@ -176,7 +176,7 @@ export default function Header() {
             </div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence> */}
     </header>
   );
 }

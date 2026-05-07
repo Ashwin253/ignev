@@ -4,6 +4,9 @@ import CatalogBrowser from "../components/CatalogBrowser";
 import { fetchEvListings } from "../lib/wordpress";
 import { getSiteContent } from "../lib/site-content";
 
+// ISR — revalidate every 60 s
+export const revalidate = 60;
+
 export const metadata = {
   title: "EV Catalog | EVPULSE",
   description: "Browse all electric vehicles — cars, scooters, and autos — with real specs, pricing, and launch dates.",

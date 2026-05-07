@@ -3,6 +3,9 @@ import Image from "next/image";
 import { ArrowLeft, Calendar, Rss } from "lucide-react";
 import { fetchWPUpdates } from "../lib/wordpress";
 
+// ISR — revalidate every 5 min
+export const revalidate = 300;
+
 export const metadata = {
   title: "EV Updates | EVPULSE",
   description: "Latest news, policy updates, and insights from the electric vehicle world.",

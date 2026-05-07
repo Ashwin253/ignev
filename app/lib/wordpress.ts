@@ -218,10 +218,15 @@ export async function fetchEvListings(first = 100): Promise<EvListing[]> {
       }
     }
   `;
-  const data = await gql<{ evlistings: { nodes: RawEvlistNode[] } }>(
-    query, { first }, { revalidate: 60 }
-  );
-  return data.evlistings.nodes.map(mapEvlistNode);
+  try {
+    const data = await gql<{ evlistings: { nodes: RawEvlistNode[] } }>(
+      query, { first }, { revalidate: 60 }
+    );
+    return data.evlistings.nodes.map(mapEvlistNode);
+  } catch (err) {
+    console.warn("[WP] fetchEvListings failed, returning []:", err);
+    return [];
+  }
 }
 
 export async function fetchEvListingBySlug(slug: string): Promise<EvListing | null> {
@@ -230,10 +235,15 @@ export async function fetchEvListingBySlug(slug: string): Promise<EvListing | nu
       evlisting(id: $slug, idType: SLUG) { ${EVLIST_FRAGMENT} }
     }
   `;
-  const data = await gql<{ evlisting: RawEvlistNode | null }>(
-    query, { slug }, { revalidate: 60 }
-  );
-  return data.evlisting ? mapEvlistNode(data.evlisting) : null;
+  try {
+    const data = await gql<{ evlisting: RawEvlistNode | null }>(
+      query, { slug }, { revalidate: 60 }
+    );
+    return data.evlisting ? mapEvlistNode(data.evlisting) : null;
+  } catch (err) {
+    console.warn("[WP] fetchEvListingBySlug failed:", err);
+    return null;
+  }
 }
 
 // ── Updates ───────────────────────────────────────────────────────────────────
@@ -275,10 +285,15 @@ export async function fetchWPUpdates(first = 10): Promise<WPUpdate[]> {
       }
     }
   `;
-  const data = await gql<{ updates: { nodes: RawUpdateNode[] } }>(
-    query, { first }, { revalidate: 300 }
-  );
-  return data.updates.nodes.map(mapUpdateNode);
+  try {
+    const data = await gql<{ updates: { nodes: RawUpdateNode[] } }>(
+      query, { first }, { revalidate: 300 }
+    );
+    return data.updates.nodes.map(mapUpdateNode);
+  } catch (err) {
+    console.warn("[WP] fetchWPUpdates failed, returning []:", err);
+    return [];
+  }
 }
 
 export async function fetchWPUpdateBySlug(slug: string): Promise<WPUpdate | null> {
@@ -287,10 +302,15 @@ export async function fetchWPUpdateBySlug(slug: string): Promise<WPUpdate | null
       update(id: $slug, idType: SLUG) { ${UPDATE_FRAGMENT} }
     }
   `;
-  const data = await gql<{ update: RawUpdateNode | null }>(
-    query, { slug }, { revalidate: 300 }
-  );
-  return data.update ? mapUpdateNode(data.update) : null;
+  try {
+    const data = await gql<{ update: RawUpdateNode | null }>(
+      query, { slug }, { revalidate: 300 }
+    );
+    return data.update ? mapUpdateNode(data.update) : null;
+  } catch (err) {
+    console.warn("[WP] fetchWPUpdateBySlug failed:", err);
+    return null;
+  }
 }
 
 // ── Leads ─────────────────────────────────────────────────────────────────────

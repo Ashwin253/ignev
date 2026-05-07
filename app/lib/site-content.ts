@@ -111,7 +111,12 @@ function loadLocalContent(): SiteContent {
 
 export const getSiteContent = cache(async (): Promise<SiteContent> => {
   if (contentSource() === "graphql") {
-    return loadFromWordPress();
+    try {
+      return await loadFromWordPress();
+    } catch (err) {
+      console.warn("[site-content] WordPress unavailable, falling back to local JSON:", err);
+      return loadLocalContent();
+    }
   }
   return loadLocalContent();
 });

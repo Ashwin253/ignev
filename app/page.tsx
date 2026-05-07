@@ -7,6 +7,9 @@ import ComingSoonCars from "./components/ComingSoonCars";
 import WhyEVPULSE from "./components/WhyIgnev";
 import LatestUpdates from "./components/LatestUpdates";
 
+// ISR — revalidate every 60 s so the build never blocks on a live network call
+export const revalidate = 60;
+
 export default async function Home() {
   const [content, updates, featured] = await Promise.all([
     getSiteContent(),

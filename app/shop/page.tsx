@@ -28,25 +28,25 @@ export default async function ShopPage() {
         {/* Header */}
         <div className="mb-12 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500 shadow-sm mb-4">
+            {/* <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500 shadow-sm mb-4">
               <ShoppingBag size={13} />
               {isWoo ? "WooCommerce Store" : "Accessories Shop"}
-            </span>
+            </span> */}
             <h1 className="text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
               EV Accessories
             </h1>
-            <p className="mt-3 text-slate-500 text-base max-w-xl">
+            {/* <p className="mt-3 text-slate-500 text-base max-w-xl">
               {isWoo
                 ? "Live products from your WooCommerce store — checkout happens right here, no redirects."
                 : "Premium EV accessories with secure on-page checkout."}
-            </p>
+            </p> */}
           </div>
-          <Link
+          {/* <Link
             href="/catalog"
             className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors shrink-0"
           >
             Browse EVs →
-          </Link>
+          </Link> */}
         </div>
 
         {/* WC not configured notice */}

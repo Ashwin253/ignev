@@ -80,7 +80,7 @@ async function loadFromWordPress(): Promise<SiteContent> {
       commercial: l.commercial,
     };
 
-    const bucket = bucketType(l.type);
+    const bucket = bucketType(l.types[0] ?? "");
     if (bucket === "car")         cars.push(product);
     else if (bucket === "two_wheeler") twoWheelers.push(product);
     else if (bucket === "auto")   autos.push(product);

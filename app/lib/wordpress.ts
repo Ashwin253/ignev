@@ -57,7 +57,7 @@ async function gql<T>(
     body: JSON.stringify({ query, variables }),
     next: options.revalidate !== undefined
       ? { revalidate: options.revalidate }
-      : { revalidate: 0 },
+      : { revalidate: 60 },   // default ISR — never block static builds
   });
 
   if (!res.ok) throw new Error(`GraphQL HTTP ${res.status}: ${await res.text()}`);
@@ -394,14 +394,16 @@ const BANNER_ACCENTS = [
  * Fetch hero banners from the Banner CPT.
  *
  * WP structure (per slide):
- *   - One post with title = slide CTA text (e.g. "Explore catalog")
- *     → featuredImage = desktop/horizontal image
- *     → content       = destination URL (optional)
+ *   - One post with title = CTA label (e.g. "Explore catalog")
+ *     → featuredImage  = desktop/horizontal image
+ *     → banner.link    = destination URL (ACF field)
  *   - One post with title = "Mobile"
- *     → featuredImage = mobile/vertical image
+ *     → featuredImage  = mobile/vertical image
  *
- * Posts are ordered by menuOrder. Desktop and Mobile posts are paired
- * by their position in the list (index 0 desktop + index 0 mobile = slide 1).
+ * NOTE: The ACF group is named "Banner" which conflicts with the CPT name,
+ * causing a DUPLICATE_TYPE warning in WPGraphQL. Rename the ACF field group
+ * to "BannerData" in ACF → Field Groups to resolve this. Until then only
+ * the `link` sub-field is accessible via the `banner` field.
  *
  * Falls back to an empty array so the Hero uses its hardcoded slides.
  */
@@ -412,8 +414,8 @@ export async function fetchHeroBanners(): Promise<HeroBanner[]> {
         nodes {
           id
           title
-          content
-          featuredImage { node { sourceUrl } }
+          banner { link }
+          featuredImage { node { sourceUrl altText } }
         }
       }
     }
@@ -423,8 +425,8 @@ export async function fetchHeroBanners(): Promise<HeroBanner[]> {
     type BannerNode = {
       id: string;
       title: string;
-      content: string | null;
-      featuredImage: { node: { sourceUrl: string } } | null;
+      banner: { link: string | null } | null;
+      featuredImage: { node: { sourceUrl: string; altText: string } } | null;
     };
 
     const data = await gql<{ banners: { nodes: BannerNode[] } }>(
@@ -441,11 +443,11 @@ export async function fetchHeroBanners(): Promise<HeroBanner[]> {
 
     return desktop.map((d, i): HeroBanner => {
       const mob = mobile[i] ?? null;
-      const rawHref = d.content?.replace(/<[^>]+>/g, "").trim() ?? "";
+      const rawLink = d.banner?.link?.trim() ?? "";
       return {
         id:              d.id,
         cta:             d.title,
-        href:            rawHref.startsWith("http") || rawHref.startsWith("/") ? rawHref : "/catalog",
+        href:            rawLink.startsWith("http") || rawLink.startsWith("/") ? rawLink : "/catalog",
         imageHorizontal: d.featuredImage?.node?.sourceUrl ?? "",
         imageVertical:   mob?.featuredImage?.node?.sourceUrl ?? d.featuredImage?.node?.sourceUrl ?? "",
         accent:          BANNER_ACCENTS[i % BANNER_ACCENTS.length],

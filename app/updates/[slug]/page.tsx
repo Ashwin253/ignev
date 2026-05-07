@@ -4,6 +4,15 @@ import Image from "next/image";
 import { ArrowLeft, Calendar } from "lucide-react";
 import { fetchWPUpdateBySlug, fetchWPUpdates } from "../../lib/wordpress";
 
+// Allow slugs not known at build time; revalidate every 60 s
+export const revalidate = 60;
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  const updates = await fetchWPUpdates(50);
+  return updates.map((u) => ({ slug: u.slug }));
+}
+
 export async function generateMetadata({
   params,
 }: {

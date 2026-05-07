@@ -277,8 +277,8 @@ export default function Hero({
                   <Image src={slides[activeSlide].imageHorizontal} alt="Banner" fill sizes="100vw" className="hidden object-cover md:block" priority />
                   <Image src={slides[activeSlide].imageVertical} alt="Banner" fill sizes="100vw" className="object-cover md:hidden" priority />
                 </div>
-                <div className={`absolute inset-0 bg-linear-to-r ${slides[activeSlide].accent}`} />
-                <div className="absolute inset-0 bg-black/20" />
+                {/* Subtle bottom gradient for CTA legibility only — no colour overlay */}
+                <div className="absolute inset-x-0 bottom-0 h-40 bg-linear-to-t from-black/50 to-transparent" />
 
                 {/* CTA */}
                 <div className="relative z-10 flex min-h-96 items-end md:min-h-[34rem]">

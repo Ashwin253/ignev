@@ -3,8 +3,9 @@ import Image from "next/image";
 import { ArrowLeft, Calendar, Rss } from "lucide-react";
 import { fetchWPUpdates } from "../lib/wordpress";
 
-// ISR — revalidate every 5 min
-export const revalidate = 300;
+// ISR — revalidate every 60 s; dynamicParams allows slugs not known at build time
+export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "EV Updates | EVPULSE",

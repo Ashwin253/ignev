@@ -129,7 +129,7 @@ export default function Header() {
       </div>
 
       {/* Mobile Menu */}
-      {/* <AnimatePresence>
+      <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
             initial={{ opacity: 0, y: -12 }}
@@ -176,7 +176,7 @@ export default function Header() {
             </div>
           </motion.div>
         )}
-      </AnimatePresence> */}
+      </AnimatePresence>
     </header>
   );
 }

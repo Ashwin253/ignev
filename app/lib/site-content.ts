@@ -39,8 +39,8 @@ export type SiteContent = {
 // ── Source selector ──────────────────────────────────────────────────────────
 
 function contentSource() {
-  // Set CONTENT_SOURCE=graphql in .env.local to pull from WordPress
-  return (process.env.CONTENT_SOURCE || "local").toLowerCase();
+  // Default to "graphql" in production — override with CONTENT_SOURCE=local for dev
+  return (process.env.CONTENT_SOURCE || "graphql").toLowerCase();
 }
 
 // ── WordPress / GraphQL loader ───────────────────────────────────────────────

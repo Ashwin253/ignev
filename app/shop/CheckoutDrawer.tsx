@@ -33,6 +33,14 @@ const INDIAN_STATES = [
   "Uttarakhand","West Bengal","Delhi","Jammu & Kashmir","Ladakh",
 ];
 
+declare global {
+  interface Window {
+    Razorpay?: new (options: Record<string, unknown>) => {
+      open: () => void;
+    };
+  }
+}
+
 export default function CheckoutDrawer({
   product,
   onClose,
@@ -40,7 +48,7 @@ export default function CheckoutDrawer({
   product: CheckoutProduct | null;
   onClose: () => void;
 }) {
-  const [step, setStep]       = useState<Step>("form");
+  const [step, setStep] = useState<Step>("form");
   const [errorMsg, setErrorMsg] = useState("");
   const [paymentId, setPaymentId] = useState("");
   const [form, setForm] = useState<CustomerForm>({
@@ -52,6 +60,28 @@ export default function CheckoutDrawer({
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
       setForm((prev) => ({ ...prev, [f]: e.target.value }));
 
+  const loadRazorpay = () =>
+    new Promise<boolean>((resolve) => {
+      if (window.Razorpay) {
+        resolve(true);
+        return;
+      }
+
+      const existing = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
+      if (existing) {
+        existing.addEventListener("load", () => resolve(true), { once: true });
+        resolve(true);
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.async = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!product) return;
@@ -59,22 +89,22 @@ export default function CheckoutDrawer({
     setErrorMsg("");
 
     try {
-      // 1. Create Cashfree + WC order server-side
       const orderRes = await fetch("/api/shop/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          productId:   product.id,
+          productId: product.id,
           productName: product.name,
-          price:       product.priceRaw,
-          customer:    form,
+          price: product.priceRaw,
+          customer: form,
         }),
       });
 
       const orderData = await orderRes.json() as {
-        paymentSessionId: string;
-        cfOrderId: string;
-        wcOrderId: number | null;
+        razorpayOrderId?: string;
+        amount?: number;
+        currency?: string;
+        keyId?: string;
         error?: string;
       };
 
@@ -82,48 +112,58 @@ export default function CheckoutDrawer({
         throw new Error(orderData.error ?? "Failed to create order.");
       }
 
-      // 2. Load Cashfree JS SDK dynamically
-      const { load } = await import("@cashfreepayments/cashfree-js");
-      const cashfree = await load({
-        mode: (process.env.NEXT_PUBLIC_CASHFREE_ENV ?? "sandbox") as "sandbox" | "production",
-      });
-
-      // 3. Open Cashfree checkout (drop-in)
-      const result = await cashfree.checkout({
-        paymentSessionId: orderData.paymentSessionId,
-        redirectTarget:   "_modal",   // opens as modal overlay, no page redirect
-      });
-
-      if (result.error) {
-        throw new Error(result.error.message ?? "Payment failed.");
+      if (!orderData.razorpayOrderId || !orderData.amount || !orderData.currency || !orderData.keyId) {
+        throw new Error("Incomplete Razorpay order response.");
       }
 
-      if (result.paymentDetails?.paymentStatus !== "SUCCESS") {
-        // User closed modal without paying
-        setStep("form");
-        return;
+      const scriptLoaded = await loadRazorpay();
+      if (!scriptLoaded || !window.Razorpay) {
+        throw new Error("Razorpay checkout failed to load.");
       }
 
-      // 4. Verify server-side
-      const verifyRes = await fetch("/api/shop/verify-payment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          cfOrderId: orderData.cfOrderId,
-          wcOrderId: orderData.wcOrderId,
-        }),
+      const razorpay = new window.Razorpay({
+        key: orderData.keyId,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: "EVPULSE",
+        description: product.name,
+        order_id: orderData.razorpayOrderId,
+        prefill: {
+          name: form.name,
+          email: form.email,
+          contact: form.phone,
+        },
+        notes: {
+          address: form.address,
+          city: form.city,
+          state: form.state,
+          pincode: form.pincode,
+        },
+        handler: async (response: {
+          razorpay_payment_id: string;
+          razorpay_order_id: string;
+          razorpay_signature: string;
+        }) => {
+          const verifyRes = await fetch("/api/shop/verify-payment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(response),
+          });
+
+          const verifyData = await verifyRes.json() as { ok?: boolean; paymentId?: string; error?: string };
+          if (!verifyRes.ok || !verifyData.ok) {
+            throw new Error(verifyData.error ?? "Verification failed.");
+          }
+
+          setPaymentId(verifyData.paymentId ?? response.razorpay_payment_id);
+          setStep("success");
+        },
+        modal: {
+          ondismiss: () => setStep("form"),
+        },
       });
 
-      const verifyData = await verifyRes.json() as {
-        ok?: boolean; paymentId?: string; error?: string;
-      };
-
-      if (!verifyRes.ok || !verifyData.ok) {
-        throw new Error(verifyData.error ?? "Verification failed.");
-      }
-
-      setPaymentId(verifyData.paymentId ?? orderData.cfOrderId);
-      setStep("success");
+      razorpay.open();
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : "Something went wrong.");
       setStep("error");
@@ -132,14 +172,12 @@ export default function CheckoutDrawer({
 
   return (
     <>
-      {/* Backdrop */}
       <div
         className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
         onClick={onClose}
         aria-hidden
       />
 
-      {/* Drawer */}
       <motion.aside
         initial={{ x: "100%" }}
         animate={{ x: 0 }}
@@ -147,7 +185,6 @@ export default function CheckoutDrawer({
         transition={{ type: "spring", damping: 28, stiffness: 280 }}
         className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-md bg-white shadow-2xl flex flex-col overflow-hidden"
       >
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
           <div className="flex items-center gap-3">
             <ShoppingBag size={20} className="text-sky-600" />
@@ -162,7 +199,6 @@ export default function CheckoutDrawer({
           </button>
         </div>
 
-        {/* Product summary */}
         {product && (
           <div className="flex items-center gap-4 px-6 py-4 bg-slate-50 border-b border-slate-100">
             <div className="relative h-16 w-16 rounded-xl overflow-hidden bg-white border border-slate-200 shrink-0">
@@ -182,11 +218,8 @@ export default function CheckoutDrawer({
           </div>
         )}
 
-        {/* Body */}
         <div className="flex-1 overflow-y-auto">
           <AnimatePresence mode="wait">
-
-            {/* Form */}
             {step === "form" && (
               <motion.form
                 key="form"
@@ -257,25 +290,23 @@ export default function CheckoutDrawer({
 
                 <button type="submit"
                   className="w-full mt-2 rounded-2xl bg-sky-600 hover:bg-sky-700 text-white font-bold py-4 text-sm transition-colors shadow-sm active:scale-[0.98]">
-                  Pay {product?.price} with Cashfree →
+                  Pay {product?.price} with Razorpay →
                 </button>
 
                 <p className="text-center text-xs text-slate-400 mt-2">
-                  Secured by Cashfree · UPI, Cards, Net Banking, Wallets
+                  Secured by Razorpay · UPI, Cards, Net Banking, Wallets
                 </p>
               </motion.form>
             )}
 
-            {/* Processing */}
             {step === "processing" && (
               <motion.div key="processing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="flex flex-col items-center justify-center h-64 gap-4 px-6">
                 <Loader2 size={36} className="text-sky-500 animate-spin" />
-                <p className="text-slate-600 font-medium">Opening payment…</p>
+                <p className="text-slate-600 font-medium">Opening payment...</p>
               </motion.div>
             )}
 
-            {/* Success */}
             {step === "success" && (
               <motion.div key="success" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
                 className="flex flex-col items-center justify-center gap-5 px-6 py-12 text-center">
@@ -284,7 +315,7 @@ export default function CheckoutDrawer({
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-slate-900 mb-1">Order placed!</h3>
-                  <p className="text-slate-500 text-sm">Payment confirmed. You'll receive a confirmation shortly.</p>
+                  <p className="text-slate-500 text-sm">Payment confirmed. You will receive a confirmation shortly.</p>
                   {paymentId && (
                     <p className="mt-3 text-xs text-slate-400 font-mono bg-slate-50 rounded-lg px-3 py-2">
                       Payment ID: {paymentId}
@@ -298,7 +329,6 @@ export default function CheckoutDrawer({
               </motion.div>
             )}
 
-            {/* Error */}
             {step === "error" && (
               <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="flex flex-col items-center justify-center gap-5 px-6 py-12 text-center">
@@ -315,7 +345,6 @@ export default function CheckoutDrawer({
                 </button>
               </motion.div>
             )}
-
           </AnimatePresence>
         </div>
       </motion.aside>

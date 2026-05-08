@@ -45,6 +45,7 @@ export default function OwnPage() {
   const [vehiclePrice, setVehiclePrice] = useState(String(defaults.vehiclePrice));
   const [downPaymentPercent, setDownPaymentPercent] = useState(String(defaults.downPaymentPercent));
   const [loanYears, setLoanYears] = useState(String(defaults.loanYears));
+  const [rateOfInterest, setRateOfInterest] = useState("");
   const [selectedBank, setSelectedBank] = useState(banks[0].name);
   const [selectedState, setSelectedState] = useState(stateCosts[0].state);
   const [mobileTab, setMobileTab] = useState<"emi" | "ride">("emi");
@@ -62,6 +63,8 @@ export default function OwnPage() {
   };
 
   const bank = banks.find((b) => b.name === selectedBank) ?? banks[0];
+  const customRate = Number(rateOfInterest);
+  const annualRate = Number.isFinite(customRate) && customRate > 0 ? customRate : bank.interest["3_year"];
   const state = stateCosts.find((s) => s.state === selectedState) ?? stateCosts[0];
   const fuelPrices = customFuelPricesEnabled
     ? {
@@ -75,8 +78,7 @@ export default function OwnPage() {
     const months = parsed.loanYears * 12;
     const downPayment = (parsed.vehiclePrice * parsed.downPaymentPercent) / 100;
     const principal = parsed.vehiclePrice - downPayment;
-    const emi1 = calcEmi(principal, bank.interest["1_year"], months);
-    const emi3 = calcEmi(principal, bank.interest["3_year"], months);
+    const emiCustom = calcEmi(principal, annualRate, months);
 
     const evMonthlyRunning = ((parsed.dailyDistanceKm * 30) * defaults.evEfficiencyKwhPer100Km * fuelPrices.electricityRsPerKwh) / 100;
     const petrolMonthlyRunning = ((parsed.dailyDistanceKm * 30) / defaults.petrolMileageKmpl) * fuelPrices.petrolRsPerL;
@@ -88,18 +90,17 @@ export default function OwnPage() {
       months,
       downPayment,
       principal,
-      emi1,
-      emi3,
+      emiCustom,
       evMonthlyRunning,
       petrolMonthlyRunning,
       dieselMonthlyRunning,
       maintenanceMonthly,
       depreciationMonthly,
-      totalEvMonthly: emi3 + evMonthlyRunning + maintenanceMonthly + depreciationMonthly,
-      totalPetrolMonthly: emi3 + petrolMonthlyRunning + maintenanceMonthly + depreciationMonthly,
-      totalDieselMonthly: emi3 + dieselMonthlyRunning + maintenanceMonthly + depreciationMonthly,
+      totalEvMonthly: emiCustom + evMonthlyRunning + maintenanceMonthly + depreciationMonthly,
+      totalPetrolMonthly: emiCustom + petrolMonthlyRunning + maintenanceMonthly + depreciationMonthly,
+      totalDieselMonthly: emiCustom + dieselMonthlyRunning + maintenanceMonthly + depreciationMonthly,
     };
-  }, [bank, fuelPrices.dieselRsPerL, fuelPrices.electricityRsPerKwh, fuelPrices.petrolRsPerL, parsed.dailyDistanceKm, parsed.downPaymentPercent, parsed.loanYears, parsed.vehiclePrice]);
+  }, [annualRate, fuelPrices.dieselRsPerL, fuelPrices.electricityRsPerKwh, fuelPrices.petrolRsPerL, parsed.dailyDistanceKm, parsed.downPaymentPercent, parsed.loanYears, parsed.vehiclePrice]);
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.18),_transparent_34%),linear-gradient(180deg,#0b1220_0%,#0f172a_60%,#111827_100%)] text-white">
@@ -135,6 +136,7 @@ export default function OwnPage() {
                 <Field label="Vehicle price" value={vehiclePrice} onChange={setVehiclePrice} />
                 <Field label="Down payment %" value={downPaymentPercent} onChange={setDownPaymentPercent} />
                 <Field label="Loan years" value={loanYears} onChange={setLoanYears} />
+                <Field label="Rate of interest (%)" value={rateOfInterest} onChange={setRateOfInterest} />
               </div>
 
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -166,8 +168,8 @@ export default function OwnPage() {
               </div>
 
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                <ResultCard title={`${bank.name} EMI for 1 year rate`} value={`Rs ${rupees(calculation.emi1)}/mo`} icon={<CalendarDays size={16} />} />
-                <ResultCard title={`${bank.name} EMI for 3 year rate`} value={`Rs ${rupees(calculation.emi3)}/mo`} icon={<ChevronDown size={16} className="rotate-[-90deg]" />} />
+                <ResultCard title={`${bank.name} EMI`} value={`Rs ${rupees(calculation.emiCustom)}/mo`} icon={<CalendarDays size={16} />} />
+                <ResultCard title="Applied rate" value={`${annualRate.toFixed(2)}%`} icon={<ChevronDown size={16} className="rotate-[-90deg]" />} />
               </div>
             </section>
 

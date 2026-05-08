@@ -4,23 +4,31 @@ import React, { useState, useEffect } from "react";
 import { X, Download, MonitorSmartphone } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+type BeforeInstallPromptEvent = Event & {
+  prompt: () => Promise<void> | void;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+};
+
 export default function AddToHomescreen() {
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
 
   useEffect(() => {
     // Check if already installed
-    const isAppStandalone = window.matchMedia("(display-mode: standalone)").matches || (window.navigator as any).standalone;
-    setIsStandalone(isAppStandalone);
-    
-    if (isAppStandalone) return;
+    const isAppStandalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      window.matchMedia("(display-mode: fullscreen)").matches ||
+      ("standalone" in window.navigator && Boolean(window.navigator.standalone));
+    const frame = window.requestAnimationFrame(() => setIsStandalone(isAppStandalone));
+
+    if (isAppStandalone) return () => window.cancelAnimationFrame(frame);
 
     // Check if iOS
     const userAgent = window.navigator.userAgent.toLowerCase();
     const isIosDevice = /iphone|ipad|ipod/.test(userAgent);
-    setIsIOS(isIosDevice);
+    const iosFrame = window.requestAnimationFrame(() => setIsIOS(isIosDevice));
 
     if (isIosDevice) {
       // Show iOS prompt after a delay if not dismissed
@@ -30,9 +38,9 @@ export default function AddToHomescreen() {
       }
     }
 
-    const handleBeforeInstallPrompt = (e: any) => {
+    const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
-      setDeferredPrompt(e);
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
       const hasDismissed = localStorage.getItem("a2hs-dismissed");
       if (!hasDismissed) {
         setTimeout(() => setIsVisible(true), 2000);
@@ -41,10 +49,29 @@ export default function AddToHomescreen() {
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
 
-    return () => {
-      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    const handleInstallRequest = () => {
+      if (isStandalone) return;
+      if (isIOS) {
+        setIsVisible(true);
+        return;
+      }
+      if (deferredPrompt) {
+        setIsVisible(true);
+        deferredPrompt.prompt();
+      } else {
+        setIsVisible(true);
+      }
     };
-  }, []);
+
+    window.addEventListener("install-request", handleInstallRequest as EventListener);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.cancelAnimationFrame(iosFrame);
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      window.removeEventListener("install-request", handleInstallRequest as EventListener);
+    };
+  }, [deferredPrompt, isIOS, isStandalone]);
 
   const handleInstall = async () => {
     if (deferredPrompt) {

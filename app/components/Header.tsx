@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, Home, LayoutGrid, Newspaper, MapPin, IndianRupee, ShoppingBag } from "lucide-react";
+import { Menu, X, Home, LayoutGrid, Newspaper, MapPin, IndianRupee, ShoppingBag, Download, Wrench, CarFront } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navLinks = [
@@ -14,11 +14,13 @@ const navLinks = [
   { name: "Updates", href: "/updates", icon: Newspaper },
   { name: "Map", href: "/map", icon: MapPin },
   { name: "Pricing", href: "/own", icon: IndianRupee },
+  { name: "Quick", href: "/service", icon: Wrench },
+  { name: "Ride", href: "/ride", icon: CarFront },
   { name: "Shop", href: "/shop", icon: ShoppingBag },
 ];
 
 // Pages that have a white/light background — nav text should be dark
-const lightBgRoutes = ["/catalog", "/product", "/updates", "/map", "/own", "/shop", "/team", "/mis"];
+const lightBgRoutes = ["/catalog", "/product", "/updates", "/map", "/own", "/service", "/ride", "/shop", "/team", "/mis"];
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -170,6 +172,13 @@ export default function Header() {
                 );
               })}
               <div className="pt-4 border-t border-slate-200/50">
+                <button
+                  onClick={() => window.dispatchEvent(new CustomEvent("install-request"))}
+                  className="w-full mb-3 bg-white hover:bg-slate-100 text-slate-900 font-semibold px-6 py-3 rounded-full transition-all shadow-sm flex items-center justify-center gap-2"
+                >
+                  <Download size={16} />
+                  Install now
+                </button>
                 <button
                   onClick={() => {
                     setMobileMenuOpen(false);

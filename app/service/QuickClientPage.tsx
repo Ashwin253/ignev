@@ -10,6 +10,12 @@ const serviceTypes = [
   { id: "service", title: "Service Assist", icon: Bike, detail: "Minor on-site service check and quick assistance." },
 ] as const;
 
+const vehicleTypes = [
+  "Two-wheeler",
+  "Three-wheeler",
+  "Four-wheeler",
+] as const;
+
 type LocationState = {
   lat: number | null;
   lng: number | null;
@@ -21,6 +27,7 @@ export default function QuickClientPage() {
   const [location, setLocation] = useState<LocationState>({ lat: null, lng: null, note: "" });
   const [loadingLocation, setLoadingLocation] = useState(false);
   const [status, setStatus] = useState("");
+  const [vehicleType, setVehicleType] = useState<(typeof vehicleTypes)[number]>("Two-wheeler");
   const [formState, handleSubmit] = useForm("mlgzwabg");
   const [preferredMode, setPreferredMode] = useState<"soon" | "schedule">("soon");
   const [preferredDate, setPreferredDate] = useState("");
@@ -135,6 +142,23 @@ export default function QuickClientPage() {
               </div>
             </div>
 
+            <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-3 sm:p-4">
+              <label className="grid gap-2">
+                <span className="text-xs uppercase tracking-wider text-slate-400">Vehicle type</span>
+                <select
+                  value={vehicleType}
+                  onChange={(e) => setVehicleType(e.target.value as (typeof vehicleTypes)[number])}
+                  className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white outline-none focus:border-sky-400/60"
+                >
+                  {vehicleTypes.map((type) => (
+                    <option key={type} value={type} className="text-slate-900">
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
             <div className="mt-6 rounded-2xl border border-white/10 bg-slate-950/70 p-3 sm:p-5">
               <div className="flex items-center gap-2 text-emerald-300">
                 <ShieldCheck size={18} />
@@ -143,6 +167,7 @@ export default function QuickClientPage() {
 
               <div className="mt-5 space-y-2 sm:space-y-3">
                 <SummaryRow label="Service" value={selectedService.title} />
+                <SummaryRow label="Vehicle" value={vehicleType} />
                 <SummaryRow
                   label="Location"
                   value={location.lat && location.lng ? "Captured" : "Pending"}
@@ -174,18 +199,18 @@ export default function QuickClientPage() {
                 <ValidationError prefix="Phone" field="phone" errors={formState.errors} />
                 <div className="rounded-2xl border border-white/10 bg-white/10 p-3">
                   <p className="text-xs uppercase tracking-wider text-slate-400">Preferred time</p>
-                  <div className="mt-3 flex gap-2">
+                  <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                     <button
                       type="button"
                       onClick={() => setPreferredMode("soon")}
-                      className={`flex-1 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${preferredMode === "soon" ? "border-emerald-400 bg-emerald-500/20 text-emerald-100" : "border-white/15 bg-white/10 text-slate-100 hover:bg-white/15"}`}
+                      className={`flex-1 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${preferredMode === "soon" ? "border-emerald-300 bg-emerald-500/30 text-emerald-50" : "border-slate-500/40 bg-slate-800/60 text-slate-100 hover:bg-slate-700/60"}`}
                     >
                       Under 1 hour
                     </button>
                     <button
                       type="button"
                       onClick={() => setPreferredMode("schedule")}
-                      className={`flex-1 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${preferredMode === "schedule" ? "border-sky-400 bg-sky-500/20 text-sky-100" : "border-white/15 bg-white/10 text-slate-100 hover:bg-white/15"}`}
+                      className={`flex-1 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${preferredMode === "schedule" ? "border-sky-300 bg-sky-500/30 text-sky-50" : "border-slate-500/40 bg-slate-800/60 text-slate-100 hover:bg-slate-700/60"}`}
                     >
                       Date & time
                     </button>

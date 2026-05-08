@@ -83,10 +83,10 @@ export default function QuickClientPage() {
                 <select
                   value={selected}
                   onChange={(e) => setSelected(e.target.value as (typeof serviceTypes)[number]["id"])}
-                  className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white outline-none focus:border-sky-400/60"
+                  className="rounded-2xl border border-white/10 bg-slate-100 px-4 py-3 text-sm text-slate-900 outline-none focus:border-sky-400/60"
                 >
                   {serviceTypes.map((service) => (
-                    <option key={service.id} value={service.id} className="text-slate-900">
+                    <option key={service.id} value={service.id}>
                       {service.title}
                     </option>
                   ))}
@@ -148,10 +148,10 @@ export default function QuickClientPage() {
                 <select
                   value={vehicleType}
                   onChange={(e) => setVehicleType(e.target.value as (typeof vehicleTypes)[number])}
-                  className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white outline-none focus:border-sky-400/60"
+                  className="rounded-2xl border border-white/10 bg-slate-100 px-4 py-3 text-sm text-slate-900 outline-none focus:border-sky-400/60"
                 >
                   {vehicleTypes.map((type) => (
-                    <option key={type} value={type} className="text-slate-900">
+                    <option key={type} value={type}>
                       {type}
                     </option>
                   ))}
@@ -222,14 +222,14 @@ export default function QuickClientPage() {
                         type="date"
                         value={preferredDate}
                         onChange={(e) => setPreferredDate(e.target.value)}
-                        className="w-full rounded-2xl border border-white/20 bg-white/90 px-4 py-3 text-sm text-slate-900 outline-none focus:border-sky-400/60"
+                        className="w-full rounded-2xl border border-slate-500/40 bg-slate-900 px-4 py-3 text-sm text-white outline-none focus:border-sky-400/60"
                       />
                       <input
                         name="preferredTime"
                         type="time"
                         value={preferredTime}
                         onChange={(e) => setPreferredTime(e.target.value)}
-                        className="w-full rounded-2xl border border-white/20 bg-white/90 px-4 py-3 text-sm text-slate-900 outline-none focus:border-sky-400/60"
+                        className="w-full rounded-2xl border border-slate-500/40 bg-slate-900 px-4 py-3 text-sm text-white outline-none focus:border-sky-400/60"
                       />
                     </div>
                   )}

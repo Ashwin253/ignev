@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap, Wrench, Navigation, MapPin, Search, Filter,
   Share2, X, Loader2, SlidersHorizontal, ChevronDown,
+  IndianRupee, Fuel,
 } from "lucide-react";
 
 // ── Location data ─────────────────────────────────────────────────────────────
@@ -88,8 +89,8 @@ function useLeafletMap(containerRef: React.RefObject<HTMLDivElement | null>) {
     mapRef.current?.panTo([lat, lng], { animate: true });
   }, []);
 
-  const drawRoute = useCallback(async (originStr: string, destStr: string): Promise<boolean> => {
-    if (!mapRef.current) return false;
+  const drawRoute = useCallback(async (originStr: string, destStr: string): Promise<{ ok: boolean; distanceKm?: number }> => {
+    if (!mapRef.current) return { ok: false };
     const L = await import("leaflet");
     const geocode = async (s: string): Promise<[number, number] | null> => {
       const m = s.match(/^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)$/);
@@ -104,23 +105,210 @@ function useLeafletMap(containerRef: React.RefObject<HTMLDivElement | null>) {
       } catch { return null; }
     };
     const [origin, dest] = await Promise.all([geocode(originStr), geocode(destStr)]);
-    if (!origin || !dest) return false;
+    if (!origin || !dest) return { ok: false };
     try {
       const url = `https://router.project-osrm.org/route/v1/driving/${origin[1]},${origin[0]};${dest[1]},${dest[0]}?overview=full&geometries=geojson`;
       const res = await fetch(url);
-      const data = await res.json() as { routes?: { geometry: { coordinates: [number, number][] } }[] };
-      if (!data.routes?.[0]) return false;
+      const data = await res.json() as { routes?: { geometry: { coordinates: [number, number][] }, distance?: number }[] };
+      if (!data.routes?.[0]) return { ok: false };
       routeRef.current?.remove();
       const coords = data.routes[0].geometry.coordinates.map(([lng, lat]) => [lat, lng] as [number, number]);
       routeRef.current = L.polyline(coords, { color: "#3b82f6", weight: 5, opacity: 0.85 }).addTo(mapRef.current!);
       mapRef.current!.fitBounds(routeRef.current.getBounds(), { padding: [60, 60] });
-      return true;
-    } catch { return false; }
+      return { ok: true, distanceKm: (data.routes[0].distance ?? 0) / 1000 };
+    } catch { return { ok: false }; }
   }, []);
 
   const clearRoute = useCallback(() => { routeRef.current?.remove(); routeRef.current = null; }, []);
 
   return { onClickRef, syncMarkers, panTo, drawRoute, clearRoute };
+}
+
+async function geocodeLocation(query: string): Promise<[number, number] | null> {
+  const m = query.match(/^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)$/);
+  if (m) return [parseFloat(m[1]), parseFloat(m[2])];
+  try {
+    const r = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&countrycodes=in`,
+      { headers: { "Accept-Language": "en", "User-Agent": "EVPULSE/1.0" } }
+    );
+    const data = await r.json() as { lat: string; lon: string }[];
+    return data[0] ? [parseFloat(data[0].lat), parseFloat(data[0].lon)] : null;
+  } catch {
+    return null;
+  }
+}
+
+function findLocalLocationMatches(query: string) {
+  const normalized = query.toLowerCase().trim();
+  if (!normalized) return [];
+  return allLocations
+    .filter((loc) =>
+      loc.name.toLowerCase().includes(normalized) ||
+      loc.address.toLowerCase().includes(normalized)
+    )
+    .slice(0, 4);
+}
+
+type MapSearchSuggestion = {
+  id: string;
+  name: string;
+  address: string;
+  lat: number;
+  lng: number;
+};
+
+function getMapSearchSuggestions(query: string) {
+  return findLocalLocationMatches(query).map((loc) => ({
+    id: loc.id,
+    name: loc.name,
+    address: loc.address,
+    lat: loc.lat,
+    lng: loc.lng,
+  }));
+}
+
+function CostCalculator({ routeDistanceKm }: { routeDistanceKm: number | null }) {
+  const distanceKm = routeDistanceKm ?? 0;
+  const [customPricesEnabled, setCustomPricesEnabled] = useState(false);
+  const [evRatePerKwh, setEvRatePerKwh] = useState("9");
+  const [petrolPricePerL, setPetrolPricePerL] = useState("104");
+  const [dieselPricePerL, setDieselPricePerL] = useState("92");
+  const evEfficiencyKwhPer100Km = 14;
+  const petrolMileageKmpl = 18;
+  const dieselMileageKmpl = 22;
+
+  const safeRate = (value: string, fallback: number) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+  };
+
+  const activeEvRate = customPricesEnabled ? safeRate(evRatePerKwh, 9) : 9;
+  const activePetrolPrice = customPricesEnabled ? safeRate(petrolPricePerL, 104) : 104;
+  const activeDieselPrice = customPricesEnabled ? safeRate(dieselPricePerL, 92) : 92;
+
+  const evCost = (distanceKm * evEfficiencyKwhPer100Km * activeEvRate) / 100;
+  const petrolCost = (distanceKm / petrolMileageKmpl) * activePetrolPrice;
+  const dieselCost = (distanceKm / dieselMileageKmpl) * activeDieselPrice;
+  const bestFossil = Math.min(petrolCost, dieselCost);
+  const savingsVsFossil = Math.max(0, bestFossil - evCost);
+
+  const fmt = (value: number) =>
+    new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(Math.max(0, Math.round(value)));
+
+  return (
+    <div className="p-5 space-y-4">
+      <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4">
+        <div className="flex items-center gap-2 text-amber-300 mb-2">
+          <IndianRupee size={16} />
+          <p className="text-sm font-semibold">Trip cost estimate</p>
+        </div>
+        <p className="text-xs text-amber-100/80 leading-5">
+          Based on the current route distance. Update the route first to compare EV charging with petrol or diesel running costs.
+        </p>
+      </div>
+
+      <div className="rounded-2xl border border-white/10 bg-black/25 p-4 space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-medium text-white">Use my prices</p>
+            <p className="text-xs text-gray-500 mt-1">Override the default rates with your own values.</p>
+          </div>
+          <button
+            onClick={() => setCustomPricesEnabled((prev) => !prev)}
+            className={`relative inline-flex h-7 w-12 items-center rounded-full border transition-colors ${
+              customPricesEnabled ? "bg-emerald-500 border-emerald-400/40" : "bg-white/10 border-white/10"
+            }`}
+            aria-pressed={customPricesEnabled}
+            aria-label="Toggle custom prices"
+          >
+            <span
+              className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                customPricesEnabled ? "translate-x-6" : "translate-x-1"
+              }`}
+            />
+          </button>
+        </div>
+
+        {customPricesEnabled && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <label className="space-y-1.5">
+              <span className="text-[11px] uppercase tracking-wider text-gray-500">EV price / kWh</span>
+              <input
+                value={evRatePerKwh}
+                onChange={(e) => setEvRatePerKwh(e.target.value)}
+                inputMode="decimal"
+                placeholder="9"
+                className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-emerald-400/60"
+              />
+            </label>
+            <label className="space-y-1.5">
+              <span className="text-[11px] uppercase tracking-wider text-gray-500">Petrol price / L</span>
+              <input
+                value={petrolPricePerL}
+                onChange={(e) => setPetrolPricePerL(e.target.value)}
+                inputMode="decimal"
+                placeholder="104"
+                className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-emerald-400/60"
+              />
+            </label>
+            <label className="space-y-1.5">
+              <span className="text-[11px] uppercase tracking-wider text-gray-500">Diesel price / L</span>
+              <input
+                value={dieselPricePerL}
+                onChange={(e) => setDieselPricePerL(e.target.value)}
+                inputMode="decimal"
+                placeholder="92"
+                className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-emerald-400/60"
+              />
+            </label>
+          </div>
+        )}
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+          <p className="text-xs text-gray-400 mb-1">Route distance</p>
+          <p className="text-2xl font-semibold text-white">{routeDistanceKm !== null ? `${distanceKm.toFixed(1)} km` : "0 km"}</p>
+        </div>
+        <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4">
+          <p className="text-xs text-emerald-100/70 mb-1">EV savings</p>
+          <p className="text-2xl font-semibold text-emerald-300">Rs {fmt(savingsVsFossil)}</p>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <div className="rounded-2xl border border-white/10 bg-black/30 p-4 flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-white">EV charging</p>
+            <p className="text-xs text-gray-500 mt-1">{evEfficiencyKwhPer100Km} kWh / 100 km at Rs {activeEvRate} per kWh</p>
+          </div>
+          <p className="text-lg font-semibold text-emerald-300">Rs {fmt(evCost)}</p>
+        </div>
+        <div className="rounded-2xl border border-white/10 bg-black/30 p-4 flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-white">Petrol</p>
+            <p className="text-xs text-gray-500 mt-1">{petrolMileageKmpl} km/l at Rs {activePetrolPrice} per litre</p>
+          </div>
+          <p className="text-lg font-semibold text-rose-300">Rs {fmt(petrolCost)}</p>
+        </div>
+        <div className="rounded-2xl border border-white/10 bg-black/30 p-4 flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-white">Diesel</p>
+            <p className="text-xs text-gray-500 mt-1">{dieselMileageKmpl} km/l at Rs {activeDieselPrice} per litre</p>
+          </div>
+          <p className="text-lg font-semibold text-sky-300">Rs {fmt(dieselCost)}</p>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex items-start gap-3">
+        <Fuel size={18} className="text-sky-400 mt-0.5 shrink-0" />
+        <p className="text-xs text-gray-400 leading-5">
+          This uses a simple distance-based estimate for quick comparison. If you want, we can later tune it with vehicle-specific mileage, battery size, and current fuel or electricity prices.
+        </p>
+      </div>
+    </div>
+  );
 }
 
 // ── Sidebar panel (shared between desktop sidebar and mobile sheet) ───────────
@@ -131,6 +319,7 @@ function SidebarContent({
   destInput, setDestInput,
   selectingPoint, setSelectingPoint,
   routeActive, routeLoading, routeError,
+  routeDistanceKm,
   onFindRoute, onClearRoute,
   filterType, setFilterType,
   selectedId, setSelectedId,
@@ -138,13 +327,14 @@ function SidebarContent({
   onRouteHere, onShare,
   onClose,
 }: {
-  activeTab: "route" | "filters";
-  setActiveTab: (t: "route" | "filters") => void;
+  activeTab: "route" | "filters" | "cost";
+  setActiveTab: (t: "route" | "filters" | "cost") => void;
   originInput: string; setOriginInput: (v: string) => void;
   destInput: string;   setDestInput:   (v: string) => void;
   selectingPoint: "origin" | "dest" | null;
   setSelectingPoint: (v: "origin" | "dest" | null) => void;
   routeActive: boolean; routeLoading: boolean; routeError: string;
+  routeDistanceKm: number | null;
   onFindRoute: () => void; onClearRoute: () => void;
   filterType: "all" | "charging" | "spare";
   setFilterType: (v: "all" | "charging" | "spare") => void;
@@ -159,15 +349,18 @@ function SidebarContent({
     <div className="flex flex-col h-full">
       {/* Header with optional close */}
       <div className="flex items-center border-b border-white/10 shrink-0">
-        {(["route", "filters"] as const).map((tab) => (
+        {(["route", "filters", "cost"] as const).map((tab) => (
           <button key={tab} onClick={() => setActiveTab(tab)}
-            className={`flex-1 py-4 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
+            className={`flex-1 py-3.5 text-xs font-medium flex items-center justify-center gap-1.5 transition-colors ${
               activeTab === tab
-                ? tab === "route" ? "text-blue-400 border-b-2 border-blue-400 bg-blue-500/5"
+                ? tab === "route"   ? "text-blue-400 border-b-2 border-blue-400 bg-blue-500/5"
+                  : tab === "cost"  ? "text-amber-400 border-b-2 border-amber-400 bg-amber-500/5"
                   : "text-emerald-400 border-b-2 border-emerald-400 bg-emerald-500/5"
                 : "text-gray-400 hover:text-white hover:bg-white/5"
             }`}>
-            {tab === "route" ? <><Navigation size={15} /> Route</> : <><Filter size={15} /> Filters</>}
+            {tab === "route"   && <><Navigation size={13} /> Filter</>}
+            {tab === "filters" && <><Filter size={13} /> Points</>}
+            {tab === "cost"    && <><IndianRupee size={13} /> Cost</>}
           </button>
         ))}
         {onClose && (
@@ -242,10 +435,10 @@ function SidebarContent({
           </div>
         )}
 
-        {/* Filters */}
+        {/* Points */}
         {activeTab === "filters" && (
           <div className="p-5 border-b border-white/10">
-            <p className="text-xs text-gray-500 uppercase tracking-wider mb-3">Station type</p>
+            <p className="text-xs text-gray-500 uppercase tracking-wider mb-3">Place type</p>
             <div className="flex gap-1.5 bg-black/40 p-1 rounded-xl border border-white/5">
               {(["all", "charging", "spare"] as const).map((t) => (
                 <button key={t} onClick={() => { setFilterType(t); setSelectedId(null); }}
@@ -265,15 +458,19 @@ function SidebarContent({
           </div>
         )}
 
-        {/* Location list */}
+        {/* ── Cost comparison tab ── */}
+        {activeTab === "cost" && <CostCalculator routeDistanceKm={routeDistanceKm} />}
+
+        {/* Location list — shown on route + filters tabs */}
+        {activeTab !== "cost" && (
         <div className="p-5 space-y-2">
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
-            {displayedLocations.length} location{displayedLocations.length !== 1 ? "s" : ""}
+            {displayedLocations.length} point{displayedLocations.length !== 1 ? "s" : ""}
           </p>
           {displayedLocations.length === 0 ? (
             <div className="text-center py-8 text-gray-600">
               <MapPin className="mx-auto h-7 w-7 mb-2 opacity-30" />
-              <p className="text-sm">No locations match.</p>
+              <p className="text-sm">No points match.</p>
             </div>
           ) : displayedLocations.map((loc) => (
             <div key={loc.id} onClick={() => setSelectedId(selectedId === loc.id ? null : loc.id)}
@@ -303,6 +500,7 @@ function SidebarContent({
             </div>
           ))}
         </div>
+        )}
       </div>
 
       <div className="px-5 py-3 border-t border-white/5 text-[10px] text-gray-600 shrink-0">
@@ -317,7 +515,7 @@ function SidebarContent({
 export default function FullMap() {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const [activeTab, setActiveTab]           = useState<"route" | "filters">("route");
+  const [activeTab, setActiveTab]           = useState<"route" | "filters" | "cost">("route");
   const [selectedId, setSelectedId]         = useState<string | null>(null);
   const [filterType, setFilterType]         = useState<"all" | "charging" | "spare">("all");
   const [originInput, setOriginInput]       = useState("");
@@ -326,7 +524,15 @@ export default function FullMap() {
   const [routeActive, setRouteActive]       = useState(false);
   const [routeLoading, setRouteLoading]     = useState(false);
   const [routeError, setRouteError]         = useState("");
+  const [routeDistanceKm, setRouteDistanceKm] = useState<number | null>(null);
+  const [mapSearchQuery, setMapSearchQuery]  = useState("");
+  const [mapSearchLoading, setMapSearchLoading] = useState(false);
+  const [mapSearchError, setMapSearchError]  = useState("");
   const [sheetOpen, setSheetOpen]           = useState(false); // mobile bottom sheet
+
+  const mapSearchSuggestions = mapSearchQuery.trim()
+    ? getMapSearchSuggestions(mapSearchQuery)
+    : [];
 
   const displayedLocations = allLocations.filter(
     (l) => filterType === "all" || l.type === filterType
@@ -365,15 +571,21 @@ export default function FullMap() {
     if (!originInput.trim() || !destInput.trim()) return;
     setRouteError("");
     setRouteLoading(true);
-    const ok = await drawRoute(originInput.trim(), destInput.trim());
+    const result = await drawRoute(originInput.trim(), destInput.trim());
     setRouteLoading(false);
-    if (ok) { setRouteActive(true); setSheetOpen(false); }
+    if (result.ok) {
+      setRouteActive(true);
+      setRouteDistanceKm(result.distanceKm ?? null);
+      setActiveTab("cost");
+      setSheetOpen(false);
+    }
     else setRouteError("Could not find a route. Try more specific addresses.");
   };
 
   const handleClearRoute = () => {
     clearRoute();
     setRouteActive(false);
+    setRouteDistanceKm(null);
     setOriginInput("");
     setDestInput("");
     setRouteError("");
@@ -390,12 +602,53 @@ export default function FullMap() {
     else { await navigator.clipboard.writeText(url); alert("Link copied!"); }
   };
 
+  const handleMapSearch = async () => {
+    const query = mapSearchQuery.trim();
+    if (!query) return;
+    const localMatch = findLocalLocationMatches(query)[0];
+    if (localMatch) {
+      panTo(localMatch.lat, localMatch.lng);
+      setMapSearchError("");
+      setSheetOpen(false);
+      return;
+    }
+    setMapSearchLoading(true);
+    setMapSearchError("");
+    const coords = await geocodeLocation(query);
+    setMapSearchLoading(false);
+    if (!coords) {
+      setMapSearchError("Location not found.");
+      return;
+    }
+    panTo(coords[0], coords[1]);
+    setSheetOpen(false);
+  };
+
+  const handleSuggestionPick = (loc: MapSearchSuggestion) => {
+    setMapSearchQuery(loc.name);
+    panTo(loc.lat, loc.lng);
+    setMapSearchError("");
+    setSheetOpen(false);
+  };
+
+  const applySearchToRoute = (loc: MapSearchSuggestion, target: "origin" | "dest") => {
+    const value = `${loc.lat.toFixed(5)}, ${loc.lng.toFixed(5)}`;
+    if (target === "origin") setOriginInput(value);
+    else setDestInput(value);
+    setMapSearchQuery(loc.name);
+    setActiveTab("route");
+    setSheetOpen(true);
+    setMapSearchError("");
+    panTo(loc.lat, loc.lng);
+  };
+
   const sidebarProps = {
     activeTab, setActiveTab,
     originInput, setOriginInput,
     destInput, setDestInput,
     selectingPoint, setSelectingPoint,
     routeActive, routeLoading, routeError,
+    routeDistanceKm,
     onFindRoute: handleFindRoute,
     onClearRoute: handleClearRoute,
     filterType, setFilterType,
@@ -414,9 +667,67 @@ export default function FullMap() {
       </div>
 
       {/* ── Map (full screen on mobile) ── */}
-      <div className="flex-1 relative">
+        <div className="flex-1 relative">
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
         <div ref={containerRef} className="absolute inset-0 z-0" />
+
+        {/* Quick map search */}
+        <div className="absolute top-4 left-4 z-20 md:left-6 md:top-6">
+          <div className="relative">
+            <div className="flex items-center gap-2 rounded-full border border-white/10 bg-slate-900/90 backdrop-blur-md shadow-[0_4px_20px_rgba(0,0,0,0.35)] px-3 py-2">
+              <MapPin size={16} className="text-sky-300 shrink-0" />
+              <input
+                value={mapSearchQuery}
+                onChange={(e) => setMapSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleMapSearch()}
+                placeholder="Search location"
+                className="w-36 sm:w-52 bg-transparent text-sm text-white placeholder:text-gray-500 focus:outline-none"
+              />
+              <button
+                onClick={handleMapSearch}
+                disabled={mapSearchLoading || !mapSearchQuery.trim()}
+                className="inline-flex items-center justify-center rounded-full bg-sky-600 hover:bg-sky-700 disabled:opacity-50 disabled:cursor-not-allowed text-white p-2 transition-colors"
+                aria-label="Search location"
+              >
+                {mapSearchLoading ? <Loader2 size={15} className="animate-spin" /> : <Search size={15} />}
+              </button>
+            </div>
+            {mapSearchSuggestions.length > 0 && (
+              <div className="absolute top-full mt-2 w-full overflow-hidden rounded-2xl border border-white/10 bg-slate-950/95 backdrop-blur-md shadow-2xl">
+                {mapSearchSuggestions.map((loc) => (
+                  <div key={loc.id} className="border-b border-white/5 last:border-b-0">
+                    <button
+                      onClick={() => handleSuggestionPick(loc)}
+                    className="w-full px-4 py-3 text-left hover:bg-white/5 transition-colors"
+                  >
+                      <p className="text-sm font-medium text-white">{loc.name}</p>
+                      <p className="text-xs text-gray-500 mt-1">{loc.address}</p>
+                    </button>
+                    <div className="flex gap-2 px-4 pb-3">
+                      <button
+                        onClick={() => applySearchToRoute(loc, "origin")}
+                        className="flex-1 rounded-lg border border-blue-500/20 bg-blue-500/10 px-3 py-2 text-[11px] font-semibold text-blue-300 hover:bg-blue-500/20 transition-colors"
+                      >
+                        Set as start
+                      </button>
+                      <button
+                        onClick={() => applySearchToRoute(loc, "dest")}
+                        className="flex-1 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-[11px] font-semibold text-emerald-300 hover:bg-emerald-500/20 transition-colors"
+                      >
+                        Set as destination
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          {mapSearchError && (
+            <p className="mt-2 text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-full px-3 py-1.5 w-fit">
+              {mapSearchError}
+            </p>
+          )}
+        </div>
 
         {/* Pick-point hint */}
         {selectingPoint && (
@@ -436,14 +747,26 @@ export default function FullMap() {
         )}
 
         {/* ── Mobile FAB ── */}
-        <button
-          onClick={() => setSheetOpen(true)}
-          className="md:hidden absolute bottom-6 left-4 z-20 flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-3 rounded-full shadow-[0_4px_20px_rgba(59,130,246,0.5)] transition-all active:scale-95"
-        >
-          <SlidersHorizontal size={18} />
-          <span className="text-sm">Route &amp; Filter</span>
-          {routeActive && <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />}
-        </button>
+        <div className="md:hidden absolute top-4 right-4 z-20 flex flex-col items-end gap-2">
+          <button
+            onClick={() => {
+              setActiveTab("cost");
+              setSheetOpen(true);
+            }}
+            className="flex items-center gap-2 bg-slate-900/90 backdrop-blur-md text-white font-semibold px-4 py-2.5 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.35)] border border-white/10 transition-all active:scale-95"
+          >
+            <IndianRupee size={17} className="text-amber-300" />
+            <span className="text-sm">Cost</span>
+          </button>
+          <button
+            onClick={() => setSheetOpen(true)}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2.5 rounded-full shadow-[0_4px_20px_rgba(59,130,246,0.5)] transition-all active:scale-95"
+          >
+            <SlidersHorizontal size={17} />
+            <span className="text-sm">Filter</span>
+            {routeActive && <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />}
+          </button>
+        </div>
       </div>
 
       {/* ── Mobile bottom sheet ── */}
@@ -481,3 +804,4 @@ export default function FullMap() {
     </div>
   );
 }
+

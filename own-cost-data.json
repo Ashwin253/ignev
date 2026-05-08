@@ -1,0 +1,25 @@
+{
+  "banks": [
+    { "name": "SBI","icon": "/banks/sbi.png", "interest": { "1_year": 8.75, "3_year": 9.15 } },
+    { "name": "HDFC Bank","icon": "/banks/hdfc.png", "interest": { "1_year": 9.10, "3_year": 9.45 } },
+    { "name": "ICICI Bank","icon": "/banks/icici.png", "interest": { "1_year": 9.25, "3_year": 9.60 } },
+    { "name": "AU Small Finance Bank","icon": "/banks/ausmall.png", "interest": { "1_year": 9.05, "3_year": 9.35 } }
+  ],
+  "stateCosts": [
+    { "state": "Delhi", "electricityRsPerKwh": 8.0, "petrolRsPerL": 94.72, "dieselRsPerL": 87.62 },
+    { "state": "Maharashtra", "electricityRsPerKwh": 9.5, "petrolRsPerL": 104.21, "dieselRsPerL": 92.53 },
+    { "state": "Karnataka", "electricityRsPerKwh": 8.75, "petrolRsPerL": 103.12, "dieselRsPerL": 89.51 },
+    { "state": "Tamil Nadu", "electricityRsPerKwh": 8.25, "petrolRsPerL": 101.45, "dieselRsPerL": 93.11 }
+  ],
+  "defaults": {
+    "vehiclePrice": 1500000,
+    "downPaymentPercent": 20,
+    "loanYears": 3,
+    "dailyDistanceKm": 35,
+    "evEfficiencyKwhPer100Km": 14,
+    "petrolMileageKmpl": 18,
+    "dieselMileageKmpl": 22,
+    "maintenancePerMonth": 1800,
+    "depreciationPerYearPercent": 12
+  }
+}

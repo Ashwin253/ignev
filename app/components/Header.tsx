@@ -3,21 +3,22 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Home, LayoutGrid, Newspaper, MapPin, IndianRupee, ShoppingBag } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navLinks = [
-  { name: "Home", href: "/" },
+  { name: "Home", href: "/", icon: Home },
   // { name: "Buy", href: "/#buy" },
   // { name: "Sell", href: "/#sell" },
-  { name: "Catalog", href: "/catalog" },
-  { name: "Updates", href: "/updates" },
-  { name: "Map", href: "/map" },
-  { name: "Shop", href: "/shop" },
+  { name: "Catalog", href: "/catalog", icon: LayoutGrid },
+  { name: "Updates", href: "/updates", icon: Newspaper },
+  { name: "Map", href: "/map", icon: MapPin },
+  { name: "Pricing", href: "/own", icon: IndianRupee },
+  { name: "Shop", href: "/shop", icon: ShoppingBag },
 ];
 
 // Pages that have a white/light background — nav text should be dark
-const lightBgRoutes = ["/catalog", "/product", "/updates", "/map", "/shop", "/team", "/mis"];
+const lightBgRoutes = ["/catalog", "/product", "/updates", "/map", "/own", "/shop", "/team", "/mis"];
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -98,7 +99,10 @@ export default function Header() {
                   href={link.href}
                   className={`${linkBase} ${isActive ? activeLinkColor : linkColor}`}
                 >
-                  {link.name}
+                  <span className="inline-flex items-center gap-1.5">
+                    <link.icon size={14} />
+                    {link.name}
+                  </span>
                 </Link>
               );
             })}
@@ -158,7 +162,10 @@ export default function Header() {
                         : mobileLinkColor
                     }`}
                   >
-                    {link.name}
+                    <span className="inline-flex items-center gap-2">
+                      <link.icon size={16} />
+                      {link.name}
+                    </span>
                   </Link>
                 );
               })}
@@ -180,3 +187,5 @@ export default function Header() {
     </header>
   );
 }
+
+

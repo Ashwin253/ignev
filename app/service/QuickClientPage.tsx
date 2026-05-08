@@ -23,16 +23,16 @@ type LocationState = {
 };
 
 export default function QuickClientPage() {
-  const [selected, setSelected] = useState<(typeof serviceTypes)[number]["id"]>("pickup");
+  const [selected, setSelected] = useState<(typeof serviceTypes)[number]["id"] | "">("");
   const [location, setLocation] = useState<LocationState>({ lat: null, lng: null, note: "" });
   const [loadingLocation, setLoadingLocation] = useState(false);
   const [status, setStatus] = useState("");
-  const [vehicleType, setVehicleType] = useState<(typeof vehicleTypes)[number]>("Two-wheeler");
+  const [vehicleType, setVehicleType] = useState<(typeof vehicleTypes)[number] | "">("");
   const [formState, handleSubmit] = useForm("mlgzwabg");
   const [preferredMode, setPreferredMode] = useState<"soon" | "schedule">("soon");
   const [preferredDate, setPreferredDate] = useState("");
   const [preferredTime, setPreferredTime] = useState("");
-  const selectedService = useMemo(() => serviceTypes.find((s) => s.id === selected) ?? serviceTypes[0], [selected]);
+  const selectedService = useMemo(() => serviceTypes.find((s) => s.id === selected) ?? null, [selected]);
 
   const requestCurrentLocation = () => {
     setStatus("");
@@ -85,6 +85,7 @@ export default function QuickClientPage() {
                   onChange={(e) => setSelected(e.target.value as (typeof serviceTypes)[number]["id"])}
                   className="rounded-2xl border border-white/10 bg-slate-100 px-4 py-3 text-sm text-slate-900 outline-none focus:border-sky-400/60"
                 >
+                  <option value="">Select service</option>
                   {serviceTypes.map((service) => (
                     <option key={service.id} value={service.id}>
                       {service.title}
@@ -150,6 +151,7 @@ export default function QuickClientPage() {
                   onChange={(e) => setVehicleType(e.target.value as (typeof vehicleTypes)[number])}
                   className="rounded-2xl border border-white/10 bg-slate-100 px-4 py-3 text-sm text-slate-900 outline-none focus:border-sky-400/60"
                 >
+                  <option value="">Select vehicle type</option>
                   {vehicleTypes.map((type) => (
                     <option key={type} value={type}>
                       {type}
@@ -166,8 +168,8 @@ export default function QuickClientPage() {
               </div>
 
               <div className="mt-5 space-y-2 sm:space-y-3">
-                <SummaryRow label="Service" value={selectedService.title} />
-                <SummaryRow label="Vehicle" value={vehicleType} />
+                <SummaryRow label="Service" value={selectedService?.title ?? "Select service"} />
+                <SummaryRow label="Vehicle" value={vehicleType || "Select vehicle"} />
                 <SummaryRow
                   label="Location"
                   value={location.lat && location.lng ? "Captured" : "Pending"}
@@ -235,7 +237,7 @@ export default function QuickClientPage() {
                   )}
                   <input name="preferredMode" type="hidden" value={preferredMode} />
                 </div>
-                <input name="service" type="hidden" value={selectedService.title} />
+                <input name="service" type="hidden" value={selectedService?.title ?? ""} />
                 <input name="location" type="hidden" value={location.lat && location.lng ? `${location.lat}, ${location.lng}` : ""} />
                 <input name="preferredDate" type="hidden" value={preferredDate} />
                 <button

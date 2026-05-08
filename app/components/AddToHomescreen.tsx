@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, Download, MonitorSmartphone } from "lucide-react";
+import { X, Download } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void> | void;
@@ -106,8 +107,14 @@ export default function AddToHomescreen() {
             <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-blue-500/10 opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
             
             {/* Icon */}
-            <div className="relative flex-shrink-0 bg-gradient-to-br from-emerald-400 to-emerald-600 p-3 rounded-xl shadow-lg">
-              <MonitorSmartphone className="w-6 h-6 text-white" />
+            <div className="relative flex-shrink-0 overflow-hidden rounded-xl shadow-lg ring-1 ring-white/10">
+              <Image
+                src="/images/android-chrome-512x512.png"
+                alt="EVPULSE app icon"
+                width={48}
+                height={48}
+                className="h-12 w-12 object-cover"
+              />
             </div>
             
             {/* Content */}

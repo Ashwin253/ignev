@@ -54,23 +54,41 @@ export default function QuickClientPage() {
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.2),_transparent_35%),linear-gradient(180deg,#07111f_0%,#0f172a_55%,#111827_100%)] text-white">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8">
           <p className="text-xs uppercase tracking-[0.35em] text-sky-300/80">QUICK SERVICE</p>
-          <h1 className="mt-3 text-3xl font-semibold sm:text-5xl">Request pickup, cleaning, or service in under 30 minutes</h1>
+          {/* <h1 className="mt-3 text-3xl font-semibold sm:text-5xl">Request pickup, cleaning, or service in under 30 minutes</h1> */}
           <p className="mt-4 max-w-3xl text-sm leading-6 text-slate-300">
             Tap your current location, choose a service, and send a quick request. We&apos;ll use your live location to help route the nearest team.
           </p>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <section className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-2xl backdrop-blur">
+        <div className="grid gap-6">
+          <section className="rounded-3xl border border-white/10 bg-white/5 p-4 sm:p-5 shadow-2xl backdrop-blur">
             <div className="flex items-center gap-2 text-sky-300">
               <Clock3 size={18} />
               <h2 className="text-lg font-semibold">Choose service</h2>
             </div>
 
-            <div className="mt-5 grid gap-3">
+            <div className="mt-5 md:hidden">
+              <label className="grid gap-2">
+                <span className="text-xs uppercase tracking-wider text-slate-400">Service type</span>
+                <select
+                  value={selected}
+                  onChange={(e) => setSelected(e.target.value as (typeof serviceTypes)[number]["id"])}
+                  className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white outline-none focus:border-sky-400/60"
+                >
+                  {serviceTypes.map((service) => (
+                    <option key={service.id} value={service.id} className="text-slate-900">
+                      {service.title}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <p className="mt-2 text-xs text-slate-400">{selectedService.detail}</p>
+            </div>
+
+            <div className="mt-5 hidden gap-3 md:grid">
               {serviceTypes.map((service) => {
                 const Icon = service.icon;
                 const active = selected === service.id;
@@ -94,7 +112,7 @@ export default function QuickClientPage() {
               })}
             </div>
 
-            <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-4">
+            <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-3 sm:p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm font-semibold text-white">Current location</p>
@@ -116,29 +134,30 @@ export default function QuickClientPage() {
                 </div>
               </div>
             </div>
-          </section>
 
-          <section className="rounded-3xl border border-white/10 bg-slate-950/70 p-5 shadow-2xl">
-            <div className="flex items-center gap-2 text-emerald-300">
-              <ShieldCheck size={18} />
-              <h2 className="text-lg font-semibold">Request summary</h2>
-            </div>
+            <div className="mt-6 rounded-2xl border border-white/10 bg-slate-950/70 p-3 sm:p-5">
+              <div className="flex items-center gap-2 text-emerald-300">
+                <ShieldCheck size={18} />
+                <h2 className="text-lg font-semibold">Request summary</h2>
+              </div>
 
-            <div className="mt-5 space-y-3">
-              <SummaryRow label="Service" value={selectedService.title} />
-              <SummaryRow
-                label="Location"
-                value={location.lat && location.lng ? "Captured" : "Pending"}
-              />
-              <SummaryRow
-                label="Next step"
-                value="Our representative will contact you"
-              />
-            </div>
+              <div className="mt-5 space-y-2 sm:space-y-3">
+                <SummaryRow label="Service" value={selectedService.title} />
+                <SummaryRow
+                  label="Location"
+                  value={location.lat && location.lng ? "Captured" : "Pending"}
+                />
+                <SummaryRow
+                  label="Next step"
+                  value="Our representative will contact you"
+                />
+              </div>
 
-            <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-4">
-              <p className="text-sm font-semibold text-white">Share contact details</p>
-              <form onSubmit={handleSubmit} className="mt-4 grid gap-3">
+              <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-3 sm:p-5">
+                <p className="text-xs uppercase tracking-wider text-slate-400">Contact details</p>
+                <div className="mt-3 rounded-2xl border border-white/10 bg-white/5 p-3 sm:p-4">
+                  <p className="text-sm font-semibold text-white">Share contact details</p>
+                  <form onSubmit={handleSubmit} className="mt-4 grid gap-3">
                 <input
                   name="name"
                   type="text"
@@ -209,13 +228,15 @@ export default function QuickClientPage() {
                 )}
               </form>
 
-              <a
-                href="tel:+918800000000"
-                className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-3.5 text-sm font-semibold text-slate-200 hover:bg-white/10 transition-colors"
-              >
-                <PhoneCall size={16} />
-                Call support
-              </a>
+                  <a
+                    href="tel:+918800000000"
+                    className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-3.5 text-sm font-semibold text-slate-200 hover:bg-white/10 transition-colors"
+                  >
+                    <PhoneCall size={16} />
+                    Call support
+                  </a>
+                </div>
+              </div>
             </div>
           </section>
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { X, Download } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -15,6 +15,7 @@ export default function AddToHomescreen() {
   const [isVisible, setIsVisible] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
+  const installButtonRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     // Check if already installed
@@ -56,12 +57,7 @@ export default function AddToHomescreen() {
         setIsVisible(true);
         return;
       }
-      if (deferredPrompt) {
-        setIsVisible(true);
-        deferredPrompt.prompt();
-      } else {
-        setIsVisible(true);
-      }
+      setIsVisible(true);
     };
 
     window.addEventListener("install-request", handleInstallRequest as EventListener);
@@ -74,6 +70,14 @@ export default function AddToHomescreen() {
     };
   }, [deferredPrompt, isIOS, isStandalone]);
 
+  useEffect(() => {
+    if (!isVisible || isIOS || isStandalone) return;
+    const frame = window.requestAnimationFrame(() => {
+      installButtonRef.current?.focus();
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [isVisible, isIOS, isStandalone]);
+
   const handleInstall = async () => {
     if (deferredPrompt) {
       deferredPrompt.prompt();
@@ -82,6 +86,8 @@ export default function AddToHomescreen() {
         setIsVisible(false);
       }
       setDeferredPrompt(null);
+    } else {
+      setIsVisible(true);
     }
   };
 
@@ -133,6 +139,7 @@ export default function AddToHomescreen() {
             <div className="flex items-center gap-2 relative z-10">
               {!isIOS && (
                 <button
+                  ref={installButtonRef}
                   onClick={handleInstall}
                   className="bg-white text-black hover:bg-emerald-500 hover:text-white text-xs font-semibold px-4 py-2 rounded-lg transition-all duration-300 shadow-md flex items-center gap-1.5"
                 >

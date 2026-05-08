@@ -113,6 +113,19 @@ export default function Header() {
           {/* CTA & Mobile Toggle */}
           <div className="flex items-center gap-3 z-50">
             <button
+              onClick={() => window.dispatchEvent(new CustomEvent("install-request"))}
+              className={`hidden md:block font-semibold px-5 py-2.5 rounded-full text-sm transition-all shadow-sm hover:shadow-md active:scale-95 ${
+                !isLightPage && !isScrolled
+                  ? "bg-slate-900/10 hover:bg-slate-900/15 text-slate-800 border border-slate-300/60"
+                  : "bg-white hover:bg-slate-100 text-slate-900 border border-slate-200"
+              }`}
+            >
+              <span className="inline-flex items-center gap-2">
+                <Download size={16} />
+                Install now
+              </span>
+            </button>
+            <button
               onClick={() =>
                 window.dispatchEvent(new CustomEvent("open-assist"))
               }

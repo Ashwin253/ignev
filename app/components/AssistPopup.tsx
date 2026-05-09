@@ -21,10 +21,10 @@ export default function AssistPopup() {
       {/* Floating Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-primary to-blue-600 text-white p-4 rounded-full shadow-[0_0_20px_rgba(0,123,255,0.5)] hover:scale-110 transition-transform flex items-center justify-center group"
+        className="fixed bottom-6 left-6 z-50 bg-gradient-to-r from-primary to-blue-600 text-white p-4 rounded-full shadow-[0_0_20px_rgba(0,123,255,0.5)] hover:scale-110 transition-transform flex items-center justify-center group"
       >
         <MessageCircle size={28} />
-        <span className="absolute right-full mr-4 bg-dark/90 backdrop-blur-sm border border-white/10 text-white px-3 py-1.5 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+        <span className="absolute left-full ml-4 bg-dark/90 backdrop-blur-sm border border-white/10 text-white px-3 py-1.5 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
           Need Help?
         </span>
       </button>

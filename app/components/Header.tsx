@@ -15,12 +15,12 @@ const navLinks = [
   { name: "Map", href: "/map", icon: MapPin },
   { name: "Pricing", href: "/own", icon: IndianRupee },
   { name: "Quick", href: "/service", icon: Wrench },
-  { name: "Ride", href: "/ride", icon: CarFront },
+  // { name: "Ride", href: "/ride", icon: CarFront },
   { name: "Shop", href: "/shop", icon: ShoppingBag },
 ];
 
 // Pages that have a white/light background — nav text should be dark
-const lightBgRoutes = ["/catalog", "/product", "/updates", "/map", "/own", "/service", "/ride", "/shop", "/team", "/mis"];
+const lightBgRoutes = ["/catalog", "/product", "/updates", "/map", "/own", "/service", "/shop", "/team", "/mis"];
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);

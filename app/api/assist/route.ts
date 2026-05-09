@@ -4,11 +4,11 @@ import { createWPLead, wpEnabled } from "@/app/lib/wordpress";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const name     = String(body?.name     ?? "").trim();
-    const phone    = String(body?.phone    ?? "").trim();
-    const pincode  = String(body?.pincode  ?? "").trim();
+    const name = String(body?.name ?? "").trim();
+    const phone = String(body?.phone ?? "").trim();
+    const pincode = String(body?.pincode ?? "").trim();
     const interest = String(body?.interest ?? "").trim();
-    const message  = String(body?.message  ?? "").trim();
+    const message = String(body?.message ?? "").trim();
 
     if (!name || !phone || !pincode || !interest) {
       return NextResponse.json(

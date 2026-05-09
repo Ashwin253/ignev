@@ -133,10 +133,34 @@ export default function OwnPage() {
             <section className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-2xl backdrop-blur">
               <div className="mb-4 flex items-center gap-2 text-sky-300"><Banknote size={18} /><h2 className="text-lg font-semibold">Loan + EMI</h2></div>
               <div className="grid gap-3 sm:grid-cols-2">
-                <Field label="Vehicle price" value={vehiclePrice} onChange={setVehiclePrice} />
-                <Field label="Down payment %" value={downPaymentPercent} onChange={setDownPaymentPercent} />
-                <Field label="Loan years" value={loanYears} onChange={setLoanYears} />
-                <Field label="Rate of interest (%)" value={rateOfInterest} onChange={setRateOfInterest} />
+                <Field 
+                  label="Vehicle price" 
+                  value={vehiclePrice} 
+                  onChange={setVehiclePrice} 
+                  placeholder={String(defaults.vehiclePrice)} 
+                  highlight={vehiclePrice !== String(defaults.vehiclePrice)}
+                />
+                <Field 
+                  label="Down payment %" 
+                  value={downPaymentPercent} 
+                  onChange={setDownPaymentPercent} 
+                  placeholder={String(defaults.downPaymentPercent)} 
+                  highlight={downPaymentPercent !== String(defaults.downPaymentPercent)}
+                />
+                <Field 
+                  label="Loan years" 
+                  value={loanYears} 
+                  onChange={setLoanYears} 
+                  placeholder={String(defaults.loanYears)} 
+                  highlight={loanYears !== String(defaults.loanYears)}
+                />
+                <Field 
+                  label="Rate of interest (%)" 
+                  value={rateOfInterest} 
+                  onChange={setRateOfInterest} 
+                  placeholder={String(bank.interest["3_year"])}
+                  highlight={rateOfInterest !== ""}
+                />
               </div>
 
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -229,10 +253,16 @@ export default function OwnPage() {
               </div>
 
               <div className="mt-4 grid gap-3 sm:grid-cols-4">
-                <Field label="Daily distance (km)" value={dailyDistanceKm} onChange={setDailyDistanceKm} />
-                <Field label="Electricity / kWh" value={customElectricityPrice} onChange={setCustomElectricityPrice} />
-                <Field label="Petrol / litre" value={customPetrolPrice} onChange={setCustomPetrolPrice} />
-                <Field label="Diesel / litre" value={customDieselPrice} onChange={setCustomDieselPrice} />
+                <Field 
+                  label="Daily distance (km)" 
+                  value={dailyDistanceKm} 
+                  onChange={setDailyDistanceKm} 
+                  placeholder={String(defaults.dailyDistanceKm)} 
+                  highlight={dailyDistanceKm !== String(defaults.dailyDistanceKm)}
+                />
+                <Field label="Electricity / kWh" value={customElectricityPrice} onChange={setCustomElectricityPrice} highlight={customElectricityPrice !== String(state.electricityRsPerKwh)} />
+                <Field label="Petrol / litre" value={customPetrolPrice} onChange={setCustomPetrolPrice} highlight={customPetrolPrice !== String(state.petrolRsPerL)} />
+                <Field label="Diesel / litre" value={customDieselPrice} onChange={setCustomDieselPrice} highlight={customDieselPrice !== String(state.dieselRsPerL)} />
               </div>
             </div>
 
@@ -251,15 +281,16 @@ export default function OwnPage() {
   );
 }
 
-function Field({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void; }) {
+function Field({ label, value, onChange, placeholder, highlight }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string; highlight?: boolean }) {
   return (
     <label className="space-y-1.5">
       <span className="text-[11px] uppercase tracking-wider text-slate-400">{label}</span>
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
         inputMode="decimal"
-        className="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none focus:border-sky-400/60"
+        className={`w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm outline-none transition-all focus:border-sky-400/60 placeholder:text-slate-500 ${highlight ? "text-sky-400 font-semibold" : "text-white"}`}
       />
     </label>
   );

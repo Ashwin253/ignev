@@ -25,6 +25,7 @@ function useLeafletMap(containerRef: React.RefObject<HTMLDivElement | null>) {
   const markersRef = useRef<Map<string, import("leaflet").Marker>>(new Map());
   const routeRef   = useRef<import("leaflet").Polyline | null>(null);
   const onClickRef = useRef<((lat: number, lng: number) => void) | null>(null);
+  const userMarkerRef = useRef<import("leaflet").Marker | null>(null);
 
   useEffect(() => {
     if (mapRef.current || !containerRef.current) return;
@@ -121,7 +122,27 @@ function useLeafletMap(containerRef: React.RefObject<HTMLDivElement | null>) {
 
   const clearRoute = useCallback(() => { routeRef.current?.remove(); routeRef.current = null; }, []);
 
-  return { onClickRef, syncMarkers, panTo, drawRoute, clearRoute };
+  const syncUserMarker = useCallback((lat: number | null, lng: number | null) => {
+    if (!mapRef.current) return;
+    import("leaflet").then((L) => {
+      if (userMarkerRef.current) {
+        userMarkerRef.current.remove();
+        userMarkerRef.current = null;
+      }
+      if (lat !== null && lng !== null) {
+        const icon = L.divIcon({
+          className: "",
+          html: `<div style="width:16px;height:16px;background:#3b82f6;border:3px solid white;border-radius:50%;box-shadow:0 0 10px rgba(59,130,246,0.6);animation:user-pulse 2s infinite"></div>
+                 <style>@keyframes user-pulse { 0% { box-shadow: 0 0 0 0 rgba(59,130,246,0.7); } 70% { box-shadow: 0 0 0 10px rgba(59,130,246,0); } 100% { box-shadow: 0 0 0 0 rgba(59,130,246,0); } }</style>`,
+          iconSize: [16, 16],
+          iconAnchor: [8, 8],
+        });
+        userMarkerRef.current = L.marker([lat, lng], { icon, zIndexOffset: 1000 }).addTo(mapRef.current!);
+      }
+    });
+  }, []);
+
+  return { onClickRef, syncMarkers, panTo, drawRoute, clearRoute, syncUserMarker };
 }
 
 async function geocodeLocation(query: string): Promise<[number, number] | null> {
@@ -169,7 +190,7 @@ function getMapSearchSuggestions(query: string) {
 }
 
 function CostCalculator({ routeDistanceKm }: { routeDistanceKm: number | null }) {
-  const distanceKm = routeDistanceKm ?? 0;
+  const distanceKm = routeDistanceKm ?? 10;
   const [customPricesEnabled, setCustomPricesEnabled] = useState(false);
   const [evRatePerKwh, setEvRatePerKwh] = useState("9");
   const [petrolPricePerL, setPetrolPricePerL] = useState("104");
@@ -204,7 +225,7 @@ function CostCalculator({ routeDistanceKm }: { routeDistanceKm: number | null })
           <p className="text-sm font-semibold">Trip cost estimate</p>
         </div>
         <p className="text-xs text-amber-100/80 leading-5">
-          Based on the current route distance. Update the route first to compare EV charging with petrol or diesel running costs.
+          Currently showing a default 10km estimate. Update the route to compare actual EV charging costs with petrol or diesel for your specific trip.
         </p>
       </div>
 
@@ -268,8 +289,8 @@ function CostCalculator({ routeDistanceKm }: { routeDistanceKm: number | null })
 
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
-          <p className="text-xs text-gray-400 mb-1">Route distance</p>
-          <p className="text-2xl font-semibold text-white">{routeDistanceKm !== null ? `${distanceKm.toFixed(1)} km` : "0 km"}</p>
+          <p className="text-xs text-gray-400 mb-1">{routeDistanceKm !== null ? "Route distance" : "Default estimate"}</p>
+          <p className="text-2xl font-semibold text-white">{distanceKm.toFixed(1)} km</p>
         </div>
         <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4">
           <p className="text-xs text-emerald-100/70 mb-1">EV savings</p>
@@ -324,7 +345,8 @@ function SidebarContent({
   filterType, setFilterType,
   selectedId, setSelectedId,
   displayedLocations,
-  onRouteHere, onShare,
+  onRouteHere, onRouteAndCost, onShare,
+  onPickMyLocation,
   onClose,
 }: {
   activeTab: "route" | "filters" | "cost";
@@ -342,11 +364,13 @@ function SidebarContent({
   setSelectedId: (v: string | null) => void;
   displayedLocations: Location[];
   onRouteHere: (loc: Location) => void;
+  onRouteAndCost: (loc: Location) => void;
   onShare: (loc: Location) => void;
+  onPickMyLocation: () => void;
   onClose?: () => void;
 }) {
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-h-0 overflow-hidden">
       {/* Header with optional close */}
       <div className="flex items-center border-b border-white/10 shrink-0">
         {(["route", "filters", "cost"] as const).map((tab) => (
@@ -370,17 +394,22 @@ function SidebarContent({
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto overscroll-contain">
         {/* Route planner */}
         {activeTab === "route" && (
           <div className="p-5 border-b border-white/10 space-y-4">
             <div>
               <div className="flex justify-between items-center mb-1.5">
                 <label className="text-xs text-gray-400">Starting point</label>
-                <button onClick={() => setSelectingPoint(selectingPoint === "origin" ? null : "origin")}
-                  className={`px-2 py-0.5 rounded text-xs transition-colors ${selectingPoint === "origin" ? "bg-blue-500/20 text-blue-400 border border-blue-500/30" : "bg-white/5 text-gray-400 hover:text-white"}`}>
-                  {selectingPoint === "origin" ? "Click map…" : "Pick on map"}
-                </button>
+                <div className="flex gap-1.5">
+                  <button onClick={onPickMyLocation} className="px-2 py-0.5 rounded text-xs bg-white/5 text-gray-400 hover:text-white transition-colors">
+                    Pick my location
+                  </button>
+                  <button onClick={() => setSelectingPoint(selectingPoint === "origin" ? null : "origin")}
+                    className={`px-2 py-0.5 rounded text-xs transition-colors ${selectingPoint === "origin" ? "bg-blue-500/20 text-blue-400 border border-blue-500/30" : "bg-white/5 text-gray-400 hover:text-white"}`}>
+                    {selectingPoint === "origin" ? "Click map…" : "Pick on map"}
+                  </button>
+                </div>
               </div>
               <div className="relative">
                 <div className={`absolute left-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full ${selectingPoint === "origin" ? "bg-blue-400 animate-pulse" : "bg-blue-500"}`} />
@@ -461,8 +490,8 @@ function SidebarContent({
         {/* ── Cost comparison tab ── */}
         {activeTab === "cost" && <CostCalculator routeDistanceKm={routeDistanceKm} />}
 
-        {/* Location list — shown on route + filters tabs */}
-        {activeTab !== "cost" && (
+        {/* Location list — shown only on the dedicated 'Points' tab */}
+        {activeTab === "filters" && (
         <div className="p-5 space-y-2">
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
             {displayedLocations.length} point{displayedLocations.length !== 1 ? "s" : ""}
@@ -484,7 +513,11 @@ function SidebarContent({
                 <div className="flex gap-2 mt-3 ml-5">
                   <button onClick={(e) => { e.stopPropagation(); onRouteHere(loc); }}
                     className="flex-1 flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2 rounded-lg transition-colors">
-                    <Navigation size={13} /> Route here
+                    <Navigation size={13} /> Route
+                  </button>
+                  <button onClick={(e) => { e.stopPropagation(); onRouteAndCost(loc); }}
+                    className="flex-1 flex items-center justify-center gap-1.5 bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 text-xs font-semibold py-2 rounded-lg border border-amber-500/20 transition-colors">
+                    <IndianRupee size={13} /> Cost
                   </button>
                   <a href={`https://www.google.com/maps/dir/?api=1&destination=${loc.lat},${loc.lng}`}
                     target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}
@@ -529,6 +562,7 @@ export default function FullMap() {
   const [mapSearchLoading, setMapSearchLoading] = useState(false);
   const [mapSearchError, setMapSearchError]  = useState("");
   const [sheetOpen, setSheetOpen]           = useState(false); // mobile bottom sheet
+  const [userLocation, setUserLocation]     = useState<[number, number] | null>(null);
 
   const mapSearchSuggestions = mapSearchQuery.trim()
     ? getMapSearchSuggestions(mapSearchQuery)
@@ -537,8 +571,13 @@ export default function FullMap() {
   const displayedLocations = allLocations.filter(
     (l) => filterType === "all" || l.type === filterType
   );
+  
+  const { onClickRef, syncMarkers, panTo, drawRoute, clearRoute, syncUserMarker } = useLeafletMap(containerRef);
 
-  const { onClickRef, syncMarkers, panTo, drawRoute, clearRoute } = useLeafletMap(containerRef);
+  // Sync user marker
+  useEffect(() => {
+    syncUserMarker(userLocation?.[0] ?? null, userLocation?.[1] ?? null);
+  }, [userLocation, syncUserMarker]);
 
   // Keep click handler ref current
   useEffect(() => {
@@ -556,9 +595,36 @@ export default function FullMap() {
   useEffect(() => {
     syncMarkers(displayedLocations, selectedId, (loc) => {
       setSelectedId((prev) => prev === loc.id ? null : loc.id);
+      setActiveTab("filters"); // Switch to points tab to show details
       setSheetOpen(true); // open sheet to show location details on mobile
     });
   }, [displayedLocations, selectedId, syncMarkers]);
+
+  // Lock body scroll when mobile sheet is open
+  useEffect(() => {
+    if (sheetOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+    return () => { document.body.style.overflow = "auto"; };
+  }, [sheetOpen]);
+
+  // Auto-fetch location on mount
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          setOriginInput(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+          setUserLocation([lat, lng]);
+          panTo(lat, lng);
+        },
+        () => {} // Ignore errors on auto-fetch
+      );
+    }
+  }, [panTo]);
 
   // Pan to selected
   useEffect(() => {
@@ -594,6 +660,30 @@ export default function FullMap() {
   const handleRouteHere = (loc: Location) => {
     setDestInput(`${loc.lat}, ${loc.lng}`);
     setActiveTab("route");
+    if (originInput.trim()) {
+      setTimeout(() => handleFindRoute(), 100);
+    }
+  };
+
+  const handleRouteAndCost = async (loc: Location) => {
+    setDestInput(`${loc.lat}, ${loc.lng}`);
+    if (!originInput.trim()) {
+      setActiveTab("route");
+      return;
+    }
+    setRouteError("");
+    setRouteLoading(true);
+    const result = await drawRoute(originInput.trim(), `${loc.lat}, ${loc.lng}`);
+    setRouteLoading(false);
+    if (result.ok) {
+      setRouteActive(true);
+      setRouteDistanceKm(result.distanceKm ?? null);
+      setActiveTab("cost");
+      setSheetOpen(false);
+    } else {
+      setActiveTab("route");
+      setRouteError("Could not find route to this location.");
+    }
   };
 
   const handleShare = async (loc: Location) => {
@@ -642,6 +732,17 @@ export default function FullMap() {
     panTo(loc.lat, loc.lng);
   };
 
+  const handlePickMyLocation = () => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition((pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      setOriginInput(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+      setUserLocation([lat, lng]);
+      panTo(lat, lng);
+    });
+  };
+
   const sidebarProps = {
     activeTab, setActiveTab,
     originInput, setOriginInput,
@@ -655,7 +756,9 @@ export default function FullMap() {
     selectedId, setSelectedId,
     displayedLocations,
     onRouteHere: handleRouteHere,
+    onRouteAndCost: handleRouteAndCost,
     onShare: handleShare,
+    onPickMyLocation: handlePickMyLocation,
   };
 
   return (
@@ -749,16 +852,6 @@ export default function FullMap() {
         {/* ── Mobile FAB ── */}
         <div className="md:hidden absolute top-4 right-4 z-20 flex flex-col items-end gap-2">
           <button
-            onClick={() => {
-              setActiveTab("cost");
-              setSheetOpen(true);
-            }}
-            className="flex items-center gap-2 bg-slate-900/90 backdrop-blur-md text-white font-semibold px-4 py-2.5 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.35)] border border-white/10 transition-all active:scale-95"
-          >
-            <IndianRupee size={17} className="text-amber-300" />
-            <span className="text-sm">Cost</span>
-          </button>
-          <button
             onClick={() => setSheetOpen(true)}
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2.5 rounded-full shadow-[0_4px_20px_rgba(59,130,246,0.5)] transition-all active:scale-95"
           >
@@ -788,11 +881,11 @@ export default function FullMap() {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#1a1d24] rounded-t-3xl shadow-2xl border-t border-white/10 flex flex-col"
-              style={{ maxHeight: "80vh" }}
+              className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#1a1d24] rounded-t-3xl shadow-2xl border-t border-white/10 flex flex-col overflow-hidden"
+              style={{ height: "80vh" }}
             >
               {/* Drag handle */}
-              <div className="flex justify-center pt-3 pb-1 shrink-0">
+              <div className="flex justify-center pt-3 pb-1 shrink-0 cursor-grab active:cursor-grabbing touch-none">
                 <div className="w-10 h-1 rounded-full bg-white/20" />
               </div>
 

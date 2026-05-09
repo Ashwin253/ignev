@@ -28,6 +28,7 @@ import Footer from "./components/Footer";
 import AssistPopup from "./components/AssistPopup";
 import EnquiryModal from "./components/EnquiryModal";
 import ClarityScript from "./components/ClarityScript";
+import FloatingMobileNav from "./components/FloatingMobileNav";
 
 export default function RootLayout({
   children,
@@ -49,6 +50,7 @@ export default function RootLayout({
         <AssistPopup />
         <EnquiryModal />
         <AddToHomescreen />
+        <FloatingMobileNav />
       </body>
     </html>
   );

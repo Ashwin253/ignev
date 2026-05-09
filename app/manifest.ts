@@ -1,8 +1,8 @@
 import { MetadataRoute } from 'next'
- 
+
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'EVPULSE - Drive Electric. Buy Smart.',
+    name: 'EVPLSE - Drive Electric. Buy Smart.',
     short_name: 'EVPULSE',
     description: 'Buy, rent, sell and service EV & Hybrid vehicles in one place. Your trusted EV marketplace in India.',
     start_url: '/',
@@ -11,9 +11,9 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: '#000000',
     icons: [
       {
-        src: '/globe.svg',
-        sizes: 'any',
-        type: 'image/svg+xml',
+        src: '/images/android-chrome-192x192.png',
+        sizes: '192x192',
+        type: 'image/png',
       },
     ],
   }

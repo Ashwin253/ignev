@@ -95,7 +95,7 @@ export default function CompareOwnershipView({
           <InputGroup label="Down Payment" value={`${downPaymentPercent}%`}>
             <input type="range" min="0" max="80" step="5" value={downPaymentPercent} onChange={(e) => setDownPaymentPercent(parseInt(e.target.value))} className="w-full accent-sky-600" />
           </InputGroup>
-          <InputGroup label="Interest Rate" value={`${interestRate.toFixed(1)}%`} highlight>
+          <InputGroup label="Interest Rate" value={`${interestRate.toFixed(1)}%`}>
             <input type="range" min="6" max="18" step="0.5" value={interestRate} onChange={(e) => setInterestRate(parseFloat(e.target.value))} className="w-full accent-violet-600" />
           </InputGroup>
           <InputGroup label="Daily Run" value={`${dailyDistance} km`}>

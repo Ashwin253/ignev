@@ -852,7 +852,15 @@ export default function FullMap() {
         {/* ── Mobile FAB ── */}
         <div className="md:hidden absolute top-4 right-4 z-20 flex flex-col items-end gap-2">
           <button
-            onClick={() => setSheetOpen(true)}
+            onClick={() => { setActiveTab("cost"); setSheetOpen(true); }}
+            className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-semibold px-3 py-2 rounded-full shadow-[0_4px_16px_rgba(245,158,11,0.5)] transition-all active:scale-95"
+            aria-label="Cost comparison"
+          >
+            <IndianRupee size={15} />
+            <span className="text-xs">Cost</span>
+          </button>
+          <button
+            onClick={() => { setActiveTab("route"); setSheetOpen(true); }}
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2.5 rounded-full shadow-[0_4px_20px_rgba(59,130,246,0.5)] transition-all active:scale-95"
           >
             <SlidersHorizontal size={17} />

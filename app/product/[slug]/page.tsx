@@ -11,6 +11,7 @@ import {
 import { getSiteContent } from "../../lib/site-content";
 import ProductGallery from "../../components/ProductGallery";
 import ProductMainUI from "../ProductMainUI";
+import ProductOwnershipSection from "../ProductOwnershipSection";
 import Image from "next/image";
 
 export const revalidate = 60;
@@ -107,6 +108,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <ProductMainUI item={item} slug={slug} />
           </div>
         </div>
+
+        {/* ── Ownership — full width below the 2-col grid ── */}
+        <ProductOwnershipSection item={item} />
 
         {/* Related */}
         {related.length > 0 && (

@@ -2,8 +2,6 @@
 
 import React, { useState } from "react";
 import BatterySelector from "./BatterySelector";
-import LoanCalculator from "../components/LoanCalculator";
-import CostEstimator from "../components/CostEstimator";
 import EnquiryTrigger from "./EnquiryTrigger";
 import CompareButton from "./CompareButton";
 import Link from "next/link";
@@ -104,27 +102,6 @@ export default function ProductMainUI({ item, slug }: { item: any, slug: string 
           className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
           <ArrowLeft size={15} /> Catalog
         </Link>
-      </div>
-
-      {/* ── Ownership Plan Integration ── */}
-      <div className="mt-20 pt-20 border-t border-slate-100 space-y-12">
-        <div className="text-center">
-          <h2 className="text-3xl font-black text-slate-900 md:text-4xl">Plan Your <span className="text-sky-600">Ownership</span></h2>
-          <p className="mt-3 text-slate-500 max-w-2xl mx-auto italic">Estimates for the <span className="font-bold text-slate-900">{variant?.capacity} kWh</span> variant</p>
-        </div>
-
-        <div className="grid gap-8 lg:grid-cols-2">
-          <LoanCalculator initialPrice={currentPrice} />
-          <CostEstimator 
-            initialPrice={currentPrice} 
-            efficiency={efficiency} 
-          />
-        </div>
-        
-        <p className="text-center text-[11px] text-slate-400 font-medium pb-8 border-b border-slate-100 max-w-2xl mx-auto">
-          * Prices and ownership estimates might change as per various reasons. 
-          <span className="font-bold text-sky-600"> Please Enquire for updated details</span> and exact on-road pricing in your city.
-        </p>
       </div>
     </div>
   );

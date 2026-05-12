@@ -1,3 +1,4 @@
+import React, { Suspense } from "react";
 import Link from "next/link";
 import { ArrowLeft, Zap } from "lucide-react";
 import CatalogBrowser from "../components/CatalogBrowser";
@@ -68,7 +69,9 @@ export default async function CatalogPage() {
           </div> */}
         </div>
 
-        <CatalogBrowser items={items} />
+        <Suspense fallback={<div className="h-96 flex items-center justify-center text-slate-400 font-medium">Loading catalog...</div>}>
+          <CatalogBrowser items={items} />
+        </Suspense>
       </div>
     </section>
   );

@@ -177,7 +177,6 @@ type RawEvlistNode = {
   conpoint:        string | null;
   colorTestText:   string | null;
   galleryImages:   string | null;
-  offervalue:      string | null;
   evlist: {
     brand: string | null;
     type: string[] | null;
@@ -208,7 +207,6 @@ const EVLIST_FRAGMENT = /* GraphQL */ `
   conpoint
   colorTestText
   galleryImages
-  offervalue
   evlist {
     brand
     type
@@ -239,7 +237,7 @@ function mapEvlistNode(n: RawEvlistNode): EvListing {
     cons:           parseJsonArray<string>(n.conpoint),
     colors:         parseJsonArray<string>(n.colorTestText),
     galleryImages:  parseJsonArray<string>(n.galleryImages),
-    offers:         parseJsonArray<EVOffer>(n.offervalue),
+    offers:         [],
     batteryTypes:   [],
   };
 }

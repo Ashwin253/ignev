@@ -1,5 +1,9 @@
 import { getSiteContent } from "./lib/site-content";
-import { fetchWPUpdates, fetchEvListings, fetchHeroBanners, formatLaunchDate, isLaunched, type EvListing } from "./lib/wordpress";
+import {
+  fetchHomepageData,
+  formatLaunchDate, isLaunched,
+  type EvListing,
+} from "./lib/wordpress";
 import Hero from "./components/Hero";
 import PopularBrands from "./components/PopularBrands";
 import ElectricCore3D from "./components/ElectricCore3D";
@@ -7,10 +11,9 @@ import ComingSoonCars, { type ComingSoonItem } from "./components/ComingSoonCars
 import WhyEVPULSE from "./components/WhyIgnev";
 import LatestUpdates from "./components/LatestUpdates";
 
-// ISR — revalidate every 60 s so the build never blocks on a live network call
+// ISR — revalidate every 60 s
 export const revalidate = 60;
 
-/** Map a WP EvListing with a future launchdate to the ComingSoonItem shape */
 function toComingSoonItem(l: EvListing): ComingSoonItem {
   return {
     name:    l.title,
@@ -24,37 +27,26 @@ function toComingSoonItem(l: EvListing): ComingSoonItem {
 }
 
 export default async function Home() {
-  const [content, updates, allListings, banners] = await Promise.all([
+  // Single GraphQL round-trip for all homepage data
+  const [{ listings, banners, updates }, content] = await Promise.all([
+    fetchHomepageData(),
     getSiteContent(),
-    fetchWPUpdates(3),
-    fetchEvListings(100),
-    fetchHeroBanners(),
   ]);
 
-  // Featured = latest 4 from WP (any status)
-  const featured = allListings.slice(0, 4);
+  const featured = listings.slice(0, 4);
 
-  // Coming soon = WP listings with a future launchdate, up to 8
-  const wpUpcoming: ComingSoonItem[] = allListings
+  const wpUpcoming: ComingSoonItem[] = listings
     .filter((l) => !isLaunched(l.launchdate))
     .slice(0, 8)
     .map(toComingSoonItem);
 
-  // Fall back to local comingsoon.json if WP has no upcoming listings
   const comingSoonItems: ComingSoonItem[] = wpUpcoming.length > 0
     ? wpUpcoming
     : [
         ...content.comingSoon.electric_cars.slice(0, 2),
         ...content.comingSoon.electric_two_wheelers.slice(0, 1),
         ...content.comingSoon.electric_autos.slice(0, 1),
-      ].map((c) => ({
-        name:    c.name,
-        brand:   c.brand,
-        type:    c.type,
-        pricing: c.pricing,
-        launch:  c.launch,
-        photo:   c.photo,
-      }));
+      ].map((c) => ({ name: c.name, brand: c.brand, type: c.type, pricing: c.pricing, launch: c.launch, photo: c.photo }));
 
   return (
     <>

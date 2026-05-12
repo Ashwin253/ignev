@@ -43,6 +43,7 @@ export default function CompareOwnershipView({
 }) {
   const [loanYears, setLoanYears] = useState(3);
   const [downPaymentPercent, setDownPaymentPercent] = useState(20);
+  const [interestRate, setInterestRate] = useState(9.5);
   const [dailyDistance, setDailyDistance] = useState(35);
   const [selectedState, setSelectedState] = useState(stateCosts[0].state);
 
@@ -64,7 +65,7 @@ export default function CompareOwnershipView({
       const price = priceVal * 100000;
       const downPayment = (price * downPaymentPercent) / 100;
       const principal = price - downPayment;
-      const emi = calcEmi(principal, 9.5, loanYears * 12);
+      const emi = calcEmi(principal, interestRate, loanYears * 12);
       
       const efficiency = variant?.range 
         ? (parseFloat(variant.capacity) / parseFloat(variant.range)) * 100 
@@ -81,18 +82,21 @@ export default function CompareOwnershipView({
         total: emi + runningCost
       };
     });
-  }, [products, loanYears, downPaymentPercent, dailyDistance, state, selectedVariants]);
+  }, [products, loanYears, downPaymentPercent, interestRate, dailyDistance, state, selectedVariants]);
 
   return (
     <div className="space-y-8">
       {/* Global Inputs */}
       <div className="rounded-3xl border border-slate-200 bg-slate-50/50 p-6 backdrop-blur-sm">
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          <InputGroup label="Loan Tenure" value={`${loanYears} Years`}>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
+          <InputGroup label="Loan Tenure" value={`${loanYears} yrs`}>
             <input type="range" min="1" max="7" value={loanYears} onChange={(e) => setLoanYears(parseInt(e.target.value))} className="w-full accent-sky-600" />
           </InputGroup>
           <InputGroup label="Down Payment" value={`${downPaymentPercent}%`}>
             <input type="range" min="0" max="80" step="5" value={downPaymentPercent} onChange={(e) => setDownPaymentPercent(parseInt(e.target.value))} className="w-full accent-sky-600" />
+          </InputGroup>
+          <InputGroup label="Interest Rate" value={`${interestRate.toFixed(1)}%`} highlight>
+            <input type="range" min="6" max="18" step="0.5" value={interestRate} onChange={(e) => setInterestRate(parseFloat(e.target.value))} className="w-full accent-violet-600" />
           </InputGroup>
           <InputGroup label="Daily Run" value={`${dailyDistance} km`}>
             <input type="range" min="5" max="200" step="5" value={dailyDistance} onChange={(e) => setDailyDistance(parseInt(e.target.value))} className="w-full accent-sky-600" />

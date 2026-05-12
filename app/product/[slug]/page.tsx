@@ -5,7 +5,7 @@ import {
   Tag, Zap,
 } from "lucide-react";
 import {
-  fetchEvListings, fetchEvListingBySlug,
+  fetchEvListingsREST, fetchEvListingBySlugREST, fetchEvListingBySlug,
   formatLaunchDate, isLaunched,
 } from "../../lib/wordpress";
 import { getSiteContent } from "../../lib/site-content";
@@ -18,7 +18,7 @@ export const dynamicParams = true;
 
 export async function generateStaticParams() {
   try {
-    const listings = await fetchEvListings(200);
+    const listings = await fetchEvListingsREST(200);
     if (listings.length) return listings.map((l) => ({ slug: l.slug }));
   } catch { /* fall through */ }
   const content = await getSiteContent();
@@ -45,8 +45,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const [item, allListings] = await Promise.all([
-    fetchEvListingBySlug(slug),
-    fetchEvListings(100),
+    fetchEvListingBySlugREST(slug),
+    fetchEvListingsREST(100),
   ]);
   if (!item) notFound();
 

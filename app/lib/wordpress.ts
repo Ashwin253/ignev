@@ -585,7 +585,82 @@ export async function fetchHeroBanners(): Promise<HeroBanner[]> {
     return [];
   }
 }
-// ── Offer Pages ──────────────────────────────────────────────────────────────
+// ── Batched homepage query ────────────────────────────────────────────────────
+// Combines evlistings + banners + updates into ONE GraphQL round-trip.
+
+export type HomepageData = {
+  listings: EvListing[];
+  banners: HeroBanner[];
+  updates: WPUpdate[];
+};
+
+export async function fetchHomepageData(): Promise<HomepageData> {
+  const query = /* GraphQL */ `
+    query HomepageData($first: Int!) {
+      evlistings(first: $first, where: { status: PUBLISH }) {
+        nodes { ${EVLIST_FRAGMENT} }
+      }
+      banners(first: 20, where: { orderby: { field: MENU_ORDER, order: ASC } }) {
+        nodes {
+          id title
+          bannerfield { link details }
+          featuredImage { node { sourceUrl altText } }
+        }
+      }
+      updates(first: 3, where: { orderby: { field: DATE, order: DESC } }) {
+        nodes { ${UPDATE_FRAGMENT} }
+      }
+    }
+  `;
+
+  type HomepageRaw = {
+    evlistings: { nodes: RawEvlistNode[] };
+    banners: {
+      nodes: Array<{
+        id: string;
+        title: string;
+        bannerfield: { link: string | null; details: string | null } | null;
+        featuredImage: { node: { sourceUrl: string; altText: string } } | null;
+      }>;
+    };
+    updates: { nodes: RawUpdateNode[] };
+  };
+
+  try {
+    const data = await gql<HomepageRaw>(query, { first: 100 }, { revalidate: 60 });
+
+    const listings = data.evlistings.nodes.map(mapEvlistNode);
+
+    const desktopBanners = data.banners.nodes.filter((n) => n.title.toLowerCase() !== "mobile");
+    const mobileBanners  = data.banners.nodes.filter((n) => n.title.toLowerCase() === "mobile");
+    const banners: HeroBanner[] = desktopBanners.map((d, i) => {
+      const mob = mobileBanners[i] ?? null;
+      const rawLink = d.bannerfield?.link?.trim() ?? "";
+      return {
+        id:              d.id,
+        cta:             d.title,
+        href:            rawLink.startsWith("http") || rawLink.startsWith("/") ? rawLink : "/catalog",
+        details:         d.bannerfield?.details?.trim() ?? "",
+        imageHorizontal: d.featuredImage?.node?.sourceUrl ?? "",
+        imageVertical:   mob?.featuredImage?.node?.sourceUrl ?? d.featuredImage?.node?.sourceUrl ?? "",
+        accent:          BANNER_ACCENTS[i % BANNER_ACCENTS.length],
+      };
+    });
+
+    const updates = data.updates.nodes.map(mapUpdateNode);
+
+    return { listings, banners, updates };
+  } catch (err) {
+    console.warn("[WP] fetchHomepageData failed, falling back:", err);
+    // Parallel fallback
+    const [listings, banners, updates] = await Promise.all([
+      fetchEvListings(100),
+      fetchHeroBanners(),
+      fetchWPUpdates(3),
+    ]);
+    return { listings, banners, updates };
+  }
+}
 
 const OFFER_PAGE_FRAGMENT = /* GraphQL */ `
   id

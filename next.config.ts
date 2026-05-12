@@ -1,7 +1,19 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Remove X-Powered-By header (minor security + saves bytes)
+  poweredByHeader: false,
+
+  // Enable gzip/brotli compression
+  compress: true,
+
   images: {
+    // Prefer AVIF then WebP — smaller files, same quality
+    formats: ["image/avif", "image/webp"],
+
+    // Aggressive caching — images don't change often
+    minimumCacheTTL: 60 * 60 * 24 * 7, // 7 days
+
     remotePatterns: [
       { protocol: "https", hostname: "imgd.aeplcdn.com" },
       { protocol: "https", hostname: "stimg.cardekho.com" },
@@ -12,10 +24,18 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "eulermotors.com" },
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "evplse.online" },
-      // WooCommerce product images (same domain or CDN)
-      { protocol: "https", hostname: "*.evplse.online" },
-      // Local fallback product images
       { protocol: "https", hostname: "m.media-amazon.com" },
+    ],
+  },
+
+  // Strict mode catches subtle bugs early
+  reactStrictMode: true,
+
+  // Experimental: faster builds, better tree-shaking
+  experimental: {
+    optimizePackageImports: [
+      "lucide-react",
+      "framer-motion",
     ],
   },
 };

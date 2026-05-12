@@ -7,6 +7,7 @@ import Link from "next/link";
 import {
   Search, Send, Truck, Zap, Gauge,
   CalendarDays, BadgeCheck, ChevronDown, X, SlidersHorizontal, ChevronUp, ArrowUpRight,
+  Share2, Check,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { triggerEnquiryModal } from "./EnquiryModal";
@@ -72,6 +73,18 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
   const launchedOnly = searchParams.get("avail") === "true";
 
   const [filtersOpen, setFiltersOpen] = useState(false); // mobile collapse
+  const [shared, setShared] = useState(false);
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      await navigator.share({ title: "EVPULSE Catalog", url }).catch(() => {});
+    } else {
+      await navigator.clipboard.writeText(url);
+      setShared(true);
+      setTimeout(() => setShared(false), 2000);
+    }
+  };
 
   // Helper to update URL params
   const updateFilters = (updates: Record<string, string | boolean | null>) => {
@@ -142,6 +155,14 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
           {filtersOpen
             ? <ChevronUp size={16} className="text-slate-400 shrink-0" />
             : <ChevronDown size={16} className="text-slate-400 shrink-0" />}
+          {/* Share — mobile */}
+          <button
+            onClick={(e) => { e.stopPropagation(); handleShare(); }}
+            className="ml-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 transition-colors"
+            aria-label="Share catalog"
+          >
+            {shared ? <Check size={13} className="text-emerald-500" /> : <Share2 size={13} className="text-slate-500" />}
+          </button>
         </div>
 
         {/* Filter body — always visible on md+, toggle on mobile */}
@@ -249,8 +270,17 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
               </button>
             )}
           </div>
-          <p className="text-xs text-slate-400 shrink-0 hidden md:block">
+          <p className="text-xs text-slate-400 shrink-0 hidden md:flex items-center gap-2">
             <span className="font-semibold text-slate-700">{filteredItems.length}</span> of {items.length}
+            <button
+              onClick={handleShare}
+              className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition-all"
+              aria-label="Share catalog"
+            >
+              {shared
+                ? <><Check size={12} className="text-emerald-500" /> Copied!</>
+                : <><Share2 size={12} /> Share</>}
+            </button>
           </p>
         </div>
         </div>{/* end collapsible */}

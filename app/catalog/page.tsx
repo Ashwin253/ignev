@@ -1,6 +1,6 @@
 import React, { Suspense } from "react";
 import Link from "next/link";
-import { ArrowLeft, Zap } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import CatalogBrowser from "../components/CatalogBrowser";
 import { fetchEvListings } from "../lib/wordpress";
 import { getSiteContent } from "../lib/site-content";
@@ -14,9 +14,9 @@ export const metadata = {
 };
 
 export default async function CatalogPage() {
-  // Try WP first; fall back to local JSON
   let items: import("../components/CatalogBrowser").CatalogItem[] = [];
 
+  // GraphQL is the primary source — it has brand/type/price from evlist ACF
   try {
     const listings = await fetchEvListings(200);
     if (listings.length) {
@@ -33,10 +33,9 @@ export default async function CatalogPage() {
         prices:     l.prices,
       }));
     }
-  } catch {
-    // WP unavailable — fall back to local JSON
-  }
+  } catch { /* fall through */ }
 
+  // Fall back to local JSON if GraphQL returned nothing
   if (!items.length) {
     const content = await getSiteContent();
     items = [

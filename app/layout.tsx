@@ -27,7 +27,7 @@ import ClarityScript from "./components/ClarityScript";
 import FloatingMobileNav from "./components/FloatingMobileNav";
 import { CompareProvider } from "./context/CompareContext";
 import CompareWidget from "./components/CompareWidget";
-
+import { Analytics } from "@vercel/analytics/next"
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -42,6 +42,7 @@ export default function RootLayout({
         <ClarityScript />
         <CompareProvider>
           <Header />
+          <Analytics />
           <main className="flex-grow">
             {children}
           </main>

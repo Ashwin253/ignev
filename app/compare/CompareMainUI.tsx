@@ -67,7 +67,7 @@ export default function CompareMainUI({
       format: (v: string[], p: any) => {
         const { variant, variantIndex } = getProductData(p);
         const rawPriceStr = v[0] || "10";
-        const priceParts = rawPriceStr.split(/[–-]/).map(s => s.trim());
+        const priceParts = rawPriceStr.split(/[–-]/).map((s: string) => s.trim());
         
         // Match logic with Ownership tab for consistency
         const specificPrice = cleanPrice(variant?.price || v[variantIndex] || priceParts[variantIndex] || priceParts[0]);

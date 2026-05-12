@@ -20,7 +20,7 @@ export default function ProductMainUI({ item, slug }: { item: any, slug: string 
   };
 
   const rawPriceStr = item.prices[0] || "10";
-  const priceParts = rawPriceStr.split(/[–-]/).map(s => s.trim());
+  const priceParts = rawPriceStr.split(/[–-]/).map((s: string) => s.trim());
   const specificPriceStr = cleanPrice(variant?.price || item.prices[selectedIndex] || priceParts[selectedIndex] || priceParts[0]);
   const priceVal = parseFloat(specificPriceStr) || 10;
   const currentPrice = priceVal * 100000;

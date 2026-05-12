@@ -9,6 +9,7 @@ type CompactProduct = {
   slug: string;
   title: string;
   brand: string;
+  photo: string | null;
   prices: string[];
   batteryVariants: any[];
 };
@@ -54,7 +55,7 @@ export default function CompareOwnershipView({
       
       const rawPriceStr = p.prices[0] || "10";
       // Split "14.74 - 19.94" into ["14.74", "19.94"]
-      const priceParts = rawPriceStr.split(/[–-]/).map(s => s.trim());
+      const priceParts = rawPriceStr.split(/[–-]/).map((s: string) => s.trim());
       
       // PRIORITIZE: 1. Variant specific price field, 2. Split price range, 3. Base price
       const specificPriceStr = variant?.price || p.prices[variantIndex] || priceParts[variantIndex] || priceParts[0];

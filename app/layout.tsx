@@ -29,6 +29,8 @@ import AssistPopup from "./components/AssistPopup";
 import EnquiryModal from "./components/EnquiryModal";
 import ClarityScript from "./components/ClarityScript";
 import FloatingMobileNav from "./components/FloatingMobileNav";
+import { CompareProvider } from "./context/CompareContext";
+import CompareWidget from "./components/CompareWidget";
 
 export default function RootLayout({
   children,
@@ -42,15 +44,18 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-[#0f1115] text-white">
         <ClarityScript />
-        <Header />
-        <main className="flex-grow">
-          {children}
-        </main>
-        <Footer />
-        <AssistPopup />
-        <EnquiryModal />
-        <AddToHomescreen />
-        <FloatingMobileNav />
+        <CompareProvider>
+          <Header />
+          <main className="flex-grow">
+            {children}
+          </main>
+          <Footer />
+          <CompareWidget />
+          <AssistPopup />
+          <EnquiryModal />
+          <AddToHomescreen />
+          <FloatingMobileNav />
+        </CompareProvider>
       </body>
     </html>
   );

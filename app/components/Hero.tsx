@@ -8,9 +8,10 @@ import {
   ArrowRight, CarFront, Bike, Truck, Sparkles, Send,
   ChevronLeft, ChevronRight, Star, BatteryCharging,
   MapPin, CalendarDays, BadgeCheck, CheckCircle2, Gauge, Info,
-  ChevronDown,
+  ChevronDown, ArrowUpRight, GitCompare,
 } from "lucide-react";
 import { triggerEnquiryModal } from "./EnquiryModal";
+import { useCompare } from "../context/CompareContext";
 import type { EvListing, HeroBanner } from "../lib/wordpress";
 import { formatLaunchDate, isLaunched } from "../lib/wordpress";
 
@@ -35,12 +36,19 @@ const heroSlides = [
   { cta: "Enquire now",       href: "/catalog", details: "", imageHorizontal: "/herobanner/banner-3-horizontal.jpg",  imageVertical: "/herobanner/banner-3-vertical.jpg"  },
 ];
 
+function toSlug(brand: string, name: string) {
+  return `${brand}-${name}`
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "");
+}
+
 // ── Featured card ─────────────────────────────────────────────────────────────
 
 function FeaturedCard({ listing, index }: { listing: EvListing; index: number }) {
   const launched = isLaunched(listing.launchdate);
   const launchLabel = formatLaunchDate(listing.launchdate);
-
+  const { isInCompare, addToCompare, removeFromCompare } = useCompare();
   return (
     <motion.article
       initial={{ opacity: 0, y: 14 }}
@@ -48,7 +56,7 @@ function FeaturedCard({ listing, index }: { listing: EvListing; index: number })
       transition={{ duration: 0.35, delay: index * 0.07 }}
       className="group w-[82vw] max-w-sm shrink-0 snap-start md:w-auto md:max-w-none md:shrink md:snap-none overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_12px_32px_rgba(15,23,42,0.06)] flex flex-col"
     >
-      <Link href={`/product/${listing.slug}`} className="block">
+      <Link href={`/product/${listing.slug}`} className="flex flex-col flex-1">
         <div className="relative aspect-4/3 overflow-hidden bg-slate-100">
           {listing.photo ? (
             <Image src={listing.photo} alt={listing.title} fill sizes="(max-width: 768px) 82vw, 25vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
@@ -57,50 +65,73 @@ function FeaturedCard({ listing, index }: { listing: EvListing; index: number })
           )}
           <div className="absolute inset-0 bg-linear-to-t from-slate-900/30 via-transparent to-transparent" />
           <span className={`absolute top-3 right-3 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold ${launched ? "bg-emerald-500 text-white" : "bg-amber-400 text-slate-900"}`}>
-            {launched ? <><BadgeCheck size={11} /> Available</> : <><CalendarDays size={11} /> {launchLabel}</>}
+            {launched ? <><BadgeCheck size={11} /> {launchLabel}</> : <><CalendarDays size={11} /> {launchLabel}</>}
           </span>
-        </div>
-      </Link>
 
-      <div className="flex flex-1 flex-col p-5 gap-3">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-600 truncate">{listing.brand}</p>
-            <h2 className="mt-0.5 text-lg font-semibold text-slate-900 line-clamp-1">{listing.title}</h2>
-          </div>
-          {listing.types[0] && (
-            <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-medium text-slate-600">{listing.types[0]}</span>
-          )}
-        </div>
-
-        <div className="flex flex-wrap gap-2 text-xs text-slate-500">
-          {listing.prices.length > 0 && <span className="font-semibold text-slate-800">₹{listing.prices.join("–")} L</span>}
-          {listing.realWorldRange !== null && <span className="inline-flex items-center gap-1"><MapPin size={11} className="text-sky-500" />{listing.realWorldRange} km</span>}
-          {listing.batteryCapacity !== null && <span className="inline-flex items-center gap-1"><BatteryCharging size={11} className="text-emerald-500" />{listing.batteryCapacity} kWh</span>}
-          {listing.topSpeed !== null && <span className="inline-flex items-center gap-1"><Gauge size={11} className="text-amber-500" />{listing.topSpeed} km/h</span>}
-        </div>
-
-        {listing.commercial && (
-          <span className="inline-flex w-fit items-center gap-1 rounded-full bg-orange-50 border border-orange-200 px-2 py-0.5 text-[10px] font-semibold text-orange-700">
-            <Truck size={10} /> Commercial
-          </span>
-        )}
-
-        {listing.pros[0] && (
-          <p className="flex items-start gap-1.5 text-xs text-slate-600 line-clamp-2">
-            <CheckCircle2 size={13} className="text-emerald-500 mt-0.5 shrink-0" />{listing.pros[0]}
-          </p>
-        )}
-
-        <div className="mt-auto pt-1">
+          {/* Compare Toggle */}
           <button
-            onClick={() => triggerEnquiryModal(`${listing.brand} ${listing.title}`)}
-            className="w-full bg-slate-900 hover:bg-sky-600 text-white py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 active:scale-95 group/btn"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              isInCompare(listing.slug) ? removeFromCompare(listing.slug) : addToCompare(listing.slug);
+            }}
+            className={`absolute bottom-3 left-3 flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-md transition-all duration-300 ${
+              isInCompare(listing.slug)
+                ? "bg-sky-600 text-white shadow-lg"
+                : "bg-white/70 text-slate-600 hover:bg-white"
+            }`}
           >
-            Enquire <Send size={12} className="group-hover/btn:translate-x-0.5 transition-transform" />
+            <GitCompare size={14} />
           </button>
         </div>
-      </div>
+
+        <div className="flex flex-1 flex-col p-5 gap-3">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-600 truncate">{listing.brand}</p>
+              <h2 className="mt-0.5 text-lg font-semibold text-slate-900 line-clamp-1">{listing.title}</h2>
+            </div>
+            {listing.types[0] && (
+              <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-medium text-slate-600">{listing.types[0]}</span>
+            )}
+          </div>
+
+          <div className="flex flex-wrap gap-2 text-xs text-slate-500">
+            {listing.prices.length > 0 && <span className="font-semibold text-slate-800">₹{listing.prices.join("–")} L</span>}
+            
+            {listing.topSpeed !== null && (
+              <span className="inline-flex items-center gap-1">
+                <Gauge size={11} className="text-amber-500" />
+                {listing.topSpeed} km/h
+              </span>
+            )}
+          </div>
+
+          {listing.commercial && (
+            <span className="inline-flex w-fit items-center gap-1 rounded-full bg-orange-50 border border-orange-200 px-2 py-0.5 text-[10px] font-semibold text-orange-700">
+              <Truck size={10} /> Commercial
+            </span>
+          )}
+
+          {listing.pros[0] && (
+            <p className="flex items-start gap-1.5 text-xs text-slate-600 line-clamp-2">
+              <CheckCircle2 size={13} className="text-emerald-500 mt-0.5 shrink-0" />{listing.pros[0]}
+            </p>
+          )}
+
+          <div className="mt-auto pt-1 flex gap-2">
+            <div className="flex-1 flex items-center justify-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-xl text-[11px] font-bold transition-colors">
+              Details <ArrowUpRight size={11} />
+            </div>
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); triggerEnquiryModal(`${listing.brand} ${listing.title}`); }}
+              className="flex-1 bg-slate-900 hover:bg-sky-600 text-white py-2.5 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1.5 transition-colors active:scale-95 group/btn"
+            >
+              Enquire <Send size={11} className="group-hover/btn:translate-x-0.5 transition-transform" />
+            </button>
+          </div>
+        </div>
+      </Link>
     </motion.article>
   );
 }
@@ -108,6 +139,7 @@ function FeaturedCard({ listing, index }: { listing: EvListing; index: number })
 // ── Standard product card ─────────────────────────────────────────────────────
 
 function ProductCard({ product, index }: { product: Product; index: number }) {
+  const { isInCompare, addToCompare, removeFromCompare } = useCompare();
   return (
     <motion.article
       initial={{ opacity: 0, y: 14 }}
@@ -115,28 +147,50 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
       transition={{ duration: 0.35, delay: index * 0.05 }}
       className="group flex h-full w-[82vw] max-w-sm shrink-0 snap-start overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_12px_32px_rgba(15,23,42,0.06)] md:w-auto md:max-w-none md:shrink md:snap-none flex-col"
     >
-      <div className="relative aspect-4/3 overflow-hidden bg-slate-100">
-        <Image src={product.photo} alt={product.name} fill sizes="(max-width: 768px) 82vw, 20vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
-        <div className="absolute inset-0 bg-linear-to-t from-slate-900/30 via-transparent to-transparent" />
-      </div>
-      <div className="flex flex-1 flex-col space-y-3 p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-600">{product.brand}</p>
-            <h2 className="mt-1 text-lg font-semibold text-slate-900 line-clamp-1">{product.name}</h2>
-          </div>
-          <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-medium text-slate-600 shrink-0">{product.type}</span>
-        </div>
-        <p className="text-sm font-medium text-slate-600">{product.pricing}</p>
-        <div className="mt-auto pt-2">
+      <Link href={`/product/${product.slug ?? toSlug(product.brand, product.name)}`} className="flex flex-col flex-1">
+        <div className="relative aspect-4/3 overflow-hidden bg-slate-100">
+          <Image src={product.photo} alt={product.name} fill sizes="(max-width: 768px) 82vw, 20vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
+          <div className="absolute inset-0 bg-linear-to-t from-slate-900/30 via-transparent to-transparent" />
+
+          {/* Compare Toggle */}
           <button
-            onClick={() => triggerEnquiryModal(`${product.brand} ${product.name}`)}
-            className="w-full bg-slate-900 hover:bg-sky-600 text-white py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 active:scale-95 group/btn"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const slug = product.slug ?? toSlug(product.brand, product.name);
+              isInCompare(slug) ? removeFromCompare(slug) : addToCompare(slug);
+            }}
+            className={`absolute bottom-3 left-3 flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-md transition-all duration-300 ${
+              isInCompare(product.slug ?? toSlug(product.brand, product.name))
+                ? "bg-sky-600 text-white shadow-lg"
+                : "bg-white/70 text-slate-600 hover:bg-white"
+            }`}
           >
-            Enquire <Send size={12} className="group-hover/btn:translate-x-0.5 transition-transform" />
+            <GitCompare size={14} />
           </button>
         </div>
-      </div>
+        <div className="flex flex-1 flex-col space-y-3 p-5">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-600">{product.brand}</p>
+              <h2 className="mt-1 text-lg font-semibold text-slate-900 line-clamp-1">{product.name}</h2>
+            </div>
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-medium text-slate-600 shrink-0">{product.type}</span>
+          </div>
+          <p className="text-sm font-medium text-slate-600">{product.pricing}</p>
+          <div className="mt-auto pt-2 flex gap-2">
+            <div className="flex-1 flex items-center justify-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-xl text-[11px] font-bold transition-colors">
+              Details <ArrowUpRight size={11} />
+            </div>
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); triggerEnquiryModal(`${product.brand} ${product.name}`); }}
+              className="flex-1 bg-slate-900 hover:bg-sky-600 text-white py-2.5 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1.5 transition-colors active:scale-95 group/btn"
+            >
+              Enquire <Send size={11} className="group-hover/btn:translate-x-0.5 transition-transform" />
+            </button>
+          </div>
+        </div>
+      </Link>
     </motion.article>
   );
 }

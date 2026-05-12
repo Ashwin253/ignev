@@ -4,9 +4,8 @@
  * Confirmed schema (introspected live):
  *
  * evlistings → Evlisting
- *   evlist (ACF): brand, type[],  price[], batteryCapacity(Float),
- *                 chargingSpeed(Float), realWorldRange(Float), launchdate(String|null),
- *                 proone, protwo, prothree, conone, contwo, conthree
+ *   evlist (ACF): brand, type[], price[], topSpeed(Float), commercial(Boolean),
+ *                 launchdate(String|null)
  *   featuredImage.node.sourceUrl
  *
  * updates → Update
@@ -79,7 +78,7 @@ export function formatLaunchDate(launchdate: string | null | undefined): string 
   if (!launchdate) return "Available Now";
   const d = new Date(launchdate);
   if (isNaN(d.getTime())) return "Available Now";
-  return d.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+  return d <= new Date() ? "Available Now" : "Coming Soon";
 }
 
 /** True when the vehicle is already launched (no future date). */
@@ -97,18 +96,40 @@ export type EvListing = {
   slug: string;
   date: string;
   photo: string;
-  // ACF evlist fields
+  // evlist ACF fields
   brand: string;
-  types: string[];          // e.g. ["4 wheeler"]
-  prices: string[];         // e.g. ["10-15"]
-  batteryCapacity: number | null;
-  chargingSpeed: number | null;
-  realWorldRange: number | null;
+  types: string[];
+  prices: string[];
   topSpeed: number | null;
   commercial: boolean;
   launchdate: string | null;
-  pros: string[];           // up to 3, nulls filtered out
-  cons: string[];           // up to 3, nulls filtered out
+  // OpenFields top-level fields (JSON strings parsed client-side)
+  batteryVariants: BatteryVariant[];
+  pros: string[];
+  cons: string[];
+  colors: string[];           // hex codes e.g. ["673ab7", "b7673a"]
+  galleryImages: string[];    // full image URLs
+  offers: EVOffer[];
+  // Legacy / optional
+  batteryCapacity?: number | null;
+  chargingSpeed?: number | null;
+  realWorldRange?: number | null;
+  batteryTypes: string[];
+};
+
+export type BatteryVariant = {
+  capacity: string;   // kWh
+  range: string;      // km
+  charge: string;     // hours
+  price?: string;     // Lakhs
+};
+
+export type EVOffer = {
+  image: string;
+  bank?: string;
+  city?: string;
+  brand?: string;
+  title?: string;
 };
 
 export type WPUpdate = {
@@ -131,6 +152,16 @@ export type WPLead = {
   createdAt: string;
 };
 
+export type WPOfferPage = {
+  id: string;
+  databaseId: number;
+  title: string;
+  detail: string;
+  location: string;
+  options: string[];
+  image: string;
+};
+
 // ── Raw ACF node type ─────────────────────────────────────────────────────────
 
 type RawEvlistNode = {
@@ -140,24 +171,30 @@ type RawEvlistNode = {
   slug: string;
   date: string;
   featuredImage: { node: { sourceUrl: string } } | null;
+  // OpenFields top-level JSON string fields
+  batteryVariants: string | null;
+  proPoint:        string | null;
+  conpoint:        string | null;
+  colorTestText:   string | null;
+  galleryImages:   string | null;
+  offervalue:      string | null;
   evlist: {
     brand: string | null;
     type: string[] | null;
     price: string[] | null;
-    batteryCapacity: number | null;
-    chargingSpeed: number | null;
-    realWorldRange: number | null;
     topSpeed: number | null;
     commercial: boolean | null;
     launchdate: string | null;
-    proone: string | null;
-    protwo: string | null;
-    prothree: string | null;
-    conone: string | null;
-    contwo: string | null;
-    conthree: string | null;
   } | null;
 };
+
+// Safe JSON parse helper
+function parseJsonArray<T>(raw: any): T[] {
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw as T[];
+  if (typeof raw !== "string") return [];
+  try { return JSON.parse(raw) as T[]; } catch { return []; }
+}
 
 const EVLIST_FRAGMENT = /* GraphQL */ `
   id
@@ -166,45 +203,44 @@ const EVLIST_FRAGMENT = /* GraphQL */ `
   slug
   date
   featuredImage { node { sourceUrl } }
+  batteryVariants
+  proPoint
+  conpoint
+  colorTestText
+  galleryImages
+  offervalue
   evlist {
     brand
     type
     price
-    batteryCapacity
-    chargingSpeed
-    realWorldRange
     topSpeed
     commercial
     launchdate
-    proone
-    protwo
-    prothree
-    conone
-    contwo
-    conthree
   }
 `;
 
 function mapEvlistNode(n: RawEvlistNode): EvListing {
   const e = n.evlist;
   return {
-    id: n.id,
-    databaseId: n.databaseId,
-    title: n.title,
-    slug: n.slug,
-    date: n.date,
-    photo: n.featuredImage?.node?.sourceUrl ?? "",
-    brand: e?.brand ?? "",
-    types: e?.type ?? [],
-    prices: e?.price ?? [],
-    batteryCapacity: e?.batteryCapacity ?? null,
-    chargingSpeed: e?.chargingSpeed ?? null,
-    realWorldRange: e?.realWorldRange ?? null,
-    topSpeed: e?.topSpeed ?? null,
-    commercial: e?.commercial ?? false,
-    launchdate: e?.launchdate ?? null,
-    pros: [e?.proone, e?.protwo, e?.prothree].filter(Boolean) as string[],
-    cons: [e?.conone, e?.contwo, e?.conthree].filter(Boolean) as string[],
+    id:             n.id,
+    databaseId:     n.databaseId,
+    title:          n.title.trim(),
+    slug:           n.slug,
+    date:           n.date,
+    photo:          n.featuredImage?.node?.sourceUrl ?? "",
+    brand:          e?.brand ?? "",
+    types:          e?.type ?? [],
+    prices:         e?.price ?? [],
+    topSpeed:       e?.topSpeed ?? null,
+    commercial:     e?.commercial ?? false,
+    launchdate:     e?.launchdate ?? null,
+    batteryVariants: parseJsonArray<BatteryVariant>(n.batteryVariants),
+    pros:           parseJsonArray<string>(n.proPoint),
+    cons:           parseJsonArray<string>(n.conpoint),
+    colors:         parseJsonArray<string>(n.colorTestText),
+    galleryImages:  parseJsonArray<string>(n.galleryImages),
+    offers:         parseJsonArray<EVOffer>(n.offervalue),
+    batteryTypes:   [],
   };
 }
 
@@ -246,7 +282,98 @@ export async function fetchEvListingBySlug(slug: string): Promise<EvListing | nu
   }
 }
 
-// ── Updates ───────────────────────────────────────────────────────────────────
+// ── WP REST API — evlisting detail (OpenFields meta) ─────────────────────────
+// Used for the /product/[slug] page to get the full OpenFields meta fields
+// once "Show in REST API" is enabled in OpenFields field group settings.
+
+const WP_REST_BASE = "https://evplse.online/wp-json/wp/v2";
+
+type RestEvlisting = {
+  id: number;
+  slug: string;
+  title: { rendered: string };
+  date: string;
+  featured_media: number;
+  meta: Record<string, unknown>;
+  _embedded?: {
+    "wp:featuredmedia"?: Array<{ source_url: string }>;
+  };
+};
+
+function mapRestListing(p: RestEvlisting): EvListing {
+  const m = p.meta ?? {};
+
+  // Helper to safely get string/array from meta
+  const str  = (k: string) => (typeof m[k] === "string" ? (m[k] as string) : "");
+  const arr  = (k: string): string[] => Array.isArray(m[k]) ? (m[k] as string[]) : (str(k) ? [str(k)] : []);
+  const num  = (k: string): number | null => { const v = parseFloat(String(m[k] ?? "")); return isNaN(v) ? null : v; };
+  const bool = (k: string): boolean => m[k] === true || m[k] === "1" || m[k] === "true";
+
+  const photo = p._embedded?.["wp:featuredmedia"]?.[0]?.source_url ?? "";
+
+  return {
+    id:             String(p.id),
+    databaseId:     p.id,
+    title:          p.title.rendered.trim(),
+    slug:           p.slug,
+    date:           p.date,
+    photo,
+    brand:          str("brand"),
+    types:          arr("type"),
+    prices:         arr("price"),
+    topSpeed:       num("top_speed") ?? num("topSpeed"),
+    commercial:     bool("commercial"),
+    launchdate:     str("launchdate") || null,
+    batteryCapacity: num("battery_capacity") ?? num("batteryCapacity"),
+    chargingSpeed:  num("charging_speed") ?? num("chargingSpeed"),
+    realWorldRange: num("real_world_range") ?? num("realWorldRange"),
+    batteryTypes:   arr("battery_type"),
+    colors:         arr("colors"),
+    pros:           [str("proone"), str("protwo"), str("prothree")].filter(Boolean),
+    cons:           [str("conone"), str("contwo"), str("conthree")].filter(Boolean),
+    batteryVariants: parseJsonArray<BatteryVariant>(str("battery_variants") || str("batteryVariants")),
+    galleryImages:  parseJsonArray<string>(str("gallery_images") || str("galleryImages")),
+    offers:         parseJsonArray<EVOffer>(str("offervalue") || str("offer_value")),
+  };
+}
+
+/**
+ * Fetch a single evlisting by slug via WP REST API.
+ * Returns richer OpenFields meta fields once "Show in REST API" is enabled.
+ * Falls back to GraphQL if REST meta is empty.
+ */
+export async function fetchEvListingBySlugREST(slug: string): Promise<EvListing | null> {
+  try {
+    const url = `${WP_REST_BASE}/evlisting?slug=${encodeURIComponent(slug)}&_embed&per_page=1`;
+    const res = await fetch(url, { next: { revalidate: 60 } });
+    if (!res.ok) return null;
+    const posts = await res.json() as RestEvlisting[];
+    if (!posts[0]) return null;
+    const listing = mapRestListing(posts[0]);
+    // If meta is populated (OpenFields REST enabled), use it; otherwise fall back to GraphQL
+    if (listing.brand || listing.types.length) return listing;
+  } catch { /* fall through */ }
+  // Fallback to GraphQL
+  return fetchEvListingBySlug(slug);
+}
+
+/**
+ * Fetch all evlistings via WP REST API (with OpenFields meta).
+ * Falls back to GraphQL if meta is empty.
+ */
+export async function fetchEvListingsREST(perPage = 100): Promise<EvListing[]> {
+  try {
+    const url = `${WP_REST_BASE}/evlisting?_embed&per_page=${perPage}&status=publish&orderby=date&order=desc`;
+    const res = await fetch(url, { next: { revalidate: 60 } });
+    if (!res.ok) return [];
+    const posts = await res.json() as RestEvlisting[];
+    const listings = posts.map(mapRestListing);
+    // If first listing has brand data, REST meta is working
+    if (listings[0]?.brand) return listings;
+  } catch { /* fall through */ }
+  // Fallback to GraphQL
+  return fetchEvListings(perPage);
+}
 
 type RawUpdateNode = {
   id: string;
@@ -457,6 +584,70 @@ export async function fetchHeroBanners(): Promise<HeroBanner[]> {
     });
   } catch (err) {
     console.warn("[WP] fetchHeroBanners failed:", err);
+    return [];
+  }
+}
+// ── Offer Pages ──────────────────────────────────────────────────────────────
+
+const OFFER_PAGE_FRAGMENT = /* GraphQL */ `
+  id
+  databaseId
+  title
+  offervalue {
+    offerdetail
+    offerlocation
+    offeroption
+    offerimage {
+      node {
+        sourceUrl
+      }
+    }
+  }
+`;
+
+type RawOfferPageNode = {
+  id: string;
+  databaseId: number;
+  title: string | null;
+  offervalue: {
+    offerdetail: string | null;
+    offerlocation: string | null;
+    offeroption: string[] | null;
+    offerimage: {
+      node: {
+        sourceUrl: string;
+      };
+    } | null;
+  } | null;
+};
+
+function mapOfferPageNode(n: RawOfferPageNode): WPOfferPage {
+  return {
+    id: n.id,
+    databaseId: n.databaseId,
+    title: n.title || n.offervalue?.offerdetail || "Special Offer",
+    detail: n.offervalue?.offerdetail || "",
+    location: n.offervalue?.offerlocation || "All Cities",
+    options: n.offervalue?.offeroption || [],
+    image: n.offervalue?.offerimage?.node?.sourceUrl || "",
+  };
+}
+
+export async function fetchOfferPages(): Promise<WPOfferPage[]> {
+  const query = /* GraphQL */ `
+    query FetchOfferPages {
+      offerpages(first: 100, where: { status: PUBLISH }) {
+        nodes { ${OFFER_PAGE_FRAGMENT} }
+      }
+    }
+  `;
+  try {
+    const data = await gql<{ offerpages: { nodes: RawOfferPageNode[] } }>(
+      query, {}, { revalidate: 60 }
+    );
+    return data.offerpages.nodes.map(mapOfferPageNode);
+  } catch (err) {
+    console.warn("[WP] fetchOfferPages failed:", err);
     return [];
   }
 }

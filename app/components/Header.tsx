@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, Home, LayoutGrid, Newspaper, MapPin, IndianRupee, ShoppingBag, Download, Wrench, CarFront } from "lucide-react";
+import { Menu, X, Home, LayoutGrid, Newspaper, MapPin, IndianRupee, ShoppingBag, Download, Wrench, CarFront, Percent } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navLinks = [
@@ -13,10 +13,11 @@ const navLinks = [
   { name: "Catalog", href: "/catalog", icon: LayoutGrid },
   { name: "Updates", href: "/updates", icon: Newspaper },
   { name: "Map", href: "/map", icon: MapPin },
-  { name: "Pricing", href: "/own", icon: IndianRupee },
+  { name: "Compare", href: "/compare", icon: IndianRupee },
   { name: "Quick", href: "/service", icon: Wrench },
   // { name: "Ride", href: "/ride", icon: CarFront },
   { name: "Shop", href: "/shop", icon: ShoppingBag },
+  { name: "Offer", href: "/offers", icon: Percent }
 ];
 
 // Pages that have a white/light background — nav text should be dark
@@ -114,11 +115,10 @@ export default function Header() {
           <div className="flex items-center gap-3 z-50">
             <button
               onClick={() => window.dispatchEvent(new CustomEvent("install-request"))}
-              className={`hidden md:block font-semibold px-5 py-2.5 rounded-full text-sm transition-all shadow-sm hover:shadow-md active:scale-95 ${
-                !isLightPage && !isScrolled
-                  ? "bg-slate-900/10 hover:bg-slate-900/15 text-slate-800 border border-slate-300/60"
-                  : "bg-white hover:bg-slate-100 text-slate-900 border border-slate-200"
-              }`}
+              className={`hidden md:block font-semibold px-5 py-2.5 rounded-full text-sm transition-all shadow-sm hover:shadow-md active:scale-95 ${!isLightPage && !isScrolled
+                ? "bg-slate-900/10 hover:bg-slate-900/15 text-slate-800 border border-slate-300/60"
+                : "bg-white hover:bg-slate-100 text-slate-900 border border-slate-200"
+                }`}
             >
               <span className="inline-flex items-center gap-2">
                 <Download size={16} />
@@ -129,11 +129,10 @@ export default function Header() {
               onClick={() =>
                 window.dispatchEvent(new CustomEvent("open-assist"))
               }
-              className={`hidden md:block font-semibold px-5 py-2.5 rounded-full text-sm transition-all shadow-sm hover:shadow-md active:scale-95 ${
-              !isLightPage && !isScrolled
+              className={`hidden md:block font-semibold px-5 py-2.5 rounded-full text-sm transition-all shadow-sm hover:shadow-md active:scale-95 ${!isLightPage && !isScrolled
                 ? "bg-slate-900/10 hover:bg-slate-900/15 text-slate-800 border border-slate-300/60"
                 : "bg-sky-600 hover:bg-sky-700 text-white"
-            }`}            >
+                }`}            >
               Get Assist
             </button>
             <button
@@ -169,13 +168,12 @@ export default function Header() {
                     key={link.name}
                     href={link.href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`text-base px-4 py-3 rounded-xl transition-colors font-medium ${
-                      isActive
-                        ? isLightPage
-                          ? "text-sky-600 bg-sky-50"
-                          : "text-white bg-white/15"
-                        : mobileLinkColor
-                    }`}
+                    className={`text-base px-4 py-3 rounded-xl transition-colors font-medium ${isActive
+                      ? isLightPage
+                        ? "text-sky-600 bg-sky-50"
+                        : "text-white bg-white/15"
+                      : mobileLinkColor
+                      }`}
                   >
                     <span className="inline-flex items-center gap-2">
                       <link.icon size={16} />

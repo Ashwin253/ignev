@@ -27,18 +27,18 @@ export default function ProductOwnershipSection({ item }: { item: EvListing }) {
     : undefined;
 
   return (
-    <div className="mt-20 border-t border-slate-100 pt-16">
+    <div className="mt-20 rounded-[3rem] bg-slate-900 px-6 py-16 md:px-12">
       {/* Header */}
       <div className="text-center mb-12">
-        <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500 shadow-sm mb-4">
+        <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.22em] text-slate-400 shadow-sm mb-4">
           Ownership
         </span>
-        <h2 className="text-3xl font-black text-slate-900 md:text-4xl">
-          Plan Your <span className="text-sky-600">Ownership</span>
+        <h2 className="text-3xl font-black text-white md:text-4xl">
+          Plan Your <span className="text-sky-400">Ownership</span>
         </h2>
         {variant?.capacity && (
-          <p className="mt-3 text-slate-500 max-w-xl mx-auto">
-            Estimates for the <span className="font-bold text-slate-900">{variant.capacity} kWh</span> variant
+          <p className="mt-3 text-slate-400 max-w-xl mx-auto">
+            Estimates for the <span className="font-bold text-white">{variant.capacity} kWh</span> variant
           </p>
         )}
       </div>
@@ -49,9 +49,9 @@ export default function ProductOwnershipSection({ item }: { item: EvListing }) {
         <CostEstimator initialPrice={currentPrice} efficiency={efficiency} />
       </div>
 
-      <p className="mt-10 text-center text-[11px] text-slate-400 font-medium max-w-2xl mx-auto leading-relaxed">
+      <p className="mt-10 text-center text-[11px] text-slate-500 font-medium max-w-2xl mx-auto leading-relaxed">
         * Prices and ownership estimates may vary based on state subsidies, RTO charges, and insurance.{" "}
-        <span className="font-bold text-sky-600">Please enquire for exact on-road pricing in your city.</span>
+        <span className="font-bold text-sky-400">Please enquire for exact on-road pricing in your city.</span>
       </p>
     </div>
   );

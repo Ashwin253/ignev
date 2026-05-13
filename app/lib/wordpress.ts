@@ -273,9 +273,16 @@ export async function fetchEvListingBySlug(slug: string): Promise<EvListing | nu
     const data = await gql<{ evlisting: RawEvlistNode | null }>(
       query, { slug }, { revalidate: 60 }
     );
-    return data.evlisting ? mapEvlistNode(data.evlisting) : null;
+    if (data.evlisting) return mapEvlistNode(data.evlisting);
   } catch (err) {
-    console.warn("[WP] fetchEvListingBySlug failed:", err);
+    console.warn("[WP] fetchEvListingBySlug direct failed:", err);
+  }
+
+  // Fallback: search in the full list (which we know works from /catalog)
+  try {
+    const all = await fetchEvListings(200);
+    return all.find((l) => l.slug === slug) || null;
+  } catch {
     return null;
   }
 }
@@ -326,11 +333,15 @@ function mapRestListing(p: RestEvlisting): EvListing {
     chargingSpeed:  num("charging_speed") ?? num("chargingSpeed"),
     realWorldRange: num("real_world_range") ?? num("realWorldRange"),
     batteryTypes:   arr("battery_type"),
-    colors:         arr("colors"),
-    pros:           [str("proone"), str("protwo"), str("prothree")].filter(Boolean),
-    cons:           [str("conone"), str("contwo"), str("conthree")].filter(Boolean),
-    batteryVariants: parseJsonArray<BatteryVariant>(str("battery_variants") || str("batteryVariants")),
-    galleryImages:  parseJsonArray<string>(str("gallery_images") || str("galleryImages")),
+    colors:         parseJsonArray<string>(str("colorTestText") || str("colors") || str("color_test_text")),
+    pros:           parseJsonArray<string>(str("proPoint") || str("pro_point")).length > 0 
+                    ? parseJsonArray<string>(str("proPoint") || str("pro_point"))
+                    : [str("proone"), str("protwo"), str("prothree")].filter(Boolean),
+    cons:           parseJsonArray<string>(str("conpoint") || str("con_point")).length > 0
+                    ? parseJsonArray<string>(str("conpoint") || str("con_point"))
+                    : [str("conone"), str("contwo"), str("conthree")].filter(Boolean),
+    batteryVariants: parseJsonArray<BatteryVariant>(str("batteryVariants") || str("battery_variants")),
+    galleryImages:  parseJsonArray<string>(str("galleryImages") || str("gallery_images")),
     offers:         parseJsonArray<EVOffer>(str("offervalue") || str("offer_value")),
   };
 }
@@ -346,10 +357,11 @@ export async function fetchEvListingBySlugREST(slug: string): Promise<EvListing 
     const res = await fetch(url, { next: { revalidate: 60 } });
     if (!res.ok) return null;
     const posts = await res.json() as RestEvlisting[];
-    if (!posts[0]) return null;
     const listing = mapRestListing(posts[0]);
-    // If meta is populated (OpenFields REST enabled), use it; otherwise fall back to GraphQL
-    if (listing.brand || listing.types.length) return listing;
+    // If meta is populated with core data, use it
+    if (listing.brand && (listing.batteryVariants.length > 0 || listing.topSpeed !== null)) {
+      return listing;
+    }
   } catch { /* fall through */ }
   // Fallback to GraphQL
   return fetchEvListingBySlug(slug);
@@ -366,8 +378,10 @@ export async function fetchEvListingsREST(perPage = 100): Promise<EvListing[]> {
     if (!res.ok) return [];
     const posts = await res.json() as RestEvlisting[];
     const listings = posts.map(mapRestListing);
-    // If first listing has brand data, REST meta is working
-    if (listings[0]?.brand) return listings;
+    // If first listing has meaningful data, REST meta is working
+    if (listings[0]?.brand && (listings[0].photo || listings[0].prices.length > 0)) {
+      return listings;
+    }
   } catch { /* fall through */ }
   // Fallback to GraphQL
   return fetchEvListings(perPage);

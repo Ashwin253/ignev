@@ -7,7 +7,7 @@ import BatterySelector from "./BatterySelector";
 import EnquiryTrigger from "./EnquiryTrigger";
 import CompareButton from "./CompareButton";
 import Link from "next/link";
-import { ArrowLeft, Gauge, CheckCircle2, XCircle, Tag } from "lucide-react";
+import { ArrowLeft, Gauge, CheckCircle2, XCircle, Tag, CircleMinus } from "lucide-react";
 import ColorList from "./ColorList";
 import type { EvListing } from "../lib/wordpress";
 
@@ -125,7 +125,7 @@ export default function ProductMainUI({ item, slug }: { item: EvListing, slug: s
       {(item.pros.length > 0 || item.cons.length > 0) && (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-emerald-600">Pros</p>
+            {/* <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-emerald-600">Pros</p> */}
             {item.pros.length > 0 ? (
               <ul className="space-y-2">
                 {item.pros.map((pro: string, i: number) => (
@@ -138,13 +138,13 @@ export default function ProductMainUI({ item, slug }: { item: EvListing, slug: s
               <p className="text-sm text-slate-500">Pros will be updated soon.</p>
             )}
           </div>
-          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-rose-600">Cons</p>
+          <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-4">
+            {/* <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-rose-600">Cons</p> */}
             {item.cons.length > 0 ? (
               <ul className="space-y-2">
                 {item.cons.map((con: string, i: number) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
-                    <XCircle size={14} className="mt-0.5 shrink-0 text-rose-500" />{con}
+                    <CircleMinus size={14} className="mt-0.5 shrink-0 text-yellow-500" />{con}
                   </li>
                 ))}
               </ul>

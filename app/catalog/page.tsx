@@ -21,17 +21,17 @@ export default async function CatalogPage() {
     const listings = await fetchEvListings(200);
     if (listings.length) {
       items = listings.map((l) => ({
-        name:       l.title,
-        brand:      l.brand,
-        type:       l.types[0] ?? "",
-        pricing:    l.prices.length ? `₹${l.prices.join("–")} lakh` : "",
-        photo:      l.photo,
-        slug:       l.slug,
-        topSpeed:   l.topSpeed,
+        name: l.title,
+        brand: l.brand,
+        type: l.types[0] ?? "",
+        pricing: l.prices.length ? `₹${l.prices.join("–")} lakh` : "",
+        photo: l.photo,
+        slug: l.slug,
+        topSpeed: l.topSpeed,
         commercial: l.commercial,
         launchdate: l.launchdate,
-        prices:     l.prices,
-        baas:       l.baas,
+        prices: l.prices,
+        baas: l.baas,
       }));
     }
   } catch { /* fall through */ }
@@ -45,6 +45,8 @@ export default async function CatalogPage() {
       ...content.products.electric_autos,
     ];
   }
+  console.log('[CatalogPage] Final items count:', items.length);
+  if (!items.length) console.log('[CatalogPage] WP failed AND fallback empty');
 
   return (
     <section className="bg-white py-28">

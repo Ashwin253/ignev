@@ -1,3 +1,4 @@
+// app/components/CatalogBrowser.tsx
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
@@ -50,10 +51,10 @@ function parsePriceLow(item: CatalogItem): number {
 function matchesPrice(item: CatalogItem, bucket: string): boolean {
   if (bucket === "all") return true;
   const low = parsePriceLow(item);
-  if (bucket === "0-5")   return low < 5;
-  if (bucket === "5-15")  return low >= 5 && low < 15;
+  if (bucket === "0-5") return low < 5;
+  if (bucket === "5-15") return low >= 5 && low < 15;
   if (bucket === "15-30") return low >= 15 && low < 30;
-  if (bucket === "30+")   return low >= 30;
+  if (bucket === "30+") return low >= 30;
   return true;
 }
 
@@ -80,7 +81,7 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
   const handleShare = async () => {
     const url = window.location.href;
     if (navigator.share) {
-      await navigator.share({ title: "EVPULSE Catalog", url }).catch(() => {});
+      await navigator.share({ title: "EVPULSE Catalog", url }).catch(() => { });
     } else {
       await navigator.clipboard.writeText(url);
       setShared(true);
@@ -115,8 +116,8 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
     const q = query.trim().toLowerCase();
     return items.filter((item) => {
       if (q && !item.name.toLowerCase().includes(q) &&
-               !item.brand.toLowerCase().includes(q) &&
-               !item.type.toLowerCase().includes(q)) return false;
+        !item.brand.toLowerCase().includes(q) &&
+        !item.type.toLowerCase().includes(q)) return false;
       if (category !== "all" && item.type !== category) return false;
       if (brand !== "all" && item.brand !== brand) return false;
       if (!matchesPrice(item, price)) return false;
@@ -173,129 +174,125 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
 
           {/* Row 1: Type pills */}
           <div className="px-4 pt-3 pb-3 border-b border-slate-100 md:pt-4">
-          <div className="flex items-center gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {categoryOptions.map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => updateFilters({ type: opt.value })}
-                className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 border shrink-0 ${
-                  category === opt.value
-                    ? "bg-slate-900 text-white border-slate-900 shadow-sm"
-                    : "bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-100"
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Row 2: Search + dropdowns */}
-        <div className="p-4 grid gap-3 sm:grid-cols-[1fr_auto_auto] md:grid-cols-[2fr_1fr_1fr]">
-          {/* Search */}
-          <label className="flex items-center gap-2.5 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-            <Search size={16} className="text-slate-400 shrink-0" />
-            <input
-              value={query}
-              onChange={(e) => updateFilters({ q: e.target.value })}
-              placeholder="Search model, brand…"
-              className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400 text-slate-800"
-            />
-            {query && (
-              <button onClick={() => updateFilters({ q: null })} className="text-slate-400 hover:text-slate-600">
-                <X size={14} />
-              </button>
-            )}
-          </label>
-
-          {/* Brand */}
-          <label className="relative flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 cursor-pointer">
-            <span className="text-xs font-semibold text-slate-400 shrink-0 hidden sm:block">Brand</span>
-            <select
-              value={brand}
-              onChange={(e) => updateFilters({ brand: e.target.value })}
-              className="w-full bg-transparent text-sm outline-none text-slate-700 cursor-pointer appearance-none pr-5"
-            >
-              {brandOptions.map((b) => (
-                <option key={b} value={b}>{b === "all" ? "All brands" : b}</option>
+            <div className="flex items-center gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {categoryOptions.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => updateFilters({ type: opt.value })}
+                  className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 border shrink-0 ${category === opt.value
+                      ? "bg-slate-900 text-white border-slate-900 shadow-sm"
+                      : "bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-100"
+                    }`}
+                >
+                  {opt.label}
+                </button>
               ))}
-            </select>
-            <ChevronDown size={14} className="text-slate-400 shrink-0 absolute right-3 pointer-events-none" />
-          </label>
-
-          {/* Price */}
-          <label className="relative flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 cursor-pointer">
-            <span className="text-xs font-semibold text-slate-400 shrink-0 hidden sm:block">Price</span>
-            <select
-              value={price}
-              onChange={(e) => updateFilters({ price: e.target.value })}
-              className="w-full bg-transparent text-sm outline-none text-slate-700 cursor-pointer appearance-none pr-5"
-            >
-              <option value="all">All prices</option>
-              <option value="0-5">Under ₹5L</option>
-              <option value="5-15">₹5L – ₹15L</option>
-              <option value="15-30">₹15L – ₹30L</option>
-              <option value="30+">₹30L+</option>
-            </select>
-            <ChevronDown size={14} className="text-slate-400 shrink-0 absolute right-3 pointer-events-none" />
-          </label>
-        </div>
-
-        {/* Row 3: Toggle chips + count */}
-        <div className="px-4 pb-4 flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex gap-2 flex-wrap">
-            <button
-              onClick={() => updateFilters({ comm: !commercialOnly })}
-              className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all duration-200 ${
-                commercialOnly
-                  ? "bg-orange-500 border-orange-500 text-white"
-                  : "bg-white border-slate-200 text-slate-600 hover:border-orange-300 hover:text-orange-600"
-              }`}
-            >
-              <Truck size={12} /> Commercial
-            </button>
-            <button
-              onClick={() => updateFilters({ avail: !launchedOnly })}
-              className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all duration-200 ${
-                launchedOnly
-                  ? "bg-emerald-500 border-emerald-500 text-white"
-                  : "bg-white border-slate-200 text-slate-600 hover:border-emerald-300 hover:text-emerald-600"
-              }`}
-            >
-              <BadgeCheck size={12} /> Available now
-            </button>
-            <button
-              onClick={() => updateFilters({ baas: !baasOnly })}
-              className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all duration-200 ${
-                baasOnly
-                  ? "bg-sky-500 border-sky-500 text-white"
-                  : "bg-white border-slate-200 text-slate-600 hover:border-sky-300 hover:text-sky-600"
-              }`}
-            >
-              <Zap size={12} /> BAAS
-            </button>
-            {hasActiveFilters && (
-              <button
-                onClick={clearAll}
-                className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3.5 py-1.5 text-xs font-semibold text-slate-500 hover:text-rose-600 hover:border-rose-300 transition-colors"
-              >
-                <X size={12} /> Clear
-              </button>
-            )}
+            </div>
           </div>
-          <p className="text-xs text-slate-400 shrink-0 hidden md:flex items-center gap-2">
-            <span className="font-semibold text-slate-700">{filteredItems.length}</span> of {items.length}
-            <button
-              onClick={handleShare}
-              className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition-all"
-              aria-label="Share catalog"
-            >
-              {shared
-                ? <><Check size={12} className="text-emerald-500" /> Copied!</>
-                : <><Share2 size={12} /> Share</>}
-            </button>
-          </p>
-        </div>
+
+          {/* Row 2: Search + dropdowns */}
+          <div className="p-4 grid gap-3 sm:grid-cols-[1fr_auto_auto] md:grid-cols-[2fr_1fr_1fr]">
+            {/* Search */}
+            <label className="flex items-center gap-2.5 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <Search size={16} className="text-slate-400 shrink-0" />
+              <input
+                value={query}
+                onChange={(e) => updateFilters({ q: e.target.value })}
+                placeholder="Search model, brand…"
+                className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400 text-slate-800"
+              />
+              {query && (
+                <button onClick={() => updateFilters({ q: null })} className="text-slate-400 hover:text-slate-600">
+                  <X size={14} />
+                </button>
+              )}
+            </label>
+
+            {/* Brand */}
+            <label className="relative flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 cursor-pointer">
+              <span className="text-xs font-semibold text-slate-400 shrink-0 hidden sm:block">Brand</span>
+              <select
+                value={brand}
+                onChange={(e) => updateFilters({ brand: e.target.value })}
+                className="w-full bg-transparent text-sm outline-none text-slate-700 cursor-pointer appearance-none pr-5"
+              >
+                {brandOptions.map((b) => (
+                  <option key={b} value={b}>{b === "all" ? "All brands" : b}</option>
+                ))}
+              </select>
+              <ChevronDown size={14} className="text-slate-400 shrink-0 absolute right-3 pointer-events-none" />
+            </label>
+
+            {/* Price */}
+            <label className="relative flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 cursor-pointer">
+              <span className="text-xs font-semibold text-slate-400 shrink-0 hidden sm:block">Price</span>
+              <select
+                value={price}
+                onChange={(e) => updateFilters({ price: e.target.value })}
+                className="w-full bg-transparent text-sm outline-none text-slate-700 cursor-pointer appearance-none pr-5"
+              >
+                <option value="all">All prices</option>
+                <option value="0-5">Under ₹5L</option>
+                <option value="5-15">₹5L – ₹15L</option>
+                <option value="15-30">₹15L – ₹30L</option>
+                <option value="30+">₹30L+</option>
+              </select>
+              <ChevronDown size={14} className="text-slate-400 shrink-0 absolute right-3 pointer-events-none" />
+            </label>
+          </div>
+
+          {/* Row 3: Toggle chips + count */}
+          <div className="px-4 pb-4 flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex gap-2 flex-wrap">
+              <button
+                onClick={() => updateFilters({ comm: !commercialOnly })}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all duration-200 ${commercialOnly
+                    ? "bg-orange-500 border-orange-500 text-white"
+                    : "bg-white border-slate-200 text-slate-600 hover:border-orange-300 hover:text-orange-600"
+                  }`}
+              >
+                <Truck size={12} /> Commercial
+              </button>
+              <button
+                onClick={() => updateFilters({ avail: !launchedOnly })}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all duration-200 ${launchedOnly
+                    ? "bg-emerald-500 border-emerald-500 text-white"
+                    : "bg-white border-slate-200 text-slate-600 hover:border-emerald-300 hover:text-emerald-600"
+                  }`}
+              >
+                <BadgeCheck size={12} /> Available now
+              </button>
+              <button
+                onClick={() => updateFilters({ baas: !baasOnly })}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all duration-200 ${baasOnly
+                    ? "bg-sky-500 border-sky-500 text-white"
+                    : "bg-white border-slate-200 text-slate-600 hover:border-sky-300 hover:text-sky-600"
+                  }`}
+              >
+                <Zap size={12} /> BAAS
+              </button>
+              {hasActiveFilters && (
+                <button
+                  onClick={clearAll}
+                  className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3.5 py-1.5 text-xs font-semibold text-slate-500 hover:text-rose-600 hover:border-rose-300 transition-colors"
+                >
+                  <X size={12} /> Clear
+                </button>
+              )}
+            </div>
+            <p className="text-xs text-slate-400 shrink-0 hidden md:flex items-center gap-2">
+              <span className="font-semibold text-slate-700">{filteredItems.length}</span> of {items.length}
+              <button
+                onClick={handleShare}
+                className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition-all"
+                aria-label="Share catalog"
+              >
+                {shared
+                  ? <><Check size={12} className="text-emerald-500" /> Copied!</>
+                  : <><Share2 size={12} /> Share</>}
+              </button>
+            </p>
+          </div>
         </div>{/* end collapsible */}
       </div>
 
@@ -335,9 +332,8 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
                       <Zap size={32} className="text-slate-300" />
                     </div>
                   )}
-                  <span className={`absolute top-3 right-3 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold backdrop-blur-sm ${
-                    launched ? "bg-emerald-500/90 text-white" : "bg-amber-400/90 text-slate-900"
-                  }`}>
+                  <span className={`absolute top-3 right-3 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold backdrop-blur-sm ${launched ? "bg-emerald-500/90 text-white" : "bg-amber-400/90 text-slate-900"
+                    }`}>
                     {launched ? <><BadgeCheck size={11} /> {launchLabel}</> : <><CalendarDays size={11} /> {launchLabel}</>}
                   </span>
                   {item.commercial && (
@@ -354,11 +350,10 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
                       const slug = item.slug ?? toSlug(item.brand, item.name);
                       isInCompare(slug) ? removeFromCompare(slug) : addToCompare(slug);
                     }}
-                    className={`absolute bottom-3 left-3 flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-md transition-all duration-300 ${
-                      isInCompare(item.slug ?? toSlug(item.brand, item.name))
+                    className={`absolute bottom-3 left-3 flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-md transition-all duration-300 ${isInCompare(item.slug ?? toSlug(item.brand, item.name))
                         ? "bg-sky-600 text-white shadow-lg"
                         : "bg-white/70 text-slate-600 hover:bg-white"
-                    }`}
+                      }`}
                     title="Add to compare"
                   >
                     <GitCompare size={15} />

@@ -1,3 +1,4 @@
+// app/lib/wordpress.ts
 /**
  * WordPress GraphQL client — https://evplse.online/graphql
  *
@@ -105,11 +106,16 @@ export type EvListing = {
   launchdate: string | null;
   // OpenFields top-level fields (JSON strings parsed client-side)
   batteryVariants: BatteryVariant[];
+  // batteryVariants: BatteryVariant[]; // Standard
+  baasVariants: BatteryVariant[];
+  // baasVariants: BatteryVariant[]; // Add this: BAAS specific variants
+
   pros: string[];
   cons: string[];
   colors: string[];           // hex codes e.g. ["673ab7", "b7673a"]
   galleryImages: string[];    // full image URLs
   offers: EVOffer[];
+  baas: boolean;              // Added for BAAS
   // Legacy / optional
   batteryCapacity?: number | null;
   chargingSpeed?: number | null;
@@ -118,10 +124,12 @@ export type EvListing = {
 };
 
 export type BatteryVariant = {
+  modelName?: string;
   capacity: string;   // kWh
   range: string;      // km
   charge: string;     // hours
-  price?: string;     // Lakhs
+  price?: string;     // Lakhs (Standard)
+  battery_subs?: string; // Lakhs (BAAS)
 };
 
 export type EVOffer = {
@@ -173,10 +181,11 @@ type RawEvlistNode = {
   featuredImage: { node: { sourceUrl: string } } | null;
   // OpenFields top-level JSON string fields
   batteryVariants: string | null;
-  proPoint:        string | null;
-  conpoint:        string | null;
-  colorTestText:   string | null;
-  galleryImages:   string | null;
+  batterySubs: string | null;
+  propoint: string | null;
+  conpoint: string | null;
+  colorTestText: string | null;
+  galleryImages: string | null;
   evlist: {
     brand: string | null;
     type: string[] | null;
@@ -184,15 +193,144 @@ type RawEvlistNode = {
     topSpeed: number | null;
     commercial: boolean | null;
     launchdate: string | null;
+    hasBaas: boolean | null;
   } | null;
 };
 
 // Safe JSON parse helper
-function parseJsonArray<T>(raw: any): T[] {
+function parseJsonArray<T>(raw: unknown): T[] {
   if (!raw) return [];
   if (Array.isArray(raw)) return raw as T[];
   if (typeof raw !== "string") return [];
   try { return JSON.parse(raw) as T[]; } catch { return []; }
+}
+
+function parseTextList(raw: unknown): string[] {
+  if (!raw) return [];
+
+  if (typeof raw === "string") {
+    const trimmed = raw.trim();
+    if (!trimmed) return [];
+
+    try {
+      const parsed = JSON.parse(trimmed) as unknown;
+      return typeof parsed === "string" || Array.isArray(parsed) || (parsed !== null && typeof parsed === "object")
+        ? parseTextList(parsed)
+        : [trimmed];
+    } catch {
+      return [trimmed];
+    }
+  }
+
+  if (Array.isArray(raw)) {
+    return raw.flatMap(parseTextList);
+  }
+
+  if (typeof raw === "object") {
+    return Object.values(raw as Record<string, unknown>).flatMap(parseTextList);
+  }
+
+  return [];
+}
+
+function firstText(...values: unknown[]): string {
+  for (const value of values) {
+    const text = parseTextList(value).find(Boolean);
+    if (text) return text;
+  }
+  return "";
+}
+
+function pickNested(raw: unknown, key: string): unknown {
+  if (!raw) return undefined;
+
+  if (typeof raw === "string") {
+    try {
+      return pickNested(JSON.parse(raw) as unknown, key);
+    } catch {
+      return undefined;
+    }
+  }
+
+  if (Array.isArray(raw)) {
+    for (const item of raw) {
+      const value = pickNested(item, key);
+      if (value !== undefined) return value;
+    }
+    return undefined;
+  }
+
+  if (typeof raw === "object") {
+    const record = raw as Record<string, unknown>;
+    if (record[key] !== undefined) return record[key];
+
+    for (const value of Object.values(record)) {
+      const nested = pickNested(value, key);
+      if (nested !== undefined) return nested;
+    }
+  }
+
+  return undefined;
+}
+
+function boolValue(raw: unknown): boolean {
+  return raw === true || raw === 1 || raw === "1" || raw === "true" || raw === "yes";
+}
+
+function priceNumber(raw: string | undefined): number | null {
+  if (!raw) return null;
+  const value = parseFloat(raw.replace(/[₹,a-zA-Z\s]/g, ""));
+  return Number.isFinite(value) ? value : null;
+}
+
+function hasVariantBaasPricing(variants: BatteryVariant[]): boolean {
+  return variants.some((variant) => {
+    if (variant.battery_subs) return true;
+    const price = priceNumber(variant.price);
+    return price !== null && price > 1000;
+  });
+}
+
+function mapBatteryVariant(raw: BatteryVariant | Record<string, unknown>): BatteryVariant {
+  const record = raw as Record<string, unknown>;
+  return {
+    modelName: firstText(record.modelName, record.modelNames, record.model_name, record.model),
+    capacity: firstText(record.capacity, record.battery_capacity, record.batteryCapacity),
+    range: firstText(record.range, record.real_world_range, record.realWorldRange),
+    charge: firstText(record.charge, record.charging_time, record.chargingTime),
+    price: firstText(
+      record.price_baas,
+      record.priceBaas,
+      record.baas_price,
+      record.baasPrice,
+      record.battery_subs,
+      record.batterySubs,
+      record.subscription_price,
+      record.price,
+      record.price_standard,
+      record.standard_price,
+      record.priceStandard
+    ),
+  };
+}
+
+function parseBatteryVariants(raw: unknown): BatteryVariant[] {
+  return parseJsonArray<Record<string, unknown>>(raw)
+    .map(mapBatteryVariant)
+    .filter((variant) => variant.capacity || variant.range || variant.charge || variant.price || variant.battery_subs);
+}
+
+function applyBatterySubs(variants: BatteryVariant[], rawSubs: unknown): BatteryVariant[] {
+  const subs = parseJsonArray<Record<string, unknown>>(rawSubs).map(mapBatteryVariant);
+  if (subs.length === 0) return variants;
+  if (variants.length === 0) return subs;
+
+  return variants.map((variant, index) => ({
+    ...variant,
+    modelName: variant.modelName || subs[index]?.modelName || subs[0]?.modelName,
+    battery_subs: variant.battery_subs || subs[index]?.battery_subs || subs[index]?.price || subs[0]?.battery_subs || subs[0]?.price,
+    range: variant.range || subs[index]?.range || subs[0]?.range || "",
+  }));
 }
 
 const EVLIST_FRAGMENT = /* GraphQL */ `
@@ -203,7 +341,8 @@ const EVLIST_FRAGMENT = /* GraphQL */ `
   date
   featuredImage { node { sourceUrl } }
   batteryVariants
-  proPoint
+  batterySubs
+  propoint
   conpoint
   colorTestText
   galleryImages
@@ -214,31 +353,40 @@ const EVLIST_FRAGMENT = /* GraphQL */ `
     topSpeed
     commercial
     launchdate
+    hasBaas
   }
 `;
 
 function mapEvlistNode(n: RawEvlistNode): EvListing {
   const e = n.evlist;
+  const standardVariants = parseBatteryVariants(n.batteryVariants);
+  const baasVariants = parseBatteryVariants(n.batterySubs);
+  // const variants = applyBatterySubs(parseBatteryVariants(n.batteryVariants), n.batterySubs);
+  const hasBaas = boolValue(e?.hasBaas) || baasVariants.length > 0 || hasVariantBaasPricing(standardVariants);
+
+
   return {
-    id:             n.id,
-    databaseId:     n.databaseId,
-    title:          n.title.trim(),
-    slug:           n.slug,
-    date:           n.date,
-    photo:          n.featuredImage?.node?.sourceUrl ?? "",
-    brand:          e?.brand ?? "",
-    types:          e?.type ?? [],
-    prices:         e?.price ?? [],
-    topSpeed:       e?.topSpeed ?? null,
-    commercial:     e?.commercial ?? false,
-    launchdate:     e?.launchdate ?? null,
-    batteryVariants: parseJsonArray<BatteryVariant>(n.batteryVariants),
-    pros:           parseJsonArray<string>(n.proPoint),
-    cons:           parseJsonArray<string>(n.conpoint),
-    colors:         parseJsonArray<string>(n.colorTestText),
-    galleryImages:  parseJsonArray<string>(n.galleryImages),
-    offers:         [],
-    batteryTypes:   [],
+    id: n.id,
+    databaseId: n.databaseId,
+    title: n.title.trim(),
+    slug: n.slug,
+    date: n.date,
+    photo: n.featuredImage?.node?.sourceUrl ?? "",
+    brand: e?.brand ?? "",
+    types: e?.type ?? [],
+    prices: e?.price ?? [],
+    topSpeed: e?.topSpeed ?? null,
+    commercial: e?.commercial ?? false,
+    launchdate: e?.launchdate ?? null,
+    batteryVariants: standardVariants, // Only standard now
+    baasVariants: baasVariants, // New: separate BAAS list
+    pros: parseTextList(n.propoint),
+    cons: parseTextList(n.conpoint),
+    colors: parseJsonArray<string>(n.colorTestText),
+    galleryImages: parseJsonArray<string>(n.galleryImages),
+    offers: [],
+    batteryTypes: [],
+    baas: hasBaas,
   };
 }
 
@@ -305,47 +453,120 @@ type RestEvlisting = {
   };
 };
 
+// function mapRestListing(p: RestEvlisting): EvListing {
+//   const m = p.meta ?? {};
+
+//   // Helper to safely get string/array from meta
+//   const str  = (k: string) => (typeof m[k] === "string" ? (m[k] as string) : "");
+//   const arr  = (k: string): string[] => Array.isArray(m[k]) ? (m[k] as string[]) : (str(k) ? [str(k)] : []);
+//   const num  = (k: string): number | null => { const v = parseFloat(String(m[k] ?? "")); return isNaN(v) ? null : v; };
+//   const bool = (k: string): boolean => boolValue(m[k]);
+
+//   const photo = p._embedded?.["wp:featuredmedia"]?.[0]?.source_url ?? "";
+
+//   const batteryVariants = applyBatterySubs(
+//     parseBatteryVariants(m["battery_variants"] ?? m["batteryVariants"]),
+//     m["battery_subs"] ?? m["batterySubs"] ?? m["battery_subscriptions"] ?? m["batterySubscriptions"]
+//   );
+//   const hasBaas = bool("has__baas") || bool("has_baas") || bool("hasBaas") || bool("baas") || hasVariantBaasPricing(batteryVariants);
+
+//   // OpenFields can expose repeaters as JSON, arrays, or nested fieldset objects.
+//   const proPointMeta = m["pro_point"] ?? m["proPoint"] ?? m["propoint"];
+//   let pros = parseTextList(pickNested(proPointMeta, "propoint") ?? proPointMeta);
+//   if (pros.length === 0) {
+//     pros = [str("proone"), str("protwo"), str("prothree")].filter(Boolean);
+//   }
+
+//   let cons = parseTextList(m["con_point"] ?? m["conPoint"] ?? m["conpoint"]);
+//   if (cons.length === 0) {
+//     cons = [str("conone"), str("contwo"), str("conthree")].filter(Boolean);
+//   }
+
+//   return {
+//     id:             String(p.id),
+//     databaseId:     p.id,
+//     title:          p.title.rendered.trim(),
+//     slug:           p.slug,
+//     date:           p.date,
+//     photo,
+//     brand:          str("brand"),
+//     types:          arr("type"),
+//     prices:         arr("price"),
+//     topSpeed:       num("top_speed") ?? num("topSpeed"),
+//     commercial:     bool("commercial"),
+//     launchdate:     str("launchdate") || null,
+//     batteryCapacity: num("battery_capacity") ?? num("batteryCapacity"),
+//     chargingSpeed:  num("charging_speed") ?? num("chargingSpeed"),
+//     realWorldRange: num("real_world_range") ?? num("realWorldRange"),
+//     batteryTypes:   arr("battery_type"),
+//     colors:         parseJsonArray<string>(str("colorTestText") || str("colors") || str("color_test_text")),
+//     pros,
+//     cons,
+//     batteryVariants,
+//      baasVariants: baasVariants, // Add thi
+//     galleryImages:  parseJsonArray<string>(str("galleryImages") || str("gallery_images")),
+//     offers:         parseJsonArray<EVOffer>(str("offervalue") || str("offer_value")),
+//     baas:           hasBaas,
+//   };
+// }
 function mapRestListing(p: RestEvlisting): EvListing {
   const m = p.meta ?? {};
 
   // Helper to safely get string/array from meta
-  const str  = (k: string) => (typeof m[k] === "string" ? (m[k] as string) : "");
-  const arr  = (k: string): string[] => Array.isArray(m[k]) ? (m[k] as string[]) : (str(k) ? [str(k)] : []);
-  const num  = (k: string): number | null => { const v = parseFloat(String(m[k] ?? "")); return isNaN(v) ? null : v; };
-  const bool = (k: string): boolean => m[k] === true || m[k] === "1" || m[k] === "true";
+  const str = (k: string) => (typeof m[k] === "string" ? (m[k] as string) : "");
+  const arr = (k: string): string[] => Array.isArray(m[k]) ? (m[k] as string[]) : (str(k) ? [str(k)] : []);
+  const num = (k: string): number | null => { const v = parseFloat(String(m[k] ?? "")); return isNaN(v) ? null : v; };
+  const bool = (k: string): boolean => boolValue(m[k]);
 
   const photo = p._embedded?.["wp:featuredmedia"]?.[0]?.source_url ?? "";
 
+  // Stop merging - keep them separate
+  const standardVariants = parseBatteryVariants(m["battery_variants"] ?? m["batteryVariants"]);
+  const baasVariants = parseBatteryVariants(
+    m["battery_subs"] ?? m["batterySubs"] ?? m["battery_subscriptions"] ?? m["batterySubscriptions"]
+  );
+
+  const hasBaas = bool("has__baas") || bool("has_baas") || bool("hasBaas") || bool("baas") || baasVariants.length > 0;
+
+  // OpenFields can expose repeaters as JSON, arrays, or nested fieldset objects.
+  const proPointMeta = m["pro_point"] ?? m["proPoint"] ?? m["propoint"];
+  let pros = parseTextList(pickNested(proPointMeta, "propoint") ?? proPointMeta);
+  if (pros.length === 0) {
+    pros = [str("proone"), str("protwo"), str("prothree")].filter(Boolean);
+  }
+
+  let cons = parseTextList(m["con_point"] ?? m["conPoint"] ?? m["conpoint"]);
+  if (cons.length === 0) {
+    cons = [str("conone"), str("contwo"), str("conthree")].filter(Boolean);
+  }
+
   return {
-    id:             String(p.id),
-    databaseId:     p.id,
-    title:          p.title.rendered.trim(),
-    slug:           p.slug,
-    date:           p.date,
+    id: String(p.id),
+    databaseId: p.id,
+    title: p.title.rendered.trim(),
+    slug: p.slug,
+    date: p.date,
     photo,
-    brand:          str("brand"),
-    types:          arr("type"),
-    prices:         arr("price"),
-    topSpeed:       num("top_speed") ?? num("topSpeed"),
-    commercial:     bool("commercial"),
-    launchdate:     str("launchdate") || null,
+    brand: str("brand"),
+    types: arr("type"),
+    prices: arr("price"),
+    topSpeed: num("top_speed") ?? num("topSpeed"),
+    commercial: bool("commercial"),
+    launchdate: str("launchdate") || null,
     batteryCapacity: num("battery_capacity") ?? num("batteryCapacity"),
-    chargingSpeed:  num("charging_speed") ?? num("chargingSpeed"),
+    chargingSpeed: num("charging_speed") ?? num("chargingSpeed"),
     realWorldRange: num("real_world_range") ?? num("realWorldRange"),
-    batteryTypes:   arr("battery_type"),
-    colors:         parseJsonArray<string>(str("colorTestText") || str("colors") || str("color_test_text")),
-    pros:           parseJsonArray<string>(str("proPoint") || str("pro_point")).length > 0 
-                    ? parseJsonArray<string>(str("proPoint") || str("pro_point"))
-                    : [str("proone"), str("protwo"), str("prothree")].filter(Boolean),
-    cons:           parseJsonArray<string>(str("conpoint") || str("con_point")).length > 0
-                    ? parseJsonArray<string>(str("conpoint") || str("con_point"))
-                    : [str("conone"), str("contwo"), str("conthree")].filter(Boolean),
-    batteryVariants: parseJsonArray<BatteryVariant>(str("batteryVariants") || str("battery_variants")),
-    galleryImages:  parseJsonArray<string>(str("galleryImages") || str("gallery_images")),
-    offers:         parseJsonArray<EVOffer>(str("offervalue") || str("offer_value")),
+    batteryTypes: arr("battery_type"),
+    colors: parseJsonArray<string>(str("colorTestText") || str("colors") || str("color_test_text")),
+    pros,
+    cons,
+    batteryVariants: standardVariants, // Standard only
+    baasVariants: baasVariants, // BAAS only - no merge
+    galleryImages: parseJsonArray<string>(str("galleryImages") || str("gallery_images")),
+    offers: parseJsonArray<EVOffer>(str("offervalue") || str("offer_value")),
+    baas: hasBaas,
   };
 }
-
 /**
  * Fetch a single evlisting by slug via WP REST API.
  * Returns richer OpenFields meta fields once "Show in REST API" is enabled.
@@ -577,7 +798,7 @@ export async function fetchHeroBanners(): Promise<HeroBanner[]> {
 
     // Separate desktop (non-"Mobile" title) and mobile posts
     const desktop = nodes.filter((n) => n.title.toLowerCase() !== "mobile");
-    const mobile  = nodes.filter((n) => n.title.toLowerCase() === "mobile");
+    const mobile = nodes.filter((n) => n.title.toLowerCase() === "mobile");
 
     if (!desktop.length) return [];
 
@@ -585,13 +806,13 @@ export async function fetchHeroBanners(): Promise<HeroBanner[]> {
       const mob = mobile[i] ?? null;
       const rawLink = d.bannerfield?.link?.trim() ?? "";
       return {
-        id:              d.id,
-        cta:             d.title,
-        href:            rawLink.startsWith("http") || rawLink.startsWith("/") ? rawLink : "/catalog",
-        details:         d.bannerfield?.details?.trim() ?? "",
+        id: d.id,
+        cta: d.title,
+        href: rawLink.startsWith("http") || rawLink.startsWith("/") ? rawLink : "/catalog",
+        details: d.bannerfield?.details?.trim() ?? "",
         imageHorizontal: d.featuredImage?.node?.sourceUrl ?? "",
-        imageVertical:   mob?.featuredImage?.node?.sourceUrl ?? d.featuredImage?.node?.sourceUrl ?? "",
-        accent:          BANNER_ACCENTS[i % BANNER_ACCENTS.length],
+        imageVertical: mob?.featuredImage?.node?.sourceUrl ?? d.featuredImage?.node?.sourceUrl ?? "",
+        accent: BANNER_ACCENTS[i % BANNER_ACCENTS.length],
       };
     });
   } catch (err) {
@@ -646,18 +867,18 @@ export async function fetchHomepageData(): Promise<HomepageData> {
     const listings = data.evlistings.nodes.map(mapEvlistNode);
 
     const desktopBanners = data.banners.nodes.filter((n) => n.title.toLowerCase() !== "mobile");
-    const mobileBanners  = data.banners.nodes.filter((n) => n.title.toLowerCase() === "mobile");
+    const mobileBanners = data.banners.nodes.filter((n) => n.title.toLowerCase() === "mobile");
     const banners: HeroBanner[] = desktopBanners.map((d, i) => {
       const mob = mobileBanners[i] ?? null;
       const rawLink = d.bannerfield?.link?.trim() ?? "";
       return {
-        id:              d.id,
-        cta:             d.title,
-        href:            rawLink.startsWith("http") || rawLink.startsWith("/") ? rawLink : "/catalog",
-        details:         d.bannerfield?.details?.trim() ?? "",
+        id: d.id,
+        cta: d.title,
+        href: rawLink.startsWith("http") || rawLink.startsWith("/") ? rawLink : "/catalog",
+        details: d.bannerfield?.details?.trim() ?? "",
         imageHorizontal: d.featuredImage?.node?.sourceUrl ?? "",
-        imageVertical:   mob?.featuredImage?.node?.sourceUrl ?? d.featuredImage?.node?.sourceUrl ?? "",
-        accent:          BANNER_ACCENTS[i % BANNER_ACCENTS.length],
+        imageVertical: mob?.featuredImage?.node?.sourceUrl ?? d.featuredImage?.node?.sourceUrl ?? "",
+        accent: BANNER_ACCENTS[i % BANNER_ACCENTS.length],
       };
     });
 

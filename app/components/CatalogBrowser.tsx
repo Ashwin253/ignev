@@ -33,6 +33,7 @@ export type CatalogItem = {
   commercial?: boolean;
   launchdate?: string | null;
   prices?: string[];
+  baas?: boolean;
 };
 
 // ── Price filter ──────────────────────────────────────────────────────────────
@@ -71,6 +72,7 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
   const price = searchParams.get("price") ?? "all";
   const commercialOnly = searchParams.get("comm") === "true";
   const launchedOnly = searchParams.get("avail") === "true";
+  const baasOnly = searchParams.get("baas") === "true";
 
   const [filtersOpen, setFiltersOpen] = useState(false); // mobile collapse
   const [shared, setShared] = useState(false);
@@ -120,12 +122,13 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
       if (!matchesPrice(item, price)) return false;
       if (commercialOnly && !item.commercial) return false;
       if (launchedOnly && !isLaunched(item.launchdate)) return false;
+      if (baasOnly && !item.baas) return false;
       return true;
     });
-  }, [brand, category, commercialOnly, items, launchedOnly, price, query]);
+  }, [brand, category, commercialOnly, items, launchedOnly, price, query, baasOnly]);
 
-  const hasActiveFilters = category !== "all" || brand !== "all" || price !== "all" || commercialOnly || launchedOnly || !!query;
-  const activeFilterCount = [category !== "all", brand !== "all", price !== "all", commercialOnly, launchedOnly, !!query].filter(Boolean).length;
+  const hasActiveFilters = category !== "all" || brand !== "all" || price !== "all" || commercialOnly || launchedOnly || baasOnly || !!query;
+  const activeFilterCount = [category !== "all", brand !== "all", price !== "all", commercialOnly, launchedOnly, baasOnly, !!query].filter(Boolean).length;
 
   const clearAll = () => {
     router.push(pathname, { scroll: false });
@@ -261,6 +264,16 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
             >
               <BadgeCheck size={12} /> Available now
             </button>
+            <button
+              onClick={() => updateFilters({ baas: !baasOnly })}
+              className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all duration-200 ${
+                baasOnly
+                  ? "bg-sky-500 border-sky-500 text-white"
+                  : "bg-white border-slate-200 text-slate-600 hover:border-sky-300 hover:text-sky-600"
+              }`}
+            >
+              <Zap size={12} /> BAAS
+            </button>
             {hasActiveFilters && (
               <button
                 onClick={clearAll}
@@ -366,7 +379,16 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
                     )}
                   </div>
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
-                    {item.pricing && <span className="font-semibold text-slate-800">{item.pricing}</span>}
+                    {item.pricing && (
+                      <span className="font-semibold text-slate-800">
+                        {item.pricing}
+                        {item.baas && (
+                          <span className="ml-1.5 inline-flex items-center rounded bg-sky-100 px-1 py-0.5 text-[9px] font-bold text-sky-700 uppercase">
+                            BAAS
+                          </span>
+                        )}
+                      </span>
+                    )}
                     {item.topSpeed != null && (
                       <span className="inline-flex items-center gap-1">
                         <Gauge size={11} className="text-amber-500" />{item.topSpeed} km/h

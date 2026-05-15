@@ -17,10 +17,12 @@ export default function ProductOwnershipSection({ item }: { item: EvListing }) {
   const rawPriceStr = item.prices[0] || "10";
   const priceParts = rawPriceStr.split(/[–-]/).map((s: string) => s.trim());
   const specificPriceStr = cleanPrice(
-    variant?.price || item.prices[selectedIndex] || priceParts[selectedIndex] || priceParts[0]
+    item.baas
+      ? (item.prices[selectedIndex] || priceParts[selectedIndex] || priceParts[0])
+      : (variant?.price || item.prices[selectedIndex] || priceParts[selectedIndex] || priceParts[0])
   );
   const priceVal = parseFloat(specificPriceStr) || 10;
-  const currentPrice = priceVal * 100000;
+  const currentPrice = priceVal > 1000 ? priceVal : priceVal * 100000;
 
   const efficiency = variant?.range
     ? (parseFloat(variant.capacity) / parseFloat(variant.range)) * 100

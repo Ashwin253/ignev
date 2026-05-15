@@ -31,6 +31,7 @@ export default async function CatalogPage() {
         commercial: l.commercial,
         launchdate: l.launchdate,
         prices:     l.prices,
+        baas:       l.baas,
       }));
     }
   } catch { /* fall through */ }

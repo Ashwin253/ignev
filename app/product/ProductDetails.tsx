@@ -111,7 +111,7 @@ export default function ProductDetails({ item }: { item: EvListing }) {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {item.pros.length > 0 && (
             <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
-              <p className="mb-4 text-xs font-bold uppercase tracking-wider text-emerald-600">Pros</p>
+              <p className="mb-4 text-xs font-bold uppercase tracking-wider text-emerald-600">Things we like</p>
               <ul className="space-y-2.5">
                 {item.pros.map((pro, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
@@ -124,7 +124,7 @@ export default function ProductDetails({ item }: { item: EvListing }) {
           )}
           {item.cons.length > 0 && (
             <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
-              <p className="mb-4 text-xs font-bold uppercase tracking-wider text-amber-600">Cons</p>
+              <p className="mb-4 text-xs font-bold uppercase tracking-wider text-amber-600">Weakness</p>
               <ul className="space-y-2.5">
                 {item.cons.map((con, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-slate-700">

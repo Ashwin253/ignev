@@ -171,6 +171,7 @@ export type BatteryVariant = {
   price?: string;        // Lakhs (Standard ex-showroom)
   price_baas?: string;   // ₹/km rate (BAAS subscription)
   baseprice?: string;    // Lakhs (BAAS upfront base price)
+  battery_subs?: string; // Battery subscription price fallback
 };
 
 export type EnergyCompareEntry = {
@@ -375,6 +376,7 @@ function mapBatteryVariant(raw: BatteryVariant | Record<string, unknown>): Batte
     price: firstText(record.price, record.price_standard, record.standard_price, record.priceStandard),
     price_baas: firstText(record.price_baas, record.priceBaas, record.baas_price, record.baasPrice),
     baseprice: firstText(record.baseprice, record.basePrice, record.base_price),
+    battery_subs: firstText(record.battery_subs, record.batterySubs, record.battery_subscription, record.batterySubscription),
   };
 }
 
@@ -634,6 +636,8 @@ function mapRestListing(p: RestEvlisting): EvListing {
     baasVariants: baasVariants, // BAAS only - no merge
     galleryImages: parseJsonArray<string>(str("galleryImages") || str("gallery_images")),
     energyComparison: parseJsonArray<EnergyCompareEntry>(str("energyComparison") || str("energy_comparison")),
+    batterySpecs: parseJsonArray<BatterySpec>(str("batterySpecs") || str("battery_specs")),
+    chargingSpecs: parseJsonArray<ChargingSpec>(str("chargingSpecs") || str("charging_specs")),
     offers: parseJsonArray<EVOffer>(str("offervalue") || str("offer_value")),
     baas: hasBaas,
   };

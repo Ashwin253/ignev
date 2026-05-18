@@ -9,6 +9,8 @@ interface BatteryVariant {
   charge: string; // in minutes
   price?: string;
   price_baas?: string; // ₹/km rate for BAAS
+  baseprice?: string; // BAAS upfront base price
+  battery_subs?: string; // Battery subscription price fallback
 }
 
 interface BatterySelectorProps {

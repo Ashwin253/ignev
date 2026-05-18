@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useMemo, useState, useEffect } from "react";
-import { Fuel, MapPinned, Zap, Gauge } from "lucide-react";
+import React, { useMemo, useState } from "react";
 import data from "../../own-cost-data.json";
 
 type StateCost = {
@@ -21,150 +20,74 @@ function rupees(value: number) {
 export default function CostEstimator({ initialPrice, efficiency }: { initialPrice?: number; efficiency?: number }) {
   const [selectedState, setSelectedState] = useState(stateCosts[0].state);
   const [dailyDistanceKm, setDailyDistanceKm] = useState(String(defaults.dailyDistanceKm));
-  const [customFuelPricesEnabled, setCustomFuelPricesEnabled] = useState(false);
-  
-  const state = stateCosts.find((s) => s.state === selectedState) ?? stateCosts[0];
-  
-  const [customElectricityPrice, setCustomElectricityPrice] = useState(String(state.electricityRsPerKwh));
-  const [customPetrolPrice, setCustomPetrolPrice] = useState(String(state.petrolRsPerL));
-  const [customDieselPrice, setCustomDieselPrice] = useState(String(state.dieselRsPerL));
 
-  const fuelPrices = customFuelPricesEnabled
-    ? {
-        electricityRsPerKwh: Number(customElectricityPrice) || state.electricityRsPerKwh,
-        petrolRsPerL: Number(customPetrolPrice) || state.petrolRsPerL,
-        dieselRsPerL: Number(customDieselPrice) || state.dieselRsPerL,
-      }
-    : state;
+  const state = stateCosts.find((s) => s.state === selectedState) ?? stateCosts[0];
 
   const calculation = useMemo(() => {
     const daily = Number(dailyDistanceKm) || defaults.dailyDistanceKm;
     const eff = efficiency || defaults.evEfficiencyKwhPer100Km;
-    
-    const evMonthlyRunning = ((daily * 30) * eff * fuelPrices.electricityRsPerKwh) / 100;
-    const petrolMonthlyRunning = ((daily * 30) / defaults.petrolMileageKmpl) * fuelPrices.petrolRsPerL;
-    const dieselMonthlyRunning = ((daily * 30) / defaults.dieselMileageKmpl) * fuelPrices.dieselRsPerL;
 
-    return {
-      evMonthlyRunning,
-      petrolMonthlyRunning,
-      dieselMonthlyRunning,
-      savings: petrolMonthlyRunning - evMonthlyRunning
-    };
-  }, [dailyDistanceKm, efficiency, fuelPrices]);
+    const evMonthly = ((daily * 30) * eff * state.electricityRsPerKwh) / 100;
+    const petrolMonthly = ((daily * 30) / defaults.petrolMileageKmpl) * state.petrolRsPerL;
+    const dieselMonthly = ((daily * 30) / defaults.dieselMileageKmpl) * state.dieselRsPerL;
+
+    return { evMonthly, petrolMonthly, dieselMonthly, savings: petrolMonthly - evMonthly };
+  }, [dailyDistanceKm, efficiency, state]);
 
   return (
-    <section className="rounded-3xl border border-white/10 bg-slate-950/40 p-6 shadow-2xl backdrop-blur-xl">
-      <div className="mb-6 flex items-center gap-3 text-emerald-400">
-        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500/20">
-          <Fuel size={20} />
-        </div>
-        <div>
-          <h2 className="text-xl font-bold">Ride & Cost Estimator</h2>
-          <p className="text-[10px] uppercase tracking-widest text-slate-400">EV vs Fuel Savings</p>
-        </div>
-      </div>
-
-      <div className="rounded-2xl border border-white/5 bg-black/40 p-5">
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-emerald-300">
-            <MapPinned size={16} />
-            <span className="text-[10px] font-bold uppercase tracking-widest">Select Your State</span>
-          </div>
-          <button
-            onClick={() => setCustomFuelPricesEnabled(!customFuelPricesEnabled)}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              customFuelPricesEnabled ? "bg-emerald-500" : "bg-white/10"
-            }`}
+    <section className="space-y-5">
+      {/* Inputs */}
+      <div className="grid grid-cols-2 gap-2">
+        <label className="flex flex-col gap-1">
+          <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">State</span>
+          <select
+            value={selectedState}
+            onChange={(e) => setSelectedState(e.target.value)}
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-bold text-slate-800 outline-none focus:border-emerald-400"
           >
-            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${customFuelPricesEnabled ? "translate-x-6" : "translate-x-1"}`} />
-          </button>
-        </div>
-
-        <select
-          value={selectedState}
-          onChange={(e) => {
-            const nextState = e.target.value;
-            setSelectedState(nextState);
-            const matched = stateCosts.find((s) => s.state === nextState);
-            if (matched && !customFuelPricesEnabled) {
-              setCustomElectricityPrice(String(matched.electricityRsPerKwh));
-              setCustomPetrolPrice(String(matched.petrolRsPerL));
-              setCustomDieselPrice(String(matched.dieselRsPerL));
-            }
-          }}
-          className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm font-bold text-white outline-none focus:border-emerald-500/50"
-        >
-          {stateCosts.map((s) => (
-            <option key={s.state} value={s.state} className="bg-slate-900">{s.state}</option>
-          ))}
-        </select>
-
-        {customFuelPricesEnabled && (
-          <div className="mt-4 grid gap-3 sm:grid-cols-3">
-            <EditField label="Elec (₹/kWh)" value={customElectricityPrice} onChange={setCustomElectricityPrice} />
-            <EditField label="Petrol (₹/L)" value={customPetrolPrice} onChange={setCustomPetrolPrice} />
-            <EditField label="Diesel (₹/L)" value={customDieselPrice} onChange={setCustomDieselPrice} />
-          </div>
-        )}
-      </div>
-
-      <div className="mt-6">
-        <label className="space-y-2 block">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Daily Average Run (km)</span>
-          <div className="relative flex items-center">
-            <Gauge size={16} className="absolute left-4 text-slate-500" />
-            <input
-              value={dailyDistanceKm}
-              onChange={(e) => setDailyDistanceKm(e.target.value)}
-              className="w-full rounded-2xl border border-white/10 bg-black/40 pl-12 pr-4 py-4 text-sm font-black text-white outline-none focus:border-emerald-500/50"
-              inputMode="numeric"
-            />
-          </div>
+            {stateCosts.map((s) => (
+              <option key={s.state} value={s.state}>{s.state}</option>
+            ))}
+          </select>
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Daily km</span>
+          <input
+            value={dailyDistanceKm}
+            onChange={(e) => setDailyDistanceKm(e.target.value)}
+            inputMode="numeric"
+            placeholder={String(defaults.dailyDistanceKm)}
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-bold text-slate-800 outline-none focus:border-emerald-400 placeholder:text-slate-300"
+          />
         </label>
       </div>
 
-      <div className="mt-8 space-y-4">
-        <div className="flex items-center justify-between rounded-2xl bg-emerald-500/10 border border-emerald-500/20 p-5">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-400 mb-1">Monthly EV Running</p>
-            <p className="text-2xl font-black text-white">₹{rupees(calculation.evMonthlyRunning)}</p>
-          </div>
-          <div className="h-10 w-10 rounded-full bg-emerald-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
-            <Zap size={20} fill="currentColor" />
-          </div>
-        </div>
+      {/* Fuel prices */}
+      <div className="flex gap-3 text-[10px] font-semibold text-slate-500">
+        <span>⚡ ₹{state.electricityRsPerKwh}/kWh</span>
+        <span>⛽ ₹{state.petrolRsPerL}/L</span>
+        <span>🛢️ ₹{state.dieselRsPerL}/L</span>
+      </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="rounded-2xl border border-white/5 bg-black/20 p-4">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Petrol Monthly</p>
-            <p className="text-xl font-bold text-slate-300">₹{rupees(calculation.petrolMonthlyRunning)}</p>
-          </div>
-          <div className="rounded-2xl border border-white/5 bg-black/20 p-4">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Diesel Monthly</p>
-            <p className="text-xl font-bold text-slate-300">₹{rupees(calculation.dieselMonthlyRunning)}</p>
-          </div>
+      {/* Outputs */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className="rounded-xl p-3 border border-emerald-300 bg-emerald-50">
+          <p className="text-[9px] uppercase tracking-wider text-emerald-600 font-bold mb-0.5">EV Monthly</p>
+          <p className="text-base font-black text-emerald-700 leading-tight">₹{rupees(calculation.evMonthly)}</p>
         </div>
-
-        <div className="rounded-2xl bg-linear-to-r from-emerald-600 to-teal-600 p-5 shadow-xl shadow-emerald-900/20">
-          <p className="text-[10px] font-black uppercase tracking-widest text-emerald-100/80 mb-1">Estimated Monthly Savings</p>
-          <p className="text-3xl font-black text-white">₹{rupees(calculation.savings)}</p>
-          <p className="mt-1 text-[10px] font-medium text-emerald-100">Compared to Petrol vehicle</p>
+        <div className="rounded-xl p-3 border border-slate-200 bg-white">
+          <p className="text-[9px] uppercase tracking-wider text-slate-400 font-bold mb-0.5">Petrol</p>
+          <p className="text-base font-black text-slate-900 leading-tight">₹{rupees(calculation.petrolMonthly)}</p>
+        </div>
+        <div className="rounded-xl p-3 border border-slate-200 bg-white">
+          <p className="text-[9px] uppercase tracking-wider text-slate-400 font-bold mb-0.5">Diesel</p>
+          <p className="text-base font-black text-slate-900 leading-tight">₹{rupees(calculation.dieselMonthly)}</p>
+        </div>
+        <div className="rounded-xl p-3 border border-emerald-300 bg-emerald-50">
+          <p className="text-[9px] uppercase tracking-wider text-emerald-600 font-bold mb-0.5">You Save</p>
+          <p className="text-base font-black text-emerald-700 leading-tight">₹{rupees(calculation.savings)}</p>
         </div>
       </div>
     </section>
-  );
-}
-
-function EditField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
-  return (
-    <div className="space-y-1">
-      <span className="text-[9px] font-bold uppercase tracking-tighter text-slate-500">{label}</span>
-      <input
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-xl border border-white/5 bg-white/5 px-3 py-2 text-xs font-bold text-white outline-none focus:border-emerald-500/50"
-      />
-    </div>
   );
 }

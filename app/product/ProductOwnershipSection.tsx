@@ -3,10 +3,18 @@
 import { useState } from "react";
 import LoanCalculator from "../components/LoanCalculator";
 import CostEstimator from "../components/CostEstimator";
+import { Banknote, Fuel } from "lucide-react";
 import type { EvListing } from "../lib/wordpress";
 
+type OwnershipTab = "emi" | "cost";
+
 export default function ProductOwnershipSection({ item }: { item: EvListing }) {
+  return <div id="ownership-section"><ProductOwnershipInner item={item} /></div>;
+}
+
+function ProductOwnershipInner({ item }: { item: EvListing }) {
   const [selectedIndex] = useState(0);
+  const [activeTab, setActiveTab] = useState<OwnershipTab>("emi");
   const variant = item.batteryVariants?.[selectedIndex];
 
   const cleanPrice = (val: string | undefined | null) => {
@@ -29,31 +37,52 @@ export default function ProductOwnershipSection({ item }: { item: EvListing }) {
     : undefined;
 
   return (
-    <div className="mt-20 rounded-[3rem] bg-slate-900 px-6 py-16 md:px-12">
+    <div className="mt-20 rounded-3xl bg-slate-50 border border-slate-200 px-5 py-10 md:px-10 md:py-14">
       {/* Header */}
-      <div className="text-center mb-12">
-        <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.22em] text-slate-400 shadow-sm mb-4">
+      <div className="text-center mb-8">
+        <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500 shadow-sm mb-4">
           Ownership
         </span>
-        <h2 className="text-3xl font-black text-white md:text-4xl">
-          Plan Your <span className="text-sky-400">Ownership</span>
+        <h2 className="text-2xl font-black text-slate-900 md:text-3xl">
+          Plan Your <span className="text-sky-600">Ownership</span>
         </h2>
-        {variant?.capacity && (
-          <p className="mt-3 text-slate-400 max-w-xl mx-auto">
-            Estimates for the <span className="font-bold text-white">{variant.capacity} kWh</span> variant
-          </p>
-        )}
       </div>
 
-      {/* Full-width two-column calculators */}
-      <div className="grid gap-8 lg:grid-cols-2">
-        <LoanCalculator initialPrice={currentPrice} />
-        <CostEstimator initialPrice={currentPrice} efficiency={efficiency} />
+      {/* Tab switcher */}
+      <div className="flex rounded-2xl bg-white border border-slate-200 p-1 gap-1 mb-8">
+        <button
+          onClick={() => setActiveTab("emi")}
+          className={`flex-1 flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition-all ${
+            activeTab === "emi"
+              ? "bg-sky-600 text-white shadow-md"
+              : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+          }`}
+        >
+          <Banknote size={16} />
+          Loan & EMI
+        </button>
+        <button
+          onClick={() => setActiveTab("cost")}
+          className={`flex-1 flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition-all ${
+            activeTab === "cost"
+              ? "bg-emerald-600 text-white shadow-md"
+              : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+          }`}
+        >
+          <Fuel size={16} />
+          Ride & Cost
+        </button>
       </div>
 
-      <p className="mt-10 text-center text-[11px] text-slate-500 font-medium max-w-2xl mx-auto leading-relaxed">
-        * Prices and ownership estimates may vary based on state subsidies, RTO charges, and insurance.{" "}
-        <span className="font-bold text-sky-400">Please enquire for exact on-road pricing in your city.</span>
+      {/* Tab content */}
+      <div>
+        {activeTab === "emi" && <LoanCalculator initialPrice={currentPrice} />}
+        {activeTab === "cost" && <CostEstimator initialPrice={currentPrice} efficiency={efficiency} />}
+      </div>
+
+      <p className="mt-8 text-center text-[11px] text-slate-400 font-medium max-w-xl mx-auto leading-relaxed">
+        * Estimates may vary based on state subsidies, RTO charges, and insurance.{" "}
+        <span className="font-bold text-sky-600">Enquire for exact on-road pricing.</span>
       </p>
     </div>
   );

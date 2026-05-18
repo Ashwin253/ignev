@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -12,6 +12,19 @@ interface ProductGalleryProps {
 export default function ProductGallery({ photos, name }: ProductGalleryProps) {
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState(0);
+
+  // Listen for color-triggered image switch from ProductMainUI
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { index } = (e as CustomEvent<{ index: number }>).detail;
+      if (index >= 0 && index < photos.length) {
+        setDirection(index > current ? 1 : -1);
+        setCurrent(index);
+      }
+    };
+    window.addEventListener("gallery-set-image", handler);
+    return () => window.removeEventListener("gallery-set-image", handler);
+  }, [current, photos.length]);
 
   const prev = () => {
     setDirection(-1);

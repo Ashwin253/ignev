@@ -12,6 +12,8 @@ import { getSiteContent } from "../../lib/site-content";
 import ProductGallery from "../../components/ProductGallery";
 import ProductMainUI from "../ProductMainUI";
 import ProductOwnershipSection from "../ProductOwnershipSection";
+import ProductColorStrip from "../ProductColorStrip";
+import ProductDetails from "../ProductDetails";
 import Image from "next/image";
 
 export const revalidate = 60;
@@ -77,8 +79,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
         <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
 
-          {/* ── Gallery ── */}
-          <ProductGallery photos={photos} name={`${item.brand} ${item.title}`} />
+          {/* ── Gallery + Colors ── */}
+          <div className="flex flex-col gap-4">
+            <ProductGallery photos={photos} name={`${item.brand} ${item.title}`} />
+            <ProductColorStrip colors={item.colors} galleryImages={item.galleryImages} />
+          </div>
 
           {/* ── Details Area ── */}
           <div className="flex flex-col gap-5">
@@ -111,6 +116,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
         {/* ── Ownership — full width below the 2-col grid ── */}
         <ProductOwnershipSection item={item} />
+
+        {/* ── Detailed Specs + Pros/Cons ── */}
+        <ProductDetails item={item} />
 
         {/* Related */}
         {related.length > 0 && (

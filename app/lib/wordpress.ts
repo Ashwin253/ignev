@@ -40,32 +40,69 @@ export function wpEnabled(): boolean {
 
 type GQLResponse<T> = { data?: T; errors?: { message: string }[] };
 
+/** Delay helper for retry backoff */
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Core GraphQL fetch with retry logic.
+ * Retries up to 3 times with exponential backoff (500ms, 1s, 2s)
+ * to handle intermittent WP hosting timeouts.
+ */
 async function gql<T>(
   query: string,
   variables: Record<string, unknown> = {},
-  options: { auth?: boolean; revalidate?: number } = {}
+  options: { auth?: boolean; revalidate?: number; retries?: number } = {}
 ): Promise<T> {
+  const maxRetries = options.retries ?? 3;
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (options.auth) {
     const auth = authHeader();
     if (auth) headers["Authorization"] = auth;
   }
 
-  const res = await fetch(gqlEndpoint(), {
-    method: "POST",
-    headers,
-    body: JSON.stringify({ query, variables }),
-    next: options.revalidate !== undefined
-      ? { revalidate: options.revalidate }
-      : { revalidate: 60 },   // default ISR — never block static builds
-  });
+  let lastError: Error | null = null;
 
-  if (!res.ok) throw new Error(`GraphQL HTTP ${res.status}: ${await res.text()}`);
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
 
-  const json = (await res.json()) as GQLResponse<T>;
-  if (json.errors?.length) throw new Error(`GraphQL: ${json.errors.map((e) => e.message).join(", ")}`);
-  if (!json.data) throw new Error("GraphQL returned no data.");
-  return json.data;
+      const res = await fetch(gqlEndpoint(), {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ query, variables }),
+        signal: controller.signal,
+        next: options.revalidate !== undefined
+          ? { revalidate: options.revalidate }
+          : { revalidate: 60 },
+      });
+
+      clearTimeout(timeout);
+
+      if (!res.ok) {
+        throw new Error(`GraphQL HTTP ${res.status}: ${await res.text()}`);
+      }
+
+      const json = (await res.json()) as GQLResponse<T>;
+      if (json.errors?.length) {
+        throw new Error(`GraphQL: ${json.errors.map((e) => e.message).join(", ")}`);
+      }
+      if (!json.data) throw new Error("GraphQL returned no data.");
+      return json.data;
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
+      // Don't retry on GraphQL schema errors (400s with field errors)
+      if (lastError.message.includes("Cannot query field")) throw lastError;
+      // Retry with backoff
+      if (attempt < maxRetries - 1) {
+        await delay(500 * Math.pow(2, attempt)); // 500ms, 1s, 2s
+      }
+    }
+  }
+
+  throw lastError ?? new Error("GraphQL request failed after retries.");
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -114,6 +151,9 @@ export type EvListing = {
   cons: string[];
   colors: string[];           // hex codes e.g. ["673ab7", "b7673a"]
   galleryImages: string[];    // full image URLs
+  energyComparison: EnergyCompareEntry[];
+  batterySpecs: BatterySpec[];
+  chargingSpecs: ChargingSpec[];
   offers: EVOffer[];
   baas: boolean;              // Added for BAAS
   // Legacy / optional
@@ -125,11 +165,42 @@ export type EvListing = {
 
 export type BatteryVariant = {
   modelName?: string;
-  capacity: string;   // kWh
-  range: string;      // km
-  charge: string;     // hours
-  price?: string;     // Lakhs (Standard)
-  battery_subs?: string; // Lakhs (BAAS)
+  capacity: string;      // kWh
+  range: string;         // km
+  charge: string;        // minutes (raw from WP)
+  price?: string;        // Lakhs (Standard ex-showroom)
+  price_baas?: string;   // ₹/km rate (BAAS subscription)
+  baseprice?: string;    // Lakhs (BAAS upfront base price)
+};
+
+export type EnergyCompareEntry = {
+  name: string;
+  fuelType: string;
+  mileage: string;
+  fuelPrice: string;
+  priceRange?: string;
+};
+
+export type BatterySpec = {
+  variantName: string;
+  turboSupercharger: string;
+  maxPower: string;
+  maxTorque: string;
+  idleStartStop: string;
+  emissionStandard: string;
+  engine: string;
+  electricMotor: string;
+};
+
+export type ChargingSpec = {
+  variantName: string;
+  acRegularCharging: string;
+  dcFastCharging: string;
+  acFastCharging: string;
+  drivingRange: string;
+  chargingOptions: string;
+  chargerIncluded: string;
+  chargerConnectionType: string;
 };
 
 export type EVOffer = {
@@ -186,6 +257,9 @@ type RawEvlistNode = {
   conpoint: string | null;
   colorTestText: string | null;
   galleryImages: string | null;
+  energyComparison: string | null;
+  batterySpecs: string | null;
+  chargingSpecs: string | null;
   evlist: {
     brand: string | null;
     type: string[] | null;
@@ -285,39 +359,29 @@ function priceNumber(raw: string | undefined): number | null {
 
 function hasVariantBaasPricing(variants: BatteryVariant[]): boolean {
   return variants.some((variant) => {
-    if (variant.battery_subs) return true;
-    const price = priceNumber(variant.price);
-    return price !== null && price > 1000;
+    if (variant.price_baas) return true;
+    if (variant.baseprice) return true;
+    return false;
   });
 }
 
 function mapBatteryVariant(raw: BatteryVariant | Record<string, unknown>): BatteryVariant {
   const record = raw as Record<string, unknown>;
   return {
-    modelName: firstText(record.modelName, record.modelNames, record.model_name, record.model),
+    modelName: firstText(record.modelName, record.ModelNames, record.modelNames, record.model_name, record.model),
     capacity: firstText(record.capacity, record.battery_capacity, record.batteryCapacity),
     range: firstText(record.range, record.real_world_range, record.realWorldRange),
-    charge: firstText(record.charge, record.charging_time, record.chargingTime),
-    price: firstText(
-      record.price_baas,
-      record.priceBaas,
-      record.baas_price,
-      record.baasPrice,
-      record.battery_subs,
-      record.batterySubs,
-      record.subscription_price,
-      record.price,
-      record.price_standard,
-      record.standard_price,
-      record.priceStandard
-    ),
+    charge: firstText(record.charge, record.chargingtime, record.charging_time, record.chargingTime),
+    price: firstText(record.price, record.price_standard, record.standard_price, record.priceStandard),
+    price_baas: firstText(record.price_baas, record.priceBaas, record.baas_price, record.baasPrice),
+    baseprice: firstText(record.baseprice, record.basePrice, record.base_price),
   };
 }
 
 function parseBatteryVariants(raw: unknown): BatteryVariant[] {
   return parseJsonArray<Record<string, unknown>>(raw)
     .map(mapBatteryVariant)
-    .filter((variant) => variant.capacity || variant.range || variant.charge || variant.price || variant.battery_subs);
+    .filter((variant) => variant.capacity || variant.range || variant.charge || variant.price || variant.price_baas || variant.baseprice);
 }
 
 function applyBatterySubs(variants: BatteryVariant[], rawSubs: unknown): BatteryVariant[] {
@@ -346,6 +410,9 @@ const EVLIST_FRAGMENT = /* GraphQL */ `
   conpoint
   colorTestText
   galleryImages
+  energyComparison
+  batterySpecs
+  chargingSpecs
   evlist {
     brand
     type
@@ -384,6 +451,9 @@ function mapEvlistNode(n: RawEvlistNode): EvListing {
     cons: parseTextList(n.conpoint),
     colors: parseJsonArray<string>(n.colorTestText),
     galleryImages: parseJsonArray<string>(n.galleryImages),
+    energyComparison: parseJsonArray<EnergyCompareEntry>(n.energyComparison),
+    batterySpecs: parseJsonArray<BatterySpec>(n.batterySpecs),
+    chargingSpecs: parseJsonArray<ChargingSpec>(n.chargingSpecs),
     offers: [],
     batteryTypes: [],
     baas: hasBaas,
@@ -563,6 +633,7 @@ function mapRestListing(p: RestEvlisting): EvListing {
     batteryVariants: standardVariants, // Standard only
     baasVariants: baasVariants, // BAAS only - no merge
     galleryImages: parseJsonArray<string>(str("galleryImages") || str("gallery_images")),
+    energyComparison: parseJsonArray<EnergyCompareEntry>(str("energyComparison") || str("energy_comparison")),
     offers: parseJsonArray<EVOffer>(str("offervalue") || str("offer_value")),
     baas: hasBaas,
   };
@@ -573,17 +644,25 @@ function mapRestListing(p: RestEvlisting): EvListing {
  * Falls back to GraphQL if REST meta is empty.
  */
 export async function fetchEvListingBySlugREST(slug: string): Promise<EvListing | null> {
-  try {
-    const url = `${WP_REST_BASE}/evlisting?slug=${encodeURIComponent(slug)}&_embed&per_page=1`;
-    const res = await fetch(url, { next: { revalidate: 60 } });
-    if (!res.ok) return null;
-    const posts = await res.json() as RestEvlisting[];
-    const listing = mapRestListing(posts[0]);
-    // If meta is populated with core data, use it
-    if (listing.brand && (listing.batteryVariants.length > 0 || listing.topSpeed !== null)) {
-      return listing;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+      const url = `${WP_REST_BASE}/evlisting?slug=${encodeURIComponent(slug)}&_embed&per_page=1`;
+      const res = await fetch(url, { signal: controller.signal, next: { revalidate: 60 } });
+      clearTimeout(timeout);
+      if (!res.ok) throw new Error(`REST ${res.status}`);
+      const posts = await res.json() as RestEvlisting[];
+      if (!posts[0]) break;
+      const listing = mapRestListing(posts[0]);
+      if (listing.brand && (listing.batteryVariants.length > 0 || listing.topSpeed !== null)) {
+        return listing;
+      }
+      break; // REST worked but no meta — fall through to GraphQL
+    } catch {
+      if (attempt < 2) await delay(500 * Math.pow(2, attempt));
     }
-  } catch { /* fall through */ }
+  }
   // Fallback to GraphQL
   return fetchEvListingBySlug(slug);
 }
@@ -593,17 +672,24 @@ export async function fetchEvListingBySlugREST(slug: string): Promise<EvListing 
  * Falls back to GraphQL if meta is empty.
  */
 export async function fetchEvListingsREST(perPage = 100): Promise<EvListing[]> {
-  try {
-    const url = `${WP_REST_BASE}/evlisting?_embed&per_page=${perPage}&status=publish&orderby=date&order=desc`;
-    const res = await fetch(url, { next: { revalidate: 60 } });
-    if (!res.ok) return [];
-    const posts = await res.json() as RestEvlisting[];
-    const listings = posts.map(mapRestListing);
-    // If first listing has meaningful data, REST meta is working
-    if (listings[0]?.brand && (listings[0].photo || listings[0].prices.length > 0)) {
-      return listings;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 12000);
+      const url = `${WP_REST_BASE}/evlisting?_embed&per_page=${perPage}&status=publish&orderby=date&order=desc`;
+      const res = await fetch(url, { signal: controller.signal, next: { revalidate: 60 } });
+      clearTimeout(timeout);
+      if (!res.ok) throw new Error(`REST ${res.status}`);
+      const posts = await res.json() as RestEvlisting[];
+      const listings = posts.map(mapRestListing);
+      if (listings[0]?.brand && (listings[0].photo || listings[0].prices.length > 0)) {
+        return listings;
+      }
+      break; // REST worked but no meta
+    } catch {
+      if (attempt < 2) await delay(500 * Math.pow(2, attempt));
     }
-  } catch { /* fall through */ }
+  }
   // Fallback to GraphQL
   return fetchEvListings(perPage);
 }

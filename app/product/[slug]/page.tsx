@@ -63,8 +63,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     .slice(0, 3);
 
   return (
-    <section className="min-h-screen bg-white py-28">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section className="min-h-screen bg-white py-28 overflow-x-hidden">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 overflow-hidden">
 
         {/* Breadcrumb */}
         <nav className="mb-8 flex items-center gap-2 text-sm text-slate-500">
@@ -78,7 +78,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
 
           {/* ── Gallery (with built-in color + photo buttons) ── */}
-          <div>
+          <div className="min-w-0 overflow-hidden">
             <ProductGallery photos={photos} name={`${item.brand} ${item.title}`} colors={item.colors} />
           </div>
 

@@ -48,7 +48,7 @@ export default function ProductGallery({ photos, name, colors = [] }: ProductGal
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 w-full max-w-full overflow-hidden">
       {/* Main image */}
       <div className="relative aspect-4/3 overflow-hidden rounded-[1.75rem] bg-slate-100 select-none">
         <AnimatePresence initial={false} custom={direction} mode="wait">

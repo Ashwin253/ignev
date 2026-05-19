@@ -180,7 +180,19 @@ export type EnergyCompareEntry = {
   mileage: string;
   fuelPrice: string;
   priceRange?: string;
+  modelused?: string;
 };
+
+function mapEnergyEntry(raw: Record<string, unknown>): EnergyCompareEntry {
+  return {
+    name: String(raw.name ?? ""),
+    fuelType: String(raw.fuelType ?? raw.fueltype ?? raw.fuel_type ?? ""),
+    mileage: String(raw.mileage ?? ""),
+    fuelPrice: String(raw.fuelPrice ?? raw.fuelprice ?? raw.fuel_price ?? ""),
+    priceRange: raw.priceRange ? String(raw.priceRange) : undefined,
+    modelused: String(raw.modelused ?? raw.model_used ?? raw.modelUsed ?? ""),
+  };
+}
 
 export type BatterySpec = {
   variantName: string;
@@ -453,7 +465,7 @@ function mapEvlistNode(n: RawEvlistNode): EvListing {
     cons: parseTextList(n.conpoint),
     colors: parseJsonArray<string>(n.colorTestText),
     galleryImages: parseJsonArray<string>(n.galleryImages),
-    energyComparison: parseJsonArray<EnergyCompareEntry>(n.energyComparison),
+    energyComparison: parseJsonArray<Record<string, unknown>>(n.energyComparison).map(mapEnergyEntry),
     batterySpecs: parseJsonArray<BatterySpec>(n.batterySpecs),
     chargingSpecs: parseJsonArray<ChargingSpec>(n.chargingSpecs),
     offers: [],
@@ -635,7 +647,7 @@ function mapRestListing(p: RestEvlisting): EvListing {
     batteryVariants: standardVariants, // Standard only
     baasVariants: baasVariants, // BAAS only - no merge
     galleryImages: parseJsonArray<string>(str("galleryImages") || str("gallery_images")),
-    energyComparison: parseJsonArray<EnergyCompareEntry>(str("energyComparison") || str("energy_comparison")),
+    energyComparison: parseJsonArray<Record<string, unknown>>(str("energyComparison") || str("energy_comparison")).map(mapEnergyEntry),
     batterySpecs: parseJsonArray<BatterySpec>(str("batterySpecs") || str("battery_specs")),
     chargingSpecs: parseJsonArray<ChargingSpec>(str("chargingSpecs") || str("charging_specs")),
     offers: parseJsonArray<EVOffer>(str("offervalue") || str("offer_value")),

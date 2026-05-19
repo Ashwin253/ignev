@@ -13,11 +13,11 @@ export default function ColorList({ colors, galleryImages = [], activeColor, onS
   if (!colors || colors.length === 0) return null;
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">
+    <div className="rounded-2xl border border-slate-200 bg-white/90 backdrop-blur-sm p-3 md:p-4 md:bg-slate-50 md:backdrop-blur-none">
+      <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-2 md:mb-3 hidden md:block">
         Available colors
       </p>
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-2 md:gap-3 justify-center md:justify-start">
         {colors.map((hex, i) => {
           const code = hex.startsWith("#") ? hex : `#${hex.replace("#", "")}`;
           const isActive = activeColor === code;
@@ -33,7 +33,7 @@ export default function ColorList({ colors, galleryImages = [], activeColor, onS
             >
               {/* Color swatch */}
               <div
-                className={`h-10 w-10 rounded-xl border-2 shadow-sm transition-all ${
+                className={`h-8 w-8 md:h-10 md:w-10 rounded-lg md:rounded-xl border-2 shadow-sm transition-all ${
                   isActive
                     ? "border-slate-900 shadow-lg ring-2 ring-slate-200"
                     : "border-white shadow-[0_4px_12px_rgba(0,0,0,0.08)] group-hover:shadow-md"

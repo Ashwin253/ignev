@@ -94,24 +94,26 @@ export default function BatterySelector({
         )}
       </div>
 
-      {/* Variant pills */}
-      <div className="flex flex-wrap gap-1.5 mb-4">
-        {activeVariants.map((v, i) => (
-          <button
-            key={`${showBaas ? "b" : "s"}-${i}`}
-            onClick={() => onSelect(i)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${
-              selectedIndex === i
-                ? showBaas
-                  ? "bg-emerald-600 border-emerald-600 text-white shadow-sm"
-                  : "bg-sky-600 border-sky-600 text-white shadow-sm"
-                : "bg-white border-slate-200 text-slate-600 hover:border-sky-200"
-            }`}
-          >
-            {v.modelName || `${v.capacity} kWh`}
-          </button>
-        ))}
-      </div>
+      {/* Variant selector — always dropdown */}
+      {activeVariants.length > 1 && (
+        <div className="mb-4">
+          <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5">
+            <BatteryCharging size={14} className={showBaas ? "text-emerald-500" : "text-sky-500"} />
+            <select
+              value={selectedIndex}
+              onChange={(e) => onSelect(Number(e.target.value))}
+              className="flex-1 bg-transparent text-sm font-bold text-slate-800 outline-none appearance-none cursor-pointer"
+            >
+              {activeVariants.map((v, i) => (
+                <option key={`${showBaas ? "b" : "s"}-${i}`} value={i}>
+                  {v.modelName || `${v.capacity} kWh`}{v.price ? ` — ₹${v.price} L` : ""}
+                </option>
+              ))}
+            </select>
+            <svg className="h-4 w-4 text-slate-400 shrink-0 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+          </label>
+        </div>
+      )}
 
       {/* Specs grid */}
       <div className={`grid gap-2 ${showBaas ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-3"}`}>

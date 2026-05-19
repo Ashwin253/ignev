@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
   // Enable gzip/brotli compression
   compress: true,
 
+  // Allow local network access in dev (mobile testing)
+  allowedDevOrigins: ["192.168.137.1"],
+
   images: {
     // Prefer AVIF then WebP — smaller files, same quality
     formats: ["image/avif", "image/webp"],

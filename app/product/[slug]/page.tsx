@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
-  BadgeCheck, CalendarDays,
-  Tag, Zap,
+  BadgeCheck, CalendarDays, Zap,
 } from "lucide-react";
 import {
   fetchEvListingsREST, fetchEvListingBySlugREST, fetchEvListingBySlug,
@@ -12,7 +11,6 @@ import { getSiteContent } from "../../lib/site-content";
 import ProductGallery from "../../components/ProductGallery";
 import ProductMainUI from "../ProductMainUI";
 import ProductOwnershipSection from "../ProductOwnershipSection";
-import ProductColorStrip from "../ProductColorStrip";
 import ProductDetails from "../ProductDetails";
 import Image from "next/image";
 
@@ -79,10 +77,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
         <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
 
-          {/* ── Gallery + Colors ── */}
-          <div className="flex flex-col gap-4">
-            <ProductGallery photos={photos} name={`${item.brand} ${item.title}`} />
-            <ProductColorStrip colors={item.colors} galleryImages={item.galleryImages} />
+          {/* ── Gallery (with built-in color + photo buttons) ── */}
+          <div>
+            <ProductGallery photos={photos} name={`${item.brand} ${item.title}`} colors={item.colors} />
           </div>
 
           {/* ── Details Area ── */}
@@ -91,21 +88,22 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             {/* Title + badges */}
             <div className="mb-2">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-600 mb-1">{item.brand}</p>
-              <h1 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">{item.title}</h1>
-
-              <div className="mt-4 flex flex-wrap gap-2">
-                {item.types[0] && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-700">
-                    <Zap size={13} className="text-sky-500" />{item.types[0]}
+              <div className="flex items-center gap-3">
+                <h1 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">{item.title}</h1>
+                <div className="flex flex-col gap-1 ml-auto shrink-0">
+                  {item.types[0] && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">
+                      <Zap size={10} className="text-sky-500" />{item.types[0]}
+                    </span>
+                  )}
+                  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                    launched ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
+                  }`}>
+                    {launched
+                      ? <><BadgeCheck size={10} className="text-emerald-500" /> {launchLabel}</>
+                      : <><CalendarDays size={10} /> {launchLabel}</>}
                   </span>
-                )}
-                <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium ${
-                  launched ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
-                }`}>
-                  {launched
-                    ? <><BadgeCheck size={13} className="text-emerald-500" /> {launchLabel}</>
-                    : <><CalendarDays size={13} /> {launchLabel}</>}
-                </span>
+                </div>
               </div>
             </div>
 

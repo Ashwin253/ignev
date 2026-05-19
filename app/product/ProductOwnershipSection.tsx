@@ -40,9 +40,9 @@ function ProductOwnershipInner({ item }: { item: EvListing }) {
     <div className="mt-20 rounded-3xl bg-slate-50 border border-slate-200 px-5 py-10 md:px-10 md:py-14">
       {/* Header */}
       <div className="text-center mb-8">
-        <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500 shadow-sm mb-4">
+        {/* <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500 shadow-sm mb-4">
           Ownership
-        </span>
+        </span> */}
         <h2 className="text-2xl font-black text-slate-900 md:text-3xl">
           Plan Your <span className="text-sky-600">Ownership</span>
         </h2>

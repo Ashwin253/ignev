@@ -263,8 +263,8 @@ export default function Hero({
               >
                 {/* Images */}
                 <div className="absolute inset-0">
-                  <Image src={slide.imageHorizontal} alt={slide.cta} fill sizes="100vw" className="hidden object-cover md:block" priority />
-                  <Image src={slide.imageVertical}   alt={slide.cta} fill sizes="100vw" className="object-cover md:hidden" priority />
+                  <Image src={slide.imageHorizontal} alt={slide.cta} fill sizes="(max-width: 1280px) 100vw, 1280px" className="hidden object-cover md:block" priority />
+                  <Image src={slide.imageVertical}   alt={slide.cta} fill sizes="(max-width: 768px) 100vw, 768px" className="object-cover md:hidden" priority />
                 </div>
 
                 {/* Bottom gradient only — no colour overlay */}

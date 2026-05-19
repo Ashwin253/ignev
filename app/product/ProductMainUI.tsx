@@ -185,7 +185,7 @@ export default function ProductMainUI({ item, slug }: { item: EvListing; slug: s
                 <p className="text-[10px] font-black uppercase tracking-widest text-sky-500">Estimated monthly EMI</p>
                 <button
                   onClick={() => triggerEnquiryModal(`EMI Enquiry: ${item.brand} ${item.title}`)}
-                  className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white text-[10px] font-black uppercase tracking-wider px-4 py-2 shadow-lg shadow-emerald-500/30 transition-all hover:shadow-emerald-500/50 hover:scale-105 active:scale-95"
+                  className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white text-[10px] font-black uppercase tracking-wider px-4 py-2 shadow-lg shadow-emerald-500/30 transition-all hover:shadow-emerald-500/50 hover:scale-105 active:scale-95"
                 >
                   💰 Get Best Rate
                 </button>
@@ -224,7 +224,6 @@ export default function ProductMainUI({ item, slug }: { item: EvListing; slug: s
         {/* Energy tab */}
         {activeTab === "energy" && (
           <div className="space-y-3">
-            {/* <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Cost per kilometre</p> */}
 
             {item.energyComparison.length > 0 ? (() => {
               const selfEntry = item.energyComparison.find(c => c.fuelType?.toLowerCase() === "self");
@@ -243,7 +242,10 @@ export default function ProductMainUI({ item, slug }: { item: EvListing; slug: s
                           </div>
                           <div>
                             <p className="text-sm font-bold text-slate-900">{item.title}</p>
-                            <p className="text-[10px] text-slate-500">₹{selfEntry.fuelPrice}/km · {selfEntry.mileage} km range</p>
+                            <p className="text-[10px] text-slate-500">
+                              {selfEntry.modelused && <span className="font-medium text-emerald-600">{selfEntry.modelused} · </span>}
+                              ₹{selfEntry.fuelPrice}/km · {selfEntry.mileage} km range
+                            </p>
                           </div>
                         </div>
                         <div className="text-right">
@@ -276,7 +278,10 @@ export default function ProductMainUI({ item, slug }: { item: EvListing; slug: s
                             </div>
                             <div>
                               <p className="text-sm font-bold text-slate-900">{comp.name}</p>
-                              <p className="text-[10px] text-slate-500">{comp.fuelType} · {priceLabel} · {mileageLabel}</p>
+                              <p className="text-[10px] text-slate-500">
+                                {comp.modelused && <span className="font-medium text-slate-600">{comp.modelused} · </span>}
+                                {comp.fuelType} · {priceLabel} · {mileageLabel}
+                              </p>
                             </div>
                           </div>
                           <div className="text-right">
@@ -287,11 +292,13 @@ export default function ProductMainUI({ item, slug }: { item: EvListing; slug: s
                         {monthlySaving > 0 && (
                           <div className="mt-2 pt-2 border-t border-slate-200/50">
                             <p className="text-[10px] font-bold text-emerald-600">You save ₹{rupees(monthlySaving)}/mo with {item.title}</p>
+                            <p className="text-[9px] text-slate-400">based on 40 km daily ride</p>
                           </div>
                         )}
                         {monthlySaving < 0 && (
                           <div className="mt-2 pt-2 border-t border-slate-200/50">
                             <p className="text-[10px] font-bold text-rose-600">You lose ₹{rupees(Math.abs(monthlySaving))}/mo with {item.title}</p>
+                            <p className="text-[9px] text-slate-400">based on 40 km daily ride</p>
                           </div>
                         )}
                       </div>

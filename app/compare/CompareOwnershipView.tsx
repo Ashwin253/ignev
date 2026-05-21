@@ -41,6 +41,7 @@ export default function CompareOwnershipView({
   products: CompactProduct[];
   selectedVariants?: Record<string, number>;
 }) {
+  const [localVariants, setLocalVariants] = useState<Record<string, number>>(selectedVariants ?? {});
   const [loanYears, setLoanYears] = useState(3);
   const [downPaymentPercent, setDownPaymentPercent] = useState(20);
   const [interestRate, setInterestRate] = useState(9.5);
@@ -51,7 +52,7 @@ export default function CompareOwnershipView({
 
   const results = useMemo(() => {
     return products.map(p => {
-      const variantIndex = selectedVariants[p.slug] ?? 0;
+      const variantIndex = localVariants[p.slug] ?? 0;
       const variant = p.batteryVariants?.[variantIndex];
       
       const rawPriceStr = p.prices[0] || "10";
@@ -62,7 +63,8 @@ export default function CompareOwnershipView({
       const specificPriceStr = variant?.price || p.prices[variantIndex] || priceParts[variantIndex] || priceParts[0];
       
       const priceVal = cleanPrice(specificPriceStr) || 10;
-      const price = priceVal * 100000;
+      // If > 1000, it's already in full rupees; otherwise it's in lakhs
+      const price = priceVal > 1000 ? priceVal : priceVal * 100000;
       const downPayment = (price * downPaymentPercent) / 100;
       const principal = price - downPayment;
       const emi = calcEmi(principal, interestRate, loanYears * 12);
@@ -82,7 +84,7 @@ export default function CompareOwnershipView({
         total: emi + runningCost
       };
     });
-  }, [products, loanYears, downPaymentPercent, interestRate, dailyDistance, state, selectedVariants]);
+  }, [products, loanYears, downPaymentPercent, interestRate, dailyDistance, state, localVariants]);
 
   return (
     <div className="space-y-8">
@@ -90,10 +92,10 @@ export default function CompareOwnershipView({
       <div className="rounded-3xl border border-slate-200 bg-slate-50/50 p-6 backdrop-blur-sm">
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
           <InputGroup label="Loan Tenure" value={`${loanYears} yrs`}>
-            <input type="range" min="1" max="7" value={loanYears} onChange={(e) => setLoanYears(parseInt(e.target.value))} className="w-full accent-sky-600" />
+            <input type="range" min="1" max="7" step="0.5" value={loanYears} onChange={(e) => setLoanYears(parseFloat(e.target.value))} className="w-full accent-sky-600" />
           </InputGroup>
           <InputGroup label="Down Payment" value={`${downPaymentPercent}%`}>
-            <input type="range" min="0" max="80" step="5" value={downPaymentPercent} onChange={(e) => setDownPaymentPercent(parseInt(e.target.value))} className="w-full accent-sky-600" />
+            <input type="range" min="0" max="80" step="1" value={downPaymentPercent} onChange={(e) => setDownPaymentPercent(parseInt(e.target.value))} className="w-full accent-sky-600" />
           </InputGroup>
           <InputGroup label="Interest Rate" value={`${interestRate.toFixed(1)}%`}>
             <input type="range" min="6" max="18" step="0.5" value={interestRate} onChange={(e) => setInterestRate(parseFloat(e.target.value))} className="w-full accent-violet-600" />
@@ -101,11 +103,11 @@ export default function CompareOwnershipView({
           <InputGroup label="Daily Run" value={`${dailyDistance} km`}>
             <input type="range" min="5" max="200" step="5" value={dailyDistance} onChange={(e) => setDailyDistance(parseInt(e.target.value))} className="w-full accent-sky-600" />
           </InputGroup>
-          <InputGroup label="Your State" value={selectedState}>
+          {/* <InputGroup label="Your State" value={selectedState}>
             <select value={selectedState} onChange={(e) => setSelectedState(e.target.value)} className="w-full bg-transparent text-sm font-bold outline-none">
               {stateCosts.map(s => <option key={s.state} value={s.state}>{s.state}</option>)}
             </select>
-          </InputGroup>
+          </InputGroup> */}
         </div>
       </div>
 
@@ -123,13 +125,21 @@ export default function CompareOwnershipView({
                 <div className="min-w-0">
                   <p className="text-[8px] font-black uppercase tracking-[0.2em] text-sky-600 truncate">{p.brand}</p>
                   <h3 className="text-xs font-black text-slate-900 leading-tight line-clamp-2">{p.title}</h3>
-                  {p.batteryVariants?.[selectedVariants[p.slug] ?? 0] && (
-                    <p className="text-[9px] font-bold text-slate-400 mt-0.5">
-                      {p.batteryVariants[selectedVariants[p.slug] ?? 0].capacity} kWh variant
-                    </p>
-                  )}
                 </div>
               </div>
+
+              {/* Variant selector */}
+              {p.batteryVariants?.length > 1 && (
+                <select
+                  value={localVariants[p.slug] ?? 0}
+                  onChange={(e) => setLocalVariants(prev => ({ ...prev, [p.slug]: parseInt(e.target.value) }))}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 outline-none cursor-pointer hover:bg-slate-100 transition-colors"
+                >
+                  {p.batteryVariants.map((v: any, idx: number) => (
+                    <option key={idx} value={idx}>{v.modelName || `${v.capacity} kWh`}</option>
+                  ))}
+                </select>
+              )}
 
               {/* Price Reference Card */}
               <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4">

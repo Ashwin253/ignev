@@ -179,7 +179,7 @@ export default function ProductMainUI({ item, slug }: { item: EvListing; slug: s
                 >
                   {item.batteryVariants.map((v, i) => (
                     <option key={i} value={i}>
-                      {v.modelName || `${v.capacity} kWh`}{v.price ? ` — ₹${v.price} L` : ""}
+                      {v.modelName || `${v.capacity} kWh`}
                     </option>
                   ))}
                 </select>

@@ -111,12 +111,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <ProductMainUI item={item} slug={slug} />
           </div>
         </div>
-
-        {/* ── Ownership — full width below the 2-col grid ── */}
-        <ProductOwnershipSection item={item} />
-
         {/* ── Detailed Specs + Pros/Cons ── */}
         <ProductDetails item={item} />
+{/* ── Ownership — full width below the 2-col grid ── */}
+        <ProductOwnershipSection item={item} />
 
         {/* Related */}
         {related.length > 0 && (

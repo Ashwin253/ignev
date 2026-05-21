@@ -20,7 +20,7 @@ function CollapsibleSection({ title, icon, defaultOpen = false, children, accent
         <p className="text-xs font-bold uppercase tracking-wider text-slate-600 flex-1 text-left">{title}</p>
         {open ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
       </button>
-      {open && <div className="px-5 py-4 bg-white">{children}</div>}
+      {open && <div className="px-5 py-4 bg-white max-w-2xl mx-auto">{children}</div>}
     </div>
   );
 }
@@ -42,12 +42,9 @@ export default function ProductDetails({ item }: { item: EvListing }) {
   const chargingSpec = item.chargingSpecs.find((s) => s.variantName === selectedVariant);
 
   return (
-    <div className="mt-16 rounded-3xl border border-slate-200 bg-white px-5 py-10 md:px-10 md:py-14">
+    <div className="mt-16 rounded-3xl border border-slate-200 bg-white px-5 py-8 md:px-10 md:py-10">
       {/* Header */}
-      <div className="text-center mb-8">
-        {/* <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500 shadow-sm mb-4">
-          Specifications
-        </span> */}
+      <div className="text-center mb-5">
         <h2 className="text-2xl font-black text-slate-900 md:text-3xl">
           Detailed <span className="text-sky-600">Specs</span>
         </h2>
@@ -55,7 +52,7 @@ export default function ProductDetails({ item }: { item: EvListing }) {
 
       {/* Variant selector */}
       {variants.length > 0 && (
-        <div className="mb-8 flex justify-center">
+        <div className="mb-5 flex justify-center">
           <label className="relative inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5">
             <Gauge size={14} className="text-sky-500 shrink-0" />
             {variants.length > 1 ? (
@@ -87,18 +84,18 @@ export default function ProductDetails({ item }: { item: EvListing }) {
             icon={<Zap size={16} className="text-sky-500" />}
             defaultOpen={true}
           >
-            <dl className="space-y-3">
-              {batterySpec.electricMotor && <SpecRow label="Electric Motor" value={batterySpec.electricMotor} />}
-              {batterySpec.maxPower && <SpecRow label="Max Power" value={`${batterySpec.maxPower} bhp`} />}
-              {batterySpec.maxTorque && <SpecRow label="Max Torque" value={`${batterySpec.maxTorque} Nm`} />}
-              {batterySpec.engine && <SpecRow label="Engine" value={batterySpec.engine} />}
-              {batterySpec.emissionStandard && <SpecRow label="Emission" value={batterySpec.emissionStandard} />}
-              {batterySpec.turboSupercharger && batterySpec.turboSupercharger !== "0" && (
-                <SpecRow label="Turbo/Supercharger" value="Yes" />
-              )}
-              {batterySpec.idleStartStop && batterySpec.idleStartStop !== "0" && (
-                <SpecRow label="Idle Start/Stop" value="Yes" />
-              )}
+            <dl className="space-y-0.5">
+              {[
+                batterySpec.electricMotor && { label: "Electric Motor", value: batterySpec.electricMotor },
+                batterySpec.maxPower && { label: "Max Power (bhp@rpm)", value: `${batterySpec.maxPower} bhp` },
+                batterySpec.maxTorque && { label: "Max Torque (Nm@rpm)", value: `${batterySpec.maxTorque} Nm` },
+                batterySpec.engine && { label: "Engine", value: batterySpec.engine },
+                batterySpec.emissionStandard && { label: "Emission", value: batterySpec.emissionStandard },
+                batterySpec.turboSupercharger && batterySpec.turboSupercharger !== "0" && { label: "Turbo/Supercharger", value: "Yes" },
+                batterySpec.idleStartStop && batterySpec.idleStartStop !== "0" && { label: "Idle Start/Stop", value: "Yes" },
+              ].filter(Boolean).map((row, i) => (
+                <SpecRow key={i} label={(row as {label:string;value:string}).label} value={(row as {label:string;value:string}).value} odd={i % 2 === 0} />
+              ))}
             </dl>
           </CollapsibleSection>
         )}
@@ -109,14 +106,18 @@ export default function ProductDetails({ item }: { item: EvListing }) {
             title="Charging"
             icon={<BatteryCharging size={16} className="text-emerald-500" />}
           >
-            <dl className="space-y-3">
-              {chargingSpec.drivingRange && <SpecRow label="Driving Range" value={chargingSpec.drivingRange} />}
-              {chargingSpec.acRegularCharging && <SpecRow label="AC Regular" value={chargingSpec.acRegularCharging} />}
-              {chargingSpec.dcFastCharging && <SpecRow label="DC Fast" value={chargingSpec.dcFastCharging} />}
-              {chargingSpec.acFastCharging && <SpecRow label="AC Fast" value={chargingSpec.acFastCharging} />}
-              {chargingSpec.chargingOptions && <SpecRow label="Options" value={chargingSpec.chargingOptions} />}
-              {chargingSpec.chargerIncluded && <SpecRow label="Charger Included" value={chargingSpec.chargerIncluded} />}
-              {chargingSpec.chargerConnectionType && <SpecRow label="Connection Type" value={chargingSpec.chargerConnectionType} />}
+            <dl className="space-y-0.5">
+              {[
+                chargingSpec.drivingRange && { label: "Driving Range", value: chargingSpec.drivingRange },
+                chargingSpec.acRegularCharging && { label: "AC Regular", value: chargingSpec.acRegularCharging },
+                chargingSpec.dcFastCharging && { label: "DC Fast", value: chargingSpec.dcFastCharging },
+                chargingSpec.acFastCharging && { label: "AC Fast", value: chargingSpec.acFastCharging },
+                chargingSpec.chargingOptions && { label: "Options", value: chargingSpec.chargingOptions },
+                chargingSpec.chargerIncluded && { label: "Charger Included", value: chargingSpec.chargerIncluded },
+                chargingSpec.chargerConnectionType && { label: "Connection Type", value: chargingSpec.chargerConnectionType },
+              ].filter(Boolean).map((row, i) => (
+                <SpecRow key={i} label={(row as {label:string;value:string}).label} value={(row as {label:string;value:string}).value} odd={i % 2 === 0} />
+              ))}
             </dl>
           </CollapsibleSection>
         )}
@@ -159,9 +160,9 @@ export default function ProductDetails({ item }: { item: EvListing }) {
   );
 }
 
-function SpecRow({ label, value }: { label: string; value: string }) {
+function SpecRow({ label, value, odd }: { label: string; value: string; odd?: boolean }) {
   return (
-    <div className="flex items-center justify-between gap-4">
+    <div className={`flex items-center justify-between gap-4 rounded-lg px-3 py-2 ${odd ? "bg-slate-50" : ""}`}>
       <dt className="text-xs text-slate-500">{label}</dt>
       <dd className="text-xs font-bold text-slate-900 text-right">{value}</dd>
     </div>

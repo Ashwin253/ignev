@@ -7,9 +7,10 @@ import {
   BadgeCheck, BatteryCharging, 
   CalendarDays, CheckCircle2, Gauge, 
   MapPin, Tag, X, GitCompare, Zap, Clock,
-  CarFront, Banknote, Sparkles
+  CarFront, Banknote, Sparkles, Trash2
 } from "lucide-react";
 import { isLaunched } from "../lib/wordpress";
+import { useCompare } from "../context/CompareContext";
 import AddVehicleToCompare from "./AddVehicleToCompare";
 import CompareOwnershipView from "./CompareOwnershipView";
 
@@ -24,6 +25,7 @@ export default function CompareMainUI({
 }) {
   const [activeTab, setActiveTab] = useState<"specs" | "ownership">("specs");
   const [selectedVariants, setSelectedVariants] = useState<Record<string, number>>({});
+  const { removeFromCompare } = useCompare();
 
   const cleanPrice = (val: string | undefined | null) => {
     if (!val) return "";
@@ -70,16 +72,18 @@ export default function CompareMainUI({
         const priceParts = rawPriceStr.split(/[–-]/).map((s: string) => s.trim());
         
         // Match logic with Ownership tab for consistency
-        const specificPrice = cleanPrice(variant?.price || v[variantIndex] || priceParts[variantIndex] || priceParts[0]);
+        const rawVal = cleanPrice(variant?.price || v[variantIndex] || priceParts[variantIndex] || priceParts[0]);
+        // If > 1000, it's in full rupees — convert to lakhs
+        const displayPrice = rawVal > 1000 ? (rawVal / 100000).toFixed(2).replace(/\.00$/, "") : String(rawVal);
         
         return (
           <div className="flex flex-col gap-1">
             <span className="text-lg font-black text-slate-900">
-              ₹{specificPrice} L
+              ₹{displayPrice} L
             </span>
-            {v.length > 0 && v[0].includes("-") && (
+            {v.length > 1 && (
               <span className="text-[9px] font-medium text-slate-400 italic">
-                From range: ₹{v[0]} L
+                Range: ₹{v.join("–")} L
               </span>
             )}
           </div>
@@ -202,6 +206,14 @@ export default function CompareMainUI({
               <div className="flex items-end pb-4 font-bold text-slate-400 uppercase tracking-widest text-[10px]">Overview</div>
               {filtered.map((p) => (
                 <div key={p.id} className="relative space-y-4">
+                  {/* Remove button */}
+                  <button
+                    onClick={() => removeFromCompare(p.slug)}
+                    className="absolute -top-1 -right-1 z-10 flex items-center gap-1 rounded-full bg-rose-100 text-rose-600 hover:bg-rose-500 hover:text-white transition-colors shadow-sm px-2.5 py-1 text-[10px] font-bold"
+                    title={`Remove ${p.title}`}
+                  >
+                    <X size={12} /> Remove
+                  </button>
                   <div className="relative aspect-video overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
                     {p.photo && (
                       <Image src={p.photo} alt={p.title} fill className="object-cover" />

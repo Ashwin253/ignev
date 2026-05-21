@@ -452,7 +452,7 @@ function mapEvlistNode(n: RawEvlistNode): EvListing {
     title: n.title.trim(),
     slug: n.slug,
     date: n.date,
-    photo: n.featuredImage?.node?.sourceUrl ?? "",
+    photo: n.featuredImage?.node?.sourceUrl || parseJsonArray<string>(n.galleryImages)[0] || "",
     brand: e?.brand ?? "",
     types: e?.type ?? [],
     prices: e?.price ?? [],
@@ -602,7 +602,9 @@ function mapRestListing(p: RestEvlisting): EvListing {
   const num = (k: string): number | null => { const v = parseFloat(String(m[k] ?? "")); return isNaN(v) ? null : v; };
   const bool = (k: string): boolean => boolValue(m[k]);
 
-  const photo = p._embedded?.["wp:featuredmedia"]?.[0]?.source_url ?? "";
+  const featuredPhoto = p._embedded?.["wp:featuredmedia"]?.[0]?.source_url || "";
+  const galleryFallback = parseJsonArray<string>(str("galleryImages") || str("gallery_images"));
+  const photo = featuredPhoto || galleryFallback[0] || "";
 
   // Stop merging - keep them separate
   const standardVariants = parseBatteryVariants(m["battery_variants"] ?? m["batteryVariants"]);

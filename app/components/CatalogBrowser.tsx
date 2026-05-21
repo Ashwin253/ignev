@@ -269,7 +269,7 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
                     : "bg-white border-slate-200 text-slate-600 hover:border-sky-300 hover:text-sky-600"
                   }`}
               >
-                <Zap size={12} /> BAAS
+                <Zap size={12} /> Battery not included (BAAS)
                 <span className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-slate-200 text-[9px] font-black text-slate-600" title="Battery as a Service — batteries are priced separately">?</span>
               </button>
               {hasActiveFilters && (

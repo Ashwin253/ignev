@@ -114,11 +114,11 @@ function FeaturedCard({ listing, index }: { listing: EvListing; index: number })
             </span>
           )}
 
-          {listing.pros[0] && (
+          {/* {listing.pros[0] && (
             <p className="flex items-start gap-1.5 text-xs text-slate-600 line-clamp-2">
               <CheckCircle2 size={13} className="text-emerald-500 mt-0.5 shrink-0" />{listing.pros[0]}
             </p>
-          )}
+          )} */}
 
           <div className="mt-auto pt-1 flex gap-2">
             <div className="flex-1 flex items-center justify-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-xl text-[11px] font-bold transition-colors">

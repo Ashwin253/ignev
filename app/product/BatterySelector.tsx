@@ -1,6 +1,7 @@
 "use client";
 
-import { BatteryCharging, Zap, IndianRupee } from "lucide-react";
+import { useState } from "react";
+import { BatteryCharging, Zap, IndianRupee, HelpCircle, X } from "lucide-react";
 
 interface BatteryVariant {
   modelName?: string;
@@ -57,6 +58,7 @@ export default function BatterySelector({
   showBaas,
   onToggleBaas,
 }: BatterySelectorProps) {
+  const [showHelp, setShowHelp] = useState(false);
   const activeVariants = showBaas ? baasVariants : standardVariants;
   if (!activeVariants || activeVariants.length === 0) return null;
 
@@ -69,9 +71,19 @@ export default function BatterySelector({
     <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-          Battery variants
-        </p>
+        <div className="flex items-center gap-1.5">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+            Battery variants
+          </p>
+          {canToggle && (
+            <button
+              onClick={() => setShowHelp(!showHelp)}
+              className="flex items-center justify-center h-4 w-4 rounded-full bg-slate-200 text-slate-500 hover:bg-slate-300 transition-colors"
+            >
+              <HelpCircle size={10} />
+            </button>
+          )}
+        </div>
         {canToggle && (
           <div className="flex gap-0.5 bg-white rounded-lg p-0.5 border border-slate-200">
             <button
@@ -80,8 +92,7 @@ export default function BatterySelector({
                 !showBaas ? "bg-sky-600 text-white" : "text-slate-500 hover:text-slate-700"
               }`}
             >
-              Standard
-              <span className={`inline-flex items-center justify-center h-4 w-4 rounded-full text-[9px] font-black ${!showBaas ? "bg-white/30" : "bg-slate-200 text-slate-500"}`} title="Pricing includes battery">?</span>
+              Included <BatteryCharging size={12} />
             </button>
             <button
               onClick={() => onToggleBaas(true)}
@@ -89,12 +100,25 @@ export default function BatterySelector({
                 showBaas ? "bg-emerald-600 text-white" : "text-slate-500 hover:text-slate-700"
               }`}
             >
-              BAAS
-              <span className={`inline-flex items-center justify-center h-4 w-4 rounded-full text-[9px] font-black ${showBaas ? "bg-white/30" : "bg-slate-200 text-slate-500"}`} title="Battery as a Service — batteries are priced separately">?</span>
+              Excluded <BatteryCharging size={12} />
             </button>
           </div>
         )}
       </div>
+
+      {/* Help popup */}
+      {showHelp && (
+        <div className="mb-3 rounded-xl border border-slate-200 bg-white p-3 text-[11px] text-slate-600 leading-relaxed relative">
+          <button onClick={() => setShowHelp(false)} className="absolute top-2 right-2 text-slate-400 hover:text-slate-600">
+            <X size={12} />
+          </button>
+          <p className="font-bold text-slate-800 mb-1.5">What does this mean?</p>
+          <div className="space-y-1.5">
+            <p><span className="font-bold text-sky-600">🔋 Included</span> — Battery is part of the vehicle price. You own it outright.</p>
+            <p><span className="font-bold text-emerald-600">🔋 Excluded</span> — Battery is rented separately. Lower upfront cost, you pay per km or monthly for battery usage. Batteries are swappable/replaceable.</p>
+          </div>
+        </div>
+      )}
 
       {/* Variant selector — always dropdown */}
       {activeVariants.length > 1 && (
@@ -108,7 +132,7 @@ export default function BatterySelector({
             >
               {activeVariants.map((v, i) => (
                 <option key={`${showBaas ? "b" : "s"}-${i}`} value={i}>
-                  {v.modelName || `${v.capacity} kWh`}{v.price ? ` — ₹${v.price} L` : ""}
+                  {v.modelName || `${v.capacity} kWh`}
                 </option>
               ))}
             </select>

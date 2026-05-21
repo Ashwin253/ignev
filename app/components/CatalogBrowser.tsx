@@ -270,6 +270,7 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
                   }`}
               >
                 <Zap size={12} /> BAAS
+                <span className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-slate-200 text-[9px] font-black text-slate-600" title="Battery as a Service — batteries are priced separately">?</span>
               </button>
               {hasActiveFilters && (
                 <button
@@ -378,8 +379,8 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
                       <span className="font-semibold text-slate-800">
                         {item.pricing}
                         {item.baas && (
-                          <span className="ml-1.5 inline-flex items-center rounded bg-sky-100 px-1 py-0.5 text-[9px] font-bold text-sky-700 uppercase">
-                            BAAS
+                          <span className="ml-1.5 inline-flex items-center gap-0.5 rounded bg-sky-100 px-1.5 py-0.5 text-[9px] font-bold text-sky-700 uppercase" title="Battery as a Service — batteries are priced separately">
+                            BAAS <span className="inline-flex items-center justify-center h-3.5 w-3.5 rounded-full bg-sky-200 text-[8px] font-black">?</span>
                           </span>
                         )}
                       </span>

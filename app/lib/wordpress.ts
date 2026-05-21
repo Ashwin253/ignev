@@ -113,10 +113,10 @@ async function gql<T>(
  *   ISO string    → "May 2026"
  */
 export function formatLaunchDate(launchdate: string | null | undefined): string {
-  if (!launchdate) return "Available Now";
+  if (!launchdate) return " ";
   const d = new Date(launchdate);
-  if (isNaN(d.getTime())) return "Available Now";
-  return d <= new Date() ? "Available Now" : "Coming Soon";
+  if (isNaN(d.getTime())) return " ";
+  return d <= new Date() ? " " : "Coming Soon";
 }
 
 /** True when the vehicle is already launched (no future date). */

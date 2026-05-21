@@ -76,19 +76,21 @@ export default function BatterySelector({
           <div className="flex gap-0.5 bg-white rounded-lg p-0.5 border border-slate-200">
             <button
               onClick={() => onToggleBaas(false)}
-              className={`text-[10px] font-bold px-2 py-1 rounded-md transition-all ${
+              className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md transition-all ${
                 !showBaas ? "bg-sky-600 text-white" : "text-slate-500 hover:text-slate-700"
               }`}
             >
               Standard
+              <span className={`inline-flex items-center justify-center h-4 w-4 rounded-full text-[9px] font-black ${!showBaas ? "bg-white/30" : "bg-slate-200 text-slate-500"}`} title="Pricing includes battery">?</span>
             </button>
             <button
               onClick={() => onToggleBaas(true)}
-              className={`text-[10px] font-bold px-2 py-1 rounded-md transition-all ${
+              className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md transition-all ${
                 showBaas ? "bg-emerald-600 text-white" : "text-slate-500 hover:text-slate-700"
               }`}
             >
               BAAS
+              <span className={`inline-flex items-center justify-center h-4 w-4 rounded-full text-[9px] font-black ${showBaas ? "bg-white/30" : "bg-slate-200 text-slate-500"}`} title="Battery as a Service — batteries are priced separately">?</span>
             </button>
           </div>
         )}

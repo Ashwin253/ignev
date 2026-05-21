@@ -21,13 +21,14 @@ type Product = {
 type ProductsPayload = {
   electric_cars: Product[]; electric_two_wheelers: Product[]; electric_autos: Product[];
 };
-type TabKey = "featured" | "buy" | "cars" | "twoWheelers" | "autos";
+type TabKey = "featured" | "fresh" | "buy" | "cars" | "twoWheelers" | "autos";
 
 const tabs: Array<{ key: TabKey; label: string; icon: typeof CarFront }> = [
-  { key: "featured",    label: "Featured",   icon: Star      },
-  { key: "cars",        label: "Cars",       icon: CarFront  },
-  { key: "twoWheelers", label: "2 Wheelers", icon: Bike      },
-  { key: "autos",       label: "Autos",      icon: Truck     },
+  { key: "featured",    label: "Featured",      icon: Star      },
+  { key: "fresh",       label: "Fresh Release", icon: Sparkles  },
+  { key: "cars",        label: "Cars",          icon: CarFront  },
+  { key: "twoWheelers", label: "2 Wheelers",    icon: Bike      },
+  { key: "autos",       label: "Autos",         icon: Truck     },
 ];
 
 const heroSlides = [
@@ -200,10 +201,12 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
 export default function Hero({
   products,
   featured = [],
+  freshReleases = [],
   banners = [],
 }: {
   products: ProductsPayload;
   featured?: EvListing[];
+  freshReleases?: EvListing[];
   banners?: HeroBanner[];
 }) {
   const [activeTab, setActiveTab] = useState<TabKey>(featured.length ? "featured" : "buy");
@@ -212,7 +215,12 @@ export default function Hero({
   const railRef = useRef<HTMLDivElement | null>(null);
 
   const slides = banners.length > 0 ? banners : heroSlides;
-  const visibleTabs = featured.length ? tabs : tabs.filter((t) => t.key !== "featured");
+  const visibleTabs = useMemo(() => {
+    let t = tabs;
+    if (!featured.length) t = t.filter((tab) => tab.key !== "featured");
+    if (!freshReleases.length) t = t.filter((tab) => tab.key !== "fresh");
+    return t;
+  }, [featured.length, freshReleases.length]);
   const activeTabMeta = visibleTabs.find((t) => t.key === activeTab) ?? visibleTabs[0];
 
   const catalogProducts = useMemo(() => {
@@ -397,6 +405,8 @@ export default function Hero({
                           isActive
                             ? tab.key === "featured"
                               ? "border-amber-300 bg-amber-500 text-white shadow-[0_4px_16px_rgba(245,158,11,0.3)]"
+                              : tab.key === "fresh"
+                              ? "border-emerald-300 bg-emerald-500 text-white shadow-[0_4px_16px_rgba(16,185,129,0.3)]"
                               : "border-sky-300 bg-sky-600 text-white shadow-[0_4px_16px_rgba(2,132,199,0.25)]"
                             : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
                         }`}
@@ -422,6 +432,8 @@ export default function Hero({
                 >
                   {activeTab === "featured"
                     ? featured.map((listing, i) => <FeaturedCard key={listing.id} listing={listing} index={i} />)
+                    : activeTab === "fresh"
+                    ? freshReleases.map((listing, i) => <FeaturedCard key={listing.id} listing={listing} index={i} />)
                     : catalogProducts.map((product, i) => <ProductCard key={`${activeTab}-${product.name}`} product={product} index={i} />)
                   }
                 </motion.div>

@@ -5,6 +5,7 @@ import {
   type EvListing,
 } from "./lib/wordpress";
 import Hero from "./components/Hero";
+import FreshReleases from "./components/FreshReleases";
 import PopularBrands from "./components/PopularBrands";
 import ElectricCore3D from "./components/ElectricCore3D";
 import ComingSoonCars, { type ComingSoonItem } from "./components/ComingSoonCars";
@@ -35,6 +36,15 @@ export default async function Home() {
 
   const featured = listings.slice(0, 4);
 
+  // Fresh releases: vehicles launched in the last 2 months
+  const twoMonthsAgo = new Date();
+  twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+  const freshReleases = listings.filter((l) => {
+    if (!l.launchdate) return false;
+    const d = new Date(l.launchdate);
+    return !isNaN(d.getTime()) && d <= new Date() && d >= twoMonthsAgo;
+  }).slice(0, 8);
+
   const wpUpcoming: ComingSoonItem[] = listings
     .filter((l) => !isLaunched(l.launchdate))
     .slice(0, 8)
@@ -50,7 +60,8 @@ export default async function Home() {
 
   return (
     <>
-      <Hero products={content.products} featured={featured} banners={banners} />
+      <Hero products={content.products} featured={featured} freshReleases={freshReleases} banners={banners} />
+      <FreshReleases listings={freshReleases} />
       <ComingSoonCars items={comingSoonItems} />
       <PopularBrands />
       <ElectricCore3D />

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import dynamic from "next/dynamic";
 import BatterySelector from "./BatterySelector";
 import EnquiryTrigger from "./EnquiryTrigger";
 import { triggerEnquiryModal } from "../components/EnquiryModal";
@@ -11,6 +12,11 @@ import {
   BatteryCharging, Banknote, Fuel, ArrowDown, Zap, ChevronDown,
 } from "lucide-react";
 import type { EvListing } from "../lib/wordpress";
+
+const DotLottieReact = dynamic(
+  () => import("@lottiefiles/dotlottie-react").then((m) => m.DotLottieReact),
+  { ssr: false }
+);
 
 type TabKey = "battery" | "emi" | "energy";
 
@@ -98,9 +104,10 @@ export default function ProductMainUI({ item, slug }: { item: EvListing; slug: s
           </div>
           <button
             onClick={() => triggerEnquiryModal(`Offers: ${item.brand} ${item.title}`)}
-            className="shrink-0 inline-flex items-center gap-1.5 rounded-md  animate-bounce bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-[10px] font-black uppercase tracking-wider px-4 py-2 shadow-lg shadow-amber-500/30 transition-all hover:shadow-amber-500/50 hover:scale-105 active:scale-95"
+            className="shrink-0 inline-flex items-center gap-1.5 rounded-md  bg-linear-to-r from-green-300 to-blue-500 hover:from-amber-600 hover:to-orange-600 text-white text-[15px] font-black uppercase tracking-wider px-4 py-2 shadow-lg shadow-amber-500/30 transition-all hover:shadow-amber-500/50 hover:scale-105 active:scale-95"
           >
-            🤩 Latest Offers
+            <DotLottieReact src="/Giftpremiumanimation.lottie" loop autoplay className="h-10 w-10" />
+            Latest Offers
           </button>
         </div>
         {item.prices.length > 1 && !showBaas && (
@@ -185,9 +192,10 @@ export default function ProductMainUI({ item, slug }: { item: EvListing; slug: s
                 <p className="text-[10px] font-black uppercase tracking-widest text-sky-500">Estimated monthly EMI</p>
                 <button
                   onClick={() => triggerEnquiryModal(`EMI Enquiry: ${item.brand} ${item.title}`)}
-                  className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white text-[10px] font-black uppercase tracking-wider px-4 py-2 shadow-lg shadow-emerald-500/30 transition-all hover:shadow-emerald-500/50 hover:scale-105 active:scale-95"
+                  className="shrink-0 inline-flex items-center gap-1.5 rounded-md bg-linear-to-r from-emerald-400 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white text-[15px] font-black uppercase tracking-wider px-4 py-2 shadow-lg shadow-emerald-500/30 transition-all hover:shadow-emerald-500/50 hover:scale-105 active:scale-95"
                 >
-                  💰 Get Best Rate
+                 <DotLottieReact src="/rupeediscount.lottie" loop autoplay className="h-10 w-10" />
+                 Get Best Rate
                 </button>
               </div>
               <p className="text-4xl font-black text-slate-900">

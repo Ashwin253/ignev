@@ -72,7 +72,7 @@ export default function CompareMainUI({
         const priceParts = rawPriceStr.split(/[–-]/).map((s: string) => s.trim());
         
         // Match logic with Ownership tab for consistency
-        const rawVal = cleanPrice(variant?.price || v[variantIndex] || priceParts[variantIndex] || priceParts[0]);
+        const rawVal = parseFloat(cleanPrice(variant?.price || v[variantIndex] || priceParts[variantIndex] || priceParts[0])) || 10;
         // If > 1000, it's in full rupees — convert to lakhs
         const displayPrice = rawVal > 1000 ? (rawVal / 100000).toFixed(2).replace(/\.00$/, "") : String(rawVal);
         

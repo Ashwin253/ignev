@@ -298,7 +298,18 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
       </div>
 
       {/* ── Grid ── */}
-      {filteredItems.length === 0 ? (
+      {items.length === 0 ? (
+        <div className="py-20 text-center text-slate-400">
+          <Zap size={36} className="mx-auto mb-3 opacity-30" />
+          <p className="font-medium text-slate-600">Couldn't load listings. Server might be busy.</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 inline-flex items-center gap-2 rounded-full bg-sky-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-sky-700 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      ) : filteredItems.length === 0 ? (
         <div className="py-20 text-center text-slate-400">
           <Zap size={36} className="mx-auto mb-3 opacity-30" />
           <p className="font-medium text-slate-600">No listings match your filters.</p>

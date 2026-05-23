@@ -4,13 +4,26 @@ import {
   formatLaunchDate, isLaunched,
   type EvListing,
 } from "./lib/wordpress";
+import dynamic from "next/dynamic";
 import Hero from "./components/Hero";
 import FreshReleases from "./components/FreshReleases";
-import PopularBrands from "./components/PopularBrands";
-import ElectricCore3D from "./components/ElectricCore3D";
-import ComingSoonCars, { type ComingSoonItem } from "./components/ComingSoonCars";
-import WhyEVPULSE from "./components/WhyIgnev";
-import LatestUpdates from "./components/LatestUpdates";
+import type { ComingSoonItem } from "./components/ComingSoonCars";
+
+const ComingSoonCars = dynamic(() => import("./components/ComingSoonCars"), {
+  loading: () => <div className="h-64" />,
+});
+const PopularBrands = dynamic(() => import("./components/PopularBrands"), {
+  loading: () => <div className="h-48" />,
+});
+const ElectricCore3D = dynamic(() => import("./components/ElectricCore3D"), {
+  loading: () => <div className="h-64" />,
+});
+const LatestUpdates = dynamic(() => import("./components/LatestUpdates"), {
+  loading: () => <div className="h-48" />,
+});
+const WhyEVPULSE = dynamic(() => import("./components/WhyIgnev"), {
+  loading: () => <div className="h-48" />,
+});
 
 // ISR — revalidate every 60 s
 export const revalidate = 60;

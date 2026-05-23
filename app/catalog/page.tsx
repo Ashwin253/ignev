@@ -16,6 +16,33 @@ export const metadata = {
 export default async function CatalogPage() {
   let items: import("../components/CatalogBrowser").CatalogItem[] = [];
 
+  function formatPricing(prices: string[]): string {
+    if (!prices.length) return "";
+    // If the first entry already contains text like "Lakh", "₹", or words — show as-is
+    const first = prices[0].trim();
+    if (/[a-zA-Z]/.test(first) || first.includes("₹")) {
+      return prices.length === 1 ? first : prices.join(" | ");
+    }
+    // Numeric entries — show "From lowest"
+    const starts: number[] = [];
+    for (const p of prices) {
+      const cleaned = p.replace(/[₹,a-zA-Z\s]/g, "");
+      const parts = cleaned.split(/[–-]/);
+      for (const part of parts) {
+        const num = parseFloat(part.trim());
+        if (Number.isFinite(num) && num > 0) {
+          starts.push(num > 1000 ? num / 100000 : num);
+        }
+      }
+    }
+    if (!starts.length) return first; // fallback to raw text
+    const min = Math.min(...starts);
+    const max = Math.max(...starts);
+    const fmt = (v: number) => v % 1 === 0 ? String(v) : v.toFixed(2).replace(/\.?0+$/, "");
+    if (min === max) return `₹${fmt(min)} Lakh`;
+    return `₹${fmt(min)}–${fmt(max)} Lakh`;
+  }
+
   // GraphQL first, fall back to REST if it fails
   try {
     const listings = await fetchEvListings(200);
@@ -24,7 +51,7 @@ export default async function CatalogPage() {
         name: l.title,
         brand: l.brand,
         type: l.types[0] ?? "",
-        pricing: l.prices.length ? `₹${l.prices.join("–")} lakh` : "",
+        pricing: formatPricing(l.prices),
         photo: l.photo,
         slug: l.slug,
         topSpeed: l.topSpeed,
@@ -45,7 +72,7 @@ export default async function CatalogPage() {
           name: l.title,
           brand: l.brand,
           type: l.types[0] ?? "",
-          pricing: l.prices.length ? `₹${l.prices.join("–")} lakh` : "",
+          pricing: formatPricing(l.prices),
           photo: l.photo,
           slug: l.slug,
           topSpeed: l.topSpeed,

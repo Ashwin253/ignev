@@ -73,10 +73,12 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
   const price = searchParams.get("price") ?? "all";
   const commercialOnly = searchParams.get("comm") === "true";
   const launchedOnly = searchParams.get("avail") === "true";
+  const comingSoonOnly = searchParams.get("upcoming") === "true";
   const baasOnly = searchParams.get("baas") === "true";
 
   const [filtersOpen, setFiltersOpen] = useState(false); // mobile collapse
   const [shared, setShared] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(6);
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -123,13 +125,18 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
       if (!matchesPrice(item, price)) return false;
       if (commercialOnly && !item.commercial) return false;
       if (launchedOnly && !isLaunched(item.launchdate)) return false;
+      if (comingSoonOnly && isLaunched(item.launchdate)) return false;
       if (baasOnly && !item.baas) return false;
       return true;
     });
-  }, [brand, category, commercialOnly, items, launchedOnly, price, query, baasOnly]);
+  }, [brand, category, commercialOnly, items, launchedOnly, comingSoonOnly, price, query, baasOnly]);
 
-  const hasActiveFilters = category !== "all" || brand !== "all" || price !== "all" || commercialOnly || launchedOnly || baasOnly || !!query;
-  const activeFilterCount = [category !== "all", brand !== "all", price !== "all", commercialOnly, launchedOnly, baasOnly, !!query].filter(Boolean).length;
+  // Reset visible count when filters change
+  const filterKey = `${query}-${category}-${brand}-${price}-${commercialOnly}-${launchedOnly}-${comingSoonOnly}-${baasOnly}`;
+  useEffect(() => { setVisibleCount(6); }, [filterKey]);
+
+  const hasActiveFilters = category !== "all" || brand !== "all" || price !== "all" || commercialOnly || launchedOnly || comingSoonOnly || baasOnly || !!query;
+  const activeFilterCount = [category !== "all", brand !== "all", price !== "all", commercialOnly, launchedOnly, comingSoonOnly, baasOnly, !!query].filter(Boolean).length;
 
   const clearAll = () => {
     router.push(pathname, { scroll: false });
@@ -263,6 +270,15 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
                 <BadgeCheck size={12} /> Available now
               </button>
               <button
+                onClick={() => updateFilters({ upcoming: !comingSoonOnly })}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all duration-200 ${comingSoonOnly
+                    ? "bg-amber-500 border-amber-500 text-white"
+                    : "bg-white border-slate-200 text-slate-600 hover:border-amber-300 hover:text-amber-600"
+                  }`}
+              >
+                <CalendarDays size={12} /> Coming Soon
+              </button>
+              <button
                 onClick={() => updateFilters({ baas: !baasOnly })}
                 className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all duration-200 ${baasOnly
                     ? "bg-sky-500 border-sky-500 text-white"
@@ -318,8 +334,9 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
           </button>
         </div>
       ) : (
+        <>
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
-          {filteredItems.map((item) => {
+          {filteredItems.slice(0, visibleCount).map((item) => {
             const launched = isLaunched(item.launchdate);
             const launchLabel = formatLaunchDate(item.launchdate);
 
@@ -420,6 +437,17 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
             );
           })}
         </div>
+        {visibleCount < filteredItems.length && (
+          <div className="mt-6 flex justify-center">
+            <button
+              onClick={() => setVisibleCount((c) => c + 6)}
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors"
+            >
+              Load More ({filteredItems.length - visibleCount} remaining)
+            </button>
+          </div>
+        )}
+        </>
       )}
     </div>
   );

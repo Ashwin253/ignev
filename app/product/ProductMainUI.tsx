@@ -110,11 +110,22 @@ export default function ProductMainUI({ item, slug }: { item: EvListing; slug: s
             Latest Offers
           </button>
         </div>
-        {item.prices.length > 1 && !showBaas && (
-          <p className="text-[10px] text-slate-400 px-1">
-            <span className="font-bold text-slate-500">Full range:</span> ₹{item.prices.join(" – ")} L
-          </p>
-        )}
+        {item.prices.length > 1 && !showBaas && (() => {
+          const nums = item.prices.map((p) => {
+            const n = parseFloat(p.replace(/[₹,a-zA-Z\s]/g, ""));
+            return Number.isFinite(n) ? (n > 1000 ? n / 100000 : n) : 0;
+          }).filter((n) => n > 0);
+          if (nums.length < 2) return null;
+          const min = Math.min(...nums);
+          const max = Math.max(...nums);
+          if (min === max) return null;
+          const fmt = (v: number) => v % 1 === 0 ? String(v) : v.toFixed(2).replace(/0$/, "");
+          return (
+            <p className="text-[10px] text-slate-400 px-1">
+              <span className="font-bold text-slate-500">Full range:</span> ₹{fmt(min)} – {fmt(max)} L
+            </p>
+          );
+        })()}
       </div>
 
       {/* ── Tab bar ── */}

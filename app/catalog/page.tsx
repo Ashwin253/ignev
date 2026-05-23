@@ -2,7 +2,7 @@ import React, { Suspense } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import CatalogBrowser from "../components/CatalogBrowser";
-import { fetchEvListings } from "../lib/wordpress";
+import { fetchEvListings, fetchEvListingsREST } from "../lib/wordpress";
 import { getSiteContent } from "../lib/site-content";
 
 // ISR — revalidate every 60 s
@@ -16,7 +16,7 @@ export const metadata = {
 export default async function CatalogPage() {
   let items: import("../components/CatalogBrowser").CatalogItem[] = [];
 
-  // GraphQL is the primary source — it has brand/type/price from evlist ACF
+  // GraphQL first, fall back to REST if it fails
   try {
     const listings = await fetchEvListings(200);
     if (listings.length) {
@@ -34,7 +34,29 @@ export default async function CatalogPage() {
         baas: l.baas,
       }));
     }
-  } catch { /* fall through */ }
+  } catch { /* GraphQL failed */ }
+
+  // REST fallback if GraphQL returned nothing
+  if (!items.length) {
+    try {
+      const listings = await fetchEvListingsREST(200);
+      if (listings.length) {
+        items = listings.map((l) => ({
+          name: l.title,
+          brand: l.brand,
+          type: l.types[0] ?? "",
+          pricing: l.prices.length ? `₹${l.prices.join("–")} lakh` : "",
+          photo: l.photo,
+          slug: l.slug,
+          topSpeed: l.topSpeed,
+          commercial: l.commercial,
+          launchdate: l.launchdate,
+          prices: l.prices,
+          baas: l.baas,
+        }));
+      }
+    } catch { /* REST also failed */ }
+  }
 
   // Fall back to local JSON if GraphQL returned nothing
   if (!items.length) {

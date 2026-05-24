@@ -55,7 +55,7 @@ async function gql<T>(
   variables: Record<string, unknown> = {},
   options: { auth?: boolean; revalidate?: number; retries?: number } = {}
 ): Promise<T> {
-  const maxRetries = options.retries ?? 3;
+  const maxRetries = options.retries ?? 2;
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (options.auth) {
     const auth = authHeader();
@@ -67,7 +67,7 @@ async function gql<T>(
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
+      const timeout = setTimeout(() => controller.abort(), 8000); // 8s timeout
 
       const res = await fetch(gqlEndpoint(), {
         method: "POST",
@@ -662,10 +662,10 @@ function mapRestListing(p: RestEvlisting): EvListing {
  * Falls back to GraphQL if REST meta is empty.
  */
 export async function fetchEvListingBySlugREST(slug: string): Promise<EvListing | null> {
-  for (let attempt = 0; attempt < 3; attempt++) {
+  for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 10000);
+      const timeout = setTimeout(() => controller.abort(), 8000);
       const url = `${WP_REST_BASE}/evlisting?slug=${encodeURIComponent(slug)}&_embed&per_page=1`;
       const res = await fetch(url, { signal: controller.signal, next: { revalidate: 60 } });
       clearTimeout(timeout);
@@ -690,10 +690,10 @@ export async function fetchEvListingBySlugREST(slug: string): Promise<EvListing 
  * Falls back to GraphQL if meta is empty.
  */
 export async function fetchEvListingsREST(perPage = 100): Promise<EvListing[]> {
-  for (let attempt = 0; attempt < 3; attempt++) {
+  for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 12000);
+      const timeout = setTimeout(() => controller.abort(), 8000);
       const url = `${WP_REST_BASE}/evlisting?_embed&per_page=${perPage}&status=publish&orderby=date&order=desc`;
       const res = await fetch(url, { signal: controller.signal, next: { revalidate: 60 } });
       clearTimeout(timeout);
@@ -966,7 +966,7 @@ export async function fetchHomepageData(): Promise<HomepageData> {
   };
 
   try {
-    const data = await gql<HomepageRaw>(query, { first: 100 }, { revalidate: 60 });
+    const data = await gql<HomepageRaw>(query, { first: 20 }, { revalidate: 300 });
 
     const listings = data.evlistings.nodes.map(mapEvlistNode);
 
@@ -993,7 +993,7 @@ export async function fetchHomepageData(): Promise<HomepageData> {
     console.warn("[WP] fetchHomepageData failed, falling back:", err);
     // Parallel fallback
     const [listings, banners, updates] = await Promise.all([
-      fetchEvListings(100),
+      fetchEvListings(20),
       fetchHeroBanners(),
       fetchWPUpdates(3),
     ]);

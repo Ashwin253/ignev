@@ -27,6 +27,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "eulermotors.com" },
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "evplse.online" },
+      { protocol: "https", hostname: "ijkofkibmxlqwolknosi.supabase.co" },
       { protocol: "https", hostname: "m.media-amazon.com" },
     ],
   },

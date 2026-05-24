@@ -78,7 +78,25 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
 
   const [filtersOpen, setFiltersOpen] = useState(false); // mobile collapse
   const [shared, setShared] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(6);
+  const [visibleCount, setVisibleCount] = useState(4);
+  const [allItems, setAllItems] = useState<CatalogItem[]>(items);
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  // Fetch remaining items client-side on first "Load More"
+  const fetchAllItems = async () => {
+    if (allItems.length > items.length) return; // already fetched
+    setLoadingMore(true);
+    try {
+      const res = await fetch("/api/catalog-all");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.items?.length > allItems.length) {
+          setAllItems(data.items);
+        }
+      }
+    } catch { /* use what we have */ }
+    setLoadingMore(false);
+  };
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -116,7 +134,7 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
 
   const filteredItems = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return items.filter((item) => {
+    return allItems.filter((item) => {
       if (q && !item.name.toLowerCase().includes(q) &&
         !item.brand.toLowerCase().includes(q) &&
         !item.type.toLowerCase().includes(q)) return false;
@@ -129,7 +147,7 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
       if (baasOnly && !item.baas) return false;
       return true;
     });
-  }, [brand, category, commercialOnly, items, launchedOnly, comingSoonOnly, price, query, baasOnly]);
+  }, [brand, category, commercialOnly, allItems, launchedOnly, comingSoonOnly, price, query, baasOnly]);
 
   // Reset visible count when filters change
   const filterKey = `${query}-${category}-${brand}-${price}-${commercialOnly}-${launchedOnly}-${comingSoonOnly}-${baasOnly}`;
@@ -440,10 +458,25 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
         {visibleCount < filteredItems.length && (
           <div className="mt-6 flex justify-center">
             <button
-              onClick={() => setVisibleCount((c) => c + 6)}
+              onClick={() => setVisibleCount((c) => c + 4)}
               className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors"
             >
               Load More ({filteredItems.length - visibleCount} remaining)
+            </button>
+          </div>
+        )}
+        {visibleCount >= filteredItems.length && allItems.length <= items.length && (
+          <div className="mt-6 flex justify-center">
+            <button
+              onClick={async () => { await fetchAllItems(); setVisibleCount((c) => c + 4); }}
+              disabled={loadingMore}
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors disabled:opacity-50"
+            >
+              {loadingMore ? (
+                <><span className="h-4 w-4 rounded-full border-2 border-slate-300 border-t-sky-600 animate-spin" /> Loading...</>
+              ) : (
+                "Load All Listings"
+              )}
             </button>
           </div>
         )}

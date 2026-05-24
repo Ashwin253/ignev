@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import CatalogBrowser from "../components/CatalogBrowser";
 import { fetchEvListings, fetchEvListingsREST } from "../lib/wordpress";
+import { fetchEvListingsFromSupabase } from "../lib/supabase";
 import { getSiteContent } from "../lib/site-content";
 
 // ISR — revalidate every 5 minutes
@@ -43,11 +44,32 @@ export default async function CatalogPage() {
     return `₹${fmt(min)}–${fmt(max)} Lakh`;
   }
 
-  // Try GraphQL and REST in parallel — use whichever succeeds first
+  // 1. Try Supabase first (fastest, most reliable)
+  try {
+    const sbListings = await fetchEvListingsFromSupabase(50);
+    if (sbListings.length) {
+      items = sbListings.map((l) => ({
+        name: l.title,
+        brand: l.brand,
+        type: l.types[0] ?? "",
+        pricing: formatPricing(l.prices),
+        photo: l.photo,
+        slug: l.slug,
+        topSpeed: l.topSpeed,
+        commercial: l.commercial,
+        launchdate: l.launchdate,
+        prices: l.prices,
+        baas: l.baas,
+      }));
+    }
+  } catch { /* Supabase failed or not configured */ }
+
+  // 2. Fall back to WordPress if Supabase returned nothing
+  if (!items.length) {
   try {
     const [gqlResult, restResult] = await Promise.allSettled([
-      fetchEvListings(200),
-      fetchEvListingsREST(200),
+      fetchEvListings(8),
+      fetchEvListingsREST(8),
     ]);
 
     const listings = 
@@ -71,8 +93,9 @@ export default async function CatalogPage() {
       }));
     }
   } catch { /* both failed */ }
+  } // end WP fallback
 
-  // Fall back to local JSON if WP returned nothing
+  // Fall back to local JSON if nothing returned
   if (!items.length) {
     const content = await getSiteContent();
     items = [

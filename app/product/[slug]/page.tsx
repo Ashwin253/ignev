@@ -7,6 +7,7 @@ import {
   fetchEvListingsREST, fetchEvListingBySlugREST, fetchEvListingBySlug,
   formatLaunchDate, isLaunched,
 } from "../../lib/wordpress";
+import { fetchEvListingBySlugFromSupabase } from "../../lib/supabase";
 import ProductGallery from "../../components/ProductGallery";
 import ProductMainUI from "../ProductMainUI";
 import ProductOwnershipSection from "../ProductOwnershipSection";
@@ -24,20 +25,24 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const item = await fetchEvListingBySlug(slug);
-  if (!item) return {};
-  return {
-    title: `${item.brand} ${item.title} | EVPULSE`,
-    description: `${item.brand} ${item.title} — ${item.types[0] ?? "EV"}. Starting at ₹${item.prices[0] || ""} Lakh.`,
-  };
+  try {
+    const item = await fetchEvListingBySlug(slug);
+    if (!item) return { title: "EVPULSE" };
+    return {
+      title: `${item.brand} ${item.title} | EVPULSE`,
+      description: `${item.brand} ${item.title} — ${item.types[0] ?? "EV"}. Starting at ₹${item.prices[0] || ""} Lakh.`,
+    };
+  } catch {
+    return { title: "EVPULSE" };
+  }
 }
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const [item, allListings] = await Promise.all([
-    fetchEvListingBySlugREST(slug),
-    fetchEvListingsREST(100),
-  ]);
+
+  // Try Supabase first, then WP
+  let item = await fetchEvListingBySlugFromSupabase(slug);
+  if (!item) item = await fetchEvListingBySlugREST(slug);
   if (!item) notFound();
 
   const launched    = isLaunched(item.launchdate);
@@ -47,9 +52,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     ? item.galleryImages
     : item.photo ? [item.photo] : [];
 
-  const related = allListings
-    .filter((l) => l.slug !== slug && (l.brand === item.brand || l.types[0] === item.types[0]))
-    .slice(0, 3);
+  // Fetch related items lazily — small request, only 10 items
+  let related: typeof item[] = [];
+  try {
+    const few = await fetchEvListingsREST(10);
+    related = few
+      .filter((l) => l.slug !== slug && (l.brand === item.brand || l.types[0] === item.types[0]))
+      .slice(0, 3);
+  } catch { /* skip related if WP is down */ }
 
   return (
     <section className="min-h-screen bg-white py-28 overflow-x-hidden">

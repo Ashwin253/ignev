@@ -5,8 +5,8 @@ import CatalogBrowser from "../components/CatalogBrowser";
 import { fetchEvListings, fetchEvListingsREST } from "../lib/wordpress";
 import { getSiteContent } from "../lib/site-content";
 
-// ISR — revalidate every 60 s
-export const revalidate = 60;
+// ISR — revalidate every 5 minutes
+export const revalidate = 300;
 
 export const metadata = {
   title: "EV Catalog | EVPULSE",
@@ -43,9 +43,18 @@ export default async function CatalogPage() {
     return `₹${fmt(min)}–${fmt(max)} Lakh`;
   }
 
-  // GraphQL first, fall back to REST if it fails
+  // Try GraphQL and REST in parallel — use whichever succeeds first
   try {
-    const listings = await fetchEvListings(200);
+    const [gqlResult, restResult] = await Promise.allSettled([
+      fetchEvListings(200),
+      fetchEvListingsREST(200),
+    ]);
+
+    const listings = 
+      (gqlResult.status === "fulfilled" && gqlResult.value.length > 0) ? gqlResult.value :
+      (restResult.status === "fulfilled" && restResult.value.length > 0) ? restResult.value :
+      [];
+
     if (listings.length) {
       items = listings.map((l) => ({
         name: l.title,
@@ -61,31 +70,9 @@ export default async function CatalogPage() {
         baas: l.baas,
       }));
     }
-  } catch { /* GraphQL failed */ }
+  } catch { /* both failed */ }
 
-  // REST fallback if GraphQL returned nothing
-  if (!items.length) {
-    try {
-      const listings = await fetchEvListingsREST(200);
-      if (listings.length) {
-        items = listings.map((l) => ({
-          name: l.title,
-          brand: l.brand,
-          type: l.types[0] ?? "",
-          pricing: formatPricing(l.prices),
-          photo: l.photo,
-          slug: l.slug,
-          topSpeed: l.topSpeed,
-          commercial: l.commercial,
-          launchdate: l.launchdate,
-          prices: l.prices,
-          baas: l.baas,
-        }));
-      }
-    } catch { /* REST also failed */ }
-  }
-
-  // Fall back to local JSON if GraphQL returned nothing
+  // Fall back to local JSON if WP returned nothing
   if (!items.length) {
     const content = await getSiteContent();
     items = [

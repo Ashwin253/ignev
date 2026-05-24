@@ -86,7 +86,7 @@ async function gql<T>(
       }
 
       const json = (await res.json()) as GQLResponse<T>;
-      if (json.errors?.length) {
+      if (json.errors?.length && !json.data) {
         throw new Error(`GraphQL: ${json.errors.map((e) => e.message).join(", ")}`);
       }
       if (!json.data) throw new Error("GraphQL returned no data.");
@@ -276,7 +276,7 @@ type RawEvlistNode = {
   evlist: {
     brand: string | null;
     type: string[] | null;
-    price: string[] | null;
+    price: string[] | string | null;
     topSpeed: number | null;
     commercial: boolean | null;
     launchdate: string | null;
@@ -455,7 +455,7 @@ function mapEvlistNode(n: RawEvlistNode): EvListing {
     photo: n.featuredImage?.node?.sourceUrl || parseJsonArray<string>(n.galleryImages)[0] || "",
     brand: e?.brand ?? "",
     types: e?.type ?? [],
-    prices: e?.price ?? [],
+    prices: Array.isArray(e?.price) ? e.price : (e?.price ? [e.price] : []),
     topSpeed: e?.topSpeed ?? null,
     commercial: e?.commercial ?? false,
     launchdate: e?.launchdate ?? null,
@@ -700,7 +700,7 @@ export async function fetchEvListingsREST(perPage = 100): Promise<EvListing[]> {
       if (!res.ok) throw new Error(`REST ${res.status}`);
       const posts = await res.json() as RestEvlisting[];
       const listings = posts.map(mapRestListing);
-      if (listings[0]?.brand && (listings[0].photo || listings[0].prices.length > 0)) {
+      if (listings.length > 0) {
         return listings;
       }
       break; // REST worked but no meta

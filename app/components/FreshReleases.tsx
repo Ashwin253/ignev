@@ -68,7 +68,7 @@ export default function FreshReleases({ listings }: { listings: EvListing[] }) {
 
                   <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
                     {listing.prices.length > 0 && (
-                      <span className="font-bold text-slate-800">₹{listing.prices.join("–")} L</span>
+                      <span className="font-bold text-slate-800">₹{listing.prices[0]} Lakh</span>
                     )}
                     {listing.topSpeed !== null && (
                       <span className="inline-flex items-center gap-0.5">

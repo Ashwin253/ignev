@@ -98,7 +98,7 @@ function FeaturedCard({ listing, index }: { listing: EvListing; index: number })
           </div>
 
           <div className="flex flex-wrap gap-2 text-xs text-slate-500">
-            {listing.prices.length > 0 && <span className="font-semibold text-slate-800">₹{listing.prices.join("–")} L</span>}
+            {listing.prices.length > 0 && <span className="font-semibold text-slate-800">₹{listing.prices[0]} Lakh</span>}
             
             {listing.topSpeed !== null && (
               <span className="inline-flex items-center gap-1">

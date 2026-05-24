@@ -25,15 +25,15 @@ const WhyEVPULSE = dynamic(() => import("./components/WhyIgnev"), {
   loading: () => <div className="h-48" />,
 });
 
-// ISR — revalidate every 60 s
-export const revalidate = 60;
+// ISR — revalidate every 5 minutes
+export const revalidate = 300;
 
 function toComingSoonItem(l: EvListing): ComingSoonItem {
   return {
     name:    l.title,
     brand:   l.brand,
     type:    l.types[0] ?? "",
-    pricing: l.prices.length ? `₹${l.prices.join("–")} lakh` : "",
+    pricing: l.prices.length ? `₹${l.prices[0]} Lakh` : "",
     launch:  formatLaunchDate(l.launchdate),
     photo:   l.photo,
     slug:    l.slug,

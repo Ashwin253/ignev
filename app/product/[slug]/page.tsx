@@ -7,7 +7,6 @@ import {
   fetchEvListingsREST, fetchEvListingBySlugREST, fetchEvListingBySlug,
   formatLaunchDate, isLaunched,
 } from "../../lib/wordpress";
-import { getSiteContent } from "../../lib/site-content";
 import ProductGallery from "../../components/ProductGallery";
 import ProductMainUI from "../ProductMainUI";
 import ProductOwnershipSection from "../ProductOwnershipSection";
@@ -18,19 +17,9 @@ export const revalidate = 300;
 export const dynamicParams = true;
 
 export async function generateStaticParams() {
-  try {
-    const listings = await fetchEvListingsREST(200);
-    if (listings.length) return listings.map((l) => ({ slug: l.slug }));
-  } catch { /* fall through */ }
-  const content = await getSiteContent();
-  const all = [
-    ...content.products.electric_cars,
-    ...content.products.electric_two_wheelers,
-    ...content.products.electric_autos,
-  ];
-  return all.map((item) => ({
-    slug: `${item.brand}-${item.name}`.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
-  }));
+  // Don't pre-render at build time — WP can't handle concurrent requests.
+  // Pages will be generated on-demand (ISR) on first visit.
+  return [];
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {

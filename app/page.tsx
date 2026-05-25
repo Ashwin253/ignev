@@ -4,6 +4,7 @@ import {
   formatLaunchDate, isLaunched,
   type EvListing,
 } from "./lib/wordpress";
+import { fetchEvListingsFromSupabase } from "./lib/supabase";
 import dynamic from "next/dynamic";
 import Hero from "./components/Hero";
 import FreshReleases from "./components/FreshReleases";
@@ -41,12 +42,34 @@ function toComingSoonItem(l: EvListing): ComingSoonItem {
 }
 
 export default async function Home() {
-  // Single GraphQL round-trip for all homepage data
-  const [{ listings, banners, updates }, content] = await Promise.all([
-    fetchHomepageData(),
-    getSiteContent(),
-  ]);
+  // Try Supabase first (fast), then WP as fallback
+  let listings: EvListing[] = [];
+  let banners: any[] = [];
+  let updates: any[] = [];
 
+  try {
+    const sbListings = await fetchEvListingsFromSupabase(20);
+    if (sbListings.length) listings = sbListings;
+  } catch { /* Supabase not configured or failed */ }
+
+  // Fall back to WP if Supabase returned nothing
+  if (!listings.length) {
+    try {
+      const wpData = await fetchHomepageData();
+      listings = wpData.listings;
+      banners = wpData.banners;
+      updates = wpData.updates;
+    } catch { /* WP also failed */ }
+  } else {
+    // Still fetch banners/updates from WP (Supabase doesn't have them yet)
+    try {
+      const wpData = await fetchHomepageData();
+      banners = wpData.banners;
+      updates = wpData.updates;
+    } catch { /* use empty */ }
+  }
+
+  const content = await getSiteContent();
   const featured = listings.slice(0, 4);
 
   // Fresh releases: vehicles launched in the last 2 months

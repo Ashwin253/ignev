@@ -122,6 +122,73 @@ export default function ProductDetails({ item }: { item: EvListing }) {
           </CollapsibleSection>
         )}
 
+        {/* Capacity & Dimensions */}
+        {item.variantDimensions && item.variantDimensions.some((d) => d.length_mm || d.ground_clearance_mm || d.wheelbase_mm) && (() => {
+          const dim = item.variantDimensions?.find((d) => d.variantName === selectedVariant) || item.variantDimensions?.[0];
+          if (!dim) return null;
+          return (
+            <CollapsibleSection title="Capacity & Dimensions" icon={<Gauge size={16} className="text-violet-500" />}>
+              <dl className="space-y-0.5">
+                {[
+                  dim.length_mm && dim.width_mm && dim.height_mm && { label: "L × W × H", value: `${dim.length_mm} × ${dim.width_mm} × ${dim.height_mm} mm` },
+                  dim.wheelbase_mm && { label: "Wheelbase", value: `${dim.wheelbase_mm} mm` },
+                  dim.ground_clearance_mm && { label: "Ground Clearance", value: `${dim.ground_clearance_mm} mm` },
+                  dim.boot_space_litres && { label: "Boot Space", value: `${dim.boot_space_litres} L` },
+                  dim.turning_radius_m && { label: "Min Turning Radius", value: `${dim.turning_radius_m} m` },
+                ].filter(Boolean).map((row, i) => (
+                  <SpecRow key={i} label={(row as {label:string;value:string}).label} value={(row as {label:string;value:string}).value} odd={i % 2 === 0} />
+                ))}
+              </dl>
+            </CollapsibleSection>
+          );
+        })()}
+
+        {/* Features & Safety */}
+        {item.variantFeatures && item.variantFeatures.some((f) => f.airbag_count || f.drivetrain || f.has_sunroof) && (() => {
+          const feat = item.variantFeatures?.find((f) => f.variantName === selectedVariant) || item.variantFeatures?.[0];
+          if (!feat) return null;
+          const rows = [
+            feat.drivetrain && { label: "Drivetrain", value: feat.drivetrain },
+            feat.front_brakes && { label: "Front Brakes", value: feat.front_brakes },
+            feat.rear_brakes && { label: "Rear Brakes", value: feat.rear_brakes },
+            feat.front_suspension && { label: "Front Suspension", value: feat.front_suspension },
+            feat.rear_suspension && { label: "Rear Suspension", value: feat.rear_suspension },
+            feat.seating_capacity && { label: "Seating Capacity", value: String(feat.seating_capacity) },
+            feat.headlight_type && { label: "Headlights", value: feat.headlight_type },
+            feat.screen_size_inches && { label: "Screen Size", value: `${feat.screen_size_inches}"` },
+            feat.speaker_count && { label: "Speakers", value: String(feat.speaker_count) },
+            feat.airbag_count && { label: "Airbags", value: String(feat.airbag_count) },
+            feat.adas_level > 0 && { label: "ADAS Level", value: String(feat.adas_level) },
+            feat.ncap_safety_rating && { label: "NCAP Rating", value: `${feat.ncap_safety_rating} ★` },
+          ].filter(Boolean);
+          const boolFeatures = [
+            feat.has_sunroof && "Sunroof", feat.has_climate_control && "Climate Control",
+            feat.has_cruise_control && "Cruise Control", feat.has_wireless_charger && "Wireless Charger",
+            feat.has_keyless_entry && "Keyless Entry", feat.has_wireless_carplay_android_auto && "Wireless CarPlay/AA",
+            feat.has_connected_car_app && "Connected Car App", feat.has_ota_updates && "OTA Updates",
+            feat.has_abs_ebd && "ABS + EBD", feat.has_esp && "ESP",
+            feat.has_tpms && "TPMS", feat.has_360_camera && "360° Camera",
+          ].filter(Boolean) as string[];
+          return (
+            <CollapsibleSection title="Features & Safety" icon={<CheckCircle2 size={16} className="text-sky-500" />}>
+              <dl className="space-y-0.5 mb-3">
+                {rows.map((row, i) => (
+                  <SpecRow key={i} label={(row as {label:string;value:string}).label} value={(row as {label:string;value:string}).value} odd={i % 2 === 0} />
+                ))}
+              </dl>
+              {boolFeatures.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 pt-2 border-t border-slate-100">
+                  {boolFeatures.map((f) => (
+                    <span key={f} className="inline-flex items-center gap-1 rounded-full bg-sky-50 border border-sky-100 px-2 py-0.5 text-[10px] font-medium text-sky-700">
+                      <CheckCircle2 size={10} className="text-sky-500" /> {f}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </CollapsibleSection>
+          );
+        })()}
+
         {/* Pros */}
         {item.pros.length > 0 && (
           <CollapsibleSection

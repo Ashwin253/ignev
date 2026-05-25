@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import type { EvListing, BatteryVariant, EnergyCompareEntry, BatterySpec, ChargingSpec } from "./wordpress";
+import type { EvListing, BatteryVariant, BatterySpec, ChargingSpec } from "./wordpress";
 
 // ── Supabase Client (server-side) ────────────────────────────────────────────
 
@@ -12,76 +12,149 @@ export function supabaseEnabled(): boolean {
   return !!(supabaseUrl && supabaseAnonKey);
 }
 
-/** Expose config for client components (passed via server component props) */
 export function getSupabaseConfig() {
   return { url: supabaseUrl, anonKey: supabaseAnonKey };
 }
 
-// ── Database Row Type ─────────────────────────────────────────────────────────
+// ── Database Row Types ───────────────────────────────────────────────────────
 
 export type EvListingRow = {
   id: string;
   slug: string;
   title: string;
   brand: string;
-  types: string[];
-  price: string;
-  top_speed: number | null;
+  body_type: string;
   commercial: boolean;
   launchdate: string | null;
   photo: string;
   gallery_images: Array<string | { url: string; type?: string; colorCode?: string }>;
   colors: string[];
-  battery_variants: BatteryVariant[];
-  baas_variants: BatteryVariant[];
-  has_baas: boolean;
+  types: string[];
   pros: string[];
   cons: string[];
-  energy_comparison: EnergyCompareEntry[];
-  battery_specs: BatterySpec[];
-  charging_specs: ChargingSpec[];
-  body_type: string;
   created_at: string;
   updated_at: string;
 };
 
-// ── Map DB row → EvListing ───────────────────────────────────────────────────
+export type EvVariantRow = {
+  id: string;
+  listing_id: string;
+  variant_name: string;
+  slug: string;
+  model_year: number;
+  price: number;
+  top_speed: number | null;
+  battery_capacity_kwh: number | null;
+  driving_range_km: number | null;
+  charging_time_mins: number | null;
+  max_power_bhp: number | null;
+  max_torque_nm: number | null;
+  has_baas: boolean;
+  baas_price_per_km: number | null;
+  baas_upfront_price: number | null;
+  baas_model_name: string;
+  charging_time_ac_hours: number | null;
+  charging_time_dc_mins: number | null;
+  max_dc_charging_rate_kw: number | null;
+  created_at: string;
+  updated_at: string;
+};
 
-function mapRowToEvListing(row: EvListingRow): EvListing {
-  const allVariants = row.battery_variants ?? [];
-  
-  // Standard variants = all variants (shown with standard price)
-  const standardVariants = allVariants.map((v: any) => ({
-    modelName: v.modelName || "",
-    capacity: v.capacity || "",
-    range: v.range || "",
-    charge: v.charge || "",
-    price: v.price || "",
-    price_baas: v.price_baas || "",
-    baseprice: v.baseprice || "",
-    maxPower: v.maxPower || "",
-    maxTorque: v.maxTorque || "",
+export type EvVariantFeatureRow = {
+  variant_id: string;
+  front_brakes: string;
+  rear_brakes: string;
+  drivetrain: string;
+  seating_capacity: number;
+  ground_clearance_mm: number | null;
+  boot_space_litres: number | null;
+  wheel_size_inches: number | null;
+  has_rear_wiper: boolean;
+  has_rear_defogger: boolean;
+  has_rain_sensing_wipers: boolean;
+  headlight_type: string;
+  has_sunroof: boolean;
+  is_panoramic_sunroof: boolean;
+  has_rear_ac_vents: boolean;
+  has_ventilated_seats: boolean;
+  has_climate_control: boolean;
+  has_cruise_control: boolean;
+  has_wireless_charger: boolean;
+  has_keyless_entry: boolean;
+  screen_size_inches: number | null;
+  speaker_count: number;
+  has_wireless_carplay_android_auto: boolean;
+  has_connected_car_app: boolean;
+  has_ota_updates: boolean;
+  airbag_count: number;
+  has_abs_ebd: boolean;
+  has_esp: boolean;
+  has_tpms: boolean;
+  has_360_camera: boolean;
+  adas_level: number;
+  ncap_safety_rating: number | null;
+};
+
+// ── Map DB rows → EvListing ──────────────────────────────────────────────────
+
+function mapToEvListing(row: EvListingRow, variants: EvVariantRow[], features?: Map<string, any>): EvListing {
+  const galleryUrls = (row.gallery_images ?? []).map((item) =>
+    typeof item === "string" ? item : (item as any).url ?? ""
+  ).filter(Boolean);
+
+  // Standard variants (all)
+  const standardVariants: BatteryVariant[] = variants.map((v) => ({
+    modelName: v.variant_name,
+    capacity: v.battery_capacity_kwh ? String(v.battery_capacity_kwh) : "",
+    range: v.driving_range_km ? String(v.driving_range_km) : "",
+    charge: v.charging_time_mins ? String(v.charging_time_mins) : "",
+    price: v.price ? String(v.price) : "",
+    price_baas: v.baas_price_per_km ? String(v.baas_price_per_km) : "",
+    baseprice: v.baas_upfront_price ? String(v.baas_upfront_price) : "",
   }));
 
-  // BAAS variants = only those with has_baas checked, using BAAS-specific pricing
-  const baasVariants = allVariants
-    .filter((v: any) => v.has_baas)
-    .map((v: any) => ({
-      modelName: v.baas_modelName || v.modelName || "",
-      capacity: v.capacity || "",
-      range: v.baas_range || v.range || "",
-      charge: v.baas_charge || v.charge || "",
-      price: v.baseprice || "", // upfront price for BAAS
-      price_baas: v.price_baas || "",
-      baseprice: v.baseprice || "",
-      maxPower: v.maxPower || "",
-      maxTorque: v.maxTorque || "",
+  // BAAS variants (only those with has_baas)
+  const baasVariants: BatteryVariant[] = variants
+    .filter((v) => v.has_baas)
+    .map((v) => ({
+      modelName: v.baas_model_name || v.variant_name,
+      capacity: v.battery_capacity_kwh ? String(v.battery_capacity_kwh) : "",
+      range: v.driving_range_km ? String(v.driving_range_km) : "",
+      charge: v.charging_time_mins ? String(v.charging_time_mins) : "",
+      price: v.baas_upfront_price ? String(v.baas_upfront_price) : "",
+      price_baas: v.baas_price_per_km ? String(v.baas_price_per_km) : "",
+      baseprice: v.baas_upfront_price ? String(v.baas_upfront_price) : "",
     }));
 
-  const hasBaas = row.has_baas || baasVariants.length > 0;
+  const hasBaas = variants.some((v) => v.has_baas);
+  const topSpeed = variants[0]?.top_speed ?? null;
+  const prices = variants.length > 0
+    ? [...new Set(variants.map((v) => v.price).filter(Boolean))].map(String)
+    : [];
 
-  // Extract photo from gallery if needed
-  const galleryUrls = (row.gallery_images ?? []).map((item) => typeof item === "string" ? item : (item as any).url ?? "").filter(Boolean);
+  // Build battery specs from variants
+  const batterySpecs: BatterySpec[] = variants.map((v) => ({
+    variantName: v.variant_name,
+    electricMotor: "",
+    maxPower: v.max_power_bhp ? String(v.max_power_bhp) : "",
+    maxTorque: v.max_torque_nm ? String(v.max_torque_nm) : "",
+    engine: "",
+    emissionStandard: "",
+    turboSupercharger: "0",
+    idleStartStop: "0",
+  }));
+
+  // Build charging specs from variants
+  const chargingSpecs: ChargingSpec[] = variants.map((v) => ({
+    variantName: v.variant_name,
+    acRegularCharging: v.charging_time_ac_hours ? `${v.charging_time_ac_hours} hrs` : "",
+    dcFastCharging: v.charging_time_dc_mins ? `${v.charging_time_dc_mins} min` : "",
+    acFastCharging: "",
+    drivingRange: v.driving_range_km ? `${v.driving_range_km} km` : "",
+    chargingOptions: v.max_dc_charging_rate_kw ? `Up to ${v.max_dc_charging_rate_kw} kW DC` : "",
+    chargerIncluded: "",
+    chargerConnectionType: "",
+  }));
 
   return {
     id: row.id,
@@ -92,22 +165,36 @@ function mapRowToEvListing(row: EvListingRow): EvListing {
     photo: row.photo || galleryUrls[0] || "",
     brand: row.brand,
     types: row.types ?? [],
-    prices: row.price ? [row.price] : [],
-    topSpeed: row.top_speed,
+    prices: prices.length > 0 ? prices : [],
+    topSpeed,
     commercial: row.commercial ?? false,
     launchdate: row.launchdate,
     batteryVariants: standardVariants,
-    baasVariants: baasVariants,
+    baasVariants,
     pros: row.pros ?? [],
     cons: row.cons ?? [],
     colors: row.colors ?? [],
     galleryImages: galleryUrls,
-    energyComparison: row.energy_comparison ?? [],
-    batterySpecs: row.battery_specs ?? [],
-    chargingSpecs: row.charging_specs ?? [],
+    energyComparison: [],
+    batterySpecs,
+    chargingSpecs,
     offers: [],
     batteryTypes: [],
     baas: hasBaas,
+    variantDimensions: variants.map((v) => ({
+      variantName: v.variant_name,
+      length_mm: (v as any).length_mm ?? undefined,
+      width_mm: (v as any).width_mm ?? undefined,
+      height_mm: (v as any).height_mm ?? undefined,
+      wheelbase_mm: (v as any).wheelbase_mm ?? undefined,
+      ground_clearance_mm: (v as any).ground_clearance_mm ?? undefined,
+      boot_space_litres: (v as any).boot_space_litres ?? undefined,
+      turning_radius_m: (v as any).turning_radius_m ?? undefined,
+    })),
+    variantFeatures: variants.map((v) => ({
+      variantName: v.variant_name,
+      ...(features?.get(v.id) ?? {}),
+    })),
   };
 }
 
@@ -115,24 +202,59 @@ function mapRowToEvListing(row: EvListingRow): EvListing {
 
 export async function fetchEvListingsFromSupabase(limit = 50): Promise<EvListing[]> {
   if (!supabaseEnabled()) return [];
-  const { data, error } = await supabase
+
+  const { data: listings, error } = await supabase
     .from("evlistings")
     .select("*")
     .order("created_at", { ascending: false })
     .limit(limit);
 
-  if (error || !data) return [];
-  return (data as EvListingRow[]).map(mapRowToEvListing);
+  if (error || !listings?.length) return [];
+
+  // Fetch all variants for these listings in one query
+  const listingIds = listings.map((l: EvListingRow) => l.id);
+  const { data: allVariants } = await supabase
+    .from("ev_variants")
+    .select("*")
+    .in("listing_id", listingIds)
+    .order("price", { ascending: true });
+
+  const variantsByListing = new Map<string, EvVariantRow[]>();
+  for (const v of (allVariants ?? []) as EvVariantRow[]) {
+    const arr = variantsByListing.get(v.listing_id) ?? [];
+    arr.push(v);
+    variantsByListing.set(v.listing_id, arr);
+  }
+
+  return (listings as EvListingRow[]).map((row) =>
+    mapToEvListing(row, variantsByListing.get(row.id) ?? [])
+  );
 }
 
 export async function fetchEvListingBySlugFromSupabase(slug: string): Promise<EvListing | null> {
   if (!supabaseEnabled()) return null;
-  const { data, error } = await supabase
+
+  const { data: listing, error } = await supabase
     .from("evlistings")
     .select("*")
     .eq("slug", slug)
     .single();
 
-  if (error || !data) return null;
-  return mapRowToEvListing(data as EvListingRow);
+  if (error || !listing) return null;
+
+  const { data: variants } = await supabase
+    .from("ev_variants")
+    .select("*")
+    .eq("listing_id", (listing as EvListingRow).id)
+    .order("price", { ascending: true });
+
+  // Fetch features for all variants
+  const variantIds = ((variants ?? []) as EvVariantRow[]).map((v) => v.id);
+  let featuresMap = new Map<string, any>();
+  if (variantIds.length) {
+    const { data: feats } = await supabase.from("ev_variant_features").select("*").in("variant_id", variantIds);
+    for (const f of (feats ?? [])) featuresMap.set(f.variant_id, f);
+  }
+
+  return mapToEvListing(listing as EvListingRow, (variants ?? []) as EvVariantRow[], featuresMap);
 }

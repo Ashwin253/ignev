@@ -156,6 +156,9 @@ export type EvListing = {
   chargingSpecs: ChargingSpec[];
   offers: EVOffer[];
   baas: boolean;              // Added for BAAS
+  // Variant details from Supabase
+  variantDimensions?: Array<{ variantName: string; length_mm?: number; width_mm?: number; height_mm?: number; wheelbase_mm?: number; ground_clearance_mm?: number; boot_space_litres?: number; turning_radius_m?: number }>;
+  variantFeatures?: Array<{ variantName: string; [key: string]: any }>;
   // Legacy / optional
   batteryCapacity?: number | null;
   chargingSpeed?: number | null;

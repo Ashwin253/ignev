@@ -44,25 +44,28 @@ export default function CompareMainUI({
 
   const features = [
     {
-      label: "Battery Option",
+      label: "Variant",
       key: "batteryVariants",
       icon: BatteryCharging,
       format: (_: any, p: any) => {
         if (!p.batteryVariants?.length) return <span className="text-slate-400">Standard</span>;
+        const variant = p.batteryVariants[selectedVariants[p.slug] ?? 0];
         return (
-          <select 
-            value={selectedVariants[p.slug] ?? 0}
-            onChange={(e) => setSelectedVariants(prev => ({ ...prev, [p.slug]: parseInt(e.target.value) }))}
-            className="w-full rounded-lg bg-sky-50 border border-sky-100 px-3 py-2 text-xs font-black text-sky-700 outline-none cursor-pointer hover:bg-sky-100 transition-colors"
-          >
-            {p.batteryVariants.map((v: any, idx: number) => (
-              <option key={idx} value={idx}>{v.capacity} kWh variant</option>
-            ))}
-          </select>
+          <div className="space-y-1">
+            <select 
+              value={selectedVariants[p.slug] ?? 0}
+              onChange={(e) => setSelectedVariants(prev => ({ ...prev, [p.slug]: parseInt(e.target.value) }))}
+              className="w-full rounded-lg bg-sky-50 border border-sky-100 px-3 py-2 text-xs font-black text-sky-700 outline-none cursor-pointer hover:bg-sky-100 transition-colors"
+            >
+              {p.batteryVariants.map((v: any, idx: number) => (
+                <option key={idx} value={idx}>{v.modelName || `${v.capacity} kWh`}</option>
+              ))}
+            </select>
+          </div>
         );
       }
     },
-    { 
+    {
       label: "Price",      
       key: "prices",     
       icon: Tag,      

@@ -2,6 +2,7 @@ import React, { Suspense } from "react";
 import Link from "next/link";
 import { ArrowLeft, GitCompare } from "lucide-react";
 import { fetchEvListingBySlugREST, fetchEvListingsREST } from "../lib/wordpress";
+import { fetchEvListingBySlugFromSupabase, fetchEvListingsFromSupabase } from "../lib/supabase";
 import CompareMainUI from "./CompareMainUI";
 import AddVehicleToCompare from "./AddVehicleToCompare";
 
@@ -11,10 +12,16 @@ export const metadata = {
 };
 
 async function CompareContent({ slugs }: { slugs: string[] }) {
-  const [products, allListings] = await Promise.all([
-    Promise.all(slugs.map((slug) => fetchEvListingBySlugREST(slug))),
-    fetchEvListingsREST(100)
-  ]);
+  // Fetch products: Supabase first, WP fallback
+  const products = await Promise.all(slugs.map(async (slug) => {
+    const sb = await fetchEvListingBySlugFromSupabase(slug);
+    if (sb) return sb;
+    return fetchEvListingBySlugREST(slug);
+  }));
+
+  // Fetch all listings for the "Add vehicle" dropdown
+  let allListings = await fetchEvListingsFromSupabase(50);
+  if (!allListings.length) allListings = await fetchEvListingsREST(50);
 
   const filtered = products.filter((p): p is NonNullable<typeof p> => p !== null);
 

@@ -1,50 +1,7 @@
--- EVPULSE: evlistings table
--- Run this in your Supabase SQL Editor (Dashboard → SQL Editor → New Query)
+-- EVPULSE: Normalized EV Listings Schema
+-- Run this in your Supabase SQL Editor
 
-create table if not exists public.evlistings (
-  id uuid default gen_random_uuid() primary key,
-  slug text unique not null,
-  title text not null,
-  brand text not null default '',
-  types text[] default '{}',
-  price text default '',
-  top_speed numeric default null,
-  commercial boolean default false,
-  launchdate text default null,
-  photo text default '',
-  gallery_images jsonb default '[]',
-  colors text[] default '{}',
-  battery_variants jsonb default '[]',
-  baas_variants jsonb default '[]',
-  has_baas boolean default false,
-  pros text[] default '{}',
-  cons text[] default '{}',
-  energy_comparison jsonb default '[]',
-  battery_specs jsonb default '[]',
-  charging_specs jsonb default '[]',
-  body_type text default '',
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
-);
-
--- Enable Row Level Security
-alter table public.evlistings enable row level security;
-
--- Public read access (anyone can view listings)
-create policy "Public read access" on public.evlistings
-  for select using (true);
-
--- Authenticated users can insert/update/delete (team members)
-create policy "Team can insert" on public.evlistings
-  for insert to authenticated with check (true);
-
-create policy "Team can update" on public.evlistings
-  for update to authenticated using (true) with check (true);
-
-create policy "Team can delete" on public.evlistings
-  for delete to authenticated using (true);
-
--- Auto-update updated_at timestamp
+-- Auto-update timestamp function
 create or replace function public.update_updated_at()
 returns trigger as $$
 begin
@@ -53,32 +10,152 @@ begin
 end;
 $$ language plpgsql;
 
+-- ── Main Listings Table ──────────────────────────────────────────────────────
+
+create table if not exists public.evlistings (
+  id uuid default gen_random_uuid() primary key,
+  slug text unique not null,
+  title text not null,
+  brand text not null default '',
+  body_type text default '',
+  commercial boolean default false,
+  launchdate text default null,
+  photo text default '',
+  gallery_images jsonb default '[]',
+  colors text[] default '{}',
+  types text[] default '{}',
+  pros text[] default '{}',
+  cons text[] default '{}',
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+alter table public.evlistings enable row level security;
+
+create policy "Public read access" on public.evlistings
+  for select using (true);
+create policy "Team can insert" on public.evlistings
+  for insert to authenticated with check (true);
+create policy "Team can update" on public.evlistings
+  for update to authenticated using (true) with check (true);
+create policy "Team can delete" on public.evlistings
+  for delete to authenticated using (true);
+
 create trigger evlistings_updated_at
   before update on public.evlistings
   for each row execute function public.update_updated_at();
 
--- Index for slug lookups
 create index if not exists idx_evlistings_slug on public.evlistings(slug);
 create index if not exists idx_evlistings_brand on public.evlistings(brand);
 
+-- ── Variants Table ───────────────────────────────────────────────────────────
+
+create table if not exists public.ev_variants (
+  id uuid default gen_random_uuid() primary key,
+  listing_id uuid references public.evlistings(id) on delete cascade not null,
+  variant_name text not null,
+  slug text not null,
+  model_year integer not null,
+  price numeric default 0,
+  top_speed numeric default null,
+  battery_capacity_kwh numeric default null,
+  driving_range_km numeric default null,
+  charging_time_mins numeric default null,
+  max_power_bhp numeric default null,
+  max_torque_nm numeric default null,
+  has_baas boolean default false,
+  baas_price_per_km numeric default null,
+  baas_upfront_price numeric default null,
+  baas_model_name text default '',
+  charging_time_ac_hours numeric default null,
+  charging_time_dc_mins numeric default null,
+  max_dc_charging_rate_kw numeric default null,
+  -- Capacity & Dimensions
+  length_mm numeric default null,
+  width_mm numeric default null,
+  height_mm numeric default null,
+  wheelbase_mm numeric default null,
+  ground_clearance_mm numeric default null,
+  boot_space_litres numeric default null,
+  turning_radius_m numeric default null,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  constraint ev_variants_slug_year_unique unique (slug, model_year)
+);
+
+alter table public.ev_variants enable row level security;
+
+create policy "Public read variants" on public.ev_variants for select using (true);
+create policy "Team manage variants insert" on public.ev_variants for insert to authenticated with check (true);
+create policy "Team manage variants update" on public.ev_variants for update to authenticated using (true) with check (true);
+create policy "Team manage variants delete" on public.ev_variants for delete to authenticated using (true);
+
+create trigger ev_variants_updated_at
+  before update on public.ev_variants
+  for each row execute function public.update_updated_at();
+
+create index if not exists idx_ev_variants_listing on public.ev_variants(listing_id);
+
+-- ── Variant Features Table ───────────────────────────────────────────────────
+
+create table if not exists public.ev_variant_features (
+  variant_id uuid references public.ev_variants(id) on delete cascade primary key,
+  front_brakes text default 'Disc',
+  rear_brakes text default 'Disc',
+  drivetrain text default 'FWD',
+  seating_capacity integer default 5,
+  front_suspension text default '',
+  rear_suspension text default '',
+  wheel_size_inches integer default null,
+  has_rear_wiper boolean default false,
+  has_rear_defogger boolean default false,
+  has_rain_sensing_wipers boolean default false,
+  headlight_type text default 'Halogen',
+  has_sunroof boolean default false,
+  is_panoramic_sunroof boolean default false,
+  has_rear_ac_vents boolean default false,
+  has_ventilated_seats boolean default false,
+  has_climate_control boolean default false,
+  has_cruise_control boolean default false,
+  has_wireless_charger boolean default false,
+  has_keyless_entry boolean default false,
+  screen_size_inches numeric default null,
+  speaker_count integer default 4,
+  has_wireless_carplay_android_auto boolean default false,
+  has_connected_car_app boolean default false,
+  has_ota_updates boolean default false,
+  airbag_count integer default 2,
+  has_abs_ebd boolean default true,
+  has_esp boolean default false,
+  has_tpms boolean default false,
+  has_360_camera boolean default false,
+  adas_level integer default 0,
+  ncap_safety_rating integer default null,
+  updated_at timestamptz default now()
+);
+
+alter table public.ev_variant_features enable row level security;
+
+create policy "Public read features" on public.ev_variant_features for select using (true);
+create policy "Team manage features insert" on public.ev_variant_features for insert to authenticated with check (true);
+create policy "Team manage features update" on public.ev_variant_features for update to authenticated using (true) with check (true);
+create policy "Team manage features delete" on public.ev_variant_features for delete to authenticated using (true);
+
+create trigger ev_variant_features_updated_at
+  before update on public.ev_variant_features
+  for each row execute function public.update_updated_at();
 
 -- ── Storage Bucket for EV Photos ─────────────────────────────────────────────
--- Run this separately in SQL Editor after creating the table above:
 
 insert into storage.buckets (id, name, public)
 values ('evphotos', 'evphotos', true)
 on conflict (id) do nothing;
 
--- Allow public read access to photos
 create policy "Public photo read" on storage.objects
   for select using (bucket_id = 'evphotos');
-
--- Allow authenticated users to upload/delete photos
 create policy "Team photo upload" on storage.objects
   for insert to authenticated with check (bucket_id = 'evphotos');
-
 create policy "Team photo update" on storage.objects
   for update to authenticated using (bucket_id = 'evphotos');
-
 create policy "Team photo delete" on storage.objects
   for delete to authenticated using (bucket_id = 'evphotos');

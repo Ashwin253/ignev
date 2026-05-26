@@ -146,6 +146,30 @@ create trigger ev_variant_features_updated_at
   before update on public.ev_variant_features
   for each row execute function public.update_updated_at();
 
+-- ── Leads / Enquiries Table ──────────────────────────────────────────────────
+
+create table if not exists public.leads (
+  id uuid default gen_random_uuid() primary key,
+  name text not null default '',
+  phone text not null default '',
+  pincode text default '',
+  interest text default '',
+  message text default '',
+  source text default 'get-assist',
+  assisted_by uuid references auth.users(id) default null,
+  assisted_at timestamptz default null,
+  created_at timestamptz default now()
+);
+
+alter table public.leads enable row level security;
+
+-- All authenticated team members can view leads
+create policy "Team read leads" on public.leads for select to authenticated using (true);
+-- Anyone can insert (from the public enquiry form)
+create policy "Public insert leads" on public.leads for insert with check (true);
+-- Team can update (mark as assisted)
+create policy "Team update leads" on public.leads for update to authenticated using (true) with check (true);
+
 -- ── Storage Bucket for EV Photos ─────────────────────────────────────────────
 
 insert into storage.buckets (id, name, public)

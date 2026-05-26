@@ -29,6 +29,26 @@ export default function EnquiryForm({
     process.env.NEXT_PUBLIC_FORMSPREE_FORM_ID || "xoqggrrp"
   );
 
+  // Also save to Supabase leads table
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    const formData = new FormData(e.currentTarget);
+    // Fire Supabase save in background (don't block form submission)
+    fetch("/api/lead", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: formData.get("name") || "",
+        phone: formData.get("phone") || "",
+        pincode: formData.get("pincode") || "",
+        interest: formData.get("interest") || "",
+        message: "",
+        source: formData.get("source") || source,
+      }),
+    }).catch(() => {});
+    // Let Formspree handle the actual submission
+    handleSubmit(e);
+  };
+
   if (state.succeeded) {
     return (
       <motion.div
@@ -61,7 +81,7 @@ export default function EnquiryForm({
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-3">
+      <form onSubmit={onSubmit} className="space-y-3">
         <input type="hidden" name="source" value={source} />
 
         {/* Name */}

@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { Plus, Pencil, Trash2, LogOut, Save, X, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, Pencil, Trash2, LogOut, Save, X, Loader2, ChevronDown, ChevronUp, MessageSquare } from "lucide-react";
 import type { EvListingRow, EvVariantRow } from "../lib/supabase";
+import LeadsPanel from "./LeadsPanel";
 
 type ListingForm = {
   slug: string; title: string; brand: string; body_type: string;
@@ -75,6 +76,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
   const [variants, setVariants] = useState<(VariantForm & { id?: string })[]>([]);
   const [saving, setSaving] = useState(false);
   const [expandedListing, setExpandedListing] = useState<string | null>(null);
+  const [activeSection, setActiveSection] = useState<"listings" | "leads">("listings");
 
   useEffect(() => { supabase.auth.getUser().then(({ data }) => { if (data.user) setUser(data.user); }); }, []);
   useEffect(() => { if (user) fetchListings(); }, [user]);
@@ -200,18 +202,36 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
       <div className="mx-auto max-w-5xl">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-black text-slate-900">EV Listings</h1>
+            <h1 className="text-2xl font-black text-slate-900">Team Dashboard</h1>
             <p className="text-sm text-slate-500">{user.email}</p>
           </div>
           <div className="flex gap-2">
-            <button onClick={startNew} className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-sky-700 transition-colors">
-              <Plus size={16} /> Add Listing
-            </button>
+            {activeSection === "listings" && (
+              <button onClick={startNew} className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-sky-700 transition-colors">
+                <Plus size={16} /> Add Listing
+              </button>
+            )}
             <button onClick={handleLogout} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
               <LogOut size={16} /> Logout
             </button>
           </div>
         </div>
+
+        {/* Section tabs */}
+        <div className="flex gap-2 mb-6">
+          <button onClick={() => setActiveSection("listings")}
+            className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all ${activeSection === "listings" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+            EV Listings
+          </button>
+          <button onClick={() => setActiveSection("leads")}
+            className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all ${activeSection === "leads" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+            <MessageSquare size={14} /> Enquiries
+          </button>
+        </div>
+
+        {activeSection === "leads" && <LeadsPanel supabase={supabase} userId={user.id} />}
+
+        {activeSection === "listings" && (<>
 
         {/* Edit Form */}
         {editing && (
@@ -455,6 +475,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             {listings.length === 0 && <div className="text-center py-12 text-slate-400">No listings yet. Add your first one!</div>}
           </div>
         )}
+        </>)}
       </div>
     </div>
   );

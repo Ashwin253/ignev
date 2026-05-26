@@ -90,7 +90,14 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
       const arr = varMap.get(v.listing_id) ?? [];
       arr.push(v); varMap.set(v.listing_id, arr);
     }
-    setListings((ls as EvListingRow[]).map((l) => ({ ...l, variants: varMap.get(l.id) ?? [] })));
+    // Fetch author emails
+    const authorIds = [...new Set(ls.map((l: any) => l.created_by).filter(Boolean))];
+    let emailMap = new Map<string, string>();
+    if (authorIds.length) {
+      // Use a simple approach: current user's email is known, others show as "Team member"
+      emailMap.set(user.id, user.email);
+    }
+    setListings((ls as any[]).map((l) => ({ ...l, variants: varMap.get(l.id) ?? [], author_email: emailMap.get(l.created_by) || "Team member" })));
     setLoading(false);
   };
 
@@ -415,12 +422,17 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-slate-900 truncate">{l.title}</p>
                     <p className="text-xs text-slate-500">{l.brand} · {l.types?.[0]} · {l.variants.length} variant{l.variants.length !== 1 ? "s" : ""}</p>
+                    <p className="text-[10px] text-slate-400">by {(l as any).author_email || "Unknown"}</p>
                   </div>
                   <button onClick={() => setExpandedListing(expandedListing === l.id ? null : l.id)} className="text-slate-400 hover:text-slate-600">
                     {expandedListing === l.id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                   </button>
-                  <button onClick={() => startEdit(l)} className="text-sky-600 hover:text-sky-700 text-xs font-bold">Edit</button>
-                  <button onClick={() => handleDelete(l.id)} className="text-rose-500 hover:text-rose-600 text-xs font-bold">Delete</button>
+                  {(l as any).created_by === user.id && (
+                    <>
+                      <button onClick={() => startEdit(l)} className="text-sky-600 hover:text-sky-700 text-xs font-bold">Edit</button>
+                      <button onClick={() => handleDelete(l.id)} className="text-rose-500 hover:text-rose-600 text-xs font-bold">Delete</button>
+                    </>
+                  )}
                 </div>
                 {expandedListing === l.id && l.variants.length > 0 && (
                   <div className="border-t border-slate-100 px-4 py-3 bg-slate-50">

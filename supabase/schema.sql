@@ -26,6 +26,7 @@ create table if not exists public.evlistings (
   types text[] default '{}',
   pros text[] default '{}',
   cons text[] default '{}',
+  created_by uuid references auth.users(id) default auth.uid(),
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -36,10 +37,10 @@ create policy "Public read access" on public.evlistings
   for select using (true);
 create policy "Team can insert" on public.evlistings
   for insert to authenticated with check (true);
-create policy "Team can update" on public.evlistings
-  for update to authenticated using (true) with check (true);
-create policy "Team can delete" on public.evlistings
-  for delete to authenticated using (true);
+create policy "Owner can update" on public.evlistings
+  for update to authenticated using (created_by = auth.uid()) with check (created_by = auth.uid());
+create policy "Owner can delete" on public.evlistings
+  for delete to authenticated using (created_by = auth.uid());
 
 create trigger evlistings_updated_at
   before update on public.evlistings

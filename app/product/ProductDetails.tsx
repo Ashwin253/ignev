@@ -46,7 +46,7 @@ export default function ProductDetails({ item }: { item: EvListing }) {
       {/* Header */}
       <div className="text-center mb-5">
         <h2 className="text-2xl font-black text-slate-900 md:text-3xl">
-          Detailed <span className="text-sky-600">Specs</span>
+          <span className="text-sky-600">Specification</span>
         </h2>
       </div>
 

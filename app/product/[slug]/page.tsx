@@ -113,7 +113,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         {/* ── Detailed Specs + Pros/Cons ── */}
         <ProductDetails item={item} />
 {/* ── Ownership — full width below the 2-col grid ── */}
-        <ProductOwnershipSection item={item} />
+        {/* <ProductOwnershipSection item={item} /> */}
 
         {/* Related */}
         {related.length > 0 && (

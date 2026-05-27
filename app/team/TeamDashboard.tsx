@@ -8,7 +8,7 @@ import LeadsPanel from "./LeadsPanel";
 
 type ListingForm = {
   slug: string; title: string; brand: string; body_type: string;
-  commercial: boolean; launchdate: string | null; photo: string;
+  commercial: boolean; has_baas: boolean; launchdate: string | null; photo: string;
   gallery_images: any[]; colors: string[]; types: string[];
   pros: string[]; cons: string[];
 };
@@ -39,7 +39,7 @@ type VariantForm = {
 };
 
 const emptyListing: ListingForm = {
-  slug: "", title: "", brand: "", body_type: "", commercial: false,
+  slug: "", title: "", brand: "", body_type: "", commercial: false, has_baas: false,
   launchdate: null, photo: "", gallery_images: [], colors: [],
   types: [], pros: [], cons: [],
 };
@@ -77,6 +77,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
   const [saving, setSaving] = useState(false);
   const [expandedListing, setExpandedListing] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<"listings" | "leads">("listings");
+  const [energyComps, setEnergyComps] = useState<Array<{ id?: string; category: string; name: string; fuel_type: string; mileage: string; fuel_price: string; model_used: string; brand: string }>>([]);
 
   useEffect(() => { supabase.auth.getUser().then(({ data }) => { if (data.user) setUser(data.user); }); }, []);
   useEffect(() => { if (user) fetchListings(); }, [user]);
@@ -92,23 +93,16 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
       const arr = varMap.get(v.listing_id) ?? [];
       arr.push(v); varMap.set(v.listing_id, arr);
     }
-    // Fetch author emails
-    const authorIds = [...new Set(ls.map((l: any) => l.created_by).filter(Boolean))];
-    let emailMap = new Map<string, string>();
-    if (authorIds.length) {
-      // Use a simple approach: current user's email is known, others show as "Team member"
-      emailMap.set(user.id, user.email);
-    }
-    setListings((ls as any[]).map((l) => ({ ...l, variants: varMap.get(l.id) ?? [], author_email: emailMap.get(l.created_by) || "Team member" })));
+    setListings((ls as any[]).map((l) => ({ ...l, variants: varMap.get(l.id) ?? [] })));
     setLoading(false);
   };
 
   const handleLogout = async () => { await supabase.auth.signOut(); setUser(null); };
 
-  const startNew = () => { setEditing("new"); setForm(emptyListing); setVariants([{ ...emptyVariant }]); };
+  const startNew = () => { setEditing("new"); setForm(emptyListing); setVariants([{ ...emptyVariant }]); setEnergyComps([]); };
   const startEdit = async (l: EvListingRow & { variants: EvVariantRow[] }) => {
     setEditing(l.id);
-    setForm({ slug: l.slug, title: l.title, brand: l.brand, body_type: l.body_type || "", commercial: l.commercial, launchdate: l.launchdate, photo: l.photo, gallery_images: l.gallery_images ?? [], colors: l.colors ?? [], types: l.types ?? [], pros: l.pros ?? [], cons: l.cons ?? [] });
+    setForm({ slug: l.slug, title: l.title, brand: l.brand, body_type: l.body_type || "", commercial: l.commercial, has_baas: l.has_baas || false, launchdate: l.launchdate, photo: l.photo, gallery_images: l.gallery_images ?? [], colors: l.colors ?? [], types: l.types ?? [], pros: l.pros ?? [], cons: l.cons ?? [] });
     // Load features for each variant
     const variantIds = l.variants.map((v) => v.id);
     let featuresMap = new Map<string, any>();
@@ -117,11 +111,14 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
       for (const f of (feats ?? [])) featuresMap.set(f.variant_id, f);
     }
     setVariants(l.variants.map((v) => ({ ...v, id: v.id, features: featuresMap.get(v.id) || undefined })) as any);
+    // Load energy comparisons
+    const { data: ec } = await supabase.from("ev_energy_comparisons").select("*").eq("listing_id", l.id).order("created_at");
+    setEnergyComps((ec ?? []).map((e: any) => ({ id: e.id, category: e.category, name: e.name, fuel_type: e.fuel_type, mileage: e.mileage, fuel_price: e.fuel_price, model_used: e.model_used, brand: e.brand })));
   };
 
   const handleSave = async () => {
     setSaving(true);
-    const listingPayload = { ...form, slug: form.slug || form.title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "") };
+    const listingPayload = { ...form, slug: form.slug || form.title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""), created_by_email: user.email };
     let listingId = editing === "new" ? null : editing;
     let error;
 
@@ -169,6 +166,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
           ground_clearance_mm: (v as any).ground_clearance_mm || null,
           boot_space_litres: (v as any).boot_space_litres || null,
           turning_radius_m: (v as any).turning_radius_m || null,
+          custom_fields: (v as any).custom_fields || [],
         };
 
         let savedVariantId = variantId;
@@ -183,6 +181,19 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
         // Save features if provided
         if (savedVariantId && features) {
           await supabase.from("ev_variant_features").upsert({ variant_id: savedVariantId, ...features });
+        }
+      }
+    }
+    // Save energy comparisons
+    if (listingId) {
+      const existingEcIds = energyComps.filter((e) => e.id).map((e) => e.id!);
+      await supabase.from("ev_energy_comparisons").delete().eq("listing_id", listingId).not("id", "in", `(${existingEcIds.join(",")})`);
+      for (const ec of energyComps) {
+        const payload = { listing_id: listingId, category: ec.category, name: ec.name, fuel_type: ec.fuel_type, mileage: ec.mileage, fuel_price: ec.fuel_price, model_used: ec.model_used, brand: ec.brand };
+        if (ec.id) {
+          await supabase.from("ev_energy_comparisons").update(payload).eq("id", ec.id);
+        } else {
+          await supabase.from("ev_energy_comparisons").insert(payload);
         }
       }
     }
@@ -264,6 +275,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
               </label>
             </div>
             <label className="flex items-center gap-2 mt-3 text-sm"><input type="checkbox" checked={form.commercial} onChange={(e) => setForm({ ...form, commercial: e.target.checked })} /> Commercial</label>
+            <label className="flex items-center gap-2 mt-1 text-sm"><input type="checkbox" checked={form.has_baas} onChange={(e) => setForm({ ...form, has_baas: e.target.checked })} /> Has BAAS (Battery as a Service)</label>
 
             {/* Photo */}
             <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
@@ -390,6 +402,20 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                       <MiniInput label="Min Turning Radius (m)" value={String((v as any).turning_radius_m ?? "")} onChange={(val) => { const arr = [...variants]; (arr[i] as any).turning_radius_m = val ? Number(val) : null; setVariants(arr); }} />
                     </div>
                   </div>
+                  {/* Custom Extra Fields */}
+                  <div className="mt-3 rounded-lg border border-violet-200 bg-violet-50 p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-[8px] font-bold uppercase tracking-wider text-violet-600">Extra Specs</p>
+                      <button onClick={() => { const arr = [...variants]; const cf = (arr[i] as any).custom_fields || []; cf.push({ label: "", value: "" }); (arr[i] as any).custom_fields = cf; setVariants(arr); }} className="text-[9px] font-bold text-violet-600 hover:text-violet-700">+ Add Field</button>
+                    </div>
+                    {((v as any).custom_fields || []).map((cf: any, ci: number) => (
+                      <div key={ci} className="flex items-center gap-2 mb-1.5">
+                        <input value={cf.label} onChange={(e) => { const arr = [...variants]; const cfs = [...((arr[i] as any).custom_fields || [])]; cfs[ci] = { ...cfs[ci], label: e.target.value }; (arr[i] as any).custom_fields = cfs; setVariants(arr); }} placeholder="Label" className="flex-1 rounded-md border border-violet-200 bg-white px-2 py-1.5 text-[11px] outline-none" />
+                        <input value={cf.value} onChange={(e) => { const arr = [...variants]; const cfs = [...((arr[i] as any).custom_fields || [])]; cfs[ci] = { ...cfs[ci], value: e.target.value }; (arr[i] as any).custom_fields = cfs; setVariants(arr); }} placeholder="Value" className="flex-1 rounded-md border border-violet-200 bg-white px-2 py-1.5 text-[11px] outline-none" />
+                        <button onClick={() => { const arr = [...variants]; const cfs = [...((arr[i] as any).custom_fields || [])]; cfs.splice(ci, 1); (arr[i] as any).custom_fields = cfs; setVariants(arr); }} className="text-rose-400 text-xs">×</button>
+                      </div>
+                    ))}
+                  </div>
                   {/* Features toggle */}
                   <button onClick={() => { const arr = [...variants]; arr[i] = { ...arr[i], showFeatures: !v.showFeatures }; setVariants(arr); }}
                     className="mt-3 flex items-center gap-1.5 text-[10px] font-bold text-slate-500 hover:text-slate-700">
@@ -425,6 +451,34 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
               ))}
             </div>
 
+            {/* ── Energy Comparisons ── */}
+            <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-amber-600">Energy Comparisons</p>
+                <div className="flex gap-2">
+                  <button onClick={() => setEnergyComps([...energyComps, { category: "fuel", name: "", fuel_type: "Petrol", mileage: "", fuel_price: "", model_used: "", brand: "" }])} className="text-[10px] font-bold text-amber-600 hover:text-amber-700">+ Fuel Type</button>
+                  <button onClick={() => setEnergyComps([...energyComps, { category: "model", name: "", fuel_type: "EV", mileage: "", fuel_price: "", model_used: "", brand: "" }])} className="text-[10px] font-bold text-sky-600 hover:text-sky-700">+ Model</button>
+                </div>
+              </div>
+              {energyComps.map((ec, i) => (
+                <div key={i} className="mb-3 rounded-lg border border-slate-200 bg-white p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded ${ec.category === "model" ? "bg-sky-100 text-sky-700" : "bg-amber-100 text-amber-700"}`}>{ec.category}</span>
+                    <button onClick={() => setEnergyComps(energyComps.filter((_, j) => j !== i))} className="text-[10px] text-rose-500 font-bold">Remove</button>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    <MiniInput label="Name" value={ec.name} onChange={(val) => { const arr = [...energyComps]; arr[i] = { ...arr[i], name: val }; setEnergyComps(arr); }} />
+                    <label className="block"><span className="text-[8px] font-bold uppercase text-slate-400">Fuel Type</span><select value={ec.fuel_type} onChange={(e) => { const arr = [...energyComps]; arr[i] = { ...arr[i], fuel_type: e.target.value }; setEnergyComps(arr); }} className="mt-0.5 w-full rounded-md border border-slate-200 px-2 py-1.5 text-[11px] outline-none"><option value="self">Self (this EV)</option><option value="EV">EV</option><option value="Petrol">Petrol</option><option value="Diesel">Diesel</option><option value="CNG">CNG</option></select></label>
+                    <MiniInput label={ec.fuel_type === "EV" || ec.fuel_type === "self" ? "Range (km)" : "Mileage (km/L)"} value={ec.mileage} onChange={(val) => { const arr = [...energyComps]; arr[i] = { ...arr[i], mileage: val }; setEnergyComps(arr); }} />
+                    <MiniInput label={ec.fuel_type === "EV" || ec.fuel_type === "self" ? "₹/km" : "₹/L or ₹/kg"} value={ec.fuel_price} onChange={(val) => { const arr = [...energyComps]; arr[i] = { ...arr[i], fuel_price: val }; setEnergyComps(arr); }} />
+                    <MiniInput label="Model Used" value={ec.model_used} onChange={(val) => { const arr = [...energyComps]; arr[i] = { ...arr[i], model_used: val }; setEnergyComps(arr); }} />
+                    {ec.category === "model" && <MiniInput label="Brand" value={ec.brand} onChange={(val) => { const arr = [...energyComps]; arr[i] = { ...arr[i], brand: val }; setEnergyComps(arr); }} />}
+                  </div>
+                </div>
+              ))}
+              {energyComps.length === 0 && <p className="text-[10px] text-amber-600/60">No comparisons added. Add fuel type or model competitors.</p>}
+            </div>
+
             <button onClick={handleSave} disabled={saving} className="mt-6 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-50">
               {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
               {editing === "new" ? "Create Listing" : "Save Changes"}
@@ -442,7 +496,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-slate-900 truncate">{l.title}</p>
                     <p className="text-xs text-slate-500">{l.brand} · {l.types?.[0]} · {l.variants.length} variant{l.variants.length !== 1 ? "s" : ""}</p>
-                    <p className="text-[10px] text-slate-400">by {(l as any).author_email || "Unknown"}</p>
+                    <p className="text-[10px] text-slate-400">by {(l as any).created_by_email || "Team member"}</p>
                   </div>
                   <button onClick={() => setExpandedListing(expandedListing === l.id ? null : l.id)} className="text-slate-400 hover:text-slate-600">
                     {expandedListing === l.id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}

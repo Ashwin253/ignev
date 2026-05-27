@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "@formspree/react";
 import { motion } from "framer-motion";
 import {
@@ -28,28 +29,36 @@ export default function EnquiryForm({
   const [state, handleSubmit] = useForm(
     process.env.NEXT_PUBLIC_FORMSPREE_FORM_ID || "xoqggrrp"
   );
+  const [submitted, setSubmitted] = useState(false);
 
   // Also save to Supabase leads table
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    // Fire Supabase save in background (don't block form submission)
-    fetch("/api/lead", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: formData.get("name") || "",
-        phone: formData.get("phone") || "",
-        pincode: formData.get("pincode") || "",
-        interest: formData.get("interest") || "",
-        message: "",
-        source: formData.get("source") || source,
-      }),
-    }).catch(() => {});
-    // Let Formspree handle the actual submission
+    // Save to Supabase
+    try {
+      await fetch("/api/lead", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.get("name") || "",
+          phone: formData.get("phone") || "",
+          pincode: formData.get("pincode") || "",
+          interest: formData.get("interest") || "",
+          message: "",
+          source: formData.get("source") || source,
+        }),
+      });
+    } catch {}
+    // Also send to Formspree (non-blocking)
     handleSubmit(e);
+    // Show success immediately (Supabase saved)
+    setSubmitted(true);
   };
 
-  if (state.succeeded) {
+  const succeeded = state.succeeded || submitted;
+
+  if (succeeded) {
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}

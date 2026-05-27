@@ -22,7 +22,7 @@ type TabKey = "battery" | "emi" | "energy";
 
 const TABS: { key: TabKey; label: string; icon: typeof BatteryCharging }[] = [
   { key: "battery", label: "Battery",  icon: BatteryCharging },
-  { key: "emi",     label: "EMI",      icon: Banknote },
+  // { key: "emi",     label: "EMI",      icon: Banknote },
   { key: "energy",  label: "Energy",   icon: Fuel },
 ];
 
@@ -52,7 +52,7 @@ export default function ProductMainUI({ item, slug }: { item: EvListing; slug: s
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const activeVariants = showBaas ? (item as any).baasVariants : item.batteryVariants;
+  const activeVariants = showBaas ? item.baasVariants : item.batteryVariants;
   const activeVariant = activeVariants?.[selectedIndex];
   const displayPriceRaw = activeVariant?.price || item.prices?.[selectedIndex] || item.prices?.[0] || "10";
 
@@ -156,8 +156,8 @@ export default function ProductMainUI({ item, slug }: { item: EvListing; slug: s
           <div className="space-y-4">
             <BatterySelector
               standardVariants={item.batteryVariants}
-              baasVariants={(item as any).baasVariants}
-              hasBaas={(item as any).baas}
+              baasVariants={item.baasVariants}
+              hasBaas={item.baas}
               selectedIndex={selectedIndex}
               onSelect={setSelectedIndex}
               showBaas={showBaas}
@@ -242,163 +242,7 @@ export default function ProductMainUI({ item, slug }: { item: EvListing; slug: s
 
         {/* Energy tab */}
         {activeTab === "energy" && (
-          <div className="space-y-3">
-
-            {item.energyComparison.length > 0 ? (() => {
-              const selfEntry = item.energyComparison.find(c => c.fuelType?.toLowerCase() === "self");
-              const others = item.energyComparison.filter(c => c.fuelType?.toLowerCase() !== "self");
-              const selfCostPerKm = selfEntry ? parseFloat(selfEntry.fuelPrice) : evCostPerKm;
-
-              return (
-                <>
-                  {/* Self — this EV, always on top */}
-                  {selfEntry && (
-                    <div className="rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-xl bg-emerald-500 flex items-center justify-center">
-                            <Zap size={18} className="text-white" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-bold text-slate-900">{item.title}</p>
-                            <p className="text-[10px] text-slate-500">
-                              {selfEntry.modelused && <span className="font-medium text-emerald-600">{selfEntry.modelused} · </span>}
-                              ₹{selfEntry.fuelPrice}/km · {selfEntry.mileage} km range
-                            </p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-[9px] font-bold text-emerald-500 uppercase">Cost/km</p>
-                          <p className="text-2xl font-black text-emerald-700">₹{selfCostPerKm.toFixed(1)}</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Competitors */}
-                  {others.map((comp, i) => {
-                    const mileage = parseFloat(comp.mileage) || 18;
-                    const fuelPrice = parseFloat(comp.fuelPrice) || 104;
-                    const fuel = comp.fuelType?.toLowerCase() ?? "petrol";
-                    const isEv = fuel === "ev";
-                    const isCng = fuel === "cng";
-                    const isDiesel = fuel === "diesel";
-                    const costPerKm = isEv ? fuelPrice : fuelPrice / mileage;
-                    const mileageLabel = isEv ? `${comp.mileage} km range` : `${comp.mileage} km/${isCng ? "kg" : "L"}`;
-                    const priceLabel = isEv ? `₹${comp.fuelPrice}/km` : `₹${comp.fuelPrice}/${isCng ? "kg" : "L"}`;
-                    const monthlySaving = (costPerKm - selfCostPerKm) * 40 * 30;
-
-                    return (
-                      <div key={i} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-xl bg-slate-200 flex items-center justify-center">
-                              {isEv ? <Zap size={18} className="text-slate-600" /> : <Fuel size={18} className="text-slate-600" />}
-                            </div>
-                            <div>
-                              <p className="text-sm font-bold text-slate-900">{comp.name}</p>
-                              <p className="text-[10px] text-slate-500">
-                                {comp.modelused && <span className="font-medium text-slate-600">{comp.modelused} · </span>}
-                                {comp.fuelType} · {priceLabel} · {mileageLabel}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-[9px] font-bold text-slate-400 uppercase">Cost/km</p>
-                            <p className="text-xl font-black text-slate-900">₹{costPerKm.toFixed(1)}</p>
-                          </div>
-                        </div>
-                        {monthlySaving > 0 && (
-                          <div className="mt-2 pt-2 border-t border-slate-200/50">
-                            <p className="text-[10px] font-bold text-emerald-600">You save ₹{rupees(monthlySaving)}/mo with {item.title}</p>
-                            <p className="text-[9px] text-slate-400">based on 40 km daily ride</p>
-                          </div>
-                        )}
-                        {monthlySaving < 0 && (
-                          <div className="mt-2 pt-2 border-t border-slate-200/50">
-                            <p className="text-[10px] font-bold text-rose-600">You lose ₹{rupees(Math.abs(monthlySaving))}/mo with {item.title}</p>
-                            <p className="text-[9px] text-slate-400">based on 40 km daily ride</p>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </>
-              );
-            })() : (
-              <>
-                {/* Fallback: this EV */}
-                <div className="rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-xl bg-emerald-500 flex items-center justify-center">
-                        <Zap size={18} className="text-white" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold text-slate-900">{item.title}</p>
-                        <p className="text-[10px] text-slate-500">@₹9/kWh · {(evEfficiency * 100).toFixed(1)} kWh/100km</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[9px] font-bold text-emerald-500 uppercase">Cost/km</p>
-                      <p className="text-2xl font-black text-emerald-700">₹{evCostPerKm.toFixed(1)}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Fallback: Petrol */}
-                <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-xl bg-rose-500 flex items-center justify-center">
-                        <Fuel size={18} className="text-white" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold text-slate-900">Avg Petrol Car</p>
-                        <p className="text-[10px] text-slate-500">@₹104/L · 18 km/L avg</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[9px] font-bold text-slate-400 uppercase">Cost/km</p>
-                      <p className="text-xl font-black text-rose-700">₹{petrolCostPerKm.toFixed(1)}</p>
-                    </div>
-                  </div>
-                  <div className="mt-2 pt-2 border-t border-slate-200/50">
-                    <p className="text-[10px] font-bold text-emerald-600">You save ₹{rupees((petrolCostPerKm - evCostPerKm) * 40 * 30)}/mo with {item.title}</p>
-                  </div>
-                </div>
-
-                {/* Fallback: CNG */}
-                <div className="rounded-2xl border border-sky-200 bg-sky-50 p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-xl bg-sky-500 flex items-center justify-center">
-                        <Fuel size={18} className="text-white" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold text-slate-900">Avg CNG Car</p>
-                        <p className="text-[10px] text-slate-500">@₹80/kg · 28 km/kg avg</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[9px] font-bold text-slate-400 uppercase">Cost/km</p>
-                      <p className="text-xl font-black text-sky-700">₹{cngCostPerKm.toFixed(1)}</p>
-                    </div>
-                  </div>
-                  <div className="mt-2 pt-2 border-t border-slate-200/50">
-                    <p className="text-[10px] font-bold text-emerald-600">You save ₹{rupees((cngCostPerKm - evCostPerKm) * 40 * 30)}/mo with {item.title}</p>
-                  </div>
-                </div>
-              </>
-            )}
-
-            <button
-              onClick={scrollToOwnership}
-              className="w-full flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors"
-            >
-              <ArrowDown size={15} /> Full ownership cost analysis below
-            </button>
-          </div>
+          <EnergyTabContent item={item} evCostPerKm={evCostPerKm} evEfficiency={evEfficiency} petrolCostPerKm={petrolCostPerKm} cngCostPerKm={cngCostPerKm} scrollToOwnership={scrollToOwnership} />
         )}
       </div>
 
@@ -411,6 +255,149 @@ export default function ProductMainUI({ item, slug }: { item: EvListing; slug: s
           <ArrowLeft size={15} /> Catalog
         </Link>
       </div>
+    </div>
+  );
+}
+
+// ── Energy Tab with Fuel Type / Models sub-tabs ──────────────────────────────
+
+type EnergySubTab = "fuel" | "models";
+
+function EnergyTabContent({ item, evCostPerKm, evEfficiency, petrolCostPerKm, cngCostPerKm, scrollToOwnership }: {
+  item: EvListing; evCostPerKm: number; evEfficiency: number; petrolCostPerKm: number; cngCostPerKm: number; scrollToOwnership: () => void;
+}) {
+  const [subTab, setSubTab] = useState<EnergySubTab>("fuel");
+  const [dailyKm, setDailyKm] = useState(50);
+  const [editingKm, setEditingKm] = useState(false);
+
+  const selfEntry = item.energyComparison.find(c => c.fuelType?.toLowerCase() === "self");
+  const selfCostPerKm = selfEntry ? parseFloat(selfEntry.fuelPrice) : evCostPerKm;
+
+  // Models = all entries from Supabase/WP energy comparisons (except "self")
+  const modelEntries = item.energyComparison.filter(c => c.fuelType?.toLowerCase() !== "self");
+
+  return (
+    <div className="space-y-3">
+      {/* Self — always on top */}
+      {selfEntry && (
+        <div className="rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-emerald-500 flex items-center justify-center">
+                <Zap size={18} className="text-white" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-slate-900">{item.title}</p>
+                <p className="text-[10px] text-slate-500">
+                  {selfEntry.modelused && <span className="font-medium text-emerald-600">{selfEntry.modelused} · </span>}
+                  ₹{selfEntry.fuelPrice}/km · {selfEntry.mileage} km range
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-[9px] font-bold text-emerald-500 uppercase">Cost/km</p>
+              <p className="text-2xl font-black text-emerald-700">₹{selfCostPerKm.toFixed(1)}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sub-tabs: Fuel Type | Models */}
+      <div className="flex rounded-xl bg-slate-100 p-0.5 gap-0.5">
+        <button onClick={() => setSubTab("fuel")} className={`flex-1 rounded-lg py-2 text-[10px] font-bold transition-all ${subTab === "fuel" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"}`}>
+          Fuel Type
+        </button>
+        <button onClick={() => setSubTab("models")} className={`flex-1 rounded-lg py-2 text-[10px] font-bold transition-all ${subTab === "models" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"}`}>
+          Models {modelEntries.length > 0 && <span className="ml-1 text-[8px] bg-sky-100 text-sky-600 rounded-full px-1.5">{modelEntries.length}</span>}
+        </button>
+      </div>
+
+      {/* Daily km editor */}
+      <div className="flex items-center gap-2 text-[10px] text-slate-500">
+        <span>Based on</span>
+        {editingKm ? (
+          <input type="number" value={dailyKm} onChange={(e) => setDailyKm(Number(e.target.value) || 50)} onBlur={() => setEditingKm(false)} autoFocus
+            className="w-12 rounded-md border border-sky-300 bg-white px-1.5 py-0.5 text-[10px] font-bold text-slate-800 outline-none text-center" />
+        ) : (
+          <button onClick={() => setEditingKm(true)} className="inline-flex items-center gap-1 font-bold text-sky-600 hover:text-sky-700">
+            {dailyKm} km <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+          </button>
+        )}
+        <span>daily ride</span>
+      </div>
+
+      {/* Fuel Type — generic commodity comparison */}
+      {subTab === "fuel" && (
+        <>
+          <CompareCard name="Avg Petrol Vehicle" subtitle="Petrol · ₹104/L · 18 km/L" costPerKm={petrolCostPerKm} monthlySaving={(petrolCostPerKm - selfCostPerKm) * dailyKm * 30} itemTitle={item.title} isEv={false} dailyKm={dailyKm} />
+          <CompareCard name="Avg Diesel Vehicle" subtitle="Diesel · ₹90/L · 22 km/L" costPerKm={90 / 22} monthlySaving={(90 / 22 - selfCostPerKm) * dailyKm * 30} itemTitle={item.title} isEv={false} dailyKm={dailyKm} />
+          <CompareCard name="Avg CNG Vehicle" subtitle="CNG · ₹80/kg · 28 km/kg" costPerKm={cngCostPerKm} monthlySaving={(cngCostPerKm - selfCostPerKm) * dailyKm * 30} itemTitle={item.title} isEv={false} dailyKm={dailyKm} />
+        </>
+      )}
+
+      {/* Models — all entries from team dashboard */}
+      {subTab === "models" && modelEntries.length > 0 && modelEntries.map((comp, i) => {
+        const fuelPrice = parseFloat(comp.fuelPrice) || 0;
+        const mileage = parseFloat(comp.mileage) || 1;
+        const fuel = comp.fuelType?.toLowerCase() ?? "petrol";
+        const isEv = fuel === "ev" || fuel === "self";
+        const costPerKm = isEv ? fuelPrice : fuelPrice / mileage;
+        const isCng = fuel === "cng";
+        const subtitle = isEv
+          ? `${comp.fuelType} · ₹${comp.fuelPrice}/km · ${comp.mileage} km range`
+          : `${comp.fuelType} · ₹${comp.fuelPrice}/${isCng ? "kg" : "L"} · ${comp.mileage} km/${isCng ? "kg" : "L"}`;
+        const monthlySaving = (costPerKm - selfCostPerKm) * dailyKm * 30;
+        return (
+          <CompareCard key={i} name={comp.name} subtitle={subtitle}
+            costPerKm={costPerKm} monthlySaving={monthlySaving} itemTitle={item.title} isEv={isEv} modelused={comp.modelused} dailyKm={dailyKm} />
+        );
+      })}
+      {subTab === "models" && modelEntries.length === 0 && (
+        <p className="text-center text-xs text-slate-400 py-6">No competitor models added yet.</p>
+      )}
+
+      <button onClick={scrollToOwnership} className="w-full flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
+        <ArrowDown size={15} /> Full ownership cost analysis below
+      </button>
+    </div>
+  );
+}
+
+function CompareCard({ name, subtitle, costPerKm, monthlySaving, itemTitle, isEv, modelused, dailyKm = 50 }: {
+  name: string; subtitle: string; costPerKm: number; monthlySaving: number; itemTitle: string; isEv: boolean; modelused?: string; dailyKm?: number;
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-slate-200 flex items-center justify-center">
+            {isEv ? <Zap size={18} className="text-slate-600" /> : <Fuel size={18} className="text-slate-600" />}
+          </div>
+          <div>
+            <p className="text-sm font-bold text-slate-900">{name}</p>
+            <p className="text-[10px] text-slate-500">
+              {modelused && <span className="font-medium text-slate-600">{modelused} · </span>}
+              {subtitle}
+            </p>
+          </div>
+        </div>
+        <div className="text-right">
+          <p className="text-[9px] font-bold text-slate-400 uppercase">Cost/km</p>
+          <p className="text-xl font-black text-slate-900">₹{costPerKm.toFixed(1)}</p>
+        </div>
+      </div>
+      {monthlySaving > 0 && (
+        <div className="mt-2 pt-2 border-t border-slate-200/50">
+          <p className="text-[10px] font-bold text-emerald-600">You save ₹{new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(Math.round(monthlySaving))}/mo with {itemTitle}</p>
+          <p className="text-[9px] text-slate-400">based on {dailyKm} km daily ride</p>
+        </div>
+      )}
+      {monthlySaving < 0 && (
+        <div className="mt-2 pt-2 border-t border-slate-200/50">
+          <p className="text-[10px] font-bold text-rose-600">You lose ₹{new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(Math.round(Math.abs(monthlySaving)))}/mo with {itemTitle}</p>
+          <p className="text-[9px] text-slate-400">based on {dailyKm} km daily ride</p>
+        </div>
+      )}
     </div>
   );
 }

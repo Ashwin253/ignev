@@ -32,6 +32,7 @@ export type EvListingRow = {
   types: string[];
   pros: string[];
   cons: string[];
+  has_baas: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -115,7 +116,7 @@ function mapToEvListing(row: EvListingRow, variants: EvVariantRow[], features?: 
 
   // BAAS variants (only those with has_baas)
   const baasVariants: BatteryVariant[] = variants
-    .filter((v) => v.has_baas)
+    .filter((v) => v.has_baas === true || (v.has_baas as any) === "true")
     .map((v) => ({
       modelName: v.baas_model_name || v.variant_name,
       capacity: v.battery_capacity_kwh ? String(v.battery_capacity_kwh) : "",
@@ -126,7 +127,7 @@ function mapToEvListing(row: EvListingRow, variants: EvVariantRow[], features?: 
       baseprice: v.baas_upfront_price ? String(v.baas_upfront_price) : "",
     }));
 
-  const hasBaas = variants.some((v) => v.has_baas);
+  const hasBaas = row.has_baas || variants.some((v) => v.has_baas === true || (v.has_baas as any) === "true");
   const topSpeed = variants[0]?.top_speed ?? null;
   const prices = variants.length > 0
     ? [...new Set(variants.map((v) => v.price).filter(Boolean))].map(String)
@@ -256,5 +257,33 @@ export async function fetchEvListingBySlugFromSupabase(slug: string): Promise<Ev
     for (const f of (feats ?? [])) featuresMap.set(f.variant_id, f);
   }
 
-  return mapToEvListing(listing as EvListingRow, (variants ?? []) as EvVariantRow[], featuresMap);
+  // Fetch energy comparisons
+  const { data: energyData } = await supabase
+    .from("ev_energy_comparisons")
+    .select("*")
+    .eq("listing_id", (listing as EvListingRow).id)
+    .order("created_at");
+
+  const result = mapToEvListing(listing as EvListingRow, (variants ?? []) as EvVariantRow[], featuresMap);
+  // Override energyComparison with Supabase data
+  if (energyData?.length) {
+    result.energyComparison = energyData.map((e: any) => ({
+      name: e.name,
+      fuelType: e.fuel_type === "self" ? "self" : e.fuel_type,
+      mileage: e.mileage || "",
+      fuelPrice: e.fuel_price || "",
+      modelused: e.model_used || "",
+      category: e.category || "fuel",
+    }));
+  }
+  return result;
+}
+
+export async function fetchEnergyComparisons(listingId: string) {
+  const { data } = await supabase
+    .from("ev_energy_comparisons")
+    .select("*")
+    .eq("listing_id", listingId)
+    .order("created_at");
+  return data ?? [];
 }

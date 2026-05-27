@@ -184,6 +184,7 @@ export type EnergyCompareEntry = {
   fuelPrice: string;
   priceRange?: string;
   modelused?: string;
+  category?: string;  // 'fuel' or 'model'
 };
 
 function mapEnergyEntry(raw: Record<string, unknown>): EnergyCompareEntry {

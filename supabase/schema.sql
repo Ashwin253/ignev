@@ -26,7 +26,9 @@ create table if not exists public.evlistings (
   types text[] default '{}',
   pros text[] default '{}',
   cons text[] default '{}',
+  has_baas boolean default false,
   created_by uuid references auth.users(id) default auth.uid(),
+  created_by_email text default '',
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -79,6 +81,7 @@ create table if not exists public.ev_variants (
   ground_clearance_mm numeric default null,
   boot_space_litres numeric default null,
   turning_radius_m numeric default null,
+  custom_fields jsonb default '[]',
   created_at timestamptz default now(),
   updated_at timestamptz default now(),
   constraint ev_variants_slug_year_unique unique (slug, model_year)
@@ -132,6 +135,7 @@ create table if not exists public.ev_variant_features (
   has_360_camera boolean default false,
   adas_level integer default 0,
   ncap_safety_rating integer default null,
+  custom_fields jsonb default '[]',
   updated_at timestamptz default now()
 );
 
@@ -145,6 +149,27 @@ create policy "Team manage features delete" on public.ev_variant_features for de
 create trigger ev_variant_features_updated_at
   before update on public.ev_variant_features
   for each row execute function public.update_updated_at();
+
+-- ── Energy Comparisons Table ─────────────────────────────────────────────────
+
+create table if not exists public.ev_energy_comparisons (
+  id uuid default gen_random_uuid() primary key,
+  listing_id uuid references public.evlistings(id) on delete cascade not null,
+  category text not null default 'fuel',  -- 'fuel' or 'model'
+  name text not null default '',           -- e.g. "Avg Petrol Car" or "Tata Nexon EV"
+  fuel_type text not null default '',      -- Petrol, Diesel, CNG, EV, self
+  mileage text default '',                 -- km/L or km range for EVs
+  fuel_price text default '',              -- ₹/L or ₹/km for EVs
+  model_used text default '',              -- variant name used for comparison
+  brand text default '',                   -- competitor brand (for model category)
+  created_at timestamptz default now()
+);
+
+alter table public.ev_energy_comparisons enable row level security;
+create policy "Public read energy" on public.ev_energy_comparisons for select using (true);
+create policy "Team manage energy" on public.ev_energy_comparisons for insert to authenticated with check (true);
+create policy "Team update energy" on public.ev_energy_comparisons for update to authenticated using (true) with check (true);
+create policy "Team delete energy" on public.ev_energy_comparisons for delete to authenticated using (true);
 
 -- ── Leads / Enquiries Table ──────────────────────────────────────────────────
 

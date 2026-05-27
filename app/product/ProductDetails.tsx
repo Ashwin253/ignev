@@ -93,6 +93,7 @@ export default function ProductDetails({ item }: { item: EvListing }) {
                 batterySpec.emissionStandard && { label: "Emission", value: batterySpec.emissionStandard },
                 batterySpec.turboSupercharger && batterySpec.turboSupercharger !== "0" && { label: "Turbo/Supercharger", value: "Yes" },
                 batterySpec.idleStartStop && batterySpec.idleStartStop !== "0" && { label: "Idle Start/Stop", value: "Yes" },
+                ...(batterySpec.extraSpecs || []).map((es) => es.label && es.value ? { label: es.label, value: es.value } : null),
               ].filter(Boolean).map((row, i) => (
                 <SpecRow key={i} label={(row as {label:string;value:string}).label} value={(row as {label:string;value:string}).value} odd={i % 2 === 0} />
               ))}
@@ -115,6 +116,7 @@ export default function ProductDetails({ item }: { item: EvListing }) {
                 chargingSpec.chargingOptions && { label: "Options", value: chargingSpec.chargingOptions },
                 chargingSpec.chargerIncluded && { label: "Charger Included", value: chargingSpec.chargerIncluded },
                 chargingSpec.chargerConnectionType && { label: "Connection Type", value: chargingSpec.chargerConnectionType },
+                ...(chargingSpec.extraSpecs || []).map((es) => es.label && es.value ? { label: es.label, value: es.value } : null),
               ].filter(Boolean).map((row, i) => (
                 <SpecRow key={i} label={(row as {label:string;value:string}).label} value={(row as {label:string;value:string}).value} odd={i % 2 === 0} />
               ))}

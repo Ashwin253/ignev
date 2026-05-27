@@ -356,9 +356,9 @@ function EnergyTabContent({ item, evCostPerKm, evEfficiency, petrolCostPerKm, cn
         <p className="text-center text-xs text-slate-400 py-6">No competitor models added yet.</p>
       )}
 
-      <button onClick={scrollToOwnership} className="w-full flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
+      {/* <button onClick={scrollToOwnership} className="w-full flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
         <ArrowDown size={15} /> Full ownership cost analysis below
-      </button>
+      </button> */}
     </div>
   );
 }

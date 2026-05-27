@@ -5,6 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 import { Plus, Pencil, Trash2, LogOut, Save, X, Loader2, ChevronDown, ChevronUp, MessageSquare } from "lucide-react";
 import type { EvListingRow, EvVariantRow } from "../lib/supabase";
 import LeadsPanel from "./LeadsPanel";
+import FuelPricesPanel from "./FuelPricesPanel";
 
 type ListingForm = {
   slug: string; title: string; brand: string; body_type: string;
@@ -76,7 +77,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
   const [variants, setVariants] = useState<(VariantForm & { id?: string })[]>([]);
   const [saving, setSaving] = useState(false);
   const [expandedListing, setExpandedListing] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<"listings" | "leads">("listings");
+  const [activeSection, setActiveSection] = useState<"listings" | "leads" | "prices">("listings");
   const [energyComps, setEnergyComps] = useState<Array<{ id?: string; category: string; name: string; fuel_type: string; mileage: string; fuel_price: string; model_used: string; brand: string }>>([]);
 
   useEffect(() => { supabase.auth.getUser().then(({ data }) => { if (data.user) setUser(data.user); }); }, []);
@@ -167,6 +168,8 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
           boot_space_litres: (v as any).boot_space_litres || null,
           turning_radius_m: (v as any).turning_radius_m || null,
           custom_fields: (v as any).custom_fields || [],
+          extra_motor: (v as any).extra_motor || [],
+          extra_charging: (v as any).extra_charging || [],
         };
 
         let savedVariantId = variantId;
@@ -238,9 +241,14 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all ${activeSection === "leads" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
             <MessageSquare size={14} /> Enquiries
           </button>
+          <button onClick={() => setActiveSection("prices")}
+            className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all ${activeSection === "prices" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+            ⛽ Fuel Prices
+          </button>
         </div>
 
         {activeSection === "leads" && <LeadsPanel supabase={supabase} userId={user.id} />}
+        {activeSection === "prices" && <FuelPricesPanel supabase={supabase} userEmail={user.email} />}
 
         {activeSection === "listings" && (<>
 
@@ -361,19 +369,63 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                     <span className="text-xs font-bold text-slate-700">{v.variant_name || `Variant ${i + 1}`}</span>
                     <button onClick={() => setVariants(variants.filter((_, j) => j !== i))} className="text-[10px] text-rose-500 font-bold">Remove</button>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
                     <MiniInput label="Variant Name" value={v.variant_name} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], variant_name: val }; setVariants(arr); }} />
                     <MiniInput label="Model Year" value={String(v.model_year)} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], model_year: Number(val) || 2026 }; setVariants(arr); }} />
                     <MiniInput label="Price (Lakh)" value={String(v.price || "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], price: Number(val) || 0 }; setVariants(arr); }} />
-                    <MiniInput label="Top Speed (km/h)" value={String(v.top_speed ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], top_speed: val ? Number(val) : null }; setVariants(arr); }} />
-                    <MiniInput label="Battery (kWh)" value={String(v.battery_capacity_kwh ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], battery_capacity_kwh: val ? Number(val) : null }; setVariants(arr); }} />
-                    <MiniInput label="Range (km)" value={String(v.driving_range_km ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], driving_range_km: val ? Number(val) : null }; setVariants(arr); }} />
-                    <MiniInput label="Charge Time (min)" value={String(v.charging_time_mins ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], charging_time_mins: val ? Number(val) : null }; setVariants(arr); }} />
-                    <MiniInput label="Max Power (bhp)" value={String(v.max_power_bhp ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], max_power_bhp: val ? Number(val) : null }; setVariants(arr); }} />
-                    <MiniInput label="Max Torque (Nm)" value={String(v.max_torque_nm ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], max_torque_nm: val ? Number(val) : null }; setVariants(arr); }} />
-                    <MiniInput label="AC Charge (hrs)" value={String(v.charging_time_ac_hours ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], charging_time_ac_hours: val ? Number(val) : null }; setVariants(arr); }} />
-                    <MiniInput label="DC Charge (min)" value={String(v.charging_time_dc_mins ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], charging_time_dc_mins: val ? Number(val) : null }; setVariants(arr); }} />
-                    <MiniInput label="Max DC Rate (kW)" value={String(v.max_dc_charging_rate_kw ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], max_dc_charging_rate_kw: val ? Number(val) : null }; setVariants(arr); }} />
+                  </div>
+
+                  {/* Motor & Engine */}
+                  <div className="mt-2 rounded-lg border border-sky-100 bg-sky-50/50 p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-[8px] font-bold uppercase tracking-wider text-sky-600">⚡ Motor & Engine</p>
+                      <div className="flex gap-2">
+                        {variants.length > 1 && i === 0 && (
+                          <button onClick={() => { const src = variants[0]; setVariants(variants.map((vr, vi) => vi === 0 ? vr : { ...vr, max_power_bhp: src.max_power_bhp, max_torque_nm: src.max_torque_nm, top_speed: src.top_speed, extra_motor: (src as any).extra_motor } as any)); }} className="text-[8px] font-bold text-violet-600 hover:text-violet-700">📋 Copy to all</button>
+                        )}
+                        <button onClick={() => { const arr = [...variants]; const ex = (arr[i] as any).extra_motor || []; ex.push({ label: "", value: "" }); (arr[i] as any).extra_motor = ex; setVariants(arr); }} className="text-[9px] font-bold text-sky-600">+ Extra</button>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      <MiniInput label="Max Power (bhp)" value={String(v.max_power_bhp ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], max_power_bhp: val ? Number(val) : null }; setVariants(arr); }} />
+                      <MiniInput label="Max Torque (Nm)" value={String(v.max_torque_nm ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], max_torque_nm: val ? Number(val) : null }; setVariants(arr); }} />
+                      <MiniInput label="Top Speed (km/h)" value={String(v.top_speed ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], top_speed: val ? Number(val) : null }; setVariants(arr); }} />
+                      <MiniInput label="Battery (kWh)" value={String(v.battery_capacity_kwh ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], battery_capacity_kwh: val ? Number(val) : null }; setVariants(arr); }} />
+                      <MiniInput label="Range (km)" value={String(v.driving_range_km ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], driving_range_km: val ? Number(val) : null }; setVariants(arr); }} />
+                    </div>
+                    {((v as any).extra_motor || []).map((ef: any, ei: number) => (
+                      <div key={ei} className="flex items-center gap-2 mt-1.5">
+                        <input value={ef.label} onChange={(e) => { const arr = [...variants]; const ex = [...((arr[i] as any).extra_motor || [])]; ex[ei] = { ...ex[ei], label: e.target.value }; (arr[i] as any).extra_motor = ex; setVariants(arr); }} placeholder="Label" className="flex-1 rounded-md border border-sky-200 bg-white px-2 py-1 text-[10px] outline-none" />
+                        <input value={ef.value} onChange={(e) => { const arr = [...variants]; const ex = [...((arr[i] as any).extra_motor || [])]; ex[ei] = { ...ex[ei], value: e.target.value }; (arr[i] as any).extra_motor = ex; setVariants(arr); }} placeholder="Value" className="flex-1 rounded-md border border-sky-200 bg-white px-2 py-1 text-[10px] outline-none" />
+                        <button onClick={() => { const arr = [...variants]; const ex = [...((arr[i] as any).extra_motor || [])]; ex.splice(ei, 1); (arr[i] as any).extra_motor = ex; setVariants(arr); }} className="text-rose-400 text-xs">×</button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Charging */}
+                  <div className="mt-2 rounded-lg border border-emerald-100 bg-emerald-50/50 p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-[8px] font-bold uppercase tracking-wider text-emerald-600">🔋 Charging</p>
+                      <div className="flex gap-2">
+                        {variants.length > 1 && i === 0 && (
+                          <button onClick={() => { const src = variants[0]; setVariants(variants.map((vr, vi) => vi === 0 ? vr : { ...vr, charging_time_mins: src.charging_time_mins, charging_time_ac_hours: src.charging_time_ac_hours, charging_time_dc_mins: src.charging_time_dc_mins, max_dc_charging_rate_kw: src.max_dc_charging_rate_kw, extra_charging: (src as any).extra_charging } as any)); }} className="text-[8px] font-bold text-violet-600 hover:text-violet-700">📋 Copy to all</button>
+                        )}
+                        <button onClick={() => { const arr = [...variants]; const ex = (arr[i] as any).extra_charging || []; ex.push({ label: "", value: "" }); (arr[i] as any).extra_charging = ex; setVariants(arr); }} className="text-[9px] font-bold text-emerald-600">+ Extra</button>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      <MiniInput label="Charge Time (min)" value={String(v.charging_time_mins ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], charging_time_mins: val ? Number(val) : null }; setVariants(arr); }} />
+                      <MiniInput label="AC Charge (hrs)" value={String(v.charging_time_ac_hours ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], charging_time_ac_hours: val ? Number(val) : null }; setVariants(arr); }} />
+                      <MiniInput label="DC Charge (min)" value={String(v.charging_time_dc_mins ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], charging_time_dc_mins: val ? Number(val) : null }; setVariants(arr); }} />
+                      <MiniInput label="Max DC Rate (kW)" value={String(v.max_dc_charging_rate_kw ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], max_dc_charging_rate_kw: val ? Number(val) : null }; setVariants(arr); }} />
+                    </div>
+                    {((v as any).extra_charging || []).map((ef: any, ei: number) => (
+                      <div key={ei} className="flex items-center gap-2 mt-1.5">
+                        <input value={ef.label} onChange={(e) => { const arr = [...variants]; const ex = [...((arr[i] as any).extra_charging || [])]; ex[ei] = { ...ex[ei], label: e.target.value }; (arr[i] as any).extra_charging = ex; setVariants(arr); }} placeholder="Label" className="flex-1 rounded-md border border-emerald-200 bg-white px-2 py-1 text-[10px] outline-none" />
+                        <input value={ef.value} onChange={(e) => { const arr = [...variants]; const ex = [...((arr[i] as any).extra_charging || [])]; ex[ei] = { ...ex[ei], value: e.target.value }; (arr[i] as any).extra_charging = ex; setVariants(arr); }} placeholder="Value" className="flex-1 rounded-md border border-emerald-200 bg-white px-2 py-1 text-[10px] outline-none" />
+                        <button onClick={() => { const arr = [...variants]; const ex = [...((arr[i] as any).extra_charging || [])]; ex.splice(ei, 1); (arr[i] as any).extra_charging = ex; setVariants(arr); }} className="text-rose-400 text-xs">×</button>
+                      </div>
+                    ))}
                   </div>
                   <label className="flex items-center gap-2 mt-3 text-xs text-slate-600">
                     <input type="checkbox" checked={v.has_baas} onChange={(e) => { const arr = [...variants]; arr[i] = { ...arr[i], has_baas: e.target.checked }; setVariants(arr); }} />
@@ -391,7 +443,12 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   )}
                   {/* Capacity & Dimensions */}
                   <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
-                    <p className="text-[8px] font-bold uppercase tracking-wider text-slate-500 mb-2">Capacity & Dimensions</p>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-[8px] font-bold uppercase tracking-wider text-slate-500">Capacity & Dimensions</p>
+                      {variants.length > 1 && i === 0 && (
+                        <button onClick={() => { const src = variants[0]; setVariants(variants.map((vr, vi) => vi === 0 ? vr : { ...vr, length_mm: (src as any).length_mm, width_mm: (src as any).width_mm, height_mm: (src as any).height_mm, wheelbase_mm: (src as any).wheelbase_mm, ground_clearance_mm: (src as any).ground_clearance_mm, boot_space_litres: (src as any).boot_space_litres, turning_radius_m: (src as any).turning_radius_m } as any)); }} className="text-[8px] font-bold text-violet-600 hover:text-violet-700">📋 Copy to all</button>
+                      )}
+                    </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
                       <MiniInput label="Length (mm)" value={String((v as any).length_mm ?? "")} onChange={(val) => { const arr = [...variants]; (arr[i] as any).length_mm = val ? Number(val) : null; setVariants(arr); }} />
                       <MiniInput label="Width (mm)" value={String((v as any).width_mm ?? "")} onChange={(val) => { const arr = [...variants]; (arr[i] as any).width_mm = val ? Number(val) : null; setVariants(arr); }} />

@@ -143,6 +143,7 @@ function mapToEvListing(row: EvListingRow, variants: EvVariantRow[], features?: 
     emissionStandard: "",
     turboSupercharger: "0",
     idleStartStop: "0",
+    extraSpecs: (v as any).extra_motor || [],
   }));
 
   // Build charging specs from variants
@@ -155,6 +156,7 @@ function mapToEvListing(row: EvListingRow, variants: EvVariantRow[], features?: 
     chargingOptions: v.max_dc_charging_rate_kw ? `Up to ${v.max_dc_charging_rate_kw} kW DC` : "",
     chargerIncluded: "",
     chargerConnectionType: "",
+    extraSpecs: (v as any).extra_charging || [],
   }));
 
   return {

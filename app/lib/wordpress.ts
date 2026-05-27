@@ -207,6 +207,7 @@ export type BatterySpec = {
   emissionStandard: string;
   engine: string;
   electricMotor: string;
+  extraSpecs?: Array<{ label: string; value: string }>;
 };
 
 export type ChargingSpec = {
@@ -218,6 +219,7 @@ export type ChargingSpec = {
   chargingOptions: string;
   chargerIncluded: string;
   chargerConnectionType: string;
+  extraSpecs?: Array<{ label: string; value: string }>;
 };
 
 export type EVOffer = {

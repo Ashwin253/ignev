@@ -82,6 +82,8 @@ create table if not exists public.ev_variants (
   boot_space_litres numeric default null,
   turning_radius_m numeric default null,
   custom_fields jsonb default '[]',
+  extra_motor jsonb default '[]',
+  extra_charging jsonb default '[]',
   created_at timestamptz default now(),
   updated_at timestamptz default now(),
   constraint ev_variants_slug_year_unique unique (slug, model_year)
@@ -170,6 +172,30 @@ create policy "Public read energy" on public.ev_energy_comparisons for select us
 create policy "Team manage energy" on public.ev_energy_comparisons for insert to authenticated with check (true);
 create policy "Team update energy" on public.ev_energy_comparisons for update to authenticated using (true) with check (true);
 create policy "Team delete energy" on public.ev_energy_comparisons for delete to authenticated using (true);
+
+-- ── Fuel Prices Table ─────────────────────────────────────────────────────────
+
+create table if not exists public.fuel_prices (
+  id uuid default gen_random_uuid() primary key,
+  city text not null default 'Delhi',
+  petrol_per_litre numeric not null default 104,
+  diesel_per_litre numeric not null default 90,
+  cng_per_kg numeric not null default 80,
+  electricity_per_kwh numeric not null default 8,
+  updated_by_email text default '',
+  updated_at timestamptz default now()
+);
+
+alter table public.fuel_prices enable row level security;
+create policy "Public read fuel prices" on public.fuel_prices for select using (true);
+create policy "Team manage fuel prices" on public.fuel_prices for insert to authenticated with check (true);
+create policy "Team update fuel prices" on public.fuel_prices for update to authenticated using (true) with check (true);
+create policy "Team delete fuel prices" on public.fuel_prices for delete to authenticated using (true);
+
+-- Insert default Delhi prices
+insert into public.fuel_prices (city, petrol_per_litre, diesel_per_litre, cng_per_kg, electricity_per_kwh)
+values ('Delhi', 94.72, 87.62, 75.09, 8)
+on conflict do nothing;
 
 -- ── Leads / Enquiries Table ──────────────────────────────────────────────────
 

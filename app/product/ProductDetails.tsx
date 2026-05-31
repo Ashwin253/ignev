@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   BatteryCharging, Zap, Gauge, CheckCircle2, CircleMinus, ChevronDown, ChevronUp,
 } from "lucide-react";
 import type { EvListing } from "../lib/wordpress";
+import { useProductSelection } from "./ProductSelectionProvider";
 
-function CollapsibleSection({ title, icon, defaultOpen = false, children, accentColor = "sky" }: {
-  title: string; icon: React.ReactNode; defaultOpen?: boolean; children: React.ReactNode; accentColor?: string;
+function CollapsibleSection({ title, icon, defaultOpen = false, children }: {
+  title: string; icon: React.ReactNode; defaultOpen?: boolean; children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
@@ -26,17 +27,20 @@ function CollapsibleSection({ title, icon, defaultOpen = false, children, accent
 }
 
 export default function ProductDetails({ item }: { item: EvListing }) {
+  const { selectedVariantName, selectVariantByName } = useProductSelection();
   const hasSpecs = item.batterySpecs.length > 0 || item.chargingSpecs.length > 0;
   const hasPros = item.pros.length > 0 || item.cons.length > 0;
-
-  if (!hasSpecs && !hasPros) return null;
-
-  const variants = [...new Set([
+  const variants = useMemo(() => [...new Set([
     ...item.batterySpecs.map((s) => s.variantName),
     ...item.chargingSpecs.map((s) => s.variantName),
-  ])].filter(Boolean);
+  ])].filter(Boolean), [item.batterySpecs, item.chargingSpecs]);
 
-  const [selectedVariant, setSelectedVariant] = useState(variants[0] || "");
+  const [localSelectedVariant, setLocalSelectedVariant] = useState(variants[0] || "");
+  const selectedVariant = selectedVariantName && variants.includes(selectedVariantName)
+    ? selectedVariantName
+    : localSelectedVariant || variants[0] || "";
+
+  if (!hasSpecs && !hasPros) return null;
 
   const batterySpec = item.batterySpecs.find((s) => s.variantName === selectedVariant);
   const chargingSpec = item.chargingSpecs.find((s) => s.variantName === selectedVariant);
@@ -58,7 +62,10 @@ export default function ProductDetails({ item }: { item: EvListing }) {
             {variants.length > 1 ? (
               <select
                 value={selectedVariant}
-                onChange={(e) => setSelectedVariant(e.target.value)}
+                onChange={(e) => {
+                  setLocalSelectedVariant(e.target.value);
+                  selectVariantByName(e.target.value);
+                }}
                 className="bg-transparent text-sm font-bold text-slate-800 outline-none appearance-none pr-6 cursor-pointer"
               >
                 {variants.map((v) => (

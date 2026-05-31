@@ -10,8 +10,8 @@ import {
 import { fetchEvListingBySlugFromSupabase } from "../../lib/supabase";
 import ProductGallery from "../../components/ProductGallery";
 import ProductMainUI from "../ProductMainUI";
-import ProductOwnershipSection from "../ProductOwnershipSection";
 import ProductDetails from "../ProductDetails";
+import { ProductSelectionProvider } from "../ProductSelectionProvider";
 import Image from "next/image";
 
 export const revalidate = 300;
@@ -74,6 +74,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <span className="font-medium text-slate-900 line-clamp-1">{item.brand} {item.title}</span>
         </nav>
 
+        <ProductSelectionProvider item={item}>
         <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
 
           {/* ── Gallery (with built-in color + photo buttons) ── */}
@@ -112,6 +113,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </div>
         {/* ── Detailed Specs + Pros/Cons ── */}
         <ProductDetails item={item} />
+        </ProductSelectionProvider>
 {/* ── Ownership — full width below the 2-col grid ── */}
         {/* <ProductOwnershipSection item={item} /> */}
 

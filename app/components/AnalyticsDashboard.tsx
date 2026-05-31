@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   BarChart2, Users, Globe, Zap, Eye, MousePointerClick, Clock,
   TrendingUp, Smartphone, Monitor, AlertTriangle, Shield, Activity,
-  ChevronRight, ArrowUpRight, Layers, Map
+  ChevronRight, ArrowUpRight, Layers, Map, FileText, ImageIcon,
+  Download, ZoomIn, X, ChevronLeft
 } from "lucide-react";
 
 // ─── DATA ────────────────────────────────────────────────────────────────────
@@ -811,16 +812,225 @@ function CombinedTab() {
   );
 }
 
+// ─── PHOTOS TAB ───────────────────────────────────────────────────────────────
+function PhotosTab() {
+  const [images, setImages]     = useState<string[]>([]);
+  const [loading, setLoading]   = useState(true);
+  const [lightbox, setLightbox] = useState<string | null>(null);
+  const [idx, setIdx]           = useState(0);
+
+  useEffect(() => {
+    fetch("/api/stats-files")
+      .then(r => r.json())
+      .then(d => { setImages(d.images ?? []); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
+
+  function openLightbox(src: string, i: number) {
+    setLightbox(src);
+    setIdx(i);
+  }
+  function prev() {
+    const ni = (idx - 1 + images.length) % images.length;
+    setIdx(ni); setLightbox(images[ni]);
+  }
+  function next() {
+    const ni = (idx + 1) % images.length;
+    setIdx(ni); setLightbox(images[ni]);
+  }
+
+  return (
+    <div className="space-y-5">
+      <Card>
+        <SectionTitle icon={<ImageIcon size={16}/>} title="Stats Photos"
+          sub={`Images from /public/stats — ${images.length} file${images.length !== 1 ? "s" : ""}`} />
+
+        {loading && (
+          <div className="flex items-center justify-center py-16">
+            <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease:"linear" }}
+              className="w-8 h-8 rounded-full border-2" style={{ borderColor:`${C.blue}40`, borderTopColor: C.blue }} />
+          </div>
+        )}
+
+        {!loading && images.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-16 gap-3">
+            <ImageIcon size={40} style={{ color: T.text4 }} />
+            <p className="text-sm" style={{ color: T.text3 }}>No images in <code className="bg-slate-100 px-1.5 py-0.5 rounded text-xs">/public/stats</code> yet.</p>
+            <p className="text-xs" style={{ color: T.text4 }}>Drop <span className="font-semibold">.png .jpg .jpeg .gif .webp .svg</span> files there and refresh.</p>
+          </div>
+        )}
+
+        {!loading && images.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {images.map((src, i) => {
+              const name = src.split("/").pop() ?? src;
+              return (
+                <motion.div key={src} initial={{ opacity:0, scale:0.96 }} animate={{ opacity:1, scale:1 }}
+                  transition={{ delay: i * 0.06 }}
+                  className="group relative rounded-2xl overflow-hidden border shadow-sm cursor-pointer"
+                  style={{ borderColor: T.cardBdr }}
+                  onClick={() => openLightbox(src, i)}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={src} alt={name} className="w-full object-cover" style={{ maxHeight: 220 }} />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center">
+                    <ZoomIn size={28} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                  <div className="px-3 py-2 border-t" style={{ borderColor: T.cardBdr, background: T.cardBg }}>
+                    <p className="text-xs truncate font-medium" style={{ color: T.text2 }}>{name}</p>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+      </Card>
+
+      {/* Lightbox */}
+      <AnimatePresence>
+        {lightbox && (
+          <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background:"rgba(0,0,0,0.85)" }}
+            onClick={() => setLightbox(null)}>
+            <motion.div initial={{ scale:0.9 }} animate={{ scale:1 }} exit={{ scale:0.9 }}
+              className="relative max-w-5xl w-full"
+              onClick={e => e.stopPropagation()}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={lightbox} alt="" className="w-full max-h-[80vh] object-contain rounded-2xl shadow-2xl" />
+              <button onClick={() => setLightbox(null)}
+                className="absolute -top-3 -right-3 w-8 h-8 rounded-full flex items-center justify-center shadow-lg"
+                style={{ background:"#ffffff" }}>
+                <X size={16} style={{ color: T.text1 }} />
+              </button>
+              {images.length > 1 && (
+                <>
+                  <button onClick={prev}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full flex items-center justify-center shadow-lg"
+                    style={{ background:"rgba(255,255,255,0.9)" }}>
+                    <ChevronLeft size={18} style={{ color: T.text1 }} />
+                  </button>
+                  <button onClick={next}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full flex items-center justify-center shadow-lg"
+                    style={{ background:"rgba(255,255,255,0.9)" }}>
+                    <ChevronRight size={18} style={{ color: T.text1 }} />
+                  </button>
+                  <p className="text-center text-xs mt-3" style={{ color:"rgba(255,255,255,0.6)" }}>
+                    {idx + 1} / {images.length} — {(lightbox.split("/").pop() ?? "")}
+                  </p>
+                </>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ─── PDFs TAB ─────────────────────────────────────────────────────────────────
+function PDFsTab() {
+  const [pdfs, setPdfs]     = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [active, setActive]   = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/stats-files")
+      .then(r => r.json())
+      .then(d => { setPdfs(d.pdfs ?? []); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
+
+  return (
+    <div className="space-y-5">
+      <Card>
+        <SectionTitle icon={<FileText size={16}/>} title="Stats PDFs"
+          sub={`PDF reports from /public/stats — ${pdfs.length} file${pdfs.length !== 1 ? "s" : ""}`} />
+
+        {loading && (
+          <div className="flex items-center justify-center py-16">
+            <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease:"linear" }}
+              className="w-8 h-8 rounded-full border-2" style={{ borderColor:`${C.violet}40`, borderTopColor: C.violet }} />
+          </div>
+        )}
+
+        {!loading && pdfs.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-16 gap-3">
+            <FileText size={40} style={{ color: T.text4 }} />
+            <p className="text-sm" style={{ color: T.text3 }}>No PDFs in <code className="bg-slate-100 px-1.5 py-0.5 rounded text-xs">/public/stats</code> yet.</p>
+            <p className="text-xs" style={{ color: T.text4 }}>Drop <span className="font-semibold">.pdf</span> files there and refresh.</p>
+          </div>
+        )}
+
+        {!loading && pdfs.length > 0 && (
+          <div className="space-y-3">
+            {pdfs.map((src, i) => {
+              const name = src.split("/").pop() ?? src;
+              const isOpen = active === src;
+              return (
+                <motion.div key={src} initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }}
+                  transition={{ delay: i * 0.07 }}
+                  className="rounded-2xl border overflow-hidden shadow-sm"
+                  style={{ borderColor: isOpen ? C.violet : T.cardBdr }}>
+                  {/* Header row */}
+                  <div className="flex items-center gap-3 px-4 py-3 cursor-pointer"
+                    style={{ background: isOpen ? `${C.violet}10` : "#f8fafc" }}
+                    onClick={() => setActive(isOpen ? null : src)}>
+                    <div className="p-2 rounded-xl" style={{ background:`${C.violet}18` }}>
+                      <FileText size={16} style={{ color: C.violet }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold truncate" style={{ color: T.text1 }}>{name}</p>
+                      <p className="text-xs" style={{ color: T.text3 }}>PDF document</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <a href={src} download
+                        className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl border transition-colors"
+                        style={{ color: C.blue, borderColor:`${C.blue}30`, background:"#ffffff" }}
+                        onClick={e => e.stopPropagation()}>
+                        <Download size={12}/> Download
+                      </a>
+                      <a href={src} target="_blank" rel="noreferrer"
+                        className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl border transition-colors"
+                        style={{ color: C.violet, borderColor:`${C.violet}30`, background:"#ffffff" }}
+                        onClick={e => e.stopPropagation()}>
+                        <ArrowUpRight size={12}/> Open
+                      </a>
+                      <ChevronRight size={16} className="transition-transform" style={{ color: T.text4, transform: isOpen ? "rotate(90deg)" : "rotate(0deg)" }} />
+                    </div>
+                  </div>
+                  {/* Inline preview */}
+                  <AnimatePresence>
+                    {isOpen && (
+                      <motion.div initial={{ height:0, opacity:0 }} animate={{ height:"auto", opacity:1 }}
+                        exit={{ height:0, opacity:0 }} transition={{ duration:0.25 }}
+                        className="overflow-hidden">
+                        <iframe src={src} title={name}
+                          className="w-full border-t" style={{ height: 640, borderColor: T.divider }} />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}
+
 // ─── TABS ────────────────────────────────────────────────────────────────────
 const TABS = [
   { id:"combined", label:"Combined",          icon:<BarChart2 size={14}/> },
   { id:"clarity",  label:"Microsoft Clarity", icon:<Eye size={14}/>       },
   { id:"vercel",   label:"Vercel Insights",   icon:<Activity size={14}/>  },
+  { id:"photos",   label:"Photos",            icon:<ImageIcon size={14}/> },
+  { id:"pdfs",     label:"PDFs",              icon:<FileText size={14}/>  },
 ];
 
 // ─── MAIN ────────────────────────────────────────────────────────────────────
 export default function AnalyticsDashboard() {
-  const [tab, setTab] = useState<"combined"|"clarity"|"vercel">("combined");
+  const [tab, setTab] = useState<"combined"|"clarity"|"vercel"|"photos"|"pdfs">("combined");
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-10">
@@ -867,6 +1077,8 @@ export default function AnalyticsDashboard() {
           {tab==="combined" && <CombinedTab />}
           {tab==="clarity"  && <ClarityTab  />}
           {tab==="vercel"   && <VercelTab   />}
+          {tab==="photos"   && <PhotosTab   />}
+          {tab==="pdfs"     && <PDFsTab     />}
         </motion.div>
       </AnimatePresence>
     </div>

@@ -22,6 +22,7 @@ interface BatterySelectorProps {
   onSelect: (index: number) => void;
   showBaas: boolean;
   onToggleBaas: (value: boolean) => void;
+  hideVariantSelector?: boolean;
 }
 
 /** Format charge time: if < 60 show as minutes, else convert to hours */
@@ -57,6 +58,7 @@ export default function BatterySelector({
   onSelect,
   showBaas,
   onToggleBaas,
+  hideVariantSelector = false,
 }: BatterySelectorProps) {
   const [showHelp, setShowHelp] = useState(false);
   const activeVariants = showBaas ? baasVariants : standardVariants;
@@ -68,7 +70,7 @@ export default function BatterySelector({
   const priceDisplay = formatPrice(active.price);
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+    <div className="rounded-2xl border-2 border-slate-300 bg-slate-100 p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-1.5">
@@ -85,7 +87,7 @@ export default function BatterySelector({
           )}
         </div>
         {canToggle && (
-          <div className="flex gap-0.5 bg-white rounded-lg p-0.5 border border-slate-200">
+          <div className="flex gap-0.5 bg-slate-200 rounded-lg p-0.5 border border-slate-300">
             <button
               onClick={() => onToggleBaas(false)}
               className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md transition-all ${
@@ -108,7 +110,7 @@ export default function BatterySelector({
 
       {/* Help popup */}
       {showHelp && (
-        <div className="mb-3 rounded-xl border border-slate-200 bg-white p-3 text-[11px] text-slate-600 leading-relaxed relative">
+        <div className="mb-3 rounded-xl border border-slate-300 bg-white p-3 text-[11px] text-slate-600 leading-relaxed relative">
           <button onClick={() => setShowHelp(false)} className="absolute top-2 right-2 text-slate-400 hover:text-slate-600">
             <X size={12} />
           </button>
@@ -121,9 +123,9 @@ export default function BatterySelector({
       )}
 
       {/* Variant selector — always dropdown */}
-      {activeVariants.length > 1 && (
+      {!hideVariantSelector && activeVariants.length > 1 && (
         <div className="mb-4">
-          <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5">
+          <label className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2.5">
             <BatteryCharging size={14} className={showBaas ? "text-emerald-500" : "text-sky-500"} />
             <select
               value={selectedIndex}
@@ -144,7 +146,7 @@ export default function BatterySelector({
       {/* Specs grid */}
       <div className={`grid gap-2 ${showBaas ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-3"}`}>
         {/* Range */}
-        <div className="rounded-xl bg-white border border-slate-100 p-3">
+        <div className="rounded-xl bg-white border border-slate-300 p-3">
           <div className="flex items-center gap-1 text-slate-400 mb-0.5">
             <Zap size={11} />
             <span className="text-[9px] font-bold uppercase tracking-wider">Range</span>
@@ -156,7 +158,7 @@ export default function BatterySelector({
 
         {/* Charge time — always show in BAAS, conditional in standard */}
         {(showBaas || chargeTime.value !== "N/A") && (
-          <div className="rounded-xl bg-white border border-slate-100 p-3">
+          <div className="rounded-xl bg-white border border-slate-300 p-3">
             <div className="flex items-center gap-1 text-slate-400 mb-0.5">
               <BatteryCharging size={11} />
               <span className="text-[9px] font-bold uppercase tracking-wider">Charge</span>
@@ -169,7 +171,7 @@ export default function BatterySelector({
 
         {/* BAAS: ₹/km rate */}
         {showBaas && active.price_baas ? (
-          <div className="rounded-xl bg-emerald-50 border border-emerald-100 p-3">
+          <div className="rounded-xl bg-emerald-100 border border-emerald-300 p-3">
             <div className="flex items-center gap-1 text-emerald-600 mb-0.5">
               <IndianRupee size={11} />
               <span className="text-[9px] font-bold uppercase tracking-wider">₹/km</span>
@@ -179,7 +181,7 @@ export default function BatterySelector({
             </p>
           </div>
         ) : priceDisplay ? (
-          <div className="rounded-xl bg-white border border-slate-100 p-3">
+          <div className="rounded-xl bg-white border border-slate-300 p-3">
             <div className="flex items-center gap-1 text-slate-400 mb-0.5">
               <IndianRupee size={11} />
               <span className="text-[9px] font-bold uppercase tracking-wider">Price</span>
@@ -192,7 +194,7 @@ export default function BatterySelector({
 
         {/* BAAS: Base price (upfront) */}
         {showBaas && active.baseprice && (
-          <div className="rounded-xl bg-emerald-50 border border-emerald-100 p-3">
+          <div className="rounded-xl bg-emerald-100 border border-emerald-300 p-3">
             <div className="flex items-center gap-1 text-emerald-600 mb-0.5">
               <IndianRupee size={11} />
               <span className="text-[9px] font-bold uppercase tracking-wider">Upfront</span>

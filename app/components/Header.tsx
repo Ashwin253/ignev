@@ -3,25 +3,23 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, Home, LayoutGrid, Newspaper, MapPin, IndianRupee, ShoppingBag, Download, Wrench, CarFront, Percent } from "lucide-react";
+import { Menu, X, Home, LayoutGrid, Newspaper, MapPin, IndianRupee, ShoppingBag, Download, Wrench, CarFront, Percent, MessageSquare } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navLinks = [
   { name: "Home", href: "/", icon: Home },
-  // { name: "Buy", href: "/#buy" },
-  // { name: "Sell", href: "/#sell" },
   { name: "Catalog", href: "/catalog", icon: LayoutGrid },
   { name: "Updates", href: "/updates", icon: Newspaper },
   { name: "Map", href: "/map", icon: MapPin },
   { name: "Compare", href: "/compare", icon: IndianRupee },
   { name: "Quick", href: "/service", icon: Wrench },
-  // { name: "Ride", href: "/ride", icon: CarFront },
   { name: "Shop", href: "/shop", icon: ShoppingBag },
-  { name: "Offer", href: "/offers", icon: Percent }
+  { name: "Offer", href: "/offers", icon: Percent },
+  { name: "Community", href: "https://evplse.online/community/", icon: MessageSquare, external: true },
 ];
 
 // Pages that have a white/light background — nav text should be dark
-const lightBgRoutes = ["/catalog", "/product", "/updates", "/map", "/own", "/service", "/shop", "/team", "/mis"];
+const lightBgRoutes = ["/catalog", "/product", "/updates", "/map", "/own", "/service", "/shop", "/team", "/mis", "/analytics"];
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -100,6 +98,7 @@ export default function Header() {
                 <Link
                   key={link.name}
                   href={link.href}
+                  {...((link as any).external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                   className={`${linkBase} ${isActive ? activeLinkColor : linkColor}`}
                 >
                   <span className="inline-flex items-center gap-1.5">
@@ -168,6 +167,7 @@ export default function Header() {
                     key={link.name}
                     href={link.href}
                     onClick={() => setMobileMenuOpen(false)}
+                    {...((link as any).external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                     className={`text-base px-4 py-3 rounded-xl transition-colors font-medium ${isActive
                       ? isLightPage
                         ? "text-sky-600 bg-sky-50"

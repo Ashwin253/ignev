@@ -6,6 +6,7 @@ import { Plus, Pencil, Trash2, LogOut, Save, X, Loader2, ChevronDown, ChevronUp,
 import type { EvListingRow, EvVariantRow } from "../lib/supabase";
 import LeadsPanel from "./LeadsPanel";
 import FuelPricesPanel from "./FuelPricesPanel";
+import AnalyticsPanel from "./AnalyticsPanel";
 
 type ListingForm = {
   slug: string; title: string; brand: string; body_type: string;
@@ -77,7 +78,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
   const [variants, setVariants] = useState<(VariantForm & { id?: string })[]>([]);
   const [saving, setSaving] = useState(false);
   const [expandedListing, setExpandedListing] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<"listings" | "leads" | "prices">("listings");
+  const [activeSection, setActiveSection] = useState<"listings" | "leads" | "prices" | "analytics">("listings");
   const [energyComps, setEnergyComps] = useState<Array<{ id?: string; category: string; name: string; fuel_type: string; mileage: string; fuel_price: string; model_used: string; brand: string }>>([]);
 
   useEffect(() => { supabase.auth.getUser().then(({ data }) => { if (data.user) setUser(data.user); }); }, []);
@@ -245,10 +246,15 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all ${activeSection === "prices" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
             ⛽ Fuel Prices
           </button>
+          <button onClick={() => setActiveSection("analytics")}
+            className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all ${activeSection === "analytics" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+            📊 Analytics
+          </button>
         </div>
 
         {activeSection === "leads" && <LeadsPanel supabase={supabase} userId={user.id} />}
         {activeSection === "prices" && <FuelPricesPanel supabase={supabase} userEmail={user.email} />}
+        {activeSection === "analytics" && <AnalyticsPanel supabase={supabase} />}
 
         {activeSection === "listings" && (<>
 

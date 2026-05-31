@@ -173,6 +173,34 @@ create policy "Team manage energy" on public.ev_energy_comparisons for insert to
 create policy "Team update energy" on public.ev_energy_comparisons for update to authenticated using (true) with check (true);
 create policy "Team delete energy" on public.ev_energy_comparisons for delete to authenticated using (true);
 
+-- ── Page Views / Activity Analytics ───────────────────────────────────────────
+
+create table if not exists public.page_views (
+  id uuid default gen_random_uuid() primary key,
+  path text not null,
+  slug text default '',
+  referrer text default '',
+  device text default 'desktop',
+  created_at timestamptz default now()
+);
+
+alter table public.page_views enable row level security;
+create policy "Public insert views" on public.page_views for insert with check (true);
+create policy "Team read views" on public.page_views for select to authenticated using (true);
+
+create index if not exists idx_page_views_path on public.page_views(path);
+create index if not exists idx_page_views_created on public.page_views(created_at);
+
+-- Function to get top pages
+create or replace function public.get_top_pages()
+returns table(path text, count bigint) as $$
+  select path, count(*) as count
+  from public.page_views
+  group by path
+  order by count desc
+  limit 10;
+$$ language sql security definer;
+
 -- ── Fuel Prices Table ─────────────────────────────────────────────────────────
 
 create table if not exists public.fuel_prices (

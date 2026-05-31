@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import AddToHomescreen from "./components/AddToHomescreen";
 
@@ -24,6 +25,7 @@ import Footer from "./components/Footer";
 import AssistPopup from "./components/AssistPopup";
 import EnquiryModal from "./components/EnquiryModal";
 import ClarityScript from "./components/ClarityScript";
+import PageTracker from "./components/PageTracker";
 import FloatingMobileNav from "./components/FloatingMobileNav";
 import { CompareProvider } from "./context/CompareContext";
 import CompareWidget from "./components/CompareWidget";
@@ -38,8 +40,12 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} h-full antialiased`}
     >
+      <head>
+        <Script src="https://t.contentsquare.net/uxa/11fb40d69f477.js" strategy="afterInteractive" />
+      </head>
       <body className="min-h-full flex flex-col bg-[#0f1115] text-white">
         <ClarityScript />
+        <PageTracker />
         <CompareProvider>
           <Header />
           <Analytics />

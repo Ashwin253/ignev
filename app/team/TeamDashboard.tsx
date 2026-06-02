@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { Plus, Pencil, Trash2, LogOut, Save, X, Loader2, ChevronDown, ChevronUp, MessageSquare } from "lucide-react";
+import { Plus, Pencil, Trash2, LogOut, Save, X, Loader2, ChevronDown, ChevronUp, MessageSquare, Mic, MicOff } from "lucide-react";
 import type { EvListingRow, EvVariantRow } from "../lib/supabase";
 import LeadsPanel from "./LeadsPanel";
 import FuelPricesPanel from "./FuelPricesPanel";
 import AnalyticsPanel from "./AnalyticsPanel";
+import { useVoiceDictation, MicButton } from "./VoiceInput";
 
 type ListingForm = {
   slug: string; title: string; brand: string; body_type: string;
@@ -36,6 +37,7 @@ type VariantForm = {
     has_ota_updates: boolean; airbag_count: number; has_abs_ebd: boolean;
     has_esp: boolean; has_tpms: boolean; has_360_camera: boolean;
     adas_level: number; ncap_safety_rating: number | null;
+    extra_features?: Array<{ label: string; value: string }>;
   };
   showFeatures?: boolean;
 };
@@ -222,9 +224,16 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
           </div>
           <div className="flex gap-2">
             {activeSection === "listings" && (
-              <button onClick={startNew} className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-sky-700 transition-colors">
-                <Plus size={16} /> Add Listing
-              </button>
+              <>
+                <button onClick={startNew} className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-sky-700 transition-colors">
+                  <Plus size={16} /> Add Listing
+                </button>
+                {editing && (
+                  <button onClick={() => { setEditing(null); }} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
+                    View Listings
+                  </button>
+                )}
+              </>
             )}
             <button onClick={handleLogout} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
               <LogOut size={16} /> Logout
@@ -260,12 +269,20 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
 
         {/* Edit Form */}
         {editing && (
-          <div className="mb-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-6">
+          <div className="mb-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm text-sm">
+            <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-slate-900">{editing === "new" ? "New Listing" : "Edit Listing"}</h2>
               <button onClick={() => setEditing(null)} className="text-slate-400 hover:text-slate-600"><X size={20} /></button>
             </div>
 
+            {/* Quick navigation */}
+            <div className="flex flex-wrap gap-2 mb-6 sticky top-20 z-10 bg-white py-2 border-b border-slate-100">
+              <a href="#section-core" className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-200 transition-colors">Core Details</a>
+              <a href="#section-variants" className="rounded-lg bg-sky-50 px-3 py-1.5 text-xs font-bold text-sky-600 hover:bg-sky-100 transition-colors">Variants</a>
+              <a href="#section-energy" className="rounded-lg bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-600 hover:bg-amber-100 transition-colors">Energy Comparison</a>
+            </div>
+
+            <span id="section-core" />
             {/* Basic fields */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <Field label="Title" value={form.title} onChange={(v) => setForm({ ...form, title: v })} />
@@ -354,37 +371,42 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             {/* Pros & Cons */}
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-                <div className="flex items-center justify-between mb-2"><p className="text-[10px] font-bold uppercase text-emerald-600">Pros</p><button onClick={() => setForm({ ...form, pros: [...form.pros, ""] })} className="text-[10px] font-bold text-emerald-600">+ Add</button></div>
-                {form.pros.map((p, i) => (<div key={i} className="flex items-center gap-1.5 mb-1.5"><input value={p} onChange={(e) => { const arr = [...form.pros]; arr[i] = e.target.value; setForm({ ...form, pros: arr }); }} className="flex-1 rounded-md border border-emerald-200 bg-white px-2 py-1.5 text-[11px] outline-none" /><button onClick={() => setForm({ ...form, pros: form.pros.filter((_, j) => j !== i) })} className="text-rose-400 text-xs">×</button></div>))}
+                <div className="flex items-center justify-between mb-2"><p className="text-[10px] font-bold uppercase text-emerald-600">Pros</p><button onClick={() => { setForm({ ...form, pros: [...form.pros, ""] }); }} className="text-[10px] font-bold text-emerald-600">+ Add</button></div>
+                {form.pros.map((p, i) => (<ProConInput key={i} value={p} onChange={(val) => { const arr = [...form.pros]; arr[i] = val; setForm({ ...form, pros: arr }); }} onRemove={() => setForm({ ...form, pros: form.pros.filter((_, j) => j !== i) })} color="emerald" />))}
               </div>
               <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-                <div className="flex items-center justify-between mb-2"><p className="text-[10px] font-bold uppercase text-amber-600">Cons</p><button onClick={() => setForm({ ...form, cons: [...form.cons, ""] })} className="text-[10px] font-bold text-amber-600">+ Add</button></div>
-                {form.cons.map((c, i) => (<div key={i} className="flex items-center gap-1.5 mb-1.5"><input value={c} onChange={(e) => { const arr = [...form.cons]; arr[i] = e.target.value; setForm({ ...form, cons: arr }); }} className="flex-1 rounded-md border border-amber-200 bg-white px-2 py-1.5 text-[11px] outline-none" /><button onClick={() => setForm({ ...form, cons: form.cons.filter((_, j) => j !== i) })} className="text-rose-400 text-xs">×</button></div>))}
+                <div className="flex items-center justify-between mb-2"><p className="text-[10px] font-bold uppercase text-amber-600">Cons</p><button onClick={() => { setForm({ ...form, cons: [...form.cons, ""] }); }} className="text-[10px] font-bold text-amber-600">+ Add</button></div>
+                {form.cons.map((c, i) => (<ProConInput key={i} value={c} onChange={(val) => { const arr = [...form.cons]; arr[i] = val; setForm({ ...form, cons: arr }); }} onRemove={() => setForm({ ...form, cons: form.cons.filter((_, j) => j !== i) })} color="amber" />))}
               </div>
             </div>
 
             {/* ── Variants ── */}
-            <div className="mt-6 rounded-xl border border-sky-200 bg-sky-50 p-4">
+            <div id="section-variants" className="mt-6 rounded-xl border border-sky-200 bg-sky-50 p-4">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-sky-600">Variants</p>
                 <button onClick={() => setVariants([...variants, { ...emptyVariant }])} className="text-[10px] font-bold text-sky-600 hover:text-sky-700">+ Add Variant</button>
               </div>
               {variants.map((v, i) => (
-                <div key={i} className="mb-4 rounded-lg border border-slate-200 bg-white p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-bold text-slate-700">{v.variant_name || `Variant ${i + 1}`}</span>
-                    <button onClick={() => setVariants(variants.filter((_, j) => j !== i))} className="text-[10px] text-rose-500 font-bold">Remove</button>
+                <div key={i} className="mb-4 rounded-lg border border-slate-200 bg-white overflow-hidden">
+                  <div className="flex items-center justify-between px-4 py-3 bg-slate-50 cursor-pointer" onClick={() => { const arr = [...variants]; (arr[i] as any).collapsed = !(arr[i] as any).collapsed; setVariants(arr); }}>
+                    <span className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                      {(v as any).collapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+                      {v.variant_name || `Variant ${i + 1}`}
+                      {v.price ? <span className="text-[10px] font-medium text-slate-400">₹{v.price}L</span> : null}
+                    </span>
+                    <button onClick={(e) => { e.stopPropagation(); setVariants(variants.filter((_, j) => j !== i)); }} className="text-[10px] text-rose-500 font-bold">Remove</button>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
+                  {!(v as any).collapsed && <div className="p-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
                     <MiniInput label="Variant Name" value={v.variant_name} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], variant_name: val }; setVariants(arr); }} />
                     <MiniInput label="Model Year" value={String(v.model_year)} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], model_year: Number(val) || 2026 }; setVariants(arr); }} />
                     <MiniInput label="Price (Lakh)" value={String(v.price || "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], price: Number(val) || 0 }; setVariants(arr); }} />
                   </div>
 
                   {/* Motor & Engine */}
-                  <div className="mt-2 rounded-lg border border-sky-100 bg-sky-50/50 p-3">
+                  <div className="mt-4 rounded-xl border border-sky-100 bg-sky-50/50 p-4">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-[8px] font-bold uppercase tracking-wider text-sky-600">⚡ Motor & Engine</p>
+                      <p className="text-xs font-bold uppercase tracking-wider text-sky-600">⚡ Motor & Engine</p>
                       <div className="flex gap-2">
                         {variants.length > 1 && i === 0 && (
                           <button onClick={() => { const src = variants[0]; setVariants(variants.map((vr, vi) => vi === 0 ? vr : { ...vr, max_power_bhp: src.max_power_bhp, max_torque_nm: src.max_torque_nm, top_speed: src.top_speed, extra_motor: (src as any).extra_motor } as any)); }} className="text-[8px] font-bold text-violet-600 hover:text-violet-700">📋 Copy to all</button>
@@ -392,7 +414,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                         <button onClick={() => { const arr = [...variants]; const ex = (arr[i] as any).extra_motor || []; ex.push({ label: "", value: "" }); (arr[i] as any).extra_motor = ex; setVariants(arr); }} className="text-[9px] font-bold text-sky-600">+ Extra</button>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                       <MiniInput label="Max Power (bhp)" value={String(v.max_power_bhp ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], max_power_bhp: val ? Number(val) : null }; setVariants(arr); }} />
                       <MiniInput label="Max Torque (Nm)" value={String(v.max_torque_nm ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], max_torque_nm: val ? Number(val) : null }; setVariants(arr); }} />
                       <MiniInput label="Top Speed (km/h)" value={String(v.top_speed ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], top_speed: val ? Number(val) : null }; setVariants(arr); }} />
@@ -409,9 +431,9 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   </div>
 
                   {/* Charging */}
-                  <div className="mt-2 rounded-lg border border-emerald-100 bg-emerald-50/50 p-3">
+                  <div className="mt-4 rounded-xl border border-emerald-100 bg-emerald-50/50 p-4">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-[8px] font-bold uppercase tracking-wider text-emerald-600">🔋 Charging</p>
+                      <p className="text-xs font-bold uppercase tracking-wider text-emerald-600">🔋 Charging</p>
                       <div className="flex gap-2">
                         {variants.length > 1 && i === 0 && (
                           <button onClick={() => { const src = variants[0]; setVariants(variants.map((vr, vi) => vi === 0 ? vr : { ...vr, charging_time_mins: src.charging_time_mins, charging_time_ac_hours: src.charging_time_ac_hours, charging_time_dc_mins: src.charging_time_dc_mins, max_dc_charging_rate_kw: src.max_dc_charging_rate_kw, extra_charging: (src as any).extra_charging } as any)); }} className="text-[8px] font-bold text-violet-600 hover:text-violet-700">📋 Copy to all</button>
@@ -419,7 +441,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                         <button onClick={() => { const arr = [...variants]; const ex = (arr[i] as any).extra_charging || []; ex.push({ label: "", value: "" }); (arr[i] as any).extra_charging = ex; setVariants(arr); }} className="text-[9px] font-bold text-emerald-600">+ Extra</button>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                       <MiniInput label="Charge Time (min)" value={String(v.charging_time_mins ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], charging_time_mins: val ? Number(val) : null }; setVariants(arr); }} />
                       <MiniInput label="AC Charge (hrs)" value={String(v.charging_time_ac_hours ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], charging_time_ac_hours: val ? Number(val) : null }; setVariants(arr); }} />
                       <MiniInput label="DC Charge (min)" value={String(v.charging_time_dc_mins ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], charging_time_dc_mins: val ? Number(val) : null }; setVariants(arr); }} />
@@ -440,7 +462,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   {v.has_baas && (
                     <div className="mt-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
                       <p className="text-[8px] font-bold uppercase text-emerald-600 mb-2">BAAS Details</p>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         <MiniInput label="BAAS Model Name" value={v.baas_model_name} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], baas_model_name: val }; setVariants(arr); }} />
                         <MiniInput label="₹/km Rate" value={String(v.baas_price_per_km ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], baas_price_per_km: val ? Number(val) : null }; setVariants(arr); }} />
                         <MiniInput label="Upfront Price (₹)" value={String(v.baas_upfront_price ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], baas_upfront_price: val ? Number(val) : null }; setVariants(arr); }} />
@@ -448,14 +470,14 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                     </div>
                   )}
                   {/* Capacity & Dimensions */}
-                  <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                  <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-[8px] font-bold uppercase tracking-wider text-slate-500">Capacity & Dimensions</p>
+                      <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Capacity & Dimensions</p>
                       {variants.length > 1 && i === 0 && (
                         <button onClick={() => { const src = variants[0]; setVariants(variants.map((vr, vi) => vi === 0 ? vr : { ...vr, length_mm: (src as any).length_mm, width_mm: (src as any).width_mm, height_mm: (src as any).height_mm, wheelbase_mm: (src as any).wheelbase_mm, ground_clearance_mm: (src as any).ground_clearance_mm, boot_space_litres: (src as any).boot_space_litres, turning_radius_m: (src as any).turning_radius_m } as any)); }} className="text-[8px] font-bold text-violet-600 hover:text-violet-700">📋 Copy to all</button>
                       )}
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                       <MiniInput label="Length (mm)" value={String((v as any).length_mm ?? "")} onChange={(val) => { const arr = [...variants]; (arr[i] as any).length_mm = val ? Number(val) : null; setVariants(arr); }} />
                       <MiniInput label="Width (mm)" value={String((v as any).width_mm ?? "")} onChange={(val) => { const arr = [...variants]; (arr[i] as any).width_mm = val ? Number(val) : null; setVariants(arr); }} />
                       <MiniInput label="Height (mm)" value={String((v as any).height_mm ?? "")} onChange={(val) => { const arr = [...variants]; (arr[i] as any).height_mm = val ? Number(val) : null; setVariants(arr); }} />
@@ -466,17 +488,17 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                     </div>
                   </div>
                   {/* Custom Extra Fields */}
-                  <div className="mt-3 rounded-lg border border-violet-200 bg-violet-50 p-3">
+                  <div className="mt-4 rounded-xl border border-violet-200 bg-violet-50 p-4">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-[8px] font-bold uppercase tracking-wider text-violet-600">Extra Specs</p>
+                      <p className="text-xs font-bold uppercase tracking-wider text-violet-600">Extra Specs</p>
                       <button onClick={() => { const arr = [...variants]; const cf = (arr[i] as any).custom_fields || []; cf.push({ label: "", value: "" }); (arr[i] as any).custom_fields = cf; setVariants(arr); }} className="text-[9px] font-bold text-violet-600 hover:text-violet-700">+ Add Field</button>
                     </div>
                     {((v as any).custom_fields || []).map((cf: any, ci: number) => (
-                      <div key={ci} className="flex items-center gap-2 mb-1.5">
-                        <input value={cf.label} onChange={(e) => { const arr = [...variants]; const cfs = [...((arr[i] as any).custom_fields || [])]; cfs[ci] = { ...cfs[ci], label: e.target.value }; (arr[i] as any).custom_fields = cfs; setVariants(arr); }} placeholder="Label" className="flex-1 rounded-md border border-violet-200 bg-white px-2 py-1.5 text-[11px] outline-none" />
-                        <input value={cf.value} onChange={(e) => { const arr = [...variants]; const cfs = [...((arr[i] as any).custom_fields || [])]; cfs[ci] = { ...cfs[ci], value: e.target.value }; (arr[i] as any).custom_fields = cfs; setVariants(arr); }} placeholder="Value" className="flex-1 rounded-md border border-violet-200 bg-white px-2 py-1.5 text-[11px] outline-none" />
-                        <button onClick={() => { const arr = [...variants]; const cfs = [...((arr[i] as any).custom_fields || [])]; cfs.splice(ci, 1); (arr[i] as any).custom_fields = cfs; setVariants(arr); }} className="text-rose-400 text-xs">×</button>
-                      </div>
+                      <ExtraFieldRow key={ci} label={cf.label} value={cf.value}
+                        onLabelChange={(val) => { const arr = [...variants]; const cfs = [...((arr[i] as any).custom_fields || [])]; cfs[ci] = { ...cfs[ci], label: val }; (arr[i] as any).custom_fields = cfs; setVariants(arr); }}
+                        onValueChange={(val) => { const arr = [...variants]; const cfs = [...((arr[i] as any).custom_fields || [])]; cfs[ci] = { ...cfs[ci], value: val }; (arr[i] as any).custom_fields = cfs; setVariants(arr); }}
+                        onRemove={() => { const arr = [...variants]; const cfs = [...((arr[i] as any).custom_fields || [])]; cfs.splice(ci, 1); (arr[i] as any).custom_fields = cfs; setVariants(arr); }}
+                      />
                     ))}
                   </div>
                   {/* Features toggle */}
@@ -485,8 +507,8 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                     {v.showFeatures ? <ChevronUp size={12} /> : <ChevronDown size={12} />} Features & Safety
                   </button>
                   {v.showFeatures && (
-                    <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
-                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 mb-3">
+                    <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
                         <label className="block"><span className="text-[8px] font-bold uppercase text-slate-400">Front Brakes</span><select value={v.features?.front_brakes || "Disc"} onChange={(e) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, front_brakes: e.target.value } }; setVariants(arr); }} className="mt-0.5 w-full rounded-md border border-slate-200 px-2 py-1.5 text-[11px] outline-none"><option value="Disc">Disc</option><option value="Ventilated Disc">Ventilated Disc</option><option value="Drum">Drum</option></select></label>
                         <label className="block"><span className="text-[8px] font-bold uppercase text-slate-400">Rear Brakes</span><select value={v.features?.rear_brakes || "Disc"} onChange={(e) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, rear_brakes: e.target.value } }; setVariants(arr); }} className="mt-0.5 w-full rounded-md border border-slate-200 px-2 py-1.5 text-[11px] outline-none"><option value="Disc">Disc</option><option value="Solid Disc">Solid Disc</option><option value="Drum">Drum</option></select></label>
                         <label className="block"><span className="text-[8px] font-bold uppercase text-slate-400">Drivetrain</span><select value={v.features?.drivetrain || "FWD"} onChange={(e) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, drivetrain: e.target.value } }; setVariants(arr); }} className="mt-0.5 w-full rounded-md border border-slate-200 px-2 py-1.5 text-[11px] outline-none"><option value="FWD">FWD</option><option value="RWD">RWD</option><option value="AWD">AWD</option></select></label>
@@ -508,14 +530,29 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                           </label>
                         ))}
                       </div>
+                      {/* Extra Features */}
+                      <div className="mt-3 pt-3 border-t border-slate-200">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Extra Features</p>
+                          <button onClick={() => { const arr = [...variants]; const ef = (arr[i] as any).features?.extra_features || []; const features = { ...defaultFeatures, ...arr[i].features, extra_features: [...ef, { label: "", value: "" }] }; arr[i] = { ...arr[i], features }; setVariants(arr); }} className="text-[9px] font-bold text-sky-600">+ Add</button>
+                        </div>
+                        {((v.features as any)?.extra_features || []).map((ef: any, ei: number) => (
+                          <ExtraFieldRow key={ei} label={ef.label} value={ef.value}
+                            onLabelChange={(val) => { const arr = [...variants]; const efs = [...((arr[i] as any).features?.extra_features || [])]; efs[ei] = { ...efs[ei], label: val }; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, extra_features: efs } }; setVariants(arr); }}
+                            onValueChange={(val) => { const arr = [...variants]; const efs = [...((arr[i] as any).features?.extra_features || [])]; efs[ei] = { ...efs[ei], value: val }; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, extra_features: efs } }; setVariants(arr); }}
+                            onRemove={() => { const arr = [...variants]; const efs = [...((arr[i] as any).features?.extra_features || [])]; efs.splice(ei, 1); arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, extra_features: efs } }; setVariants(arr); }}
+                          />
+                        ))}
+                      </div>
                     </div>
                   )}
+                  </div>}
                 </div>
               ))}
             </div>
 
             {/* ── Energy Comparisons ── */}
-            <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <div id="section-energy" className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-amber-600">Energy Comparisons</p>
                 <div className="flex gap-2">
@@ -524,19 +561,26 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                 </div>
               </div>
               {energyComps.map((ec, i) => (
-                <div key={i} className="mb-3 rounded-lg border border-slate-200 bg-white p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded ${ec.category === "model" ? "bg-sky-100 text-sky-700" : "bg-amber-100 text-amber-700"}`}>{ec.category}</span>
-                    <button onClick={() => setEnergyComps(energyComps.filter((_, j) => j !== i))} className="text-[10px] text-rose-500 font-bold">Remove</button>
+                <div key={i} className="mb-3 rounded-lg border border-slate-200 bg-white overflow-hidden">
+                  <div className="flex items-center justify-between px-3 py-2 bg-slate-50 cursor-pointer" onClick={() => { const arr = [...energyComps]; (arr[i] as any).collapsed = !(arr[i] as any).collapsed; setEnergyComps(arr); }}>
+                    <span className="text-xs font-bold text-slate-700 flex items-center gap-2">
+                      {(ec as any).collapsed ? <ChevronDown size={12} /> : <ChevronUp size={12} />}
+                      {ec.name || "Untitled"} <span className={`text-[9px] px-1.5 py-0.5 rounded ${ec.category === "model" ? "bg-sky-100 text-sky-600" : "bg-amber-100 text-amber-600"}`}>{ec.fuel_type}</span>
+                    </span>
+                    <button onClick={(e) => { e.stopPropagation(); setEnergyComps(energyComps.filter((_, j) => j !== i)); }} className="text-[10px] text-rose-500 font-bold">Remove</button>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {!(ec as any).collapsed && (
+                  <div className="p-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     <MiniInput label="Name" value={ec.name} onChange={(val) => { const arr = [...energyComps]; arr[i] = { ...arr[i], name: val }; setEnergyComps(arr); }} />
-                    <label className="block"><span className="text-[8px] font-bold uppercase text-slate-400">Fuel Type</span><select value={ec.fuel_type} onChange={(e) => { const arr = [...energyComps]; arr[i] = { ...arr[i], fuel_type: e.target.value }; setEnergyComps(arr); }} className="mt-0.5 w-full rounded-md border border-slate-200 px-2 py-1.5 text-[11px] outline-none"><option value="self">Self (this EV)</option><option value="EV">EV</option><option value="Petrol">Petrol</option><option value="Diesel">Diesel</option><option value="CNG">CNG</option></select></label>
+                    <label className="block"><span className="text-[10px] font-bold uppercase text-slate-400">Fuel Type</span><select value={ec.fuel_type} onChange={(e) => { const arr = [...energyComps]; arr[i] = { ...arr[i], fuel_type: e.target.value }; setEnergyComps(arr); }} className="mt-0.5 w-full rounded-md border border-slate-200 px-2.5 py-2 text-sm outline-none"><option value="self">Self (this EV)</option><option value="EV">EV</option><option value="Petrol">Petrol</option><option value="Diesel">Diesel</option><option value="CNG">CNG</option></select></label>
                     <MiniInput label={ec.fuel_type === "EV" || ec.fuel_type === "self" ? "Range (km)" : "Mileage (km/L)"} value={ec.mileage} onChange={(val) => { const arr = [...energyComps]; arr[i] = { ...arr[i], mileage: val }; setEnergyComps(arr); }} />
                     <MiniInput label={ec.fuel_type === "EV" || ec.fuel_type === "self" ? "₹/km" : "₹/L or ₹/kg"} value={ec.fuel_price} onChange={(val) => { const arr = [...energyComps]; arr[i] = { ...arr[i], fuel_price: val }; setEnergyComps(arr); }} />
                     <MiniInput label="Model Used" value={ec.model_used} onChange={(val) => { const arr = [...energyComps]; arr[i] = { ...arr[i], model_used: val }; setEnergyComps(arr); }} />
                     {ec.category === "model" && <MiniInput label="Brand" value={ec.brand} onChange={(val) => { const arr = [...energyComps]; arr[i] = { ...arr[i], brand: val }; setEnergyComps(arr); }} />}
                   </div>
+                  </div>
+                  )}
                 </div>
               ))}
               {energyComps.length === 0 && <p className="text-[10px] text-amber-600/60">No comparisons added. Add fuel type or model competitors.</p>}
@@ -599,11 +643,76 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
 }
 
 function Field({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
-  return (<label className="block"><span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{label}</span><input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-sky-400" /></label>);
+  const [micActive, setMicActive] = useState(false);
+  const startMic = () => {
+    if (!("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) return;
+    if (micActive) return;
+    const SR = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+    const r = new SR(); r.continuous = false; r.interimResults = false; r.lang = "en-IN";
+    r.onresult = (e: any) => { onChange(e.results[0][0].transcript.trim()); };
+    r.onend = () => setMicActive(false); r.onerror = () => setMicActive(false);
+    r.start(); setMicActive(true);
+  };
+  return (<label className="block"><span className="text-xs font-bold uppercase tracking-wider text-slate-500">{label}</span><div className="mt-1 flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2.5"><input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="flex-1 text-sm outline-none bg-transparent" /><button type="button" onClick={startMic} className={`shrink-0 h-6 w-6 rounded-full flex items-center justify-center transition-all ${micActive ? "bg-rose-500 text-white animate-pulse" : "bg-slate-100 text-slate-400 hover:bg-sky-100 hover:text-sky-600"}`}>{micActive ? <MicOff size={10} /> : <Mic size={10} />}</button></div></label>);
 }
 
 function MiniInput({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
-  return (<label className="block"><span className="text-[8px] font-bold uppercase tracking-wider text-slate-400">{label}</span><input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="mt-0.5 w-full rounded-md border border-slate-200 px-2 py-1.5 text-[11px] outline-none focus:border-sky-400" /></label>);
+  const [micActive, setMicActive] = useState(false);
+  const startMic = () => {
+    if (!("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) return;
+    if (micActive) return;
+    const SR = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+    const r = new SR(); r.continuous = false; r.interimResults = false; r.lang = "en-IN";
+    r.onresult = (e: any) => { onChange(e.results[0][0].transcript.trim()); };
+    r.onend = () => setMicActive(false); r.onerror = () => setMicActive(false);
+    r.start(); setMicActive(true);
+  };
+  return (<label className="block"><span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</span><div className="mt-0.5 flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2.5 py-2"><input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="flex-1 text-sm outline-none bg-transparent min-w-0" /><button type="button" onClick={startMic} className={`shrink-0 h-5 w-5 rounded-full flex items-center justify-center transition-all ${micActive ? "bg-rose-500 text-white animate-pulse" : "bg-slate-100 text-slate-400 hover:bg-sky-100 hover:text-sky-600"}`}>{micActive ? <MicOff size={9} /> : <Mic size={9} />}</button></div></label>);
+}
+
+function ExtraFieldRow({ label, value, onLabelChange, onValueChange, onRemove }: { label: string; value: string; onLabelChange: (v: string) => void; onValueChange: (v: string) => void; onRemove: () => void }) {
+  const [micField, setMicField] = useState<"label" | "value" | null>(null);
+  const startMic = (field: "label" | "value") => {
+    if (!("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) return;
+    const SR = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+    const r = new SR(); r.continuous = false; r.interimResults = false; r.lang = "en-IN";
+    r.onresult = (e: any) => { const text = e.results[0][0].transcript.trim(); field === "label" ? onLabelChange(text) : onValueChange(text); };
+    r.onend = () => setMicField(null); r.onerror = () => setMicField(null);
+    r.start(); setMicField(field);
+  };
+  return (
+    <div className="flex items-center gap-1.5 mb-1.5">
+      <div className="flex-1 flex items-center gap-1 rounded-md border border-violet-200 bg-white px-2 py-1.5">
+        <input value={label} onChange={(e) => onLabelChange(e.target.value)} placeholder="Label" className="flex-1 text-sm outline-none min-w-0" />
+        <button type="button" onClick={() => startMic("label")} className={`shrink-0 h-4 w-4 rounded-full flex items-center justify-center ${micField === "label" ? "bg-rose-500 text-white animate-pulse" : "bg-violet-100 text-violet-400 hover:bg-violet-200"}`}><Mic size={8} /></button>
+      </div>
+      <div className="flex-1 flex items-center gap-1 rounded-md border border-violet-200 bg-white px-2 py-1.5">
+        <input value={value} onChange={(e) => onValueChange(e.target.value)} placeholder="Value" className="flex-1 text-sm outline-none min-w-0" />
+        <button type="button" onClick={() => startMic("value")} className={`shrink-0 h-4 w-4 rounded-full flex items-center justify-center ${micField === "value" ? "bg-rose-500 text-white animate-pulse" : "bg-violet-100 text-violet-400 hover:bg-violet-200"}`}><Mic size={8} /></button>
+      </div>
+      <button onClick={onRemove} className="text-rose-400 text-xs shrink-0">×</button>
+    </div>
+  );
+}
+
+function ProConInput({ value, onChange, onRemove, color }: { value: string; onChange: (v: string) => void; onRemove: () => void; color: "emerald" | "amber" }) {
+  const [mic, setMic] = useState(false);
+  const startMic = () => {
+    if (!("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) return;
+    if (mic) return;
+    const SR = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+    const r = new SR(); r.continuous = false; r.interimResults = false; r.lang = "en-IN";
+    r.onresult = (e: any) => { onChange(e.results[0][0].transcript.trim()); };
+    r.onend = () => setMic(false); r.onerror = () => setMic(false);
+    r.start(); setMic(true);
+  };
+  return (
+    <div className="flex items-center gap-1.5 mb-1.5">
+      <input value={value} onChange={(e) => onChange(e.target.value)} className={`flex-1 rounded-md border bg-white px-2 py-1.5 text-sm outline-none ${color === "emerald" ? "border-emerald-200" : "border-amber-200"}`} />
+      <button type="button" onClick={startMic} className={`shrink-0 h-5 w-5 rounded-full flex items-center justify-center transition-all ${mic ? "bg-rose-500 text-white animate-pulse" : color === "emerald" ? "bg-emerald-100 text-emerald-500 hover:bg-emerald-200" : "bg-amber-100 text-amber-500 hover:bg-amber-200"}`}><Mic size={9} /></button>
+      <button onClick={onRemove} className="text-rose-400 text-xs">×</button>
+    </div>
+  );
 }
 
 // ── Login Screen ─────────────────────────────────────────────────────────────

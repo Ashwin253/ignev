@@ -193,10 +193,19 @@ function mapToEvListing(row: EvListingRow, variants: EvVariantRow[], features?: 
       ground_clearance_mm: (v as any).ground_clearance_mm ?? undefined,
       boot_space_litres: (v as any).boot_space_litres ?? undefined,
       turning_radius_m: (v as any).turning_radius_m ?? undefined,
+      extraSpecs: (v as { extra_dimensions?: Array<{ label: string; value: string }> }).extra_dimensions ?? [],
     })),
     variantFeatures: variants.map((v) => ({
       variantName: v.variant_name,
       ...(features?.get(v.id) ?? {}),
+    })),
+    variantExtraSections: variants.map((v) => ({
+      variantName: v.variant_name,
+      sections: (v as { extra_sections?: Array<{ title: string; fields: Array<{ label: string; value: string }> }> }).extra_sections ?? [],
+    })),
+    variantCustomFields: variants.map((v) => ({
+      variantName: v.variant_name,
+      fields: (v as { custom_fields?: Array<{ label: string; value: string }> }).custom_fields ?? [],
     })),
   };
 }

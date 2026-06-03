@@ -2,63 +2,99 @@
 
 import { useMemo, useState } from "react";
 import {
-  BatteryCharging, Zap, Gauge, CheckCircle2, CircleMinus, ChevronDown, ChevronUp,
+  BatteryCharging, Zap, Gauge, CheckCircle2, CircleMinus, ChevronDown, ChevronUp, LayoutList,
 } from "lucide-react";
 import type { EvListing } from "../lib/wordpress";
 import { useProductSelection } from "./ProductSelectionProvider";
+import {
+  chargingSpecCheckboxes,
+  chargingSpecRows,
+  collectVariantNames,
+  dimensionSpecCheckboxes,
+  dimensionSpecRows,
+  hasFeatureContent,
+  listingHasSpecifications,
+  motorSpecCheckboxes,
+  motorSpecRows,
+  sectionCheckboxLabels,
+  sectionFieldRows,
+} from "../lib/listing-specs";
+import { isCheckboxExtra, isExtraChecked, normalizeExtras } from "../lib/spec-extras";
 
 function CollapsibleSection({ title, icon, defaultOpen = false, children }: {
   title: string; icon: React.ReactNode; defaultOpen?: boolean; children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="rounded-2xl border border-slate-200 overflow-hidden">
+    <div className="rounded-2xl border-2 border-slate-300 overflow-hidden shadow-sm">
       <button
+        type="button"
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-2 px-5 py-4 bg-slate-50 hover:bg-slate-100 transition-colors"
+        className="w-full flex items-center gap-2 px-5 py-4 bg-slate-200 hover:bg-slate-300/80 transition-colors border-b border-slate-300"
       >
         {icon}
-        <p className="text-xs font-bold uppercase tracking-wider text-slate-600 flex-1 text-left">{title}</p>
-        {open ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
+        <p className="text-xs font-bold uppercase tracking-wider text-slate-800 flex-1 text-left">{title}</p>
+        {open ? <ChevronUp size={16} className="text-slate-600" /> : <ChevronDown size={16} className="text-slate-600" />}
       </button>
-      {open && <div className="px-5 py-4 bg-white max-w-2xl mx-auto">{children}</div>}
+      {open && <div className="px-5 py-4 bg-slate-50 max-w-2xl mx-auto">{children}</div>}
     </div>
   );
 }
 
 export default function ProductDetails({ item }: { item: EvListing }) {
   const { selectedVariantName, selectVariantByName } = useProductSelection();
-  const hasSpecs = item.batterySpecs.length > 0 || item.chargingSpecs.length > 0;
-  const hasPros = item.pros.length > 0 || item.cons.length > 0;
-  const variants = useMemo(() => [...new Set([
-    ...item.batterySpecs.map((s) => s.variantName),
-    ...item.chargingSpecs.map((s) => s.variantName),
-  ])].filter(Boolean), [item.batterySpecs, item.chargingSpecs]);
+  const variants = useMemo(() => collectVariantNames(item), [item]);
 
   const [localSelectedVariant, setLocalSelectedVariant] = useState(variants[0] || "");
   const selectedVariant = selectedVariantName && variants.includes(selectedVariantName)
     ? selectedVariantName
     : localSelectedVariant || variants[0] || "";
 
-  if (!hasSpecs && !hasPros) return null;
+  if (!listingHasSpecifications(item)) return null;
 
   const batterySpec = item.batterySpecs.find((s) => s.variantName === selectedVariant);
   const chargingSpec = item.chargingSpecs.find((s) => s.variantName === selectedVariant);
+  const motorRows = batterySpec ? motorSpecRows(batterySpec) : [];
+  const motorChecks = batterySpec ? motorSpecCheckboxes(batterySpec) : [];
+  const chargingRows = chargingSpec ? chargingSpecRows(chargingSpec) : [];
+  const chargingChecks = chargingSpec ? chargingSpecCheckboxes(chargingSpec) : [];
+
+  const dim = item.variantDimensions?.find((d) => d.variantName === selectedVariant)
+    ?? item.variantDimensions?.[0];
+  const dimensionRows = dim ? dimensionSpecRows(dim) : [];
+  const dimensionChecks = dim ? dimensionSpecCheckboxes(dim) : [];
+
+  const sectionHasContent = (fields: Array<{ label: string; value: string; kind?: string }> | undefined) =>
+    fields?.some((f) => f.label && (!isCheckboxExtra(f) ? f.value.trim() : isExtraChecked(f.value)));
+
+  const extraSections = (
+    item.variantExtraSections?.find((v) => v.variantName === selectedVariant)
+    ?? item.variantExtraSections?.[0]
+  )?.sections?.filter((s) => s.title && sectionHasContent(s.fields)) ?? [];
+
+  const customFields = (
+    item.variantCustomFields?.find((v) => v.variantName === selectedVariant)
+    ?? item.variantCustomFields?.[0]
+  )?.fields;
+  const customFieldRows = sectionFieldRows(customFields);
+  const customFieldChecks = sectionCheckboxLabels(customFields);
+
+  const feat = item.variantFeatures?.find((f) => f.variantName === selectedVariant)
+    ?? item.variantFeatures?.[0];
+  const showFeatures = feat && hasFeatureContent(feat);
 
   return (
-    <div className="mt-16 rounded-3xl border border-slate-200 bg-white px-5 py-8 md:px-10 md:py-10">
-      {/* Header */}
+    <div className="mt-16 rounded-3xl border-2 border-slate-300 bg-slate-100 px-5 py-8 md:px-10 md:py-10 shadow-sm">
       <div className="text-center mb-5">
         <h2 className="text-2xl font-black text-slate-900 md:text-3xl">
-          <span className="text-sky-600">Specification</span>
+          <span className="text-sky-700">Specification</span>
         </h2>
       </div>
 
-      {/* Variant selector */}
       {variants.length > 0 && (
         <div className="mb-5 flex justify-center">
-          <label className="relative inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5">
-            <Gauge size={14} className="text-sky-500 shrink-0" />
+          <label className="relative inline-flex items-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-4 py-2.5 shadow-sm">
+            <Gauge size={14} className="text-sky-600 shrink-0" />
             {variants.length > 1 ? (
               <select
                 value={selectedVariant}
@@ -66,110 +102,120 @@ export default function ProductDetails({ item }: { item: EvListing }) {
                   setLocalSelectedVariant(e.target.value);
                   selectVariantByName(e.target.value);
                 }}
-                className="bg-transparent text-sm font-bold text-slate-800 outline-none appearance-none pr-6 cursor-pointer"
+                className="bg-transparent text-sm font-bold text-slate-900 outline-none appearance-none pr-6 cursor-pointer"
               >
                 {variants.map((v) => (
                   <option key={v} value={v}>{v}</option>
                 ))}
               </select>
             ) : (
-              <span className="text-sm font-bold text-slate-800">{variants[0]}</span>
+              <span className="text-sm font-bold text-slate-900">{variants[0]}</span>
             )}
             {variants.length > 1 && (
-              <ChevronDown size={14} className="text-slate-400 absolute right-3 pointer-events-none" />
+              <ChevronDown size={14} className="text-slate-500 absolute right-3 pointer-events-none" />
             )}
           </label>
         </div>
       )}
 
-      {/* Collapsible sections */}
       <div className="space-y-3">
-        {/* Motor & Engine */}
-        {batterySpec && (
+        {(motorRows.length > 0 || motorChecks.length > 0) && (
           <CollapsibleSection
             title="Motor & Engine"
-            icon={<Zap size={16} className="text-sky-500" />}
-            defaultOpen={true}
+            icon={<Zap size={16} className="text-sky-600" />}
+            defaultOpen
           >
-            <dl className="space-y-0.5">
-              {[
-                batterySpec.electricMotor && { label: "Electric Motor", value: batterySpec.electricMotor },
-                batterySpec.maxPower && { label: "Max Power (bhp@rpm)", value: `${batterySpec.maxPower} bhp` },
-                batterySpec.maxTorque && { label: "Max Torque (Nm@rpm)", value: `${batterySpec.maxTorque} Nm` },
-                batterySpec.engine && { label: "Engine", value: batterySpec.engine },
-                batterySpec.emissionStandard && { label: "Emission", value: batterySpec.emissionStandard },
-                batterySpec.turboSupercharger && batterySpec.turboSupercharger !== "0" && { label: "Turbo/Supercharger", value: "Yes" },
-                batterySpec.idleStartStop && batterySpec.idleStartStop !== "0" && { label: "Idle Start/Stop", value: "Yes" },
-                ...(batterySpec.extraSpecs || []).map((es) => es.label && es.value ? { label: es.label, value: es.value } : null),
-              ].filter(Boolean).map((row, i) => (
-                <SpecRow key={i} label={(row as {label:string;value:string}).label} value={(row as {label:string;value:string}).value} odd={i % 2 === 0} />
-              ))}
-            </dl>
-          </CollapsibleSection>
-        )}
-
-        {/* Charging */}
-        {chargingSpec && (
-          <CollapsibleSection
-            title="Charging"
-            icon={<BatteryCharging size={16} className="text-emerald-500" />}
-          >
-            <dl className="space-y-0.5">
-              {[
-                chargingSpec.drivingRange && { label: "Driving Range", value: chargingSpec.drivingRange },
-                chargingSpec.acRegularCharging && { label: "AC Regular", value: chargingSpec.acRegularCharging },
-                chargingSpec.dcFastCharging && { label: "DC Fast", value: chargingSpec.dcFastCharging },
-                chargingSpec.acFastCharging && { label: "AC Fast", value: chargingSpec.acFastCharging },
-                chargingSpec.chargingOptions && { label: "Options", value: chargingSpec.chargingOptions },
-                chargingSpec.chargerIncluded && { label: "Charger Included", value: chargingSpec.chargerIncluded },
-                chargingSpec.chargerConnectionType && { label: "Connection Type", value: chargingSpec.chargerConnectionType },
-                ...(chargingSpec.extraSpecs || []).map((es) => es.label && es.value ? { label: es.label, value: es.value } : null),
-              ].filter(Boolean).map((row, i) => (
-                <SpecRow key={i} label={(row as {label:string;value:string}).label} value={(row as {label:string;value:string}).value} odd={i % 2 === 0} />
-              ))}
-            </dl>
-          </CollapsibleSection>
-        )}
-
-        {/* Capacity & Dimensions */}
-        {item.variantDimensions && item.variantDimensions.some((d) => d.length_mm || d.ground_clearance_mm || d.wheelbase_mm) && (() => {
-          const dim = item.variantDimensions?.find((d) => d.variantName === selectedVariant) || item.variantDimensions?.[0];
-          if (!dim) return null;
-          return (
-            <CollapsibleSection title="Capacity & Dimensions" icon={<Gauge size={16} className="text-violet-500" />}>
+            {motorRows.length > 0 && (
               <dl className="space-y-0.5">
-                {[
-                  dim.length_mm && dim.width_mm && dim.height_mm && { label: "L × W × H", value: `${dim.length_mm} × ${dim.width_mm} × ${dim.height_mm} mm` },
-                  dim.wheelbase_mm && { label: "Wheelbase", value: `${dim.wheelbase_mm} mm` },
-                  dim.ground_clearance_mm && { label: "Ground Clearance", value: `${dim.ground_clearance_mm} mm` },
-                  dim.boot_space_litres && { label: "Boot Space", value: `${dim.boot_space_litres} L` },
-                  dim.turning_radius_m && { label: "Min Turning Radius", value: `${dim.turning_radius_m} m` },
-                ].filter(Boolean).map((row, i) => (
-                  <SpecRow key={i} label={(row as {label:string;value:string}).label} value={(row as {label:string;value:string}).value} odd={i % 2 === 0} />
+                {motorRows.map((row, i) => (
+                  <SpecRow key={i} label={row.label} value={row.value} odd={i % 2 === 0} />
                 ))}
               </dl>
+            )}
+            <SpecCheckboxChips labels={motorChecks} />
+          </CollapsibleSection>
+        )}
+
+        {(chargingRows.length > 0 || chargingChecks.length > 0) && (
+          <CollapsibleSection
+            title="Charging"
+            icon={<BatteryCharging size={16} className="text-emerald-600" />}
+          >
+            {chargingRows.length > 0 && (
+              <dl className="space-y-0.5">
+                {chargingRows.map((row, i) => (
+                  <SpecRow key={i} label={row.label} value={row.value} odd={i % 2 === 0} />
+                ))}
+              </dl>
+            )}
+            <SpecCheckboxChips labels={chargingChecks} />
+          </CollapsibleSection>
+        )}
+
+        {(dimensionRows.length > 0 || dimensionChecks.length > 0) && (
+          <CollapsibleSection title="Capacity & Dimensions" icon={<Gauge size={16} className="text-violet-600" />}>
+            {dimensionRows.length > 0 && (
+              <dl className="space-y-0.5">
+                {dimensionRows.map((row, i) => (
+                  <SpecRow key={i} label={row.label} value={row.value} odd={i % 2 === 0} />
+                ))}
+              </dl>
+            )}
+            <SpecCheckboxChips labels={dimensionChecks} />
+          </CollapsibleSection>
+        )}
+
+        {extraSections.map((sec, si) => {
+          const rows = sectionFieldRows(sec.fields);
+          const checks = sectionCheckboxLabels(sec.fields);
+          return (
+            <CollapsibleSection
+              key={si}
+              title={sec.title}
+              icon={<LayoutList size={16} className="text-amber-600" />}
+            >
+              {rows.length > 0 && (
+                <dl className="space-y-0.5">
+                  {rows.map((f, fi) => (
+                    <SpecRow key={fi} label={f.label} value={f.value} odd={fi % 2 === 0} />
+                  ))}
+                </dl>
+              )}
+              <SpecCheckboxChips labels={checks} />
             </CollapsibleSection>
           );
-        })()}
+        })}
 
-        {/* Features & Safety */}
-        {item.variantFeatures && item.variantFeatures.some((f) => f.airbag_count || f.drivetrain || f.has_sunroof) && (() => {
-          const feat = item.variantFeatures?.find((f) => f.variantName === selectedVariant) || item.variantFeatures?.[0];
-          if (!feat) return null;
+        {(customFieldRows.length > 0 || customFieldChecks.length > 0) && (
+          <CollapsibleSection title="Extra Specs" icon={<LayoutList size={16} className="text-violet-600" />}>
+            {customFieldRows.length > 0 && (
+              <dl className="space-y-0.5">
+                {customFieldRows.map((f, i) => (
+                  <SpecRow key={i} label={f.label} value={f.value} odd={i % 2 === 0} />
+                ))}
+              </dl>
+            )}
+            <SpecCheckboxChips labels={customFieldChecks} />
+          </CollapsibleSection>
+        )}
+
+        {showFeatures && feat && (() => {
           const rows = [
-            feat.drivetrain && { label: "Drivetrain", value: feat.drivetrain },
-            feat.front_brakes && { label: "Front Brakes", value: feat.front_brakes },
-            feat.rear_brakes && { label: "Rear Brakes", value: feat.rear_brakes },
-            feat.front_suspension && { label: "Front Suspension", value: feat.front_suspension },
-            feat.rear_suspension && { label: "Rear Suspension", value: feat.rear_suspension },
+            feat.drivetrain && { label: "Drivetrain", value: String(feat.drivetrain) },
+            feat.front_brakes && { label: "Front Brakes", value: String(feat.front_brakes) },
+            feat.rear_brakes && { label: "Rear Brakes", value: String(feat.rear_brakes) },
+            feat.front_suspension && { label: "Front Suspension", value: String(feat.front_suspension) },
+            feat.rear_suspension && { label: "Rear Suspension", value: String(feat.rear_suspension) },
             feat.seating_capacity && { label: "Seating Capacity", value: String(feat.seating_capacity) },
-            feat.headlight_type && { label: "Headlights", value: feat.headlight_type },
+            feat.headlight_type && { label: "Headlights", value: String(feat.headlight_type) },
             feat.screen_size_inches && { label: "Screen Size", value: `${feat.screen_size_inches}"` },
             feat.speaker_count && { label: "Speakers", value: String(feat.speaker_count) },
             feat.airbag_count && { label: "Airbags", value: String(feat.airbag_count) },
-            feat.adas_level > 0 && { label: "ADAS Level", value: String(feat.adas_level) },
+            Number(feat.adas_level) > 0 && { label: "ADAS Level", value: String(feat.adas_level) },
             feat.ncap_safety_rating && { label: "NCAP Rating", value: `${feat.ncap_safety_rating} ★` },
-          ].filter(Boolean);
+            ...sectionFieldRows(normalizeExtras(feat.extra_features as unknown[])),
+          ].filter(Boolean) as { label: string; value: string }[];
+          const extraCheckLabels = sectionCheckboxLabels(normalizeExtras(feat.extra_features as unknown[]));
           const boolFeatures = [
             feat.has_sunroof && "Sunroof", feat.has_climate_control && "Climate Control",
             feat.has_cruise_control && "Cruise Control", feat.has_wireless_charger && "Wireless Charger",
@@ -179,35 +225,26 @@ export default function ProductDetails({ item }: { item: EvListing }) {
             feat.has_tpms && "TPMS", feat.has_360_camera && "360° Camera",
           ].filter(Boolean) as string[];
           return (
-            <CollapsibleSection title="Features & Safety" icon={<CheckCircle2 size={16} className="text-sky-500" />}>
+            <CollapsibleSection title="Features & Safety" icon={<CheckCircle2 size={16} className="text-sky-600" />}>
               <dl className="space-y-0.5 mb-3">
                 {rows.map((row, i) => (
-                  <SpecRow key={i} label={(row as {label:string;value:string}).label} value={(row as {label:string;value:string}).value} odd={i % 2 === 0} />
+                  <SpecRow key={i} label={row.label} value={row.value} odd={i % 2 === 0} />
                 ))}
               </dl>
-              {boolFeatures.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 pt-2 border-t border-slate-100">
-                  {boolFeatures.map((f) => (
-                    <span key={f} className="inline-flex items-center gap-1 rounded-full bg-sky-50 border border-sky-100 px-2 py-0.5 text-[10px] font-medium text-sky-700">
-                      <CheckCircle2 size={10} className="text-sky-500" /> {f}
-                    </span>
-                  ))}
-                </div>
-              )}
+              <SpecCheckboxChips labels={[...boolFeatures, ...extraCheckLabels]} />
             </CollapsibleSection>
           );
         })()}
 
-        {/* Pros */}
         {item.pros.length > 0 && (
           <CollapsibleSection
             title="Things we like"
-            icon={<CheckCircle2 size={16} className="text-emerald-500" />}
+            icon={<CheckCircle2 size={16} className="text-emerald-600" />}
           >
             <ul className="space-y-2.5">
               {item.pros.map((pro, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
-                  <CheckCircle2 size={15} className="mt-0.5 shrink-0 text-emerald-500" />
+                <li key={i} className="flex items-start gap-2 text-sm text-slate-800">
+                  <CheckCircle2 size={15} className="mt-0.5 shrink-0 text-emerald-600" />
                   {pro}
                 </li>
               ))}
@@ -215,16 +252,15 @@ export default function ProductDetails({ item }: { item: EvListing }) {
           </CollapsibleSection>
         )}
 
-        {/* Cons */}
         {item.cons.length > 0 && (
           <CollapsibleSection
             title="Weakness"
-            icon={<CircleMinus size={16} className="text-amber-500" />}
+            icon={<CircleMinus size={16} className="text-amber-600" />}
           >
             <ul className="space-y-2.5">
               {item.cons.map((con, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
-                  <CircleMinus size={15} className="mt-0.5 shrink-0 text-amber-500" />
+                <li key={i} className="flex items-start gap-2 text-sm text-slate-800">
+                  <CircleMinus size={15} className="mt-0.5 shrink-0 text-amber-600" />
                   {con}
                 </li>
               ))}
@@ -236,10 +272,23 @@ export default function ProductDetails({ item }: { item: EvListing }) {
   );
 }
 
+function SpecCheckboxChips({ labels }: { labels: string[] }) {
+  if (!labels.length) return null;
+  return (
+    <div className="flex flex-wrap gap-1.5 pt-2 border-t-2 border-slate-200">
+      {labels.map((f) => (
+        <span key={f} className="inline-flex items-center gap-1 rounded-full bg-sky-100 border-2 border-sky-200 px-2 py-0.5 text-[10px] font-semibold text-sky-800">
+          <CheckCircle2 size={10} className="text-sky-600" /> {f}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 function SpecRow({ label, value, odd }: { label: string; value: string; odd?: boolean }) {
   return (
-    <div className={`flex items-center justify-between gap-4 rounded-lg px-3 py-2 ${odd ? "bg-slate-50" : ""}`}>
-      <dt className="text-xs text-slate-500">{label}</dt>
+    <div className={`flex items-center justify-between gap-4 rounded-lg px-3 py-2 border border-transparent ${odd ? "bg-white border-slate-200" : "bg-slate-100/80"}`}>
+      <dt className="text-xs font-medium text-slate-600">{label}</dt>
       <dd className="text-xs font-bold text-slate-900 text-right">{value}</dd>
     </div>
   );

@@ -56,6 +56,7 @@ export default async function CatalogPage() {
         photo: l.photo,
         slug: l.slug,
         topSpeed: l.topSpeed,
+        drivingRange: l.batteryVariants[0]?.range || "",
         commercial: l.commercial,
         launchdate: l.launchdate,
         prices: l.prices,
@@ -108,7 +109,7 @@ export default async function CatalogPage() {
   if (!items.length) console.log('[CatalogPage] WP failed AND fallback empty');
 
   return (
-    <section className="bg-white py-28">
+    <section className="bg-slate-100 py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>

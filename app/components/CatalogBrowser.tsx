@@ -31,6 +31,7 @@ export type CatalogItem = {
   photo: string;
   slug?: string;
   topSpeed?: number | null;
+  drivingRange?: string;
   commercial?: boolean;
   launchdate?: string | null;
   prices?: string[];
@@ -164,7 +165,7 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
     <div className="space-y-5">
 
       {/* ── Unified filter panel ── */}
-      <div className="rounded-3xl border border-slate-200 bg-white shadow-[0_4px_20px_rgba(15,23,42,0.06)] overflow-hidden">
+      <div className="rounded-3xl border-2 border-slate-300 bg-slate-50 shadow-[0_4px_20px_rgba(15,23,42,0.08)] overflow-hidden">
 
         {/* Mobile collapsed bar — tap to expand */}
         <div
@@ -362,7 +363,7 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
               <Link
                 key={`${item.brand}-${item.name}`}
                 href={`/product/${item.slug ?? toSlug(item.brand, item.name)}`}
-                className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_4px_16px_rgba(15,23,42,0.05)] hover:shadow-[0_12px_32px_rgba(15,23,42,0.1)] hover:-translate-y-0.5 transition-all duration-300 flex flex-col"
+                className="group overflow-hidden rounded-3xl border-2 border-slate-300 bg-slate-50 shadow-[0_4px_16px_rgba(15,23,42,0.08)] hover:shadow-[0_12px_32px_rgba(15,23,42,0.12)] hover:-translate-y-0.5 transition-all duration-300 flex flex-col"
               >
                 {/* Image */}
                 <div className="relative aspect-4/3 bg-slate-100 overflow-hidden">
@@ -431,9 +432,14 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
                         )}
                       </span>
                     )}
+                    {item.drivingRange && (
+                      <span className="inline-flex items-center gap-1">
+                        <Zap size={11} className="text-emerald-600" />{item.drivingRange} km
+                      </span>
+                    )}
                     {item.topSpeed != null && (
                       <span className="inline-flex items-center gap-1">
-                        <Gauge size={11} className="text-amber-500" />{item.topSpeed} km/h
+                        <Gauge size={11} className="text-amber-600" />{item.topSpeed} km/h
                       </span>
                     )}
                   </div>

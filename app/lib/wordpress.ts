@@ -157,8 +157,16 @@ export type EvListing = {
   offers: EVOffer[];
   baas: boolean;              // Added for BAAS
   // Variant details from Supabase
-  variantDimensions?: Array<{ variantName: string; length_mm?: number; width_mm?: number; height_mm?: number; wheelbase_mm?: number; ground_clearance_mm?: number; boot_space_litres?: number; turning_radius_m?: number }>;
+  variantDimensions?: Array<{ variantName: string; length_mm?: number; width_mm?: number; height_mm?: number; wheelbase_mm?: number; ground_clearance_mm?: number; boot_space_litres?: number; turning_radius_m?: number; extraSpecs?: Array<{ label: string; value: string; kind?: "field" | "checkbox" }> }>;
   variantFeatures?: Array<{ variantName: string; [key: string]: any }>;
+  variantExtraSections?: Array<{
+    variantName: string;
+    sections: Array<{ title: string; fields: Array<{ label: string; value: string; kind?: "field" | "checkbox" }> }>;
+  }>;
+  variantCustomFields?: Array<{
+    variantName: string;
+    fields: Array<{ label: string; value: string; kind?: "field" | "checkbox" }>;
+  }>;
   // Legacy / optional
   batteryCapacity?: number | null;
   chargingSpeed?: number | null;
@@ -207,7 +215,7 @@ export type BatterySpec = {
   emissionStandard: string;
   engine: string;
   electricMotor: string;
-  extraSpecs?: Array<{ label: string; value: string }>;
+  extraSpecs?: Array<{ label: string; value: string; kind?: "field" | "checkbox" }>;
 };
 
 export type ChargingSpec = {
@@ -219,7 +227,7 @@ export type ChargingSpec = {
   chargingOptions: string;
   chargerIncluded: string;
   chargerConnectionType: string;
-  extraSpecs?: Array<{ label: string; value: string }>;
+  extraSpecs?: Array<{ label: string; value: string; kind?: "field" | "checkbox" }>;
 };
 
 export type EVOffer = {

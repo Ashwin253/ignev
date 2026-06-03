@@ -84,6 +84,8 @@ create table if not exists public.ev_variants (
   custom_fields jsonb default '[]',
   extra_motor jsonb default '[]',
   extra_charging jsonb default '[]',
+  extra_sections jsonb default '[]',
+  extra_dimensions jsonb default '[]',
   created_at timestamptz default now(),
   updated_at timestamptz default now(),
   constraint ev_variants_slug_year_unique unique (slug, model_year)
@@ -138,6 +140,7 @@ create table if not exists public.ev_variant_features (
   adas_level integer default 0,
   ncap_safety_rating integer default null,
   custom_fields jsonb default '[]',
+  extra_features jsonb default '[]',
   updated_at timestamptz default now()
 );
 

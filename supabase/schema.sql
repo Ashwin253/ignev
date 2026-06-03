@@ -27,6 +27,7 @@ create table if not exists public.evlistings (
   pros text[] default '{}',
   cons text[] default '{}',
   has_baas boolean default false,
+  price_bracket text default '',
   created_by uuid references auth.users(id) default auth.uid(),
   created_by_email text default '',
   created_at timestamptz default now(),

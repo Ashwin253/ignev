@@ -286,9 +286,9 @@ function SpecCheckboxChips({ labels }: { labels: string[] }) {
 
 function SpecRow({ label, value, odd }: { label: string; value: string; odd?: boolean }) {
   return (
-    <div className={`flex items-center justify-between gap-4 rounded-lg px-3 py-2 border border-transparent ${odd ? "bg-white border-slate-200" : "bg-slate-100/80"}`}>
-      <dt className="text-xs font-medium text-slate-600">{label}</dt>
-      <dd className="text-xs font-bold text-slate-900 text-right">{value}</dd>
+    <div className={`flex items-start sm:items-center justify-between gap-4 rounded-lg px-3 py-2 border border-transparent ${odd ? "bg-white border-slate-200" : "bg-slate-100/80"}`}>
+      <dt className="text-xs font-medium text-slate-600 shrink-0">{label}</dt>
+      <dd className="text-xs font-bold text-slate-900 text-right break-words max-w-[65%]">{value}</dd>
     </div>
   );
 }

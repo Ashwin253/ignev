@@ -10,11 +10,30 @@ import AnalyticsPanel from "./AnalyticsPanel";
 import { useVoiceDictation, MicButton } from "./VoiceInput";
 import { appendExtra, isCheckboxExtra, isExtraChecked, normalizeExtras, type SpecExtraItem } from "../lib/spec-extras";
 
+const cleanNumber = (val: string): number | null => {
+  if (!val || val.trim() === "") return null;
+  const num = Number(val);
+  return isNaN(num) ? null : num;
+};
+
+const cleanInt = (val: string, fallback: number = 0): number => {
+  if (!val || val.trim() === "") return fallback;
+  const num = parseInt(val, 10);
+  return isNaN(num) ? fallback : num;
+};
+
+const cleanFloat = (val: string, fallback: number = 0): number => {
+  if (!val || val.trim() === "") return fallback;
+  const num = parseFloat(val);
+  return isNaN(num) ? fallback : num;
+};
+
 type ListingForm = {
   slug: string; title: string; brand: string; body_type: string;
   commercial: boolean; has_baas: boolean; launchdate: string | null; photo: string;
   gallery_images: any[]; colors: string[]; types: string[];
   pros: string[]; cons: string[];
+  price_bracket: string;
 };
 
 type VariantForm = {
@@ -46,7 +65,7 @@ type VariantForm = {
 const emptyListing: ListingForm = {
   slug: "", title: "", brand: "", body_type: "", commercial: false, has_baas: false,
   launchdate: null, photo: "", gallery_images: [], colors: [],
-  types: [], pros: [], cons: [],
+  types: [], pros: [], cons: [], price_bracket: "",
 };
 
 const emptyVariant: VariantForm = {
@@ -86,8 +105,70 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
   const [variantSpecSection, setVariantSpecSection] = useState<Record<number, string>>({});
   const [listingFormTab, setListingFormTab] = useState<"core" | "variants" | "energy">("core");
 
+  const [motorClipboard, setMotorClipboard] = useState<any>(null);
+  const [chargingClipboard, setChargingClipboard] = useState<any>(null);
+  const [dimensionsClipboard, setDimensionsClipboard] = useState<any>(null);
+
+  const [sameForAllMotor, setSameForAllMotor] = useState(false);
+  const [sameForAllCharging, setSameForAllCharging] = useState(false);
+  const [sameForAllDimensions, setSameForAllDimensions] = useState(false);
+
   useEffect(() => { supabase.auth.getUser().then(({ data }) => { if (data.user) setUser(data.user); }); }, []);
   useEffect(() => { if (user) fetchListings(); }, [user]);
+
+  const updateVariantMotorField = (idx: number, fieldName: string, value: any) => {
+    setVariants(prev => prev.map((v, i) => {
+      if (i === idx || sameForAllMotor) {
+        return { ...v, [fieldName]: value };
+      }
+      return v;
+    }));
+  };
+
+  const updateVariantMotorExtra = (idx: number, next: any) => {
+    setVariants(prev => prev.map((v, i) => {
+      if (i === idx || sameForAllMotor) {
+        return { ...v, extra_motor: next };
+      }
+      return v;
+    }));
+  };
+
+  const updateVariantChargingField = (idx: number, fieldName: string, value: any) => {
+    setVariants(prev => prev.map((v, i) => {
+      if (i === idx || sameForAllCharging) {
+        return { ...v, [fieldName]: value };
+      }
+      return v;
+    }));
+  };
+
+  const updateVariantChargingExtra = (idx: number, next: any) => {
+    setVariants(prev => prev.map((v, i) => {
+      if (i === idx || sameForAllCharging) {
+        return { ...v, extra_charging: next };
+      }
+      return v;
+    }));
+  };
+
+  const updateVariantDimensionsField = (idx: number, fieldName: string, value: any) => {
+    setVariants(prev => prev.map((v, i) => {
+      if (i === idx || sameForAllDimensions) {
+        return { ...v, [fieldName]: value };
+      }
+      return v;
+    }));
+  };
+
+  const updateVariantDimensionsExtra = (idx: number, next: any) => {
+    setVariants(prev => prev.map((v, i) => {
+      if (i === idx || sameForAllDimensions) {
+        return { ...v, extra_dimensions: next };
+      }
+      return v;
+    }));
+  };
 
   const fetchListings = async () => {
     setLoading(true);
@@ -117,7 +198,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
   const startEdit = async (l: EvListingRow & { variants: EvVariantRow[] }) => {
     setEditing(l.id);
     setListingFormTab("core");
-    setForm({ slug: l.slug, title: l.title, brand: l.brand, body_type: l.body_type || "", commercial: l.commercial, has_baas: l.has_baas || false, launchdate: l.launchdate, photo: l.photo, gallery_images: l.gallery_images ?? [], colors: l.colors ?? [], types: l.types ?? [], pros: l.pros ?? [], cons: l.cons ?? [] });
+    setForm({ slug: l.slug, title: l.title, brand: l.brand, body_type: l.body_type || "", commercial: l.commercial, has_baas: l.has_baas || false, launchdate: l.launchdate, photo: l.photo, gallery_images: l.gallery_images ?? [], colors: l.colors ?? [], types: l.types ?? [], pros: l.pros ?? [], cons: l.cons ?? [], price_bracket: (l as any).price_bracket || "" });
     // Load features for each variant
     const variantIds = l.variants.map((v) => v.id);
     let featuresMap = new Map<string, any>();
@@ -327,13 +408,23 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
               <label className="block">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Type</span>
                 <select value={form.types[0] || ""} onChange={(e) => setForm({ ...form, types: [e.target.value] })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none">
-                  <option value="">Select</option><option value="2 Wheeler">2 Wheeler</option><option value="3 Wheeler">3 Wheeler</option><option value="4 Wheeler">4 Wheeler</option>
+                  <option value="">Select</option><option value="Scooter">Scooter</option><option value="2 Wheeler">2 Wheeler</option><option value="3 Wheeler">3 Wheeler</option><option value="4 Wheeler">4 Wheeler</option>
+                </select>
+              </label>
+              <label className="block">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Price Bracket</span>
+                <select value={form.price_bracket} onChange={(e) => setForm({ ...form, price_bracket: e.target.value })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none">
+                  <option value="">Select Bracket</option>
+                  <option value="0-5">Under ₹5L</option>
+                  <option value="5-15">₹5L – ₹15L</option>
+                  <option value="15-30">₹15L – ₹30L</option>
+                  <option value="30+">₹30L+</option>
                 </select>
               </label>
               <label className="block">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Body Type</span>
                 <select value={form.body_type} onChange={(e) => setForm({ ...form, body_type: e.target.value })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none">
-                  <option value="">Select</option><option value="Sedan">Sedan</option><option value="SUV">SUV</option><option value="Hatchback">Hatchback</option><option value="Compact SUV">Compact SUV</option><option value="MUV">MUV</option><option value="Bike">Bike</option><option value="Tempo">Tempo</option><option value="Other">Other</option>
+                  <option value="">Select</option><option value="Scooter">Scooter</option><option value="Sedan">Sedan</option><option value="SUV">SUV</option><option value="Hatchback">Hatchback</option><option value="Compact SUV">Compact SUV</option><option value="MUV">MUV</option><option value="Bike">Bike</option><option value="Tempo">Tempo</option><option value="Other">Other</option>
                 </select>
               </label>
               <label className="block">
@@ -437,8 +528,8 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   {!(v as any).collapsed && <div className="p-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
                     <MiniInput label="Variant Name" value={v.variant_name} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], variant_name: val }; setVariants(arr); }} />
-                    <MiniInput label="Model Year" value={String(v.model_year)} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], model_year: Number(val) || 2026 }; setVariants(arr); }} />
-                    <MiniInput label="Price (Lakh)" value={String(v.price || "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], price: Number(val) || 0 }; setVariants(arr); }} />
+                    <MiniInput label="Model Year" value={String(v.model_year)} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], model_year: cleanInt(val, 2026) }; setVariants(arr); }} />
+                    <MiniInput label="Price (Lakh)" value={String(v.price || "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], price: cleanFloat(val, 0) }; setVariants(arr); }} />
                   </div>
 
                   {(() => {
@@ -536,27 +627,61 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   <div className="mt-4 rounded-xl border-2 border-sky-300 bg-sky-100 p-4">
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-xs font-bold uppercase tracking-wider text-sky-600">⚡ Motor & Engine</p>
-                      <div className="flex gap-2">
-                        {variants.length > 1 && i === 0 && (
-                          <button onClick={() => { const src = variants[0]; setVariants(variants.map((vr, vi) => vi === 0 ? vr : { ...vr, max_power_bhp: src.max_power_bhp, max_torque_nm: src.max_torque_nm, top_speed: src.top_speed, extra_motor: (src as any).extra_motor } as any)); }} className="text-[8px] font-bold text-violet-600 hover:text-violet-700">📋 Copy to all</button>
+                      <div className="flex items-center gap-3">
+                        <button type="button" onClick={() => setMotorClipboard({ max_power_bhp: v.max_power_bhp, max_torque_nm: v.max_torque_nm, top_speed: v.top_speed, battery_capacity_kwh: v.battery_capacity_kwh, driving_range_km: v.driving_range_km, extra_motor: (v as any).extra_motor })} className="text-[10px] font-bold text-sky-600 hover:text-sky-700">📋 Copy</button>
+                        {motorClipboard && (
+                          <button type="button" onClick={() => {
+                            setVariants(prev => prev.map((vr, vi) => {
+                              if (vi === i || sameForAllMotor) {
+                                return {
+                                  ...vr,
+                                  max_power_bhp: motorClipboard.max_power_bhp,
+                                  max_torque_nm: motorClipboard.max_torque_nm,
+                                  top_speed: motorClipboard.top_speed,
+                                  battery_capacity_kwh: motorClipboard.battery_capacity_kwh,
+                                  driving_range_km: motorClipboard.driving_range_km,
+                                  extra_motor: motorClipboard.extra_motor,
+                                };
+                              }
+                              return vr;
+                            }));
+                          }} className="text-[10px] font-bold text-sky-600 hover:text-sky-700">📋 Paste</button>
                         )}
+                        <label className="flex items-center gap-1 text-[10px] font-bold text-violet-600 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={sameForAllMotor}
+                            onChange={(e) => {
+                              setSameForAllMotor(e.target.checked);
+                              if (e.target.checked) {
+                                const src = variants[i];
+                                setVariants(variants.map((vr) => ({
+                                  ...vr,
+                                  max_power_bhp: src.max_power_bhp,
+                                  max_torque_nm: src.max_torque_nm,
+                                  top_speed: src.top_speed,
+                                  battery_capacity_kwh: src.battery_capacity_kwh,
+                                  driving_range_km: src.driving_range_km,
+                                  extra_motor: (src as any).extra_motor,
+                                })));
+                              }
+                            }}
+                          />
+                          Same for all
+                        </label>
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      <MiniInput label="Max Power (bhp)" value={String(v.max_power_bhp ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], max_power_bhp: val ? Number(val) : null }; setVariants(arr); }} />
-                      <MiniInput label="Max Torque (Nm)" value={String(v.max_torque_nm ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], max_torque_nm: val ? Number(val) : null }; setVariants(arr); }} />
-                      <MiniInput label="Top Speed (km/h)" value={String(v.top_speed ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], top_speed: val ? Number(val) : null }; setVariants(arr); }} />
-                      <MiniInput label="Battery (kWh)" value={String(v.battery_capacity_kwh ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], battery_capacity_kwh: val ? Number(val) : null }; setVariants(arr); }} />
-                      <MiniInput label="Range (km)" value={String(v.driving_range_km ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], driving_range_km: val ? Number(val) : null }; setVariants(arr); }} />
+                      <MiniInput label="Max Power (bhp)" value={String(v.max_power_bhp ?? "")} onChange={(val) => updateVariantMotorField(i, "max_power_bhp", cleanNumber(val))} />
+                      <MiniInput label="Max Torque (Nm)" value={String(v.max_torque_nm ?? "")} onChange={(val) => updateVariantMotorField(i, "max_torque_nm", cleanNumber(val))} />
+                      <MiniInput label="Top Speed (km/h)" value={String(v.top_speed ?? "")} onChange={(val) => updateVariantMotorField(i, "top_speed", cleanNumber(val))} />
+                      <MiniInput label="Battery (kWh)" value={String(v.battery_capacity_kwh ?? "")} onChange={(val) => updateVariantMotorField(i, "battery_capacity_kwh", cleanNumber(val))} />
+                      <MiniInput label="Range (km)" value={String(v.driving_range_km ?? "")} onChange={(val) => updateVariantMotorField(i, "driving_range_km", cleanNumber(val))} />
                     </div>
                     <VariantExtrasEditor
                       extras={normalizeExtras((v as any).extra_motor)}
                       inputBorder="border-sky-200"
-                      onChange={(next) => {
-                        const arr = [...variants];
-                        (arr[i] as any).extra_motor = next;
-                        setVariants(arr);
-                      }}
+                      onChange={(next) => updateVariantMotorExtra(i, next)}
                     />
                   </div>
                   )}
@@ -566,37 +691,93 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   <div className="mt-4 rounded-xl border-2 border-emerald-300 bg-emerald-100 p-4">
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-xs font-bold uppercase tracking-wider text-emerald-600">🔋 Charging</p>
-                      <div className="flex gap-2">
-                        {variants.length > 1 && i === 0 && (
-                          <button onClick={() => { const src = variants[0]; setVariants(variants.map((vr, vi) => vi === 0 ? vr : { ...vr, charging_time_mins: src.charging_time_mins, charging_time_ac_hours: src.charging_time_ac_hours, charging_time_dc_mins: src.charging_time_dc_mins, max_dc_charging_rate_kw: src.max_dc_charging_rate_kw, extra_charging: (src as any).extra_charging } as any)); }} className="text-[8px] font-bold text-violet-600 hover:text-violet-700">📋 Copy to all</button>
+                      <div className="flex items-center gap-3">
+                        <button type="button" onClick={() => setChargingClipboard({ charging_time_mins: v.charging_time_mins, charging_time_ac_hours: v.charging_time_ac_hours, charging_time_dc_mins: v.charging_time_dc_mins, max_dc_charging_rate_kw: v.max_dc_charging_rate_kw, has_baas: v.has_baas, baas_model_name: v.baas_model_name, baas_price_per_km: v.baas_price_per_km, baas_upfront_price: v.baas_upfront_price, extra_charging: (v as any).extra_charging || [] })} className="text-[10px] font-bold text-emerald-700 hover:text-emerald-800">📋 Copy</button>
+                        {chargingClipboard && (
+                          <button type="button" onClick={() => {
+                            setVariants(prev => prev.map((vr, vi) => {
+                              if (vi === i || sameForAllCharging) {
+                                return {
+                                  ...vr,
+                                  charging_time_mins: chargingClipboard.charging_time_mins,
+                                  charging_time_ac_hours: chargingClipboard.charging_time_ac_hours,
+                                  charging_time_dc_mins: chargingClipboard.charging_time_dc_mins,
+                                  max_dc_charging_rate_kw: chargingClipboard.max_dc_charging_rate_kw,
+                                  has_baas: chargingClipboard.has_baas,
+                                  baas_model_name: chargingClipboard.baas_model_name,
+                                  baas_price_per_km: chargingClipboard.baas_price_per_km,
+                                  baas_upfront_price: chargingClipboard.baas_upfront_price,
+                                  extra_charging: chargingClipboard.extra_charging,
+                                };
+                              }
+                              return vr;
+                            }));
+                          }} className="text-[10px] font-bold text-emerald-700 hover:text-emerald-800">📋 Paste</button>
                         )}
+                        <label className="flex items-center gap-1 text-[10px] font-bold text-violet-600 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={sameForAllCharging}
+                            onChange={(e) => {
+                              setSameForAllCharging(e.target.checked);
+                              if (e.target.checked) {
+                                const src = variants[i];
+                                setVariants(variants.map((vr) => ({
+                                  ...vr,
+                                  charging_time_mins: src.charging_time_mins,
+                                  charging_time_ac_hours: src.charging_time_ac_hours,
+                                  charging_time_dc_mins: src.charging_time_dc_mins,
+                                  max_dc_charging_rate_kw: src.max_dc_charging_rate_kw,
+                                  has_baas: src.has_baas,
+                                  baas_model_name: src.baas_model_name,
+                                  baas_price_per_km: src.baas_price_per_km,
+                                  baas_upfront_price: src.baas_upfront_price,
+                                  extra_charging: (src as any).extra_charging || [],
+                                })));
+                              }
+                            }}
+                          />
+                          Same for all
+                        </label>
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      <MiniInput label="Charge Time (min)" value={String(v.charging_time_mins ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], charging_time_mins: val ? Number(val) : null }; setVariants(arr); }} />
-                      <MiniInput label="AC Charge (hrs)" value={String(v.charging_time_ac_hours ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], charging_time_ac_hours: val ? Number(val) : null }; setVariants(arr); }} />
-                      <MiniInput label="DC Charge (min)" value={String(v.charging_time_dc_mins ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], charging_time_dc_mins: val ? Number(val) : null }; setVariants(arr); }} />
-                      <MiniInput label="Max DC Rate (kW)" value={String(v.max_dc_charging_rate_kw ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], max_dc_charging_rate_kw: val ? Number(val) : null }; setVariants(arr); }} />
+                      <MiniInput label="Charge Time (min)" value={String(v.charging_time_mins ?? "")} onChange={(val) => updateVariantChargingField(i, "charging_time_mins", cleanNumber(val))} />
+                      <MiniInput label="AC Charge (hrs)" value={String(v.charging_time_ac_hours ?? "")} onChange={(val) => updateVariantChargingField(i, "charging_time_ac_hours", cleanNumber(val))} />
+                      <MiniInput label="DC Charge (min)" value={String(v.charging_time_dc_mins ?? "")} onChange={(val) => updateVariantChargingField(i, "charging_time_dc_mins", cleanNumber(val))} />
+                      <MiniInput label="Max DC Rate (kW)" value={String(v.max_dc_charging_rate_kw ?? "")} onChange={(val) => updateVariantChargingField(i, "max_dc_charging_rate_kw", cleanNumber(val))} />
                     </div>
                     {((v as any).extra_charging || []).map((ef: any, ei: number) => (
                       <div key={ei} className="flex items-center gap-2 mt-1.5">
-                        <input value={ef.label} onChange={(e) => { const arr = [...variants]; const ex = [...((arr[i] as any).extra_charging || [])]; ex[ei] = { ...ex[ei], label: e.target.value }; (arr[i] as any).extra_charging = ex; setVariants(arr); }} placeholder="Label" className="flex-1 rounded-md border border-emerald-200 bg-white px-2 py-1 text-[10px] outline-none" />
-                        <input value={ef.value} onChange={(e) => { const arr = [...variants]; const ex = [...((arr[i] as any).extra_charging || [])]; ex[ei] = { ...ex[ei], value: e.target.value }; (arr[i] as any).extra_charging = ex; setVariants(arr); }} placeholder="Value" className="flex-1 rounded-md border border-emerald-200 bg-white px-2 py-1 text-[10px] outline-none" />
-                        <button onClick={() => { const arr = [...variants]; const ex = [...((arr[i] as any).extra_charging || [])]; ex.splice(ei, 1); (arr[i] as any).extra_charging = ex; setVariants(arr); }} className="text-rose-400 text-xs">×</button>
+                        <input value={ef.label} onChange={(e) => {
+                          const next = [...((v as any).extra_charging || [])];
+                          next[ei] = { ...next[ei], label: e.target.value };
+                          updateVariantChargingExtra(i, next);
+                        }} placeholder="Label" className="flex-1 rounded-md border border-emerald-200 bg-white px-3 py-2 text-xs outline-none" />
+                        <input value={ef.value} onChange={(e) => {
+                          const next = [...((v as any).extra_charging || [])];
+                          next[ei] = { ...next[ei], value: e.target.value };
+                          updateVariantChargingExtra(i, next);
+                        }} placeholder="Value" className="flex-1 rounded-md border border-emerald-200 bg-white px-3 py-2 text-xs outline-none" />
+                        <button onClick={() => {
+                          const next = [...((v as any).extra_charging || [])];
+                          next.splice(ei, 1);
+                          updateVariantChargingExtra(i, next);
+                        }} className="text-rose-400 text-xs">×</button>
                       </div>
                     ))}
                   </div>
                   <label className="flex items-center gap-2 mt-3 text-xs text-slate-600">
-                    <input type="checkbox" checked={v.has_baas} onChange={(e) => { const arr = [...variants]; arr[i] = { ...arr[i], has_baas: e.target.checked }; setVariants(arr); }} />
+                    <input type="checkbox" checked={v.has_baas} onChange={(e) => updateVariantChargingField(i, "has_baas", e.target.checked)} />
                     This variant has BAAS option
                   </label>
                   {v.has_baas && (
                     <div className="mt-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
                       <p className="text-[8px] font-bold uppercase text-emerald-600 mb-2">BAAS Details</p>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        <MiniInput label="BAAS Model Name" value={v.baas_model_name} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], baas_model_name: val }; setVariants(arr); }} />
-                        <MiniInput label="₹/km Rate" value={String(v.baas_price_per_km ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], baas_price_per_km: val ? Number(val) : null }; setVariants(arr); }} />
-                        <MiniInput label="Upfront Price (₹)" value={String(v.baas_upfront_price ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], baas_upfront_price: val ? Number(val) : null }; setVariants(arr); }} />
+                        <MiniInput label="BAAS Model Name" value={v.baas_model_name} onChange={(val) => updateVariantChargingField(i, "baas_model_name", val)} />
+                        <MiniInput label="₹/km Rate" value={String(v.baas_price_per_km ?? "")} onChange={(val) => updateVariantChargingField(i, "baas_price_per_km", cleanNumber(val))} />
+                        <MiniInput label="Upfront Price (₹)" value={String(v.baas_upfront_price ?? "")} onChange={(val) => updateVariantChargingField(i, "baas_upfront_price", cleanNumber(val))} />
                       </div>
                     </div>
                   )}
@@ -607,27 +788,67 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   <div className="mt-4 rounded-xl border-2 border-slate-300 bg-slate-200 p-4">
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-xs font-bold uppercase tracking-wider text-slate-700">Capacity & Dimensions</p>
-                      {variants.length > 1 && i === 0 && (
-                        <button onClick={() => { const src = variants[0]; setVariants(variants.map((vr, vi) => vi === 0 ? vr : { ...vr, length_mm: (src as any).length_mm, width_mm: (src as any).width_mm, height_mm: (src as any).height_mm, wheelbase_mm: (src as any).wheelbase_mm, ground_clearance_mm: (src as any).ground_clearance_mm, boot_space_litres: (src as any).boot_space_litres, turning_radius_m: (src as any).turning_radius_m, extra_dimensions: (src as any).extra_dimensions } as any)); }} className="text-[8px] font-bold text-violet-600 hover:text-violet-700">📋 Copy to all</button>
-                      )}
+                      <div className="flex items-center gap-3">
+                        <button type="button" onClick={() => setDimensionsClipboard({ length_mm: (v as any).length_mm, width_mm: (v as any).width_mm, height_mm: (v as any).height_mm, wheelbase_mm: (v as any).wheelbase_mm, ground_clearance_mm: (v as any).ground_clearance_mm, boot_space_litres: (v as any).boot_space_litres, turning_radius_m: (v as any).turning_radius_m, extra_dimensions: (v as any).extra_dimensions || [] })} className="text-[10px] font-bold text-slate-600 hover:text-slate-700">📋 Copy</button>
+                        {dimensionsClipboard && (
+                          <button type="button" onClick={() => {
+                            setVariants(prev => prev.map((vr, vi) => {
+                              if (vi === i || sameForAllDimensions) {
+                                return {
+                                  ...vr,
+                                  length_mm: dimensionsClipboard.length_mm,
+                                  width_mm: dimensionsClipboard.width_mm,
+                                  height_mm: dimensionsClipboard.height_mm,
+                                  wheelbase_mm: dimensionsClipboard.wheelbase_mm,
+                                  ground_clearance_mm: dimensionsClipboard.ground_clearance_mm,
+                                  boot_space_litres: dimensionsClipboard.boot_space_litres,
+                                  turning_radius_m: dimensionsClipboard.turning_radius_m,
+                                  extra_dimensions: dimensionsClipboard.extra_dimensions,
+                                };
+                              }
+                              return vr;
+                            }));
+                          }} className="text-[10px] font-bold text-slate-600 hover:text-slate-700">📋 Paste</button>
+                        )}
+                        <label className="flex items-center gap-1 text-[10px] font-bold text-violet-600 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={sameForAllDimensions}
+                            onChange={(e) => {
+                              setSameForAllDimensions(e.target.checked);
+                              if (e.target.checked) {
+                                const src = variants[i];
+                                setVariants(variants.map((vr) => ({
+                                  ...vr,
+                                  length_mm: (src as any).length_mm,
+                                  width_mm: (src as any).width_mm,
+                                  height_mm: (src as any).height_mm,
+                                  wheelbase_mm: (src as any).wheelbase_mm,
+                                  ground_clearance_mm: (src as any).ground_clearance_mm,
+                                  boot_space_litres: (src as any).boot_space_litres,
+                                  turning_radius_m: (src as any).turning_radius_m,
+                                  extra_dimensions: (src as any).extra_dimensions || [],
+                                })));
+                              }
+                            }}
+                          />
+                          Same for all
+                        </label>
+                      </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      <MiniInput label="Length (mm)" value={String((v as any).length_mm ?? "")} onChange={(val) => { const arr = [...variants]; (arr[i] as any).length_mm = val ? Number(val) : null; setVariants(arr); }} />
-                      <MiniInput label="Width (mm)" value={String((v as any).width_mm ?? "")} onChange={(val) => { const arr = [...variants]; (arr[i] as any).width_mm = val ? Number(val) : null; setVariants(arr); }} />
-                      <MiniInput label="Height (mm)" value={String((v as any).height_mm ?? "")} onChange={(val) => { const arr = [...variants]; (arr[i] as any).height_mm = val ? Number(val) : null; setVariants(arr); }} />
-                      <MiniInput label="Wheelbase (mm)" value={String((v as any).wheelbase_mm ?? "")} onChange={(val) => { const arr = [...variants]; (arr[i] as any).wheelbase_mm = val ? Number(val) : null; setVariants(arr); }} />
-                      <MiniInput label="Ground Clearance (mm)" value={String((v as any).ground_clearance_mm ?? "")} onChange={(val) => { const arr = [...variants]; (arr[i] as any).ground_clearance_mm = val ? Number(val) : null; setVariants(arr); }} />
-                      <MiniInput label="Boot Space (L)" value={String((v as any).boot_space_litres ?? "")} onChange={(val) => { const arr = [...variants]; (arr[i] as any).boot_space_litres = val ? Number(val) : null; setVariants(arr); }} />
-                      <MiniInput label="Min Turning Radius (m)" value={String((v as any).turning_radius_m ?? "")} onChange={(val) => { const arr = [...variants]; (arr[i] as any).turning_radius_m = val ? Number(val) : null; setVariants(arr); }} />
+                      <MiniInput label="Length (mm)" value={String((v as any).length_mm ?? "")} onChange={(val) => updateVariantDimensionsField(i, "length_mm", cleanNumber(val))} />
+                      <MiniInput label="Width (mm)" value={String((v as any).width_mm ?? "")} onChange={(val) => updateVariantDimensionsField(i, "width_mm", cleanNumber(val))} />
+                      <MiniInput label="Height (mm)" value={String((v as any).height_mm ?? "")} onChange={(val) => updateVariantDimensionsField(i, "height_mm", cleanNumber(val))} />
+                      <MiniInput label="Wheelbase (mm)" value={String((v as any).wheelbase_mm ?? "")} onChange={(val) => updateVariantDimensionsField(i, "wheelbase_mm", cleanNumber(val))} />
+                      <MiniInput label="Ground Clearance (mm)" value={String((v as any).ground_clearance_mm ?? "")} onChange={(val) => updateVariantDimensionsField(i, "ground_clearance_mm", cleanNumber(val))} />
+                      <MiniInput label="Boot Space (L)" value={String((v as any).boot_space_litres ?? "")} onChange={(val) => updateVariantDimensionsField(i, "boot_space_litres", cleanNumber(val))} />
+                      <MiniInput label="Min Turning Radius (m)" value={String((v as any).turning_radius_m ?? "")} onChange={(val) => updateVariantDimensionsField(i, "turning_radius_m", cleanNumber(val))} />
                     </div>
                     <VariantExtrasEditor
                       extras={normalizeExtras((v as any).extra_dimensions)}
                       inputBorder="border-slate-300"
-                      onChange={(next) => {
-                        const arr = [...variants];
-                        (arr[i] as any).extra_dimensions = next;
-                        setVariants(arr);
-                      }}
+                      onChange={(next) => updateVariantDimensionsExtra(i, next)}
                     />
                   </div>
                   )}
@@ -720,14 +941,14 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                         <label className="block"><span className="text-[8px] font-bold uppercase text-slate-500">Front Brakes</span><select value={v.features?.front_brakes || "Disc"} onChange={(e) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, front_brakes: e.target.value } }; setVariants(arr); }} className="mt-0.5 w-full rounded-md border border-slate-200 px-2 py-1.5 text-[11px] outline-none"><option value="Disc">Disc</option><option value="Ventilated Disc">Ventilated Disc</option><option value="Drum">Drum</option></select></label>
                         <label className="block"><span className="text-[8px] font-bold uppercase text-slate-400">Rear Brakes</span><select value={v.features?.rear_brakes || "Disc"} onChange={(e) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, rear_brakes: e.target.value } }; setVariants(arr); }} className="mt-0.5 w-full rounded-md border border-slate-200 px-2 py-1.5 text-[11px] outline-none"><option value="Disc">Disc</option><option value="Solid Disc">Solid Disc</option><option value="Drum">Drum</option></select></label>
                         <label className="block"><span className="text-[8px] font-bold uppercase text-slate-400">Drivetrain</span><select value={v.features?.drivetrain || "FWD"} onChange={(e) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, drivetrain: e.target.value } }; setVariants(arr); }} className="mt-0.5 w-full rounded-md border border-slate-200 px-2 py-1.5 text-[11px] outline-none"><option value="FWD">FWD</option><option value="RWD">RWD</option><option value="AWD">AWD</option></select></label>
-                        <MiniInput label="Seating" value={String(v.features?.seating_capacity ?? 5)} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, seating_capacity: Number(val) || 5 } }; setVariants(arr); }} />
+                        <MiniInput label="Seating" value={String(v.features?.seating_capacity ?? 5)} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, seating_capacity: cleanInt(val, 5) } }; setVariants(arr); }} />
                         <MiniInput label="Front Suspension" value={(v.features as any)?.front_suspension ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, front_suspension: val } }; setVariants(arr); }} />
                         <MiniInput label="Rear Suspension" value={(v.features as any)?.rear_suspension ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, rear_suspension: val } }; setVariants(arr); }} />
-                        <MiniInput label="Screen (inches)" value={String(v.features?.screen_size_inches ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, screen_size_inches: val ? Number(val) : null } }; setVariants(arr); }} />
-                        <MiniInput label="Speakers" value={String(v.features?.speaker_count ?? 4)} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, speaker_count: Number(val) || 4 } }; setVariants(arr); }} />
-                        <MiniInput label="Airbags" value={String(v.features?.airbag_count ?? 2)} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, airbag_count: Number(val) || 2 } }; setVariants(arr); }} />
-                        <MiniInput label="ADAS Level (0/1/2)" value={String(v.features?.adas_level ?? 0)} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, adas_level: Number(val) || 0 } }; setVariants(arr); }} />
-                        <MiniInput label="NCAP Rating" value={String(v.features?.ncap_safety_rating ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, ncap_safety_rating: val ? Number(val) : null } }; setVariants(arr); }} />
+                        <MiniInput label="Screen (inches)" value={String(v.features?.screen_size_inches ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, screen_size_inches: cleanNumber(val) } }; setVariants(arr); }} />
+                        <MiniInput label="Speakers" value={String(v.features?.speaker_count ?? 4)} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, speaker_count: cleanInt(val, 4) } }; setVariants(arr); }} />
+                        <MiniInput label="Airbags" value={String(v.features?.airbag_count ?? 2)} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, airbag_count: cleanInt(val, 2) } }; setVariants(arr); }} />
+                        <MiniInput label="ADAS Level (0/1/2)" value={String(v.features?.adas_level ?? 0)} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, adas_level: cleanInt(val, 0) } }; setVariants(arr); }} />
+                        <MiniInput label="NCAP Rating" value={String(v.features?.ncap_safety_rating ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, ncap_safety_rating: cleanNumber(val) } }; setVariants(arr); }} />
                         <label className="block"><span className="text-[8px] font-bold uppercase text-slate-400">Headlights</span><select value={v.features?.headlight_type || "LED"} onChange={(e) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, headlight_type: e.target.value } }; setVariants(arr); }} className="mt-0.5 w-full rounded-md border border-slate-200 px-2 py-1.5 text-[11px] outline-none"><option value="Halogen">Halogen</option><option value="LED">LED</option><option value="Projector LED">Projector LED</option></select></label>
                       </div>
                       <div className="flex flex-wrap gap-x-4 gap-y-1.5">
@@ -876,16 +1097,32 @@ function Field({ label, value, onChange, placeholder }: { label: string; value: 
 
 function MiniInput({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
   const [micActive, setMicActive] = useState(false);
+  const [localValue, setLocalValue] = useState(value);
+
+  useEffect(() => {
+    const parentNum = parseFloat(value);
+    const localNum = parseFloat(localValue);
+    if (value !== localValue) {
+      if (isNaN(parentNum) || isNaN(localNum) || parentNum !== localNum) {
+        setLocalValue(value);
+      }
+    }
+  }, [value, localValue]);
+
   const startMic = () => {
     if (!("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) return;
     if (micActive) return;
     const SR = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
     const r = new SR(); r.continuous = false; r.interimResults = false; r.lang = "en-IN";
-    r.onresult = (e: any) => { onChange(e.results[0][0].transcript.trim()); };
+    r.onresult = (e: any) => {
+      const txt = e.results[0][0].transcript.trim();
+      setLocalValue(txt);
+      onChange(txt);
+    };
     r.onend = () => setMicActive(false); r.onerror = () => setMicActive(false);
     r.start(); setMicActive(true);
   };
-  return (<label className="block"><span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</span><div className="mt-0.5 flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2.5 py-2"><input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="flex-1 text-sm outline-none bg-transparent min-w-0" /><button type="button" onClick={startMic} className={`shrink-0 h-5 w-5 rounded-full flex items-center justify-center transition-all ${micActive ? "bg-rose-500 text-white animate-pulse" : "bg-slate-100 text-slate-400 hover:bg-sky-100 hover:text-sky-600"}`}>{micActive ? <MicOff size={9} /> : <Mic size={9} />}</button></div></label>);
+  return (<label className="block"><span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</span><div className="mt-0.5 flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2.5 py-2"><input value={localValue} onChange={(e) => { setLocalValue(e.target.value); onChange(e.target.value); }} placeholder={placeholder} className="flex-1 text-sm outline-none bg-transparent min-w-0" /><button type="button" onClick={startMic} className={`shrink-0 h-5 w-5 rounded-full flex items-center justify-center transition-all ${micActive ? "bg-rose-500 text-white animate-pulse" : "bg-slate-100 text-slate-400 hover:bg-sky-100 hover:text-sky-600"}`}>{micActive ? <MicOff size={9} /> : <Mic size={9} />}</button></div></label>);
 }
 
 function VariantExtrasEditor({
@@ -911,9 +1148,9 @@ function VariantExtrasEditor({
                 onChange(next);
               }}
               placeholder="Checkbox label"
-              className={`flex-1 rounded-md border ${inputBorder} bg-white px-2 py-1 text-[10px] outline-none`}
+              className={`flex-1 rounded-md border ${inputBorder} bg-white px-3 py-2 text-xs outline-none`}
             />
-            <label className="flex shrink-0 items-center gap-1 rounded-md border border-slate-300 bg-white px-2 py-1 text-[10px] font-semibold text-slate-700">
+            <label className="flex shrink-0 items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700">
               <input
                 type="checkbox"
                 checked={isExtraChecked(ef.value)}
@@ -937,7 +1174,7 @@ function VariantExtrasEditor({
                 onChange(next);
               }}
               placeholder="Label"
-              className={`flex-1 rounded-md border ${inputBorder} bg-white px-2 py-1 text-[10px] outline-none`}
+              className={`flex-1 rounded-md border ${inputBorder} bg-white px-3 py-2 text-xs outline-none`}
             />
             <input
               value={ef.value}
@@ -947,7 +1184,7 @@ function VariantExtrasEditor({
                 onChange(next);
               }}
               placeholder="Value"
-              className={`flex-1 rounded-md border ${inputBorder} bg-white px-2 py-1 text-[10px] outline-none`}
+              className={`flex-1 rounded-md border ${inputBorder} bg-white px-3 py-2 text-xs outline-none`}
             />
             <button type="button" onClick={() => onChange(extras.filter((_, j) => j !== ei))} className="text-rose-400 text-xs">×</button>
           </div>

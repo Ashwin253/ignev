@@ -33,6 +33,7 @@ export type EvListingRow = {
   pros: string[];
   cons: string[];
   has_baas: boolean;
+  price_bracket?: string;
   created_at: string;
   updated_at: string;
 };
@@ -168,6 +169,7 @@ function mapToEvListing(row: EvListingRow, variants: EvVariantRow[], features?: 
     photo: row.photo || galleryUrls[0] || "",
     brand: row.brand,
     types: row.types ?? [],
+    price_bracket: row.price_bracket || "",
     prices: prices.length > 0 ? prices : [],
     topSpeed,
     commercial: row.commercial ?? false,

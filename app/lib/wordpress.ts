@@ -137,6 +137,7 @@ export type EvListing = {
   // evlist ACF fields
   brand: string;
   types: string[];
+  price_bracket?: string;
   prices: string[];
   topSpeed: number | null;
   commercial: boolean;

@@ -940,7 +940,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
                         <label className="block"><span className="text-[8px] font-bold uppercase text-slate-500">Front Brakes</span><select value={v.features?.front_brakes || "Disc"} onChange={(e) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, front_brakes: e.target.value } }; setVariants(arr); }} className="mt-0.5 w-full rounded-md border border-slate-200 px-2 py-1.5 text-[11px] outline-none"><option value="Disc">Disc</option><option value="Ventilated Disc">Ventilated Disc</option><option value="Drum">Drum</option></select></label>
                         <label className="block"><span className="text-[8px] font-bold uppercase text-slate-400">Rear Brakes</span><select value={v.features?.rear_brakes || "Disc"} onChange={(e) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, rear_brakes: e.target.value } }; setVariants(arr); }} className="mt-0.5 w-full rounded-md border border-slate-200 px-2 py-1.5 text-[11px] outline-none"><option value="Disc">Disc</option><option value="Solid Disc">Solid Disc</option><option value="Drum">Drum</option></select></label>
-                        <label className="block"><span className="text-[8px] font-bold uppercase text-slate-400">Drivetrain</span><select value={v.features?.drivetrain || "FWD"} onChange={(e) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, drivetrain: e.target.value } }; setVariants(arr); }} className="mt-0.5 w-full rounded-md border border-slate-200 px-2 py-1.5 text-[11px] outline-none"><option value="FWD">FWD</option><option value="RWD">RWD</option><option value="AWD">AWD</option></select></label>
+                        <label className="block"><span className="text-[8px] font-bold uppercase text-slate-400">Drivetrain</span><select value={v.features?.drivetrain || "FWD"} onChange={(e) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, drivetrain: e.target.value } }; setVariants(arr); }} className="mt-0.5 w-full rounded-md border border-slate-200 px-2 py-1.5 text-[11px] outline-none"><option value="FWD">FWD</option><option value="RWD">RWD</option><option value="AWD">AWD</option><option value="IPM">IPM</option></select></label>
                         <MiniInput label="Seating" value={String(v.features?.seating_capacity ?? 5)} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, seating_capacity: cleanInt(val, 5) } }; setVariants(arr); }} />
                         <MiniInput label="Front Suspension" value={(v.features as any)?.front_suspension ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, front_suspension: val } }; setVariants(arr); }} />
                         <MiniInput label="Rear Suspension" value={(v.features as any)?.rear_suspension ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, rear_suspension: val } }; setVariants(arr); }} />
@@ -1100,11 +1100,18 @@ function MiniInput({ label, value, onChange, placeholder }: { label: string; val
   const [localValue, setLocalValue] = useState(value);
 
   useEffect(() => {
-    const parentNum = parseFloat(value);
-    const localNum = parseFloat(localValue);
     if (value !== localValue) {
-      if (isNaN(parentNum) || isNaN(localNum) || parentNum !== localNum) {
-        setLocalValue(value);
+      const parentNum = parseFloat(value);
+      const localNum = parseFloat(localValue);
+      const bothValid = !isNaN(parentNum) && !isNaN(localNum);
+      if (bothValid) {
+        if (parentNum !== localNum) {
+          setLocalValue(value);
+        }
+      } else {
+        if (value === "" || isNaN(parentNum)) {
+          setLocalValue(value);
+        }
       }
     }
   }, [value, localValue]);

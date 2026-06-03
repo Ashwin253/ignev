@@ -64,9 +64,8 @@ export default function ProductDetails({ item }: { item: EvListing }) {
   const dimensionRows = dim ? dimensionSpecRows(dim) : [];
   const dimensionChecks = dim ? dimensionSpecCheckboxes(dim) : [];
 
-  const sectionHasContent = (fields: Array<{ label: string; value: string; kind?: string }> | undefined) =>
-    fields?.some((f) => f.label && (!isCheckboxExtra(f) ? f.value.trim() : isExtraChecked(f.value)));
-
+ const sectionHasContent = (fields: Array<{ label: string; value: string; kind?: "field" | "checkbox" | undefined }> | undefined) =>
+  fields?.some((f) => f.label && (!isCheckboxExtra(f) ? f.value.trim() : isExtraChecked(f.value)));
   const extraSections = (
     item.variantExtraSections?.find((v) => v.variantName === selectedVariant)
     ?? item.variantExtraSections?.[0]

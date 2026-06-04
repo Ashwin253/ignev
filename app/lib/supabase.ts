@@ -248,10 +248,14 @@ export async function fetchEvListingsFromSupabase(limit = 50): Promise<EvListing
 export async function fetchEvListingBySlugFromSupabase(slug: string): Promise<EvListing | null> {
   if (!supabaseEnabled()) return null;
 
+  const decodedSlug = decodeURIComponent(slug);
+  const spacedSlug = decodedSlug.replace(/-/g, " ");
+  const hyphenatedSlug = decodedSlug.replace(/\s+/g, "-");
+
   const { data: listing, error } = await supabase
     .from("evlistings")
     .select("*")
-    .eq("slug", slug)
+    .or(`slug.eq."${slug}",slug.eq."${decodedSlug}",slug.eq."${spacedSlug}",slug.eq."${hyphenatedSlug}"`)
     .single();
 
   if (error || !listing) return null;

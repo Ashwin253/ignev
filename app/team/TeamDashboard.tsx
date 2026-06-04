@@ -34,6 +34,7 @@ type ListingForm = {
   gallery_images: any[]; colors: string[]; types: string[];
   pros: string[]; cons: string[];
   price_bracket: string;
+  parent_id?: string;
 };
 
 type VariantForm = {
@@ -66,6 +67,7 @@ const emptyListing: ListingForm = {
   slug: "", title: "", brand: "", body_type: "", commercial: false, has_baas: false,
   launchdate: null, photo: "", gallery_images: [], colors: [],
   types: [], pros: [], cons: [], price_bracket: "",
+  parent_id: "",
 };
 
 const emptyVariant: VariantForm = {
@@ -198,7 +200,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
   const startEdit = async (l: EvListingRow & { variants: EvVariantRow[] }) => {
     setEditing(l.id);
     setListingFormTab("core");
-    setForm({ slug: l.slug, title: l.title, brand: l.brand, body_type: l.body_type || "", commercial: l.commercial, has_baas: l.has_baas || false, launchdate: l.launchdate, photo: l.photo, gallery_images: l.gallery_images ?? [], colors: l.colors ?? [], types: l.types ?? [], pros: l.pros ?? [], cons: l.cons ?? [], price_bracket: (l as any).price_bracket || "" });
+    setForm({ slug: l.slug, title: l.title, brand: l.brand, body_type: l.body_type || "", commercial: l.commercial, has_baas: l.has_baas || false, launchdate: l.launchdate, photo: l.photo, gallery_images: l.gallery_images ?? [], colors: l.colors ?? [], types: l.types ?? [], pros: l.pros ?? [], cons: l.cons ?? [], price_bracket: (l as any).price_bracket || "", parent_id: "" });
     // Load features for each variant
     const variantIds = l.variants.map((v) => v.id);
     let featuresMap = new Map<string, any>();
@@ -212,26 +214,54 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
     setEnergyComps((ec ?? []).map((e: any) => ({ id: e.id, category: e.category, name: e.name, fuel_type: e.fuel_type, mileage: e.mileage, fuel_price: e.fuel_price, model_used: e.model_used, brand: e.brand })));
   };
 
+  const startAddVariant = async (l: EvListingRow & { variants: EvVariantRow[] }) => {
+    await startEdit(l);
+    setListingFormTab("variants");
+    setVariants((prev) => [...prev, { ...emptyVariant }]);
+  };
+
   const handleSave = async () => {
     setSaving(true);
-    const listingPayload = { ...form, slug: form.slug || form.title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""), created_by_email: user.email };
-    let listingId = editing === "new" ? null : editing;
+    // Sanitize slug by replacing spaces with '-' and removing non-alphanumeric chars
+    const sanitizedSlug = (form.slug || form.title)
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
+
+    const { parent_id, ...formWithoutParent } = form;
+    let listingId = parent_id || (editing === "new" ? null : editing);
     let error;
 
-    if (editing === "new") {
-      const res = await supabase.from("evlistings").insert(listingPayload).select("id").single();
-      error = res.error; listingId = res.data?.id ?? null;
+    if (!parent_id) {
+      // Normal flow: save listing
+      const listingPayload = { 
+        ...formWithoutParent, 
+        slug: sanitizedSlug, 
+        created_by_email: user.email 
+      };
+      if (editing === "new") {
+        const res = await supabase.from("evlistings").insert(listingPayload).select("id").single();
+        error = res.error; listingId = res.data?.id ?? null;
+      } else {
+        const res = await supabase.from("evlistings").update(listingPayload).eq("id", editing);
+        error = res.error;
+      }
+      if (error) { alert(`Save failed: ${error.message}`); setSaving(false); return; }
     } else {
-      const res = await supabase.from("evlistings").update(listingPayload).eq("id", editing);
-      error = res.error;
+      // If we are moving variants from an existing listing to a parent, delete the old listing
+      if (editing && editing !== "new") {
+        const res = await supabase.from("evlistings").delete().eq("id", editing);
+        if (res.error) { alert(`Failed to delete old listing: ${res.error.message}`); setSaving(false); return; }
+      }
     }
-    if (error) { alert(`Save failed: ${error.message}`); setSaving(false); return; }
 
-    // Save variants
+    // Save variants under listingId (which is either the created/updated listing, or the parent_id)
     if (listingId) {
-      // Delete removed variants
-      const existingIds = variants.filter((v) => v.id).map((v) => v.id!);
-      await supabase.from("ev_variants").delete().eq("listing_id", listingId).not("id", "in", `(${existingIds.join(",")})`);
+      // Delete removed variants only if it wasn't a parent merge
+      if (!parent_id) {
+        const existingIds = variants.filter((v) => v.id).map((v) => v.id!);
+        await supabase.from("ev_variants").delete().eq("listing_id", listingId).not("id", "in", `(${existingIds.join(",")})`);
+      }
 
       for (const v of variants) {
         const features = (v as any).features;
@@ -239,7 +269,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
         const varPayload: any = {
           listing_id: listingId,
           variant_name: v.variant_name,
-          slug: v.slug || `${listingPayload.slug}-${v.variant_name}`.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
+          slug: v.slug || `${sanitizedSlug}-${v.variant_name}`.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
           model_year: v.model_year,
           price: v.price,
           top_speed: v.top_speed,
@@ -278,14 +308,14 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
           if (res.error) { alert(`Variant insert failed: ${res.error.message}`); setSaving(false); return; }
           savedVariantId = res.data?.id;
         }
-        // Save features if provided
         if (savedVariantId && features) {
           await supabase.from("ev_variant_features").upsert({ variant_id: savedVariantId, ...features });
         }
       }
     }
-    // Save energy comparisons
-    if (listingId) {
+
+    // Save energy comparisons (only if not moving/merged to parent)
+    if (listingId && !parent_id) {
       const existingEcIds = energyComps.filter((e) => e.id).map((e) => e.id!);
       await supabase.from("ev_energy_comparisons").delete().eq("listing_id", listingId).not("id", "in", `(${existingEcIds.join(",")})`);
       for (const ec of energyComps) {
@@ -430,6 +460,15 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
               <label className="block">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Launch Date</span>
                 <input type="date" value={form.launchdate ?? ""} onChange={(e) => setForm({ ...form, launchdate: e.target.value || null })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" />
+              </label>
+              <label className="block">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Parent Model (Optional)</span>
+                <select value={form.parent_id || ""} onChange={(e) => setForm({ ...form, parent_id: e.target.value })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none">
+                  <option value="">None (Standalone/Parent)</option>
+                  {listings.filter((l) => l.id !== editing).map((l) => (
+                    <option key={l.id} value={l.id}>{l.brand} - {l.title} ({l.slug})</option>
+                  ))}
+                </select>
               </label>
             </div>
             <label className="flex items-center gap-2 mt-3 text-sm"><input type="checkbox" checked={form.commercial} onChange={(e) => setForm({ ...form, commercial: e.target.checked })} /> Commercial</label>
@@ -1047,6 +1086,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   <button onClick={() => setExpandedListing(expandedListing === l.id ? null : l.id)} className="text-slate-400 hover:text-slate-600">
                     {expandedListing === l.id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                   </button>
+                  <button onClick={() => startAddVariant(l)} className="text-emerald-600 hover:text-emerald-700 text-xs font-bold">Add Variant</button>
                   {(l as any).created_by === user.id && (
                     <>
                       <button onClick={() => startEdit(l)} className="text-sky-600 hover:text-sky-700 text-xs font-bold">Edit</button>
@@ -1060,7 +1100,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                     <div className="space-y-1">
                       {l.variants.map((v) => (
                         <div key={v.id} className="flex items-center gap-3 text-xs text-slate-600">
-                          <span className="font-semibold text-slate-800">{v.variant_name}</span>
+                          <span className="font-semibold text-slate-800">{v.variant_name} <span className="text-[10px] font-normal text-slate-400">({v.slug})</span></span>
                           <span>₹{v.price}L</span>
                           <span>{v.driving_range_km}km</span>
                           <span>{v.battery_capacity_kwh}kWh</span>

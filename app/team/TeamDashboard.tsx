@@ -117,8 +117,13 @@ const defaultFeatures = {
   has_turn_signal: false, has_drls: false,
 };
 
+let browserSupabaseClient: any = null;
+
 export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supabaseUrl: string; supabaseAnonKey: string }) {
-  const supabase = useMemo(() => createClient(supabaseUrl, supabaseAnonKey), [supabaseUrl, supabaseAnonKey]);
+  if (!browserSupabaseClient) {
+    browserSupabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+  }
+  const supabase = browserSupabaseClient;
   const [user, setUser] = useState<any>(null);
   const [loginError, setLoginError] = useState("");
   const [listings, setListings] = useState<(EvListingRow & { variants: EvVariantRow[] })[]>([]);
@@ -132,6 +137,8 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
   const [energyComps, setEnergyComps] = useState<Array<{ id?: string; category: string; name: string; fuel_type: string; mileage: string; fuel_price: string; model_used: string; brand: string }>>([]);
   const [variantSpecSection, setVariantSpecSection] = useState<Record<number, string>>({});
   const [listingFormTab, setListingFormTab] = useState<"core" | "variants" | "energy">("core");
+  const [activeVariantIndex, setActiveVariantIndex] = useState(0);
+  const [initialSnapshot, setInitialSnapshot] = useState<{form: any, variants: any, energyComps: any} | null>(null);
 
   const [motorClipboard, setMotorClipboard] = useState<any>(null);
   const [chargingClipboard, setChargingClipboard] = useState<any>(null);
@@ -219,14 +226,21 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
     setEditing("new");
     setForm(emptyListing);
     setVariants([{ ...emptyVariant }]);
+    setActiveVariantIndex(0);
     setEnergyComps([]);
     setListingFormTab("core");
     setVariantSpecSection({});
+    setInitialSnapshot({
+      form: JSON.parse(JSON.stringify(emptyListing)),
+      variants: JSON.parse(JSON.stringify([{ ...emptyVariant }])),
+      energyComps: [],
+    });
   };
   const startEdit = async (l: EvListingRow & { variants: EvVariantRow[] }) => {
     setEditing(l.id);
     setListingFormTab("core");
-    setForm({ slug: l.slug, title: l.title, brand: l.brand, body_type: l.body_type || "", commercial: l.commercial, has_baas: l.has_baas || false, launchdate: l.launchdate, photo: l.photo, gallery_images: l.gallery_images ?? [], colors: l.colors ?? [], types: l.types ?? [], pros: l.pros ?? [], cons: l.cons ?? [], price_bracket: (l as any).price_bracket || "", parent_id: l.parent_id || "", editors_emails: l.editors_emails ?? [] });
+    const loadedForm = { slug: l.slug, title: l.title, brand: l.brand, body_type: l.body_type || "", commercial: l.commercial, has_baas: l.has_baas || false, launchdate: l.launchdate, photo: l.photo, gallery_images: l.gallery_images ?? [], colors: l.colors ?? [], types: l.types ?? [], pros: l.pros ?? [], cons: l.cons ?? [], price_bracket: (l as any).price_bracket || "", parent_id: l.parent_id || "", editors_emails: l.editors_emails ?? [] };
+    setForm(loadedForm);
     // Load features for each variant
     const variantIds = l.variants.map((v) => v.id);
     let featuresMap = new Map<string, any>();
@@ -234,16 +248,28 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
       const { data: feats } = await supabase.from("ev_variant_features").select("*").in("variant_id", variantIds);
       for (const f of (feats ?? [])) featuresMap.set(f.variant_id, f);
     }
-    setVariants(l.variants.map((v) => ({ ...v, id: v.id, features: featuresMap.get(v.id) || undefined })) as any);
+    const loadedVariants = l.variants.map((v) => ({ ...v, id: v.id, features: featuresMap.get(v.id) || undefined })) as any;
+    setVariants(loadedVariants);
     // Load energy comparisons
     const { data: ec } = await supabase.from("ev_energy_comparisons").select("*").eq("listing_id", l.id).order("created_at");
-    setEnergyComps((ec ?? []).map((e: any) => ({ id: e.id, category: e.category, name: e.name, fuel_type: e.fuel_type, mileage: e.mileage, fuel_price: e.fuel_price, model_used: e.model_used, brand: e.brand })));
+    const loadedEnergy = (ec ?? []).map((e: any) => ({ id: e.id, category: e.category, name: e.name, fuel_type: e.fuel_type, mileage: e.mileage, fuel_price: e.fuel_price, model_used: e.model_used, brand: e.brand }));
+    setEnergyComps(loadedEnergy);
+
+    setInitialSnapshot({
+      form: JSON.parse(JSON.stringify(loadedForm)),
+      variants: JSON.parse(JSON.stringify(loadedVariants)),
+      energyComps: JSON.parse(JSON.stringify(loadedEnergy)),
+    });
   };
 
   const startAddVariant = async (l: EvListingRow & { variants: EvVariantRow[] }) => {
     await startEdit(l);
     setListingFormTab("variants");
-    setVariants((prev) => [...prev, { ...emptyVariant }]);
+    setVariants((prev) => {
+      const next = [...prev, { ...emptyVariant }];
+      setActiveVariantIndex(next.length - 1);
+      return next;
+    });
   };
 
   const handleSave = async () => {
@@ -641,19 +667,36 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             <div className="rounded-xl border-2 border-sky-300 bg-sky-100 p-4">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-sky-600">Variants</p>
-                <button onClick={() => setVariants([...variants, { ...emptyVariant }])} className="text-[10px] font-bold text-sky-600 hover:text-sky-700">+ Add Variant</button>
+                <button onClick={() => { setVariants([...variants, { ...emptyVariant }]); setActiveVariantIndex(variants.length); }} className="text-[10px] font-bold text-sky-600 hover:text-sky-700">+ Add Variant</button>
               </div>
+
+              {variants.length > 0 && (
+                <div className="mb-4">
+                  <select
+                    value={activeVariantIndex}
+                    onChange={(e) => setActiveVariantIndex(Number(e.target.value))}
+                    className="w-full rounded-xl border-2 border-sky-400 bg-white px-4 py-3 text-sm font-bold text-sky-900 outline-none shadow-md focus:border-sky-500 focus:ring-4 focus:ring-sky-100 transition-all cursor-pointer"
+                  >
+                    {variants.map((v, idx) => (
+                      <option key={idx} value={idx}>
+                        {v.variant_name || `Variant ${idx + 1}`} {v.price ? `(₹${v.price}L)` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               {variants.map((v, i) => (
+                i === (activeVariantIndex < variants.length ? activeVariantIndex : 0) && (
                 <div key={i} className="mb-4 rounded-lg border-2 border-slate-300 bg-white overflow-hidden shadow-sm">
-                  <div className="flex items-center justify-between px-4 py-3 bg-slate-200 cursor-pointer border-b border-slate-300" onClick={() => { const arr = [...variants]; (arr[i] as any).collapsed = !(arr[i] as any).collapsed; setVariants(arr); }}>
+                  <div className="flex items-center justify-between px-4 py-3 bg-slate-200 border-b border-slate-300">
                     <span className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                      {(v as any).collapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
                       {v.variant_name || `Variant ${i + 1}`}
                       {v.price ? <span className="text-[10px] font-medium text-slate-400">₹{v.price}L</span> : null}
                     </span>
-                    <button onClick={(e) => { e.stopPropagation(); setVariants(variants.filter((_, j) => j !== i)); }} className="text-[10px] text-rose-500 font-bold">Remove</button>
+                    <button onClick={(e) => { e.stopPropagation(); setVariants(variants.filter((_, j) => j !== i)); setActiveVariantIndex(Math.max(0, i - 1)); }} className="text-[10px] text-rose-500 font-bold">Remove Variant</button>
                   </div>
-                  {!(v as any).collapsed && <div className="p-4">
+                  <div className="p-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
                     <MiniInput label="Variant Name" value={v.variant_name} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], variant_name: val }; setVariants(arr); }} />
                     <MiniInput label="Version/Refresh" value={v.version_name || ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], version_name: val }; setVariants(arr); }} />
@@ -1172,8 +1215,9 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   </>
                     );
                   })()}
-                  </div>}
+                  </div>
                 </div>
+                )
               ))}
             </div>
             )}
@@ -1217,10 +1261,24 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
 
             <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t-2 border-slate-300 pt-4">
               <p className="text-[10px] text-slate-500">Changes apply to all tabs when you save.</p>
-            <button onClick={handleSave} disabled={saving} className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-50">
-              {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-              {editing === "new" ? "Create Listing" : "Save Changes"}
-            </button>
+              <div className="flex items-center gap-3">
+                {initialSnapshot && (
+                  <button type="button" onClick={() => {
+                    if (confirm("Are you sure you want to undo all unsaved changes?")) {
+                      setForm(JSON.parse(JSON.stringify(initialSnapshot.form)));
+                      setVariants(JSON.parse(JSON.stringify(initialSnapshot.variants)));
+                      setEnergyComps(JSON.parse(JSON.stringify(initialSnapshot.energyComps)));
+                      setActiveVariantIndex(0);
+                    }
+                  }} className="inline-flex items-center gap-2 rounded-xl border-2 border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-bold text-rose-600 hover:bg-rose-100 transition-colors">
+                    Undo Changes
+                  </button>
+                )}
+                <button onClick={handleSave} disabled={saving} className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors">
+                  {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                  {editing === "new" ? "Create Listing" : "Save Changes"}
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -1241,7 +1299,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                     </p>
                   </div>
                   <button onClick={() => setExpandedListing(expandedListing === l.id ? null : l.id)} className="text-slate-400 hover:text-slate-600">
-                    {expandedListing === l.id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                    {expandedListing === l.id ?<p className="text-emerald-600 hover:text-emerald-700 text-xs font-bold">Hide Variants</p>  : <p className="text-cyan-500 hover:text-emerald-700 text-xs font-bold">Show Variants</p>}
                   </button>
                   <button onClick={() => startAddVariant(l)} className="text-emerald-600 hover:text-emerald-700 text-xs font-bold">Add Variant</button>
                   <button onClick={() => startEdit(l)} className="text-sky-600 hover:text-sky-700 text-xs font-bold">Edit</button>

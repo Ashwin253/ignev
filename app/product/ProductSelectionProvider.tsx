@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { EvListing } from "../lib/wordpress";
 
 type ProductSelectionContextValue = {
@@ -18,6 +18,64 @@ const ProductSelectionContext = createContext<ProductSelectionContextValue | nul
 export function ProductSelectionProvider({ item, children }: { item: EvListing; children: React.ReactNode }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [showBaasState, setShowBaasState] = useState(false);
+  const [initialized, setInitialized] = useState(false);
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const variantQuery = searchParams.get("variant");
+    const baasQuery = searchParams.get("baas");
+
+    let initialBaas = false;
+    if (baasQuery === "true") {
+      initialBaas = true;
+      setShowBaasState(true);
+    }
+
+    if (variantQuery) {
+      const variantsToSearch = initialBaas ? item.baasVariants : item.batteryVariants;
+      const index = variantsToSearch.findIndex((v) => v.modelName === variantQuery);
+      if (index >= 0) {
+        setSelectedIndex(index);
+      }
+    }
+    setInitialized(true);
+  }, [item]);
+
+  useEffect(() => {
+    if (!initialized) return;
+
+    const searchParams = new URLSearchParams(window.location.search);
+    let changed = false;
+
+    if (showBaasState) {
+      if (searchParams.get("baas") !== "true") {
+        searchParams.set("baas", "true");
+        changed = true;
+      }
+    } else {
+      if (searchParams.has("baas")) {
+        searchParams.delete("baas");
+        changed = true;
+      }
+    }
+
+    const currentVariant = showBaasState ? item.baasVariants[selectedIndex] : item.batteryVariants[selectedIndex];
+    const currentVariantName = currentVariant?.modelName;
+
+    if (currentVariantName) {
+      if (searchParams.get("variant") !== currentVariantName) {
+        searchParams.set("variant", currentVariantName);
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      const newQuery = searchParams.toString();
+      const newUrl = window.location.pathname + (newQuery ? `?${newQuery}` : "");
+      window.history.replaceState(null, "", newUrl);
+    }
+  }, [selectedIndex, showBaasState, initialized, item]);
+
   const activeVariants = showBaasState ? item.baasVariants : item.batteryVariants;
 
   const selectedVariantName = useMemo(() => {

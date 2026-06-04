@@ -222,6 +222,15 @@ export default function ProductDetails({ item }: { item: EvListing }) {
             feat.has_connected_car_app && "Connected Car App", feat.has_ota_updates && "OTA Updates",
             feat.has_abs_ebd && "ABS + EBD", feat.has_esp && "ESP",
             feat.has_tpms && "TPMS", feat.has_360_camera && "360° Camera",
+            feat.has_speedometer_digital && "Digital Speedometer", feat.has_odometer_digital && "Digital Odometer",
+            feat.has_voice_assist && "Voice Assist", feat.has_stand_alarm && "Stand Alarm",
+            feat.has_low_battery_indicator && "Low Battery Indicator", feat.has_clock && "Clock",
+            feat.has_call_sms_alert && "Call/SMS Alert", feat.has_tripmeter && "Tripmeter",
+            feat.has_boot_storage && "Boot Storage", feat.has_usb_charging_port && "USB Charging",
+            feat.has_keyless_lock_unlock && "Keyless Lock/Unlock", feat.has_start_type_self && "Self Start",
+            feat.has_reverse_mode && "Reverse Mode", feat.has_boot_light && "Boot Light",
+            feat.has_tail_light && "Tail Light", feat.has_break_light && "Break Light",
+            feat.has_turn_signal && "Turn Signal", feat.has_drls && "DRLs",
           ].filter(Boolean) as string[];
           return (
             <CollapsibleSection title="Features & Safety" icon={<CheckCircle2 size={16} className="text-sky-600" />}>

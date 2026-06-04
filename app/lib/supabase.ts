@@ -170,7 +170,7 @@ function mapToEvListing(row: EvListingRow, variants: EvVariantRow[], features?: 
   const hasBaas = row.has_baas || variants.some((v) => v.has_baas === true || (v.has_baas as any) === "true");
   const topSpeed = variants[0]?.top_speed ?? null;
   const prices = variants.length > 0
-    ? [...new Set(variants.map((v) => v.price).filter(Boolean))].map(String)
+    ? Array.from(new Set(variants.map((v) => v.price).filter(Boolean))).map(String)
     : [];
 
   // Build battery specs from variants
@@ -183,7 +183,10 @@ function mapToEvListing(row: EvListingRow, variants: EvVariantRow[], features?: 
     emissionStandard: "",
     turboSupercharger: "0",
     idleStartStop: "0",
-    extraSpecs: (v as any).extra_motor || [],
+    extraSpecs: [
+      v.acceleration ? { label: "Acceleration", value: v.acceleration } : null,
+      ...((v as any).extra_motor || [])
+    ].filter(Boolean),
   }));
 
   // Build charging specs from variants
@@ -196,7 +199,14 @@ function mapToEvListing(row: EvListingRow, variants: EvVariantRow[], features?: 
     chargingOptions: v.max_dc_charging_rate_kw ? `Up to ${v.max_dc_charging_rate_kw} kW DC` : "",
     chargerIncluded: "",
     chargerConnectionType: "",
-    extraSpecs: (v as any).extra_charging || [],
+    extraSpecs: [
+      v.battery_type ? { label: "Battery Type", value: v.battery_type } : null,
+      v.battery_portability ? { label: "Battery Portability", value: v.battery_portability } : null,
+      v.charger_type ? { label: "Charger Type", value: v.charger_type } : null,
+      v.charger_output ? { label: "Charger Output", value: v.charger_output } : null,
+      v.charger_cost_included ? { label: "Charger Cost Included", value: v.charger_cost_included } : null,
+      ...((v as any).extra_charging || [])
+    ].filter(Boolean),
   }));
 
   return {
@@ -210,7 +220,7 @@ function mapToEvListing(row: EvListingRow, variants: EvVariantRow[], features?: 
     types: row.types ?? [],
     price_bracket: row.price_bracket || "",
     prices: prices.length > 0 ? prices : [],
-    topSpeed,
+    topSpeed: topSpeed ? Number(topSpeed) : null,
     commercial: row.commercial ?? false,
     launchdate: row.launchdate,
     batteryVariants: standardVariants,
@@ -234,16 +244,50 @@ function mapToEvListing(row: EvListingRow, variants: EvVariantRow[], features?: 
       ground_clearance_mm: (v as any).ground_clearance_mm ?? undefined,
       boot_space_litres: (v as any).boot_space_litres ?? undefined,
       turning_radius_m: (v as any).turning_radius_m ?? undefined,
-      extraSpecs: (v as { extra_dimensions?: Array<{ label: string; value: string }> }).extra_dimensions ?? [],
+      extraSpecs: [
+        v.kerb_weight_kg ? { label: "Kerb Weight", value: `${v.kerb_weight_kg} kg` } : null,
+        v.seat_length_mm ? { label: "Seat Length", value: `${v.seat_length_mm} mm` } : null,
+        v.seat_height_mm ? { label: "Seat Height", value: `${v.seat_height_mm} mm` } : null,
+        ...((v as { extra_dimensions?: Array<{ label: string; value: string }> }).extra_dimensions ?? [])
+      ].filter(Boolean) as any,
     })),
     variantFeatures: variants.map((v) => ({
       variantName: v.variant_name,
       ...(features?.get(v.id) ?? {}),
     })),
-    variantExtraSections: variants.map((v) => ({
-      variantName: v.variant_name,
-      sections: (v as { extra_sections?: Array<{ title: string; fields: Array<{ label: string; value: string }> }> }).extra_sections ?? [],
-    })),
+    variantExtraSections: variants.map((v) => {
+      const builtInSections = [
+        {
+          title: "Brakes & Wheels",
+          fields: [
+            v.braking_system ? { label: "Braking System", value: v.braking_system } : null,
+            v.wheel_type ? { label: "Wheel Type", value: v.wheel_type } : null,
+            v.front_wheel_size ? { label: "Front Wheel Size", value: v.front_wheel_size } : null,
+            v.rear_wheel_size ? { label: "Rear Wheel Size", value: v.rear_wheel_size } : null
+          ].filter(Boolean)
+        },
+        {
+          title: "Suspension & Chassis",
+          fields: [
+            v.front_suspension ? { label: "Front Suspension", value: v.front_suspension } : null,
+            v.rear_suspension ? { label: "Rear Suspension", value: v.rear_suspension } : null,
+            v.chassis_type ? { label: "Chassis Type", value: v.chassis_type } : null
+          ].filter(Boolean)
+        },
+        {
+          title: "Warranty",
+          fields: [
+            v.battery_warranty ? { label: "Battery Warranty", value: v.battery_warranty } : null,
+            v.motor_warranty ? { label: "Motor Warranty", value: v.motor_warranty } : null
+          ].filter(Boolean)
+        }
+      ].filter(s => s.fields.length > 0);
+
+      return {
+        variantName: v.variant_name,
+        sections: [...builtInSections, ...((v as { extra_sections?: Array<{ title: string; fields: Array<{ label: string; value: string }> }> }).extra_sections ?? [])] as any,
+      };
+    }),
     variantCustomFields: variants.map((v) => ({
       variantName: v.variant_name,
       fields: (v as { custom_fields?: Array<{ label: string; value: string }> }).custom_fields ?? [],

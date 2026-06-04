@@ -38,8 +38,12 @@ type ListingForm = {
   editors_emails?: string[];
 };
 
-type VariantForm = {
-  variant_name: string; slug: string; model_year: number; price: number;
+export type VariantForm = {
+  id?: string;
+  variant_name: string;
+  version_name?: string | null;
+  launch_date?: string | null;
+  slug: string; model_year: number; price: number;
   top_speed: string | null; battery_capacity_kwh: string | null;
   driving_range_km: string | null; charging_time_mins: string | null;
   max_power_bhp: string | null; max_torque_nm: string | null;
@@ -85,7 +89,7 @@ const emptyListing: ListingForm = {
 };
 
 const emptyVariant: VariantForm = {
-  variant_name: "", slug: "", model_year: 2026, price: 0,
+  variant_name: "", version_name: "", launch_date: "", slug: "", model_year: 2026, price: 0,
   top_speed: null, battery_capacity_kwh: null, driving_range_km: null,
   charging_time_mins: null, max_power_bhp: null, max_torque_nm: null,
   has_baas: false, baas_price_per_km: null, baas_upfront_price: null,
@@ -289,6 +293,8 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
         const varPayload: any = {
           listing_id: listingId,
           variant_name: v.variant_name,
+          version_name: v.version_name || null,
+          launch_date: v.launch_date || null,
           slug: v.slug || `${sanitizedSlug}-${v.variant_name}`.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
           model_year: v.model_year,
           price: v.price,
@@ -297,7 +303,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
           driving_range_km: v.driving_range_km,
           charging_time_mins: v.charging_time_mins,
           max_power_bhp: v.max_power_bhp,
-          max_torque_nm: v.max_torque_nm,
+          max_torque_nm: v.max_torque_nm || null,
           has_baas: v.has_baas,
           baas_price_per_km: v.baas_price_per_km,
           baas_upfront_price: v.baas_upfront_price,
@@ -648,6 +654,8 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   {!(v as any).collapsed && <div className="p-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
                     <MiniInput label="Variant Name" value={v.variant_name} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], variant_name: val }; setVariants(arr); }} />
+                    <MiniInput label="Version/Refresh" value={v.version_name || ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], version_name: val }; setVariants(arr); }} />
+                    <MiniInput label="Launch Date" value={v.launch_date || ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], launch_date: val }; setVariants(arr); }} />
                     <MiniInput label="Model Year" value={String(v.model_year)} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], model_year: cleanInt(val, 2026) }; setVariants(arr); }} />
                     <MiniInput label="Price (Lakh)" value={String(v.price || "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], price: cleanFloat(val, 0) }; setVariants(arr); }} />
                   </div>

@@ -355,13 +355,13 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
       ) : (
         <>
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
-          {filteredItems.slice(0, visibleCount).map((item) => {
+          {filteredItems.slice(0, visibleCount).map((item, index) => {
             const launched = isLaunched(item.launchdate);
             const launchLabel = formatLaunchDate(item.launchdate);
 
             return (
               <Link
-                key={`${item.brand}-${item.name}`}
+                key={item.slug ?? `${item.brand}-${item.name}-${index}`}
                 href={`/product/${item.slug ?? toSlug(item.brand, item.name)}`}
                 className="group overflow-hidden rounded-3xl border-2 border-slate-300 bg-slate-50 shadow-[0_4px_16px_rgba(15,23,42,0.08)] hover:shadow-[0_12px_32px_rgba(15,23,42,0.12)] hover:-translate-y-0.5 transition-all duration-300 flex flex-col"
               >

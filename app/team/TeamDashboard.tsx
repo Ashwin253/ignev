@@ -35,29 +35,42 @@ type ListingForm = {
   pros: string[]; cons: string[];
   price_bracket: string;
   parent_id?: string;
+  editors_emails?: string[];
 };
 
 type VariantForm = {
   variant_name: string; slug: string; model_year: number; price: number;
-  top_speed: number | null; battery_capacity_kwh: number | null;
-  driving_range_km: number | null; charging_time_mins: number | null;
-  max_power_bhp: number | null; max_torque_nm: number | null;
-  has_baas: boolean; baas_price_per_km: number | null;
-  baas_upfront_price: number | null; baas_model_name: string;
-  charging_time_ac_hours: number | null; charging_time_dc_mins: number | null;
-  max_dc_charging_rate_kw: number | null;
+  top_speed: string | null; battery_capacity_kwh: string | null;
+  driving_range_km: string | null; charging_time_mins: string | null;
+  max_power_bhp: string | null; max_torque_nm: string | null;
+  has_baas: boolean; baas_price_per_km: string | null;
+  baas_upfront_price: string | null; baas_model_name: string;
+  charging_time_ac_hours: string | null; charging_time_dc_mins: string | null;
+  max_dc_charging_rate_kw: string | null;
+  acceleration?: string | null; battery_type?: string | null; battery_portability?: string | null;
+  charger_type?: string | null; charger_output?: string | null; charger_cost_included?: string | null;
+  kerb_weight_kg?: string | null; seat_length_mm?: string | null; seat_height_mm?: string | null;
+  braking_system?: string | null; wheel_type?: string | null; front_wheel_size?: string | null; rear_wheel_size?: string | null;
+  front_suspension?: string | null; rear_suspension?: string | null; chassis_type?: string | null;
+  battery_warranty?: string | null; motor_warranty?: string | null;
   // Features
   features?: {
     front_brakes: string; rear_brakes: string; drivetrain: string;
-    seating_capacity: number; front_suspension: string; rear_suspension: string;
+    seating_capacity: string | null; front_suspension: string; rear_suspension: string;
     headlight_type: string;
     has_sunroof: boolean; has_climate_control: boolean; has_cruise_control: boolean;
     has_wireless_charger: boolean; has_keyless_entry: boolean;
-    screen_size_inches: number | null; speaker_count: number;
+    screen_size_inches: string | null; speaker_count: string | null;
     has_wireless_carplay_android_auto: boolean; has_connected_car_app: boolean;
-    has_ota_updates: boolean; airbag_count: number; has_abs_ebd: boolean;
+    has_ota_updates: boolean; airbag_count: string | null; has_abs_ebd: boolean;
     has_esp: boolean; has_tpms: boolean; has_360_camera: boolean;
-    adas_level: number; ncap_safety_rating: number | null;
+    adas_level: string | null; ncap_safety_rating: string | null;
+    has_speedometer_digital?: boolean; has_odometer_digital?: boolean; has_voice_assist?: boolean;
+    has_stand_alarm?: boolean; has_low_battery_indicator?: boolean; has_clock?: boolean;
+    has_call_sms_alert?: boolean; has_tripmeter?: boolean; has_boot_storage?: boolean;
+    has_usb_charging_port?: boolean; has_start_type_self?: boolean; has_reverse_mode?: boolean;
+    has_boot_light?: boolean; has_tail_light?: boolean; has_break_light?: boolean;
+    has_turn_signal?: boolean; has_drls?: boolean;
     extra_features?: Array<{ label: string; value: string; kind?: "field" | "checkbox" }>;
   };
   showFeatures?: boolean;
@@ -68,6 +81,7 @@ const emptyListing: ListingForm = {
   launchdate: null, photo: "", gallery_images: [], colors: [],
   types: [], pros: [], cons: [], price_bracket: "",
   parent_id: "",
+  editors_emails: [],
 };
 
 const emptyVariant: VariantForm = {
@@ -84,11 +98,17 @@ const defaultFeatures = {
   seating_capacity: 5, front_suspension: "", rear_suspension: "",
   headlight_type: "LED", has_sunroof: false, has_climate_control: false,
   has_cruise_control: false, has_wireless_charger: false, has_keyless_entry: false,
-  screen_size_inches: null, speaker_count: 4,
+  screen_size_inches: null, speaker_count: "4",
   has_wireless_carplay_android_auto: false, has_connected_car_app: false,
-  has_ota_updates: false, airbag_count: 2, has_abs_ebd: true,
+  has_ota_updates: false, airbag_count: "2", has_abs_ebd: true,
   has_esp: false, has_tpms: false, has_360_camera: false,
-  adas_level: 0, ncap_safety_rating: null,
+  adas_level: "0", ncap_safety_rating: null,
+  has_speedometer_digital: false, has_odometer_digital: false, has_voice_assist: false,
+  has_stand_alarm: false, has_low_battery_indicator: false, has_clock: false,
+  has_call_sms_alert: false, has_tripmeter: false, has_boot_storage: false,
+  has_usb_charging_port: false, has_start_type_self: false, has_reverse_mode: false,
+  has_boot_light: false, has_tail_light: false, has_break_light: false,
+  has_turn_signal: false, has_drls: false,
 };
 
 export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supabaseUrl: string; supabaseAnonKey: string }) {
@@ -200,7 +220,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
   const startEdit = async (l: EvListingRow & { variants: EvVariantRow[] }) => {
     setEditing(l.id);
     setListingFormTab("core");
-    setForm({ slug: l.slug, title: l.title, brand: l.brand, body_type: l.body_type || "", commercial: l.commercial, has_baas: l.has_baas || false, launchdate: l.launchdate, photo: l.photo, gallery_images: l.gallery_images ?? [], colors: l.colors ?? [], types: l.types ?? [], pros: l.pros ?? [], cons: l.cons ?? [], price_bracket: (l as any).price_bracket || "", parent_id: "" });
+    setForm({ slug: l.slug, title: l.title, brand: l.brand, body_type: l.body_type || "", commercial: l.commercial, has_baas: l.has_baas || false, launchdate: l.launchdate, photo: l.photo, gallery_images: l.gallery_images ?? [], colors: l.colors ?? [], types: l.types ?? [], pros: l.pros ?? [], cons: l.cons ?? [], price_bracket: (l as any).price_bracket || "", parent_id: l.parent_id || "", editors_emails: l.editors_emails ?? [] });
     // Load features for each variant
     const variantIds = l.variants.map((v) => v.id);
     let featuresMap = new Map<string, any>();
@@ -230,18 +250,24 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
       .replace(/\s+/g, "-")
       .replace(/[^a-z0-9-]/g, "");
 
-    const { parent_id, ...formWithoutParent } = form;
+    const { parent_id, editors_emails, ...formWithoutParent } = form;
     let listingId = editing === "new" ? null : editing;
     let error;
 
-    const listingPayload = { 
+    let newEditors = editors_emails ? [...editors_emails] : [];
+    if (user?.email && !newEditors.includes(user.email)) {
+      newEditors.push(user.email);
+    }
+
+    const listingPayload: any = { 
       ...formWithoutParent, 
       parent_id: parent_id || null,
-      slug: sanitizedSlug, 
-      created_by_email: user.email 
+      slug: sanitizedSlug,
+      editors_emails: newEditors,
     };
 
     if (editing === "new") {
+      listingPayload.created_by_email = user.email; // Only set created_by on new
       const res = await supabase.from("evlistings").insert(listingPayload).select("id").single();
       error = res.error; listingId = res.data?.id ?? null;
     } else {
@@ -286,6 +312,24 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
           ground_clearance_mm: (v as any).ground_clearance_mm || null,
           boot_space_litres: (v as any).boot_space_litres || null,
           turning_radius_m: (v as any).turning_radius_m || null,
+          acceleration: v.acceleration || null,
+          battery_type: v.battery_type || null,
+          battery_portability: v.battery_portability || null,
+          charger_type: v.charger_type || null,
+          charger_output: v.charger_output || null,
+          charger_cost_included: v.charger_cost_included || null,
+          kerb_weight_kg: v.kerb_weight_kg || null,
+          seat_length_mm: v.seat_length_mm || null,
+          seat_height_mm: v.seat_height_mm || null,
+          braking_system: v.braking_system || null,
+          wheel_type: v.wheel_type || null,
+          front_wheel_size: v.front_wheel_size || null,
+          rear_wheel_size: v.rear_wheel_size || null,
+          front_suspension: v.front_suspension || null,
+          rear_suspension: v.rear_suspension || null,
+          chassis_type: v.chassis_type || null,
+          battery_warranty: v.battery_warranty || null,
+          motor_warranty: v.motor_warranty || null,
           custom_fields: (v as any).custom_fields || [],
           extra_motor: (v as any).extra_motor || [],
           extra_charging: (v as any).extra_charging || [],
@@ -326,7 +370,26 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this listing and all its variants?")) return;
-    await supabase.from("evlistings").delete().eq("id", id);
+    
+    // Find the listing to get its variants
+    const listing = listings.find((l) => l.id === id);
+    if (listing && listing.variants.length > 0) {
+      const variantIds = listing.variants.map((v) => v.id);
+      // Delete variant features first
+      await supabase.from("ev_variant_features").delete().in("variant_id", variantIds);
+      // Delete variants
+      await supabase.from("ev_variants").delete().eq("listing_id", id);
+    }
+    
+    // Delete energy comparisons
+    await supabase.from("ev_energy_comparisons").delete().eq("listing_id", id);
+    
+    // Finally delete the main listing
+    const { error } = await supabase.from("evlistings").delete().eq("id", id);
+    if (error) {
+      alert(`Failed to delete: ${error.message}`);
+    }
+    
     fetchListings();
   };
 
@@ -598,9 +661,13 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                       (v as any).custom_fields || [];
                     const specOptions: { value: string; label: string }[] = [
                       { value: "motor", label: "Motor & Engine" },
-                      { value: "charging", label: "Charging" },
-                      { value: "dimensions", label: "Capacity & Dimensions" },
-                      { value: "features", label: "Features & Safety" },
+                      { value: "charging", label: "Charging & Battery" },
+                      { value: "dimensions", label: "Dimension" },
+                      { value: "brakes_wheels", label: "Brakes & Wheels" },
+                      { value: "suspension", label: "Suspension & Chassis" },
+                      { value: "warranty", label: "Warranty" },
+                      { value: "features_safety", label: "Features & Safety" },
+                      { value: "lights", label: "Lights" },
                       ...customSections.map((s, idx) => ({
                         value: `custom-${idx}`,
                         label: s.title?.trim() || `Custom Section ${idx + 1}`,
@@ -729,11 +796,12 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      <MiniInput label="Max Power (bhp)" value={String(v.max_power_bhp ?? "")} onChange={(val) => updateVariantMotorField(i, "max_power_bhp", cleanNumber(val))} />
-                      <MiniInput label="Max Torque (Nm)" value={String(v.max_torque_nm ?? "")} onChange={(val) => updateVariantMotorField(i, "max_torque_nm", cleanNumber(val))} />
-                      <MiniInput label="Top Speed (km/h)" value={String(v.top_speed ?? "")} onChange={(val) => updateVariantMotorField(i, "top_speed", cleanNumber(val))} />
-                      <MiniInput label="Battery (kWh)" value={String(v.battery_capacity_kwh ?? "")} onChange={(val) => updateVariantMotorField(i, "battery_capacity_kwh", cleanNumber(val))} />
-                      <MiniInput label="Range (km)" value={String(v.driving_range_km ?? "")} onChange={(val) => updateVariantMotorField(i, "driving_range_km", cleanNumber(val))} />
+                      <MiniInput label="Max Power (bhp)" value={v.max_power_bhp ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], max_power_bhp: val }; setVariants(arr); }} />
+                      <MiniInput label="Max Torque (Nm)" value={v.max_torque_nm ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], max_torque_nm: val }; setVariants(arr); }} />
+                      <MiniInput label="Top Speed (km/h)" value={v.top_speed ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], top_speed: val }; setVariants(arr); }} />
+                      <MiniInput label="Range (km)" value={v.driving_range_km ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], driving_range_km: val }; setVariants(arr); }} />
+                      <MiniInput label="Acceleration" value={v.acceleration ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], acceleration: val }; setVariants(arr); }} />
+                      <MiniInput label="Motor Type / Drivetrain" value={v.features?.drivetrain ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, drivetrain: val } }; setVariants(arr); }} />
                     </div>
                     <VariantExtrasEditor
                       extras={normalizeExtras((v as any).extra_motor)}
@@ -799,10 +867,15 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      <MiniInput label="Charge Time (min)" value={String(v.charging_time_mins ?? "")} onChange={(val) => updateVariantChargingField(i, "charging_time_mins", cleanNumber(val))} />
-                      <MiniInput label="AC Charge (hrs)" value={String(v.charging_time_ac_hours ?? "")} onChange={(val) => updateVariantChargingField(i, "charging_time_ac_hours", cleanNumber(val))} />
-                      <MiniInput label="DC Charge (min)" value={String(v.charging_time_dc_mins ?? "")} onChange={(val) => updateVariantChargingField(i, "charging_time_dc_mins", cleanNumber(val))} />
-                      <MiniInput label="Max DC Rate (kW)" value={String(v.max_dc_charging_rate_kw ?? "")} onChange={(val) => updateVariantChargingField(i, "max_dc_charging_rate_kw", cleanNumber(val))} />
+                      <MiniInput label="Battery Capacity" value={v.battery_capacity_kwh ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], battery_capacity_kwh: val }; setVariants(arr); }} />
+                      <MiniInput label="AC Charge (hrs)" value={v.charging_time_ac_hours ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], charging_time_ac_hours: val }; setVariants(arr); }} />
+                      <MiniInput label="DC Charge (min)" value={v.charging_time_dc_mins ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], charging_time_dc_mins: val }; setVariants(arr); }} />
+                      <MiniInput label="Max DC Rate" value={v.max_dc_charging_rate_kw ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], max_dc_charging_rate_kw: val }; setVariants(arr); }} />
+                      <MiniInput label="Battery Type" value={v.battery_type ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], battery_type: val }; setVariants(arr); }} />
+                      <MiniInput label="Battery Portability" value={v.battery_portability ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], battery_portability: val }; setVariants(arr); }} />
+                      <MiniInput label="Charger Type" value={v.charger_type ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], charger_type: val }; setVariants(arr); }} />
+                      <MiniInput label="Charger Output" value={v.charger_output ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], charger_output: val }; setVariants(arr); }} />
+                      <MiniInput label="Charger Cost Included" value={v.charger_cost_included ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], charger_cost_included: val }; setVariants(arr); }} />
                     </div>
                     {((v as any).extra_charging || []).map((ef: any, ei: number) => (
                       <div key={ei} className="flex items-center gap-2 mt-1.5">
@@ -832,9 +905,9 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                     <div className="mt-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
                       <p className="text-[8px] font-bold uppercase text-emerald-600 mb-2">BAAS Details</p>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        <MiniInput label="BAAS Model Name" value={v.baas_model_name} onChange={(val) => updateVariantChargingField(i, "baas_model_name", val)} />
-                        <MiniInput label="₹/km Rate" value={String(v.baas_price_per_km ?? "")} onChange={(val) => updateVariantChargingField(i, "baas_price_per_km", cleanNumber(val))} />
-                        <MiniInput label="Upfront Price (₹)" value={String(v.baas_upfront_price ?? "")} onChange={(val) => updateVariantChargingField(i, "baas_upfront_price", cleanNumber(val))} />
+                        <MiniInput label="BAAS Model Name" value={v.baas_model_name} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], baas_model_name: val }; setVariants(arr); }} />
+                        <MiniInput label="₹/km Rate" value={v.baas_price_per_km ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], baas_price_per_km: val }; setVariants(arr); }} />
+                        <MiniInput label="Upfront Price (₹)" value={v.baas_upfront_price ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], baas_upfront_price: val }; setVariants(arr); }} />
                       </div>
                     </div>
                   )}
@@ -894,13 +967,15 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      <MiniInput label="Length (mm)" value={String((v as any).length_mm ?? "")} onChange={(val) => updateVariantDimensionsField(i, "length_mm", cleanNumber(val))} />
-                      <MiniInput label="Width (mm)" value={String((v as any).width_mm ?? "")} onChange={(val) => updateVariantDimensionsField(i, "width_mm", cleanNumber(val))} />
-                      <MiniInput label="Height (mm)" value={String((v as any).height_mm ?? "")} onChange={(val) => updateVariantDimensionsField(i, "height_mm", cleanNumber(val))} />
-                      <MiniInput label="Wheelbase (mm)" value={String((v as any).wheelbase_mm ?? "")} onChange={(val) => updateVariantDimensionsField(i, "wheelbase_mm", cleanNumber(val))} />
-                      <MiniInput label="Ground Clearance (mm)" value={String((v as any).ground_clearance_mm ?? "")} onChange={(val) => updateVariantDimensionsField(i, "ground_clearance_mm", cleanNumber(val))} />
-                      <MiniInput label="Boot Space (L)" value={String((v as any).boot_space_litres ?? "")} onChange={(val) => updateVariantDimensionsField(i, "boot_space_litres", cleanNumber(val))} />
-                      <MiniInput label="Min Turning Radius (m)" value={String((v as any).turning_radius_m ?? "")} onChange={(val) => updateVariantDimensionsField(i, "turning_radius_m", cleanNumber(val))} />
+                      <MiniInput label="Length (mm)" value={v.length_mm ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], length_mm: val }; setVariants(arr); }} />
+                      <MiniInput label="Width (mm)" value={v.width_mm ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], width_mm: val }; setVariants(arr); }} />
+                      <MiniInput label="Height (mm)" value={v.height_mm ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], height_mm: val }; setVariants(arr); }} />
+                      <MiniInput label="Ground Clearance (mm)" value={v.ground_clearance_mm ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], ground_clearance_mm: val }; setVariants(arr); }} />
+                      <MiniInput label="Wheelbase (mm)" value={v.wheelbase_mm ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], wheelbase_mm: val }; setVariants(arr); }} />
+                      <MiniInput label="Min Turning Radius" value={v.turning_radius_m ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], turning_radius_m: val }; setVariants(arr); }} />
+                      <MiniInput label="Kerb Weight (kg)" value={v.kerb_weight_kg ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], kerb_weight_kg: val }; setVariants(arr); }} />
+                      <MiniInput label="Seat Length (mm)" value={v.seat_length_mm ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], seat_length_mm: val }; setVariants(arr); }} />
+                      <MiniInput label="Seat Height (mm)" value={v.seat_height_mm ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], seat_height_mm: val }; setVariants(arr); }} />
                     </div>
                     <VariantExtrasEditor
                       extras={normalizeExtras((v as any).extra_dimensions)}
@@ -992,44 +1067,95 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   </div>
                   )}
 
-                  {resolvedSpec === "features" && (
+                  {resolvedSpec === "brakes_wheels" && (
                     <div className="mt-4 rounded-xl border-2 border-slate-300 bg-slate-200 p-4">
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
+                        <MiniInput label="Braking System" value={v.braking_system ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], braking_system: val }; setVariants(arr); }} />
+                        <MiniInput label="Wheel Type" value={v.wheel_type ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], wheel_type: val }; setVariants(arr); }} />
                         <label className="block"><span className="text-[8px] font-bold uppercase text-slate-500">Front Brakes</span><select value={v.features?.front_brakes || "Disc"} onChange={(e) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, front_brakes: e.target.value } }; setVariants(arr); }} className="mt-0.5 w-full rounded-md border border-slate-200 px-2 py-1.5 text-[11px] outline-none"><option value="Disc">Disc</option><option value="Ventilated Disc">Ventilated Disc</option><option value="Drum">Drum</option></select></label>
                         <label className="block"><span className="text-[8px] font-bold uppercase text-slate-400">Rear Brakes</span><select value={v.features?.rear_brakes || "Disc"} onChange={(e) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, rear_brakes: e.target.value } }; setVariants(arr); }} className="mt-0.5 w-full rounded-md border border-slate-200 px-2 py-1.5 text-[11px] outline-none"><option value="Disc">Disc</option><option value="Solid Disc">Solid Disc</option><option value="Drum">Drum</option></select></label>
-                        <label className="block"><span className="text-[8px] font-bold uppercase text-slate-400">Drivetrain</span><select value={v.features?.drivetrain || "FWD"} onChange={(e) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, drivetrain: e.target.value } }; setVariants(arr); }} className="mt-0.5 w-full rounded-md border border-slate-200 px-2 py-1.5 text-[11px] outline-none"><option value="FWD">FWD</option><option value="RWD">RWD</option><option value="AWD">AWD</option><option value="IPM">IPM</option></select></label>
-                        <MiniInput label="Seating" value={String(v.features?.seating_capacity ?? 5)} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, seating_capacity: cleanInt(val, 5) } }; setVariants(arr); }} />
-                        <MiniInput label="Front Suspension" value={(v.features as any)?.front_suspension ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, front_suspension: val } }; setVariants(arr); }} />
-                        <MiniInput label="Rear Suspension" value={(v.features as any)?.rear_suspension ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, rear_suspension: val } }; setVariants(arr); }} />
-                        <MiniInput label="Screen (inches)" value={String(v.features?.screen_size_inches ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, screen_size_inches: cleanNumber(val) } }; setVariants(arr); }} />
-                        <MiniInput label="Speakers" value={String(v.features?.speaker_count ?? 4)} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, speaker_count: cleanInt(val, 4) } }; setVariants(arr); }} />
-                        <MiniInput label="Airbags" value={String(v.features?.airbag_count ?? 2)} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, airbag_count: cleanInt(val, 2) } }; setVariants(arr); }} />
-                        <MiniInput label="ADAS Level (0/1/2)" value={String(v.features?.adas_level ?? 0)} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, adas_level: cleanInt(val, 0) } }; setVariants(arr); }} />
-                        <MiniInput label="NCAP Rating" value={String(v.features?.ncap_safety_rating ?? "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, ncap_safety_rating: cleanNumber(val) } }; setVariants(arr); }} />
-                        <label className="block"><span className="text-[8px] font-bold uppercase text-slate-400">Headlights</span><select value={v.features?.headlight_type || "LED"} onChange={(e) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, headlight_type: e.target.value } }; setVariants(arr); }} className="mt-0.5 w-full rounded-md border border-slate-200 px-2 py-1.5 text-[11px] outline-none"><option value="Halogen">Halogen</option><option value="LED">LED</option><option value="Projector LED">Projector LED</option></select></label>
+                        <MiniInput label="Front Wheel Size" value={v.front_wheel_size ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], front_wheel_size: val }; setVariants(arr); }} />
+                        <MiniInput label="Rear Wheel Size" value={v.rear_wheel_size ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], rear_wheel_size: val }; setVariants(arr); }} />
                       </div>
-                      <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-                        {([["has_sunroof","Sunroof"],["has_climate_control","Climate Control"],["has_cruise_control","Cruise Control"],["has_wireless_charger","Wireless Charger"],["has_keyless_entry","Keyless Entry"],["has_wireless_carplay_android_auto","Wireless CarPlay/AA"],["has_connected_car_app","Connected Car App"],["has_ota_updates","OTA Updates"],["has_abs_ebd","ABS+EBD"],["has_esp","ESP"],["has_tpms","TPMS"],["has_360_camera","360° Camera"]] as [string,string][]).map(([key, label]) => (
-                          <label key={key} className="flex items-center gap-1.5 text-[10px] text-slate-600">
+                    </div>
+                  )}
+
+                  {resolvedSpec === "suspension" && (
+                    <div className="mt-4 rounded-xl border-2 border-slate-300 bg-slate-200 p-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
+                        <MiniInput label="Front Suspension" value={v.front_suspension ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], front_suspension: val }; setVariants(arr); }} />
+                        <MiniInput label="Rear Suspension" value={v.rear_suspension ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], rear_suspension: val }; setVariants(arr); }} />
+                        <MiniInput label="Chassis Type" value={v.chassis_type ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], chassis_type: val }; setVariants(arr); }} />
+                      </div>
+                    </div>
+                  )}
+
+                  {resolvedSpec === "warranty" && (
+                    <div className="mt-4 rounded-xl border-2 border-slate-300 bg-slate-200 p-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
+                        <MiniInput label="Battery Warranty" value={v.battery_warranty ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], battery_warranty: val }; setVariants(arr); }} />
+                        <MiniInput label="Motor Warranty" value={v.motor_warranty ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], motor_warranty: val }; setVariants(arr); }} />
+                      </div>
+                    </div>
+                  )}
+
+                  {resolvedSpec === "features_safety" && (
+                    <div className="mt-4 rounded-xl border-2 border-slate-300 bg-slate-200 p-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
+                        <MiniInput label="Screen Size (inches)" value={v.features?.screen_size_inches ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, screen_size_inches: val } }; setVariants(arr); }} />
+                      </div>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-3">
+                        {([
+                          ["has_speedometer_digital", "Speedometer digital"],
+                          ["has_odometer_digital", "Odometer digital"],
+                          ["has_voice_assist", "Voice assist"],
+                          ["has_stand_alarm", "Stand alarm"],
+                          ["has_low_battery_indicator", "Low battery indicator"],
+                          ["has_clock", "Clock"],
+                          ["has_call_sms_alert", "Call/Sms Alert yes"],
+                          ["has_tripmeter", "Tripmeter"],
+                          ["has_boot_storage", "Boot Storage"],
+                          ["has_usb_charging_port", "USB charging port"],
+                          ["has_keyless_lock_unlock", "Keyless lock/unlock"],
+                          ["has_cruise_control", "Cruise control"],
+                          ["has_start_type_self", "Start type Self"],
+                          ["has_reverse_mode", "Reverse mode"],
+                          ["has_abs_ebd", "ABS+EBD"],
+                          ["has_esp", "ESP"],
+                          ["has_tpms", "TPMS"],
+                          ["has_360_camera", "360° Camera"],
+                        ] as [string,string][]).map(([key, label]) => (
+                          <label key={key} className="flex items-center gap-1.5 text-[10px] text-slate-600 w-full sm:w-[48%] lg:w-[31%]">
                             <input type="checkbox" checked={!!(v.features as any)?.[key]} onChange={(e) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, [key]: e.target.checked } }; setVariants(arr); }} />
                             {label}
                           </label>
                         ))}
                       </div>
-                      {/* Extra Features */}
                       <div className="mt-3 pt-3 border-t border-slate-200">
-                        <div className="flex items-center justify-between mb-2">
-                          <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Extra Features</p>
-                        </div>
-                        <VariantExtrasEditor
-                          extras={normalizeExtras((v.features as any)?.extra_features)}
-                          inputBorder="border-slate-300"
-                          onChange={(next) => {
-                            const arr = [...variants];
-                            arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, extra_features: next } };
-                            setVariants(arr);
-                          }}
-                        />
+                        <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Extra Features</p>
+                        <VariantExtrasEditor extras={normalizeExtras((v.features as any)?.extra_features)} inputBorder="border-slate-300" onChange={(next) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, extra_features: next } }; setVariants(arr); }} />
+                      </div>
+                    </div>
+                  )}
+
+                  {resolvedSpec === "lights" && (
+                    <div className="mt-4 rounded-xl border-2 border-slate-300 bg-slate-200 p-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
+                        <label className="block"><span className="text-[8px] font-bold uppercase text-slate-400">Headlights</span><select value={v.features?.headlight_type || "LED"} onChange={(e) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, headlight_type: e.target.value } }; setVariants(arr); }} className="mt-0.5 w-full rounded-md border border-slate-200 px-2 py-1.5 text-[11px] outline-none"><option value="Halogen">Halogen</option><option value="LED">LED</option><option value="Projector LED">Projector LED</option></select></label>
+                      </div>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-3">
+                        {([
+                          ["has_boot_light", "Boot light"],
+                          ["has_tail_light", "Tail Light"],
+                          ["has_break_light", "Break Light"],
+                          ["has_turn_signal", "Turn signal"],
+                          ["has_drls", "DRLs(Daytime Running Lights)"],
+                        ] as [string,string][]).map(([key, label]) => (
+                          <label key={key} className="flex items-center gap-1.5 text-[10px] text-slate-600 w-full sm:w-[48%] lg:w-[31%]">
+                            <input type="checkbox" checked={!!(v.features as any)?.[key]} onChange={(e) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, [key]: e.target.checked } }; setVariants(arr); }} />
+                            {label}
+                          </label>
+                        ))}
                       </div>
                     </div>
                   )}
@@ -1099,18 +1225,17 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-slate-900 truncate">{l.title}</p>
                     <p className="text-xs text-slate-500">{l.brand} · {l.types?.[0]} · {l.variants.length} variant{l.variants.length !== 1 ? "s" : ""}</p>
-                    <p className="text-[10px] text-slate-400">by {(l as any).created_by_email || "Team member"}</p>
+                    <p className="text-[10px] text-slate-400">
+                      Created by: {(l as any).created_by_email || "Team member"}
+                      {l.editors_emails && l.editors_emails.length > 0 && ` | Edited by: ${l.editors_emails.join(', ')}`}
+                    </p>
                   </div>
                   <button onClick={() => setExpandedListing(expandedListing === l.id ? null : l.id)} className="text-slate-400 hover:text-slate-600">
                     {expandedListing === l.id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                   </button>
                   <button onClick={() => startAddVariant(l)} className="text-emerald-600 hover:text-emerald-700 text-xs font-bold">Add Variant</button>
-                  {(l as any).created_by === user.id && (
-                    <>
-                      <button onClick={() => startEdit(l)} className="text-sky-600 hover:text-sky-700 text-xs font-bold">Edit</button>
-                      <button onClick={() => handleDelete(l.id)} className="text-rose-500 hover:text-rose-600 text-xs font-bold">Delete</button>
-                    </>
-                  )}
+                  <button onClick={() => startEdit(l)} className="text-sky-600 hover:text-sky-700 text-xs font-bold">Edit</button>
+                  <button onClick={() => handleDelete(l.id)} className="text-rose-500 hover:text-rose-600 text-xs font-bold">Delete</button>
                 </div>
                 {expandedListing === l.id && l.variants.length > 0 && (
                   <div className="border-t border-slate-100 px-4 py-3 bg-slate-50">

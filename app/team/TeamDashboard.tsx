@@ -148,7 +148,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
   const [sameForAllCharging, setSameForAllCharging] = useState(false);
   const [sameForAllDimensions, setSameForAllDimensions] = useState(false);
 
-  useEffect(() => { supabase.auth.getUser().then(({ data }) => { if (data.user) setUser(data.user); }); }, []);
+  useEffect(() => { supabase.auth.getUser().then(({ data }: any) => { if (data.user) setUser(data.user); }); }, []);
   useEffect(() => { if (user) fetchListings(); }, [user]);
 
   const updateVariantMotorField = (idx: number, fieldName: string, value: any) => {

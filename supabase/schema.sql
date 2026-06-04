@@ -28,6 +28,7 @@ create table if not exists public.evlistings (
   cons text[] default '{}',
   has_baas boolean default false,
   price_bracket text default '',
+  parent_id uuid references public.evlistings(id) on delete set null,
   created_by uuid references auth.users(id) default auth.uid(),
   created_by_email text default '',
   created_at timestamptz default now(),

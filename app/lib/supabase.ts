@@ -34,6 +34,7 @@ export type EvListingRow = {
   cons: string[];
   has_baas: boolean;
   price_bracket?: string;
+  parent_id?: string | null;
   created_at: string;
   updated_at: string;
 };

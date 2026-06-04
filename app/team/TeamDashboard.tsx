@@ -223,45 +223,39 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
   const handleSave = async () => {
     setSaving(true);
     // Sanitize slug by replacing spaces with '-' and removing non-alphanumeric chars
-    const sanitizedSlug = (form.slug || form.title)
+    // Fallback to timestamp if both are empty to avoid unique constraints
+    const baseSlug = form.slug || form.title || `listing-${Date.now()}`;
+    const sanitizedSlug = baseSlug
       .toLowerCase()
       .replace(/\s+/g, "-")
       .replace(/[^a-z0-9-]/g, "");
 
     const { parent_id, ...formWithoutParent } = form;
-    let listingId = parent_id || (editing === "new" ? null : editing);
+    let listingId = editing === "new" ? null : editing;
     let error;
 
-    if (!parent_id) {
-      // Normal flow: save listing
-      const listingPayload = { 
-        ...formWithoutParent, 
-        slug: sanitizedSlug, 
-        created_by_email: user.email 
-      };
-      if (editing === "new") {
-        const res = await supabase.from("evlistings").insert(listingPayload).select("id").single();
-        error = res.error; listingId = res.data?.id ?? null;
-      } else {
-        const res = await supabase.from("evlistings").update(listingPayload).eq("id", editing);
-        error = res.error;
-      }
-      if (error) { alert(`Save failed: ${error.message}`); setSaving(false); return; }
-    } else {
-      // If we are moving variants from an existing listing to a parent, delete the old listing
-      if (editing && editing !== "new") {
-        const res = await supabase.from("evlistings").delete().eq("id", editing);
-        if (res.error) { alert(`Failed to delete old listing: ${res.error.message}`); setSaving(false); return; }
-      }
-    }
+    const listingPayload = { 
+      ...formWithoutParent, 
+      parent_id: parent_id || null,
+      slug: sanitizedSlug, 
+      created_by_email: user.email 
+    };
 
-    // Save variants under listingId (which is either the created/updated listing, or the parent_id)
+    if (editing === "new") {
+      const res = await supabase.from("evlistings").insert(listingPayload).select("id").single();
+      error = res.error; listingId = res.data?.id ?? null;
+    } else {
+      const res = await supabase.from("evlistings").update(listingPayload).eq("id", editing);
+      error = res.error;
+    }
+    
+    if (error) { alert(`Save failed: ${error.message}`); setSaving(false); return; }
+
+    // Save variants under listingId
     if (listingId) {
-      // Delete removed variants only if it wasn't a parent merge
-      if (!parent_id) {
-        const existingIds = variants.filter((v) => v.id).map((v) => v.id!);
-        await supabase.from("ev_variants").delete().eq("listing_id", listingId).not("id", "in", `(${existingIds.join(",")})`);
-      }
+      // Delete removed variants
+      const existingIds = variants.filter((v) => v.id).map((v) => v.id!);
+      await supabase.from("ev_variants").delete().eq("listing_id", listingId).not("id", "in", `(${existingIds.join(",")})`);
 
       for (const v of variants) {
         const features = (v as any).features;
@@ -463,7 +457,31 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
               </label>
               <label className="block">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Parent Model (Optional)</span>
-                <select value={form.parent_id || ""} onChange={(e) => setForm({ ...form, parent_id: e.target.value })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none">
+                <select value={form.parent_id || ""} onChange={(e) => {
+                  const newParentId = e.target.value;
+                  if (newParentId) {
+                    const p = listings.find((l) => l.id === newParentId);
+                    if (p) {
+                      setForm({
+                        ...form,
+                        parent_id: newParentId,
+                        brand: p.brand,
+                        body_type: p.body_type || "",
+                        commercial: p.commercial,
+                        photo: p.photo,
+                        gallery_images: p.gallery_images ?? [],
+                        colors: p.colors ?? [],
+                        types: p.types ?? [],
+                        pros: p.pros ?? [],
+                        cons: p.cons ?? [],
+                        price_bracket: (p as any).price_bracket || "",
+                        has_baas: p.has_baas || false,
+                      });
+                      return;
+                    }
+                  }
+                  setForm({ ...form, parent_id: newParentId });
+                }} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none">
                   <option value="">None (Standalone/Parent)</option>
                   {listings.filter((l) => l.id !== editing).map((l) => (
                     <option key={l.id} value={l.id}>{l.brand} - {l.title} ({l.slug})</option>

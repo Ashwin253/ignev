@@ -158,7 +158,7 @@ export type EvListing = {
   offers: EVOffer[];
   baas: boolean;              // Added for BAAS
   // Variant details from Supabase
-  variantDimensions?: Array<{ variantName: string; length_mm?: number; width_mm?: number; height_mm?: number; wheelbase_mm?: number; ground_clearance_mm?: number; boot_space_litres?: number; turning_radius_m?: number; extraSpecs?: Array<{ label: string; value: string; kind?: "field" | "checkbox" }> }>;
+  variantDimensions?: Array<{ variantName: string; length_mm?: number; width_mm?: number; height_mm?: number; wheelbase_mm?: number; ground_clearance_mm?: number; boot_space_litres?: number; turning_radius_m?: number; kerb_weight_kg?: number; seat_length_mm?: number; seat_height_mm?: number; extraSpecs?: Array<{ label: string; value: string; kind?: "field" | "checkbox" }> }>;
   variantFeatures?: Array<{ variantName: string; [key: string]: any }>;
   variantExtraSections?: Array<{
     variantName: string;

@@ -54,6 +54,8 @@ export type VariantForm = {
   acceleration?: string | null; battery_type?: string | null; battery_portability?: string | null;
   charger_type?: string | null; charger_output?: string | null; charger_cost_included?: string | null;
   kerb_weight_kg?: string | null; seat_length_mm?: string | null; seat_height_mm?: string | null;
+  length_mm?: string | null; width_mm?: string | null; height_mm?: string | null;
+  ground_clearance_mm?: string | null; wheelbase_mm?: string | null; turning_radius_m?: string | null;
   braking_system?: string | null; wheel_type?: string | null; front_wheel_size?: string | null; rear_wheel_size?: string | null;
   front_suspension?: string | null; rear_suspension?: string | null; chassis_type?: string | null;
   battery_warranty?: string | null; motor_warranty?: string | null;
@@ -99,7 +101,7 @@ const emptyVariant: VariantForm = {
 
 const defaultFeatures = {
   front_brakes: "Disc", rear_brakes: "Disc", drivetrain: "FWD",
-  seating_capacity: 5, front_suspension: "", rear_suspension: "",
+  seating_capacity: "5", front_suspension: "", rear_suspension: "",
   headlight_type: "LED", has_sunroof: false, has_climate_control: false,
   has_cruise_control: false, has_wireless_charger: false, has_keyless_entry: false,
   screen_size_inches: null, speaker_count: "4",
@@ -1235,7 +1237,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                     <p className="text-xs text-slate-500">{l.brand} · {l.types?.[0]} · {l.variants.length} variant{l.variants.length !== 1 ? "s" : ""}</p>
                     <p className="text-[10px] text-slate-400">
                       Created by: {(l as any).created_by_email || "Team member"}
-                      {l.editors_emails && l.editors_emails.length > 0 && ` | Edited by: ${l.editors_emails.join(', ')}`}
+                      {l.editors_emails && l.editors_emails.filter((e) => e !== (l as any).created_by_email).length > 0 && ` | Edited by: ${l.editors_emails.filter((e) => e !== (l as any).created_by_email).join(', ')}`}
                     </p>
                   </div>
                   <button onClick={() => setExpandedListing(expandedListing === l.id ? null : l.id)} className="text-slate-400 hover:text-slate-600">

@@ -61,6 +61,13 @@ export type EvVariantRow = {
   charging_time_ac_hours: string | null;
   charging_time_dc_mins: string | null;
   max_dc_charging_rate_kw: string | null;
+  length_mm?: number | null;
+  width_mm?: number | null;
+  height_mm?: number | null;
+  wheelbase_mm?: number | null;
+  ground_clearance_mm?: number | null;
+  boot_space_litres?: number | null;
+  turning_radius_m?: number | null;
   acceleration?: string | null;
   battery_type?: string | null;
   battery_portability?: string | null;

@@ -86,13 +86,16 @@ export function chargingSpecCheckboxes(spec: ChargingSpec): string[] {
 export function dimensionSpecRows(dim: NonNullable<EvListing["variantDimensions"]>[number]): SpecPair[] {
   const extras = normalizeExtras(dim.extraSpecs);
   return [
-    dim.length_mm && dim.width_mm && dim.height_mm
-      ? { label: "L × W × H", value: `${dim.length_mm} × ${dim.width_mm} × ${dim.height_mm} mm` }
+    dim.length_mm || dim.width_mm || dim.height_mm
+      ? { label: "L × W × H", value: `${dim.length_mm || "-"} × ${dim.width_mm || "-"} × ${dim.height_mm || "-"} mm` }
       : null,
     dim.wheelbase_mm ? { label: "Wheelbase", value: `${dim.wheelbase_mm} mm` } : null,
     dim.ground_clearance_mm ? { label: "Ground Clearance", value: `${dim.ground_clearance_mm} mm` } : null,
     dim.boot_space_litres ? { label: "Boot Space", value: `${dim.boot_space_litres} L` } : null,
     dim.turning_radius_m ? { label: "Min Turning Radius", value: `${dim.turning_radius_m} m` } : null,
+    dim.kerb_weight_kg ? { label: "Kerb Weight", value: `${dim.kerb_weight_kg} kg` } : null,
+    dim.seat_length_mm ? { label: "Seat Length", value: `${dim.seat_length_mm} mm` } : null,
+    dim.seat_height_mm ? { label: "Seat Height", value: `${dim.seat_height_mm} mm` } : null,
     ...rowsFromExtras(extras),
   ].filter((r): r is SpecPair => r !== null);
 }

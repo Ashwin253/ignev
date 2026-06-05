@@ -28,6 +28,14 @@ const cleanFloat = (val: string, fallback: number = 0): number => {
   return isNaN(num) ? fallback : num;
 };
 
+// Auto-convert to lakhs if someone enters full amount (e.g. 1500000 → 15)
+const cleanPriceLakh = (val: string): number => {
+  if (!val || val.trim() === "") return 0;
+  const num = parseFloat(val.replace(/,/g, ""));
+  if (isNaN(num)) return 0;
+  return num > 1000 ? parseFloat((num / 100000).toFixed(2)) : num;
+};
+
 type ListingForm = {
   slug: string; title: string; brand: string; body_type: string;
   commercial: boolean; has_baas: boolean; launchdate: string | null; photo: string;
@@ -134,6 +142,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
   const [saving, setSaving] = useState(false);
   const [expandedListing, setExpandedListing] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<"listings" | "leads" | "prices" | "analytics">("listings");
+  const [selectedModelId, setSelectedModelId] = useState<string>("");
   const [energyComps, setEnergyComps] = useState<Array<{ id?: string; category: string; name: string; fuel_type: string; mileage: string; fuel_price: string; model_used: string; brand: string }>>([]);
   const [variantSpecSection, setVariantSpecSection] = useState<Record<number, string>>({});
   const [listingFormTab, setListingFormTab] = useState<"core" | "variants" | "energy">("core");
@@ -482,6 +491,56 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
 
         {activeSection === "listings" && (<>
 
+        {/* Quick Add Variant — select model then add variant */}
+        {!editing && listings.length > 0 && (() => {
+          const selectedModel = listings.find((l) => l.id === selectedModelId);
+          return (
+            <div className="mb-6 rounded-2xl border border-sky-200 bg-sky-50 p-5">
+              <p className="text-sm font-bold text-sky-700 mb-3">Manage Variants</p>
+              <div className="flex items-center gap-3 mb-4">
+                <select
+                  className="flex-1 rounded-xl border border-sky-200 bg-white px-4 py-3 text-sm font-bold text-slate-800 outline-none cursor-pointer"
+                  value={selectedModelId}
+                  onChange={(e) => setSelectedModelId(e.target.value)}
+                >
+                  <option value="">Select a model...</option>
+                  {listings.map((l) => (
+                    <option key={l.id} value={l.id}>{l.brand} {l.title} ({l.variants.length} variants)</option>
+                  ))}
+                </select>
+                {selectedModel && (
+                  <button onClick={() => { startEdit(selectedModel); setTimeout(() => document.getElementById("section-variants")?.scrollIntoView({ behavior: "smooth" }), 200); }}
+                    className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-3 text-sm font-bold text-white hover:bg-sky-700 shrink-0">
+                    <Plus size={14} /> Add Variant
+                  </button>
+                )}
+              </div>
+              {/* Variants list for selected model */}
+              {selectedModel && selectedModel.variants.length > 0 && (
+                <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+                  {selectedModel.variants.map((v) => (
+                    <div key={v.id} className="flex items-center justify-between px-4 py-3 border-b border-slate-100 last:border-0">
+                      <div>
+                        <p className="text-sm font-bold text-slate-800">{v.variant_name}</p>
+                        <p className="text-[10px] text-slate-500">₹{v.price}L · {v.driving_range_km}km · {v.battery_capacity_kwh}kWh {v.has_baas && <span className="text-emerald-600 font-bold">· BAAS</span>}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={() => { startEdit(selectedModel); setTimeout(() => document.getElementById("section-variants")?.scrollIntoView({ behavior: "smooth" }), 200); }}
+                          className="text-xs font-bold text-sky-600 hover:text-sky-700">Edit</button>
+                        <button onClick={async () => { if (!confirm(`Delete variant "${v.variant_name}"?`)) return; await supabase.from("ev_variants").delete().eq("id", v.id); fetchListings(); }}
+                          className="text-xs font-bold text-rose-500 hover:text-rose-600">Delete</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {selectedModel && selectedModel.variants.length === 0 && (
+                <p className="text-xs text-slate-400 text-center py-4">No variants yet. Click &quot;Add Variant&quot; to add one.</p>
+              )}
+            </div>
+          );
+        })()}
+
         {/* Edit Form */}
         {editing && (
           <div className="mb-8 rounded-2xl border-2 border-slate-300 bg-slate-50 p-6 shadow-sm text-sm">
@@ -702,7 +761,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                     <MiniInput label="Version/Refresh" value={v.version_name || ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], version_name: val }; setVariants(arr); }} />
                     <MiniInput label="Launch Date" value={v.launch_date || ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], launch_date: val }; setVariants(arr); }} />
                     <MiniInput label="Model Year" value={String(v.model_year)} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], model_year: cleanInt(val, 2026) }; setVariants(arr); }} />
-                    <MiniInput label="Price (Lakh)" value={String(v.price || "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], price: cleanFloat(val, 0) }; setVariants(arr); }} />
+                    <MiniInput label="Price (Lakh)" value={String(v.price || "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], price: cleanPriceLakh(val) }; setVariants(arr); }} />
                   </div>
 
                   {(() => {
@@ -854,7 +913,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                       <MiniInput label="Top Speed (km/h)" value={v.top_speed ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], top_speed: val }; setVariants(arr); }} />
                       <MiniInput label="Range (km)" value={v.driving_range_km ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], driving_range_km: val }; setVariants(arr); }} />
                       <MiniInput label="Acceleration" value={v.acceleration ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], acceleration: val }; setVariants(arr); }} />
-                      <MiniInput label="Motor Type / Drivetrain" value={v.features?.drivetrain ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, drivetrain: val } }; setVariants(arr); }} />
+                      <label className="block"><span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Motor Type / Drivetrain</span><select value={v.features?.drivetrain ?? "FWD"} onChange={(e) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, drivetrain: e.target.value } }; setVariants(arr); }} className="mt-0.5 w-full rounded-md border border-slate-200 px-2.5 py-2 text-sm outline-none"><option value="FWD">FWD</option><option value="RWD">RWD</option><option value="AWD">AWD</option><option value="IPM">IPM</option><option value="PMSM">PMSM</option><option value="Hub Motor">Hub Motor</option></select></label>
                     </div>
                     <VariantExtrasEditor
                       extras={normalizeExtras((v as any).extra_motor)}
@@ -1283,49 +1342,9 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
           </div>
         )}
 
-        {/* Listings Table */}
-        {loading ? <div className="text-center py-12 text-slate-400">Loading...</div> : (
-          <div className="space-y-3">
-            {listings.map((l) => (
-              <div key={l.id} className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
-                <div className="flex items-center gap-4 px-4 py-3">
-                  {l.photo && <img src={l.photo} alt="" className="h-12 w-16 rounded-lg object-cover border shrink-0" />}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-slate-900 truncate">{l.title}</p>
-                    <p className="text-xs text-slate-500">{l.brand} · {l.types?.[0]} · {l.variants.length} variant{l.variants.length !== 1 ? "s" : ""}</p>
-                    <p className="text-[10px] text-slate-400">
-                      Created by: {(l as any).created_by_email || "Team member"}
-                      {l.editors_emails && l.editors_emails.filter((e) => e !== (l as any).created_by_email).length > 0 && ` | Edited by: ${l.editors_emails.filter((e) => e !== (l as any).created_by_email).join(', ')}`}
-                    </p>
-                  </div>
-                  <button onClick={() => setExpandedListing(expandedListing === l.id ? null : l.id)} className="text-slate-400 hover:text-slate-600">
-                    {expandedListing === l.id ?<p className="text-emerald-600 hover:text-emerald-700 text-xs font-bold">Hide Variants</p>  : <p className="text-cyan-500 hover:text-emerald-700 text-xs font-bold">Show Variants</p>}
-                  </button>
-                  <button onClick={() => startAddVariant(l)} className="text-emerald-600 hover:text-emerald-700 text-xs font-bold">Add Variant</button>
-                  <button onClick={() => startEdit(l)} className="text-sky-600 hover:text-sky-700 text-xs font-bold">Edit</button>
-                  <button onClick={() => handleDelete(l.id)} className="text-rose-500 hover:text-rose-600 text-xs font-bold">Delete</button>
-                </div>
-                {expandedListing === l.id && l.variants.length > 0 && (
-                  <div className="border-t border-slate-100 px-4 py-3 bg-slate-50">
-                    <p className="text-[10px] font-bold uppercase text-slate-400 mb-2">Variants</p>
-                    <div className="space-y-1">
-                      {l.variants.map((v) => (
-                        <div key={v.id} className="flex items-center gap-3 text-xs text-slate-600">
-                          <span className="font-semibold text-slate-800">{v.variant_name} <span className="text-[10px] font-normal text-slate-400">({v.slug})</span></span>
-                          <span>₹{v.price}L</span>
-                          <span>{v.driving_range_km}km</span>
-                          <span>{v.battery_capacity_kwh}kWh</span>
-                          {v.has_baas && <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold text-emerald-700">BAAS</span>}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-            {listings.length === 0 && <div className="text-center py-12 text-slate-400">No listings yet. Add your first one!</div>}
-          </div>
-        )}
+        {/* Old listings table — hidden, using "Manage Variants" dropdown above */}
+        {loading && <div className="text-center py-12 text-slate-400">Loading...</div>}
+        {!loading && listings.length === 0 && !editing && <div className="text-center py-12 text-slate-400">No listings yet. Add your first one!</div>}
         </>)}
       </div>
     </div>

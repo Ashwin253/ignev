@@ -85,6 +85,7 @@ export type VariantForm = {
     has_usb_charging_port?: boolean; has_start_type_self?: boolean; has_reverse_mode?: boolean;
     has_boot_light?: boolean; has_tail_light?: boolean; has_break_light?: boolean;
     has_turn_signal?: boolean; has_drls?: boolean;
+    boot_storage_litres?: string;
     extra_features?: Array<{ label: string; value: string; kind?: "field" | "checkbox" }>;
   };
   showFeatures?: boolean;
@@ -519,6 +520,10 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                       className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 shrink-0">
                       Edit Model
                     </button>
+                    <button onClick={() => { if (confirm(`Delete "${selectedModel.brand} ${selectedModel.title}" and all its variants?`)) { handleDelete(selectedModel.id); setSelectedModelId(""); } }}
+                      className="inline-flex items-center gap-2 rounded-xl border border-rose-200 bg-white px-4 py-3 text-sm font-bold text-rose-500 hover:bg-rose-50 shrink-0">
+                      <Trash2 size={14} /> Delete
+                    </button>
                   </>
                 )}
               </div>
@@ -806,6 +811,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                       { value: "warranty", label: "Warranty" },
                       { value: "features_safety", label: "Features & Safety" },
                       { value: "lights", label: "Lights" },
+                      { value: "modes", label: "Driving Modes" },
                       ...customSections.map((s, idx) => ({
                         value: `custom-${idx}`,
                         label: s.title?.trim() || `Custom Section ${idx + 1}`,
@@ -1241,6 +1247,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                     <div className="mt-4 rounded-xl border-2 border-slate-300 bg-slate-200 p-4">
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
                         <MiniInput label="Screen Size (inches)" value={v.features?.screen_size_inches ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, screen_size_inches: val } }; setVariants(arr); }} />
+                        <MiniInput label="Boot Storage (L)" value={(v.features as any)?.boot_storage_litres ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, boot_storage_litres: val } }; setVariants(arr); }} />
                       </div>
                       <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-3">
                         {([
@@ -1252,16 +1259,16 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                           ["has_clock", "Clock"],
                           ["has_call_sms_alert", "Call/Sms Alert"],
                           ["has_tripmeter", "Tripmeter"],
-                          ["has_boot_storage", "Boot Storage"],
                           ["has_usb_charging_port", "USB charging"],
                           ["has_keyless_lock_unlock", "Keyless"],
                           ["has_cruise_control", "Cruise control"],
                           ["has_start_type_self", "Start type Self"],
-                          ["has_reverse_mode", "Reverse mode"],
                           ["has_abs_ebd", "ABS+EBD"],
                           ["has_esp", "ESP"],
                           ["has_tpms", "TPMS"],
                           ["has_360_camera", "360° Camera"],
+                          ["has_gps", "GPS Connectivity"],
+                          ["has_navigation", "Navigation"],
                         ] as [string,string][]).map(([key, label]) => (
                           <label key={key} className="flex items-center gap-1.5 text-[10px] text-slate-600 w-full sm:w-[48%] lg:w-[31%]">
                             <input type="checkbox" checked={!!(v.features as any)?.[key]} onChange={(e) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, [key]: e.target.checked } }; setVariants(arr); }} />
@@ -1295,33 +1302,35 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                           </label>
                         ))}
                       </div>
-                      {/* Driving Modes */}
-                      <div className="mt-4 pt-3 border-t border-slate-200">
-                        <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Driving Modes</p>
-                        <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-                          {([
-                            ["has_mode_eco", "Eco"],
-                            ["has_mode_normal", "Normal"],
-                            ["has_mode_sports", "Sports"],
-                            ["has_mode_hyper", "Hyper"],
-                            ["has_mode_cruise", "Cruise"],
-                            ["has_mode_reverse", "Reverse"],
-                          ] as [string,string][]).map(([key, label]) => (
-                            <label key={key} className="flex items-center gap-1.5 text-[10px] text-slate-600">
-                              <input type="checkbox" checked={!!(v.features as any)?.[key]} onChange={(e) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, [key]: e.target.checked } }; setVariants(arr); }} />
-                              {label}
-                            </label>
-                          ))}
-                        </div>
+                    </div>
+                  )}
+
+                  {resolvedSpec === "modes" && (
+                    <div className="mt-4 rounded-xl border-2 border-slate-300 bg-slate-200 p-4">
+                      <p className="text-xs font-bold uppercase tracking-wider text-slate-600 mb-3">Driving Modes</p>
+                      <div className="flex flex-wrap gap-x-4 gap-y-2">
+                        {([
+                          ["has_mode_eco", "Eco"],
+                          ["has_mode_normal", "Normal"],
+                          ["has_mode_sports", "Sports"],
+                          ["has_mode_hyper", "Hyper"],
+                          ["has_mode_cruise", "Cruise"],
+                          ["has_mode_reverse", "Reverse"],
+                        ] as [string,string][]).map(([key, label]) => (
+                          <label key={key} className="flex items-center gap-1.5 text-sm text-slate-600">
+                            <input type="checkbox" checked={!!(v.features as any)?.[key]} onChange={(e) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, [key]: e.target.checked } }; setVariants(arr); }} />
+                            {label}
+                          </label>
+                        ))}
                       </div>
                     </div>
                   )}
                   </>
-                    );
+                  );
                   })()}
                   </div>
                 </div>
-                )
+              )
               ))}
             </div>
             )}

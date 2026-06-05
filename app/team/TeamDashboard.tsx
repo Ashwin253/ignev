@@ -938,7 +938,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                       <MiniInput label="Max Torque (Nm)" value={v.max_torque_nm ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], max_torque_nm: val }; setVariants(arr); }} />
                       <MiniInput label="Top Speed (km/h)" value={v.top_speed ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], top_speed: val }; setVariants(arr); }} />
                       <MiniInput label="Range (km)" value={v.driving_range_km ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], driving_range_km: val }; setVariants(arr); }} />
-                      <MiniInput label="Acceleration" value={v.acceleration ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], acceleration: val }; setVariants(arr); }} />
+                      <MiniInput label="Acceleration(sec)" value={v.acceleration ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], acceleration: val }; setVariants(arr); }} />
                       <label className="block"><span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Motor Type / Drivetrain</span><select value={v.features?.drivetrain ?? "FWD"} onChange={(e) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, drivetrain: e.target.value } }; setVariants(arr); }} className="mt-0.5 w-full rounded-md border border-slate-200 px-2.5 py-2 text-sm outline-none"><option value="FWD">FWD</option><option value="RWD">RWD</option><option value="AWD">AWD</option><option value="IPM">IPM</option><option value="PMSM">PMSM</option><option value="Hub Motor">Hub Motor</option></select></label>
                     </div>
                     <VariantExtrasEditor
@@ -1294,6 +1294,25 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                             {label}
                           </label>
                         ))}
+                      </div>
+                      {/* Driving Modes */}
+                      <div className="mt-4 pt-3 border-t border-slate-200">
+                        <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Driving Modes</p>
+                        <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+                          {([
+                            ["has_mode_eco", "Eco"],
+                            ["has_mode_normal", "Normal"],
+                            ["has_mode_sports", "Sports"],
+                            ["has_mode_hyper", "Hyper"],
+                            ["has_mode_cruise", "Cruise"],
+                            ["has_mode_reverse", "Reverse"],
+                          ] as [string,string][]).map(([key, label]) => (
+                            <label key={key} className="flex items-center gap-1.5 text-[10px] text-slate-600">
+                              <input type="checkbox" checked={!!(v.features as any)?.[key]} onChange={(e) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, [key]: e.target.checked } }; setVariants(arr); }} />
+                              {label}
+                            </label>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   )}

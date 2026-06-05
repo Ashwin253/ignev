@@ -143,6 +143,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
   const [expandedListing, setExpandedListing] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<"listings" | "leads" | "prices" | "analytics">("listings");
   const [selectedModelId, setSelectedModelId] = useState<string>("");
+  const [editingVariantId, setEditingVariantId] = useState<string | null>(null);
   const [energyComps, setEnergyComps] = useState<Array<{ id?: string; category: string; name: string; fuel_type: string; mileage: string; fuel_price: string; model_used: string; brand: string }>>([]);
   const [variantSpecSection, setVariantSpecSection] = useState<Record<number, string>>({});
   const [listingFormTab, setListingFormTab] = useState<"core" | "variants" | "energy">("core");
@@ -509,10 +510,16 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   ))}
                 </select>
                 {selectedModel && (
-                  <button onClick={() => { startEdit(selectedModel); setTimeout(() => document.getElementById("section-variants")?.scrollIntoView({ behavior: "smooth" }), 200); }}
-                    className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-3 text-sm font-bold text-white hover:bg-sky-700 shrink-0">
-                    <Plus size={14} /> Add Variant
-                  </button>
+                  <>
+                    <button onClick={() => { startEdit(selectedModel); setListingFormTab("variants"); setEditingVariantId(null); }}
+                      className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-3 text-sm font-bold text-white hover:bg-sky-700 shrink-0">
+                      <Plus size={14} /> Add Variant
+                    </button>
+                    <button onClick={() => { startEdit(selectedModel); setListingFormTab("core"); setEditingVariantId(null); }}
+                      className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 shrink-0">
+                      Edit Model
+                    </button>
+                  </>
                 )}
               </div>
               {/* Variants list for selected model */}
@@ -525,7 +532,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                         <p className="text-[10px] text-slate-500">₹{v.price}L · {v.driving_range_km}km · {v.battery_capacity_kwh}kWh {v.has_baas && <span className="text-emerald-600 font-bold">· BAAS</span>}</p>
                       </div>
                       <div className="flex gap-2">
-                        <button onClick={() => { startEdit(selectedModel); setTimeout(() => document.getElementById("section-variants")?.scrollIntoView({ behavior: "smooth" }), 200); }}
+                        <button onClick={() => { startEdit(selectedModel); setListingFormTab("variants"); setEditingVariantId(v.id); }}
                           className="text-xs font-bold text-sky-600 hover:text-sky-700">Edit</button>
                         <button onClick={async () => { if (!confirm(`Delete variant "${v.variant_name}"?`)) return; await supabase.from("ev_variants").delete().eq("id", v.id); fetchListings(); }}
                           className="text-xs font-bold text-rose-500 hover:text-rose-600">Delete</button>
@@ -725,11 +732,30 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             {listingFormTab === "variants" && (
             <div className="rounded-xl border-2 border-sky-300 bg-sky-100 p-4">
               <div className="flex items-center justify-between mb-3">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-sky-600">Variants</p>
-                <button onClick={() => { setVariants([...variants, { ...emptyVariant }]); setActiveVariantIndex(variants.length); }} className="text-[10px] font-bold text-sky-600 hover:text-sky-700">+ Add Variant</button>
+                <p className="text-sm font-bold text-sky-700">
+                  {editingVariantId ? `Editing: ${variants.find((v) => (v as any).id === editingVariantId)?.variant_name || "Variant"}` : `Variants (${variants.length})`}
+                </p>
+              </div>
+              {/* Actions row */}
+              <div className="flex flex-wrap gap-2 mb-4 rounded-xl bg-white border border-sky-200 p-3">
+                <button onClick={() => { setVariants([...variants, { ...emptyVariant }]); setActiveVariantIndex(variants.length); setEditingVariantId(null); }}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-3 py-2 text-xs font-bold text-white hover:bg-sky-700">
+                  <Plus size={12} /> Add New
+                </button>
+                <button onClick={() => { const current = variants[activeVariantIndex]; if (current) { const clone = { ...current, variant_name: `${current.variant_name} (Copy)`, id: undefined } as any; delete clone.id; setVariants([...variants, clone]); setActiveVariantIndex(variants.length); setEditingVariantId(null); } }}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-sky-200 bg-white px-3 py-2 text-xs font-bold text-sky-600 hover:bg-sky-50">
+                  📋 Clone Current
+                </button>
+                {variants.length > 1 && (
+                  <button onClick={() => { if (!confirm(`Remove "${variants[activeVariantIndex]?.variant_name || "this variant"}"?`)) return; const arr = variants.filter((_, j) => j !== activeVariantIndex); setVariants(arr); setActiveVariantIndex(Math.max(0, activeVariantIndex - 1)); setEditingVariantId(null); }}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-3 py-2 text-xs font-bold text-rose-500 hover:bg-rose-50">
+                    <Trash2 size={12} /> Remove
+                  </button>
+                )}
+                {editingVariantId && <button onClick={() => setEditingVariantId(null)} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50">Show All</button>}
               </div>
 
-              {variants.length > 0 && (
+              {variants.length > 0 && !editingVariantId && (
                 <div className="mb-4">
                   <select
                     value={activeVariantIndex}
@@ -1218,17 +1244,17 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                       </div>
                       <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-3">
                         {([
-                          ["has_speedometer_digital", "Speedometer digital"],
-                          ["has_odometer_digital", "Odometer digital"],
+                          ["has_speedometer_digital", "Speedometer"],
+                          ["has_odometer_digital", "Odometer"],
                           ["has_voice_assist", "Voice assist"],
                           ["has_stand_alarm", "Stand alarm"],
                           ["has_low_battery_indicator", "Low battery indicator"],
                           ["has_clock", "Clock"],
-                          ["has_call_sms_alert", "Call/Sms Alert yes"],
+                          ["has_call_sms_alert", "Call/Sms Alert"],
                           ["has_tripmeter", "Tripmeter"],
                           ["has_boot_storage", "Boot Storage"],
-                          ["has_usb_charging_port", "USB charging port"],
-                          ["has_keyless_lock_unlock", "Keyless lock/unlock"],
+                          ["has_usb_charging_port", "USB charging"],
+                          ["has_keyless_lock_unlock", "Keyless"],
                           ["has_cruise_control", "Cruise control"],
                           ["has_start_type_self", "Start type Self"],
                           ["has_reverse_mode", "Reverse mode"],

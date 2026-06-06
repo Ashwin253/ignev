@@ -208,8 +208,10 @@ export default function ProductDetails({ item }: { item: EvListing }) {
             feat.seating_capacity && { label: "Seating Capacity", value: String(feat.seating_capacity) },
             feat.headlight_type && { label: "Headlights", value: String(feat.headlight_type) },
             feat.screen_size_inches && { label: "Screen Size", value: `${feat.screen_size_inches}"` },
-            feat.speaker_count && { label: "Speakers", value: String(feat.speaker_count) },
-            feat.airbag_count && { label: "Airbags", value: String(feat.airbag_count) },
+            feat.front_speakers != null && Number(feat.front_speakers) > 0 && { label: "Front Speakers", value: String(feat.front_speakers) },
+            feat.rear_speakers != null && Number(feat.rear_speakers) > 0 && { label: "Rear Speakers", value: String(feat.rear_speakers) },
+            (feat.speaker_count != null && Number(feat.speaker_count) > 0) && { label: "Total Speakers", value: String(feat.speaker_count) },
+            (feat.airbag_count != null && Number(feat.airbag_count) > 0) && { label: "Airbags", value: String(feat.airbag_count) },
             Number(feat.adas_level) > 0 && { label: "ADAS Level", value: String(feat.adas_level) },
             feat.ncap_safety_rating && { label: "NCAP Rating", value: `${feat.ncap_safety_rating} ★` },
             ...sectionFieldRows(normalizeExtras(feat.extra_features as unknown[])),
@@ -231,6 +233,10 @@ export default function ProductDetails({ item }: { item: EvListing }) {
             feat.has_reverse_mode && "Reverse Mode", feat.has_boot_light && "Boot Light",
             feat.has_tail_light && "Tail Light", feat.has_break_light && "Break Light",
             feat.has_turn_signal && "Turn Signal", feat.has_drls && "DRLs",
+            feat.has_gps && "GPS Connectivity", feat.has_navigation && "Navigation",
+            feat.has_mode_eco && "Eco Mode", feat.has_mode_normal && "Normal Mode",
+            feat.has_mode_sports && "Sports Mode", feat.has_mode_hyper && "Hyper Mode",
+            feat.has_mode_cruise && "Cruise Mode", feat.has_mode_reverse && "Reverse Mode",
           ].filter(Boolean) as string[];
           return (
             <CollapsibleSection title="Features & Safety" icon={<CheckCircle2 size={16} className="text-sky-600" />}>

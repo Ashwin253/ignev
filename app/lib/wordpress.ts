@@ -433,15 +433,6 @@ const EVLIST_FRAGMENT = /* GraphQL */ `
   slug
   date
   featuredImage { node { sourceUrl } }
-  batteryVariants
-  batterySubs
-  propoint
-  conpoint
-  colorTestText
-  galleryImages
-  energyComparison
-  batterySpecs
-  chargingSpecs
   evlist {
     brand
     type

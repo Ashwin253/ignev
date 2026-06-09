@@ -7,7 +7,7 @@ import {
   fetchEvListingsREST, fetchEvListingBySlugREST, fetchEvListingBySlug,
   formatLaunchDate, isLaunched,
 } from "../../lib/wordpress";
-import { fetchEvListingBySlugFromSupabase } from "../../lib/supabase";
+import { fetchEvListingBySlugFromSupabase, fetchEvListingsFromSupabase } from "../../lib/supabase";
 import ProductGallery from "../../components/ProductGallery";
 import ProductMainUI from "../ProductMainUI";
 import ProductDetails from "../ProductDetails";
@@ -52,14 +52,27 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     ? item.galleryImages
     : item.photo ? [item.photo] : [];
 
-  // Fetch related items lazily — small request, only 10 items
+  // Fetch related items lazily
   let related: typeof item[] = [];
   try {
-    const few = await fetchEvListingsREST(10);
+    const allSupabase = await fetchEvListingsFromSupabase(50);
+    const few = allSupabase.length > 0 ? allSupabase : await fetchEvListingsREST(50);
+    
+    const targetPrice = item.prices[0] ? parseFloat(item.prices[0].replace(/[^\d.]/g, "")) : null;
+
     related = few
-      .filter((l) => l.slug !== slug && (l.brand === item.brand || l.types[0] === item.types[0]))
+      .filter((l) => {
+        if (l.slug === slug) return false;
+        if (l.types[0] === item.types[0] && item.types[0]) return true;
+        if (l.brand === item.brand && item.brand) return true;
+        if (targetPrice && l.prices[0]) {
+          const p = parseFloat(l.prices[0].replace(/[^\d.]/g, ""));
+          if (!isNaN(p) && Math.abs(p - targetPrice) / targetPrice <= 0.2) return true;
+        }
+        return false;
+      })
       .slice(0, 3);
-  } catch { /* skip related if WP is down */ }
+  } catch { /* skip related if DB is down */ }
 
   return (
     <section className="min-h-screen bg-slate-100 py-28 overflow-x-hidden">
@@ -120,7 +133,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         {/* Related */}
         {related.length > 0 && (
           <div className="mt-32">
-            <h2 className="mb-8 text-2xl font-semibold text-slate-900">You might also like</h2>
+            <h2 className="mb-8 text-2xl font-semibold text-slate-900">More like this</h2>
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {related.map((rel) => (
                 <Link key={rel.id} href={`/product/${rel.slug}`}

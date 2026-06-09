@@ -127,7 +127,7 @@ export function hasFeatureContent(feat: Record<string, unknown>): boolean {
     "has_usb_charging_port", "has_keyless_lock_unlock", "has_start_type_self",
     "has_boot_light", "has_tail_light", "has_break_light", "has_turn_signal", "has_drls",
     "has_mode_eco", "has_mode_normal", "has_mode_sports", "has_mode_hyper",
-    "has_mode_cruise", "has_mode_reverse",
+    "has_mode_cruise", "has_mode_reverse", "has_boot_storage",
   ];
   if (boolKeys.some((k) => feat[k])) return true;
   if (feat.drivetrain || feat.front_brakes || feat.rear_brakes) return true;
@@ -141,6 +141,7 @@ export function hasFeatureContent(feat: Record<string, unknown>): boolean {
   if (feat.airbag_count && Number(feat.airbag_count) > 0) return true;
   if (feat.adas_level && Number(feat.adas_level) > 0) return true;
   if (feat.ncap_safety_rating) return true;
+  if (feat.boot_storage_litres) return true;
   const extra = normalizeExtras(feat.extra_features as unknown[]);
   if (extra.some((e) => e.label && (!isCheckboxExtra(e) ? e.value.trim() : isExtraChecked(e.value)))) return true;
   return false;

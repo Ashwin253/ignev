@@ -121,6 +121,13 @@ export function hasFeatureContent(feat: Record<string, unknown>): boolean {
     "has_sunroof", "has_climate_control", "has_cruise_control", "has_wireless_charger",
     "has_keyless_entry", "has_wireless_carplay_android_auto", "has_connected_car_app",
     "has_ota_updates", "has_abs_ebd", "has_esp", "has_tpms", "has_360_camera",
+    "has_gps", "has_navigation",
+    "has_speedometer_digital", "has_odometer_digital", "has_voice_assist", "has_stand_alarm",
+    "has_low_battery_indicator", "has_clock", "has_call_sms_alert", "has_tripmeter",
+    "has_usb_charging_port", "has_keyless_lock_unlock", "has_start_type_self",
+    "has_boot_light", "has_tail_light", "has_break_light", "has_turn_signal", "has_drls",
+    "has_mode_eco", "has_mode_normal", "has_mode_sports", "has_mode_hyper",
+    "has_mode_cruise", "has_mode_reverse",
   ];
   if (boolKeys.some((k) => feat[k])) return true;
   if (feat.drivetrain || feat.front_brakes || feat.rear_brakes) return true;
@@ -128,6 +135,8 @@ export function hasFeatureContent(feat: Record<string, unknown>): boolean {
   if (feat.seating_capacity && Number(feat.seating_capacity) > 0) return true;
   if (feat.headlight_type) return true;
   if (feat.screen_size_inches) return true;
+  if (feat.front_speakers && Number(feat.front_speakers) > 0) return true;
+  if (feat.rear_speakers && Number(feat.rear_speakers) > 0) return true;
   if (feat.speaker_count && Number(feat.speaker_count) > 0) return true;
   if (feat.airbag_count && Number(feat.airbag_count) > 0) return true;
   if (feat.adas_level && Number(feat.adas_level) > 0) return true;

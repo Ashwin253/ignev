@@ -120,7 +120,7 @@ export function hasFeatureContent(feat: Record<string, unknown>): boolean {
   const boolKeys = [
     "has_sunroof", "has_climate_control", "has_cruise_control", "has_wireless_charger",
     "has_keyless_entry", "has_wireless_carplay_android_auto", "has_connected_car_app",
-    "has_ota_updates", "has_abs_ebd", "has_esp", "has_tpms", "has_360_camera",
+    "has_ota_updates", "has_abs", "has_ebd", "has_esp", "has_tpms", "has_360_camera",
     "has_gps", "has_navigation",
     "has_speedometer_digital", "has_odometer_digital", "has_voice_assist", "has_stand_alarm",
     "has_low_battery_indicator", "has_clock", "has_call_sms_alert", "has_tripmeter",

@@ -2,9 +2,8 @@ import React, { Suspense } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import CatalogBrowser from "../components/CatalogBrowser";
-import { fetchEvListings, fetchEvListingsREST, formatPricing } from "../lib/wordpress";
 import { fetchEvListingsFromSupabase } from "../lib/supabase";
-import { getSiteContent } from "../lib/site-content";
+import { formatPricing } from "../lib/wordpress";
 
 // ISR — revalidate every 5 minutes
 export const revalidate = 300;
@@ -17,7 +16,7 @@ export const metadata = {
 export default async function CatalogPage() {
   let items: import("../components/CatalogBrowser").CatalogItem[] = [];
 
-  // 1. Try Supabase first (fastest, most reliable)
+  // 1. Fetch from Supabase (fastest, most reliable)
   try {
     const sbListings = await fetchEvListingsFromSupabase(50);
     if (sbListings.length) {
@@ -37,49 +36,6 @@ export default async function CatalogPage() {
       }));
     }
   } catch { /* Supabase failed or not configured */ }
-
-  // 2. Fall back to WordPress if Supabase returned nothing
-  if (!items.length) {
-  try {
-    const [gqlResult, restResult] = await Promise.allSettled([
-      fetchEvListings(8),
-      fetchEvListingsREST(8),
-    ]);
-
-    const listings = 
-      (gqlResult.status === "fulfilled" && gqlResult.value.length > 0) ? gqlResult.value :
-      (restResult.status === "fulfilled" && restResult.value.length > 0) ? restResult.value :
-      [];
-
-    if (listings.length) {
-      items = listings.map((l) => ({
-        name: l.title,
-        brand: l.brand,
-        type: l.types[0] ?? "",
-        pricing: formatPricing(l.prices),
-        photo: l.photo,
-        slug: l.slug,
-        topSpeed: l.topSpeed,
-        commercial: l.commercial,
-        launchdate: l.launchdate,
-        prices: l.prices,
-        baas: l.baas,
-      }));
-    }
-  } catch { /* both failed */ }
-  } // end WP fallback
-
-  // Fall back to local JSON if nothing returned
-  if (!items.length) {
-    const content = await getSiteContent();
-    items = [
-      ...content.products.electric_cars,
-      ...content.products.electric_two_wheelers,
-      ...content.products.electric_autos,
-    ];
-  }
-  console.log('[CatalogPage] Final items count:', items.length);
-  if (!items.length) console.log('[CatalogPage] WP failed AND fallback empty');
 
   return (
     <section className="bg-slate-100 py-28">

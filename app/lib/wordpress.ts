@@ -130,9 +130,7 @@ export function isLaunched(launchdate: string | null | undefined): boolean {
 export function formatPricing(prices: string[]): string {
   if (!prices || !prices.length) return "";
   const first = prices[0].trim();
-  if (/[a-zA-Z]/.test(first) || first.includes("₹")) {
-    return prices.length === 1 ? first : prices.join(" | ");
-  }
+
   const starts: number[] = [];
   for (const p of prices) {
     const cleaned = p.replace(/[₹,a-zA-Z\s]/g, "");
@@ -144,12 +142,15 @@ export function formatPricing(prices: string[]): string {
       }
     }
   }
+  
   if (!starts.length) return first;
+  
   const min = Math.min(...starts);
   const max = Math.max(...starts);
   const fmt = (v: number) => v % 1 === 0 ? String(v) : v.toFixed(2).replace(/\.?0+$/, "");
-  if (min === max) return `₹${fmt(min)} Lakh`;
-  return `₹${fmt(min)}–${fmt(max)} Lakh`;
+  
+  if (min === max) return `₹${fmt(min)}L`;
+  return `₹${fmt(min)}–${fmt(max)}L`;
 }
 
 // ── Types ─────────────────────────────────────────────────────────────────────

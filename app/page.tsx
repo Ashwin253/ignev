@@ -5,6 +5,7 @@ import {
   type EvListing,
 } from "./lib/wordpress";
 import { fetchEvListingsFromSupabase } from "./lib/supabase";
+import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import Hero from "./components/Hero";
 import FreshReleases from "./components/FreshReleases";
@@ -41,7 +42,17 @@ function toComingSoonItem(l: EvListing): ComingSoonItem {
   };
 }
 
-export default async function Home() {
+import LoadingSkeleton from "./loading";
+
+export default function Home() {
+  return (
+    <Suspense fallback={<LoadingSkeleton />}>
+      <HomeContent />
+    </Suspense>
+  );
+}
+
+async function HomeContent() {
   // Try Supabase first (fast), then WP as fallback
   let listings: EvListing[] = [];
   let banners: any[] = [];

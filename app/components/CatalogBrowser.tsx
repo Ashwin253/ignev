@@ -1,7 +1,7 @@
 // app/components/CatalogBrowser.tsx
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -37,6 +37,26 @@ export type CatalogItem = {
   prices?: string[];
   baas?: boolean;
 };
+
+function ProductSkeleton() {
+  return (
+    <div className="group overflow-hidden rounded-3xl border-2 border-slate-300 bg-slate-50 shadow-[0_4px_16px_rgba(15,23,42,0.08)] flex flex-col animate-pulse">
+      <div className="relative aspect-4/3 bg-slate-200" />
+      <div className="grow p-4 flex flex-col gap-3 mt-1">
+        <div className="h-2.5 w-16 bg-slate-200 rounded-full" />
+        <div className="h-5 w-3/4 bg-slate-200 rounded-full" />
+        <div className="flex gap-3 mt-1">
+          <div className="h-3 w-14 bg-slate-200 rounded-full" />
+          <div className="h-3 w-16 bg-slate-200 rounded-full" />
+        </div>
+      </div>
+      <div className="px-4 pb-4 flex gap-2">
+        <div className="h-10 flex-1 bg-slate-200 rounded-2xl" />
+        <div className="h-10 flex-1 bg-slate-200 rounded-2xl" />
+      </div>
+    </div>
+  );
+}
 
 // ── Price filter ──────────────────────────────────────────────────────────────
 
@@ -79,11 +99,12 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
 
   const [filtersOpen, setFiltersOpen] = useState(false); // mobile collapse
   const [shared, setShared] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(4);
+  const [visibleCount, setVisibleCount] = useState(3);
   const [allItems, setAllItems] = useState<CatalogItem[]>(items);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [loadingSkeleton, setLoadingSkeleton] = useState(false);
+  const observerTarget = useRef<HTMLDivElement>(null);
 
-  // Fetch remaining items client-side on first "Load More"
   const fetchAllItems = async () => {
     if (allItems.length > items.length) return; // already fetched
     setLoadingMore(true);
@@ -150,9 +171,35 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
     });
   }, [brand, category, commercialOnly, allItems, launchedOnly, comingSoonOnly, price, query, baasOnly]);
 
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !loadingSkeleton && !loadingMore) {
+          if (visibleCount < filteredItems.length) {
+            setLoadingSkeleton(true);
+            setTimeout(() => {
+              setVisibleCount((v) => v + 3);
+              setLoadingSkeleton(false);
+            }, 600);
+          } else if (allItems.length <= items.length) {
+            setLoadingSkeleton(true);
+            fetchAllItems().then(() => {
+              setVisibleCount((v) => v + 3);
+              setLoadingSkeleton(false);
+            });
+          }
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerTarget.current) observer.observe(observerTarget.current);
+    return () => observer.disconnect();
+  }, [visibleCount, filteredItems.length, allItems.length, items.length, loadingMore, loadingSkeleton]);
+
   // Reset visible count when filters change
   const filterKey = `${query}-${category}-${brand}-${price}-${commercialOnly}-${launchedOnly}-${comingSoonOnly}-${baasOnly}`;
-  useEffect(() => { setVisibleCount(6); }, [filterKey]);
+  useEffect(() => { setVisibleCount(3); }, [filterKey]);
 
   const hasActiveFilters = category !== "all" || brand !== "all" || price !== "all" || commercialOnly || launchedOnly || comingSoonOnly || baasOnly || !!query;
   const activeFilterCount = [category !== "all", brand !== "all", price !== "all", commercialOnly, launchedOnly, comingSoonOnly, baasOnly, !!query].filter(Boolean).length;
@@ -461,29 +508,17 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
             );
           })}
         </div>
-        {visibleCount < filteredItems.length && (
-          <div className="mt-6 flex justify-center">
-            <button
-              onClick={() => setVisibleCount((c) => c + 4)}
-              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors"
-            >
-              Load More ({filteredItems.length - visibleCount} remaining)
-            </button>
-          </div>
-        )}
-        {visibleCount >= filteredItems.length && allItems.length <= items.length && (
-          <div className="mt-6 flex justify-center">
-            <button
-              onClick={async () => { await fetchAllItems(); setVisibleCount((c) => c + 4); }}
-              disabled={loadingMore}
-              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors disabled:opacity-50"
-            >
-              {loadingMore ? (
-                <><span className="h-4 w-4 rounded-full border-2 border-slate-300 border-t-sky-600 animate-spin" /> Loading...</>
-              ) : (
-                "Load All Listings"
-              )}
-            </button>
+        
+        {/* Infinite Scroll Trigger & Skeleton Loaders */}
+        {(visibleCount < filteredItems.length || allItems.length <= items.length) && (
+          <div ref={observerTarget} className="mt-4 pt-4">
+            {loadingSkeleton && (
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
+                <ProductSkeleton />
+                <ProductSkeleton />
+                <ProductSkeleton />
+              </div>
+            )}
           </div>
         )}
         </>

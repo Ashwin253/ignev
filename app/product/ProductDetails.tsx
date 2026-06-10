@@ -85,6 +85,13 @@ export default function ProductDetails({ item }: { item: EvListing }) {
     ?? item.variantFeatures?.[0];
   const showFeatures = feat && hasFeatureContent(feat);
 
+  if (feat?.drivetrain) {
+    motorRows.push({ label: "Drivetrain", value: String(feat.drivetrain) });
+  }
+  if (feat?.seating_capacity) {
+    dimensionRows.push({ label: "Seating Capacity", value: String(feat.seating_capacity) });
+  }
+
   const brakesRows = [
     feat?.front_brakes && { label: "Front Brakes", value: String(feat.front_brakes) },
     feat?.rear_brakes && { label: "Rear Brakes", value: String(feat.rear_brakes) },
@@ -224,10 +231,8 @@ export default function ProductDetails({ item }: { item: EvListing }) {
 
         {showFeatures && feat && (() => {
           const rows = [
-            feat.drivetrain && { label: "Drivetrain", value: String(feat.drivetrain) },
             feat.front_suspension && { label: "Front Suspension", value: String(feat.front_suspension) },
             feat.rear_suspension && { label: "Rear Suspension", value: String(feat.rear_suspension) },
-            feat.seating_capacity && { label: "Seating Capacity", value: String(feat.seating_capacity) },
             feat.screen_size_inches && { label: "Screen Size", value: `${feat.screen_size_inches}"` },
             feat.front_speakers != null && Number(feat.front_speakers) > 0 && { label: "Front Speakers", value: String(feat.front_speakers) },
             feat.rear_speakers != null && Number(feat.rear_speakers) > 0 && { label: "Rear Speakers", value: String(feat.rear_speakers) },
@@ -243,7 +248,7 @@ export default function ProductDetails({ item }: { item: EvListing }) {
             feat.has_cruise_control && "Cruise Control", feat.has_wireless_charger && "Wireless Charger",
             feat.has_keyless_entry && "Keyless Entry", feat.has_wireless_carplay_android_auto && "Wireless CarPlay/AA",
             feat.has_connected_car_app && "Connected Car App", feat.has_ota_updates && "OTA Updates",
-            feat.has_abs_ebd && "ABS + EBD", feat.has_esp && "ESP",
+            feat.has_abs && "ABS", feat.has_ebd && "EBD", feat.has_esp && "ESP",
             feat.has_tpms && "TPMS", feat.has_360_camera && "360° Camera",
             feat.has_speedometer_digital && "Digital Speedometer", feat.has_odometer_digital && "Digital Odometer",
             feat.has_voice_assist && "Voice Assist", feat.has_stand_alarm && "Stand Alarm",

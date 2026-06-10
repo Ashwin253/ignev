@@ -1,15 +1,11 @@
 import { NextResponse } from "next/server";
-import { fetchEvListings, fetchEvListingsREST } from "../../lib/wordpress";
+import { fetchEvListingsFromSupabase } from "../../lib/supabase";
 
 export const revalidate = 300;
 
 export async function GET() {
   try {
-    // Try GraphQL first, then REST
-    let listings = await fetchEvListings(50);
-    if (!listings.length) {
-      listings = await fetchEvListingsREST(50);
-    }
+    const listings = await fetchEvListingsFromSupabase(100);
 
     const items = listings.map((l) => ({
       name: l.title,

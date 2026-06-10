@@ -1,6 +1,6 @@
 import React, { Suspense } from "react";
 import Link from "next/link";
-import { fetchEvListingBySlugREST, fetchEvListingsREST } from "../lib/wordpress";
+import { fetchEvListingBySlugFromSupabase, fetchEvListingsFromSupabase } from "../lib/supabase";
 import LoanCalculator from "../components/LoanCalculator";
 import CostEstimator from "../components/CostEstimator";
 import AddVehicleToCompare from "../compare/AddVehicleToCompare";
@@ -8,8 +8,8 @@ import { ArrowLeft, CarFront } from "lucide-react";
 
 async function OwnContent({ slug }: { slug: string | undefined }) {
   const [listing, allListings] = await Promise.all([
-    slug ? fetchEvListingBySlugREST(slug) : Promise.resolve(null),
-    fetchEvListingsREST(100)
+    slug ? fetchEvListingBySlugFromSupabase(slug) : Promise.resolve(null),
+    fetchEvListingsFromSupabase(100)
   ]);
 
   const compactAll = allListings.map(l => ({

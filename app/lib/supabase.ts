@@ -117,7 +117,8 @@ export type EvVariantFeatureRow = {
   has_connected_car_app: boolean;
   has_ota_updates: boolean;
   airbag_count: string | null;
-  has_abs_ebd: boolean;
+  has_abs: boolean;
+  has_ebd: boolean;
   has_esp: boolean;
   has_tpms: boolean;
   has_360_camera: boolean;

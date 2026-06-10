@@ -80,7 +80,7 @@ export type VariantForm = {
     has_wireless_charger: boolean; has_keyless_entry: boolean;
     screen_size_inches: string | null; speaker_count: string | null;
     has_wireless_carplay_android_auto: boolean; has_connected_car_app: boolean;
-    has_ota_updates: boolean; airbag_count: string | null; has_abs_ebd: boolean;
+    has_ota_updates: boolean; airbag_count: string | null; has_abs: boolean; has_ebd: boolean;
     has_esp: boolean; has_tpms: boolean; has_360_camera: boolean;
     adas_level: string | null; ncap_safety_rating: string | null;
     has_speedometer_digital?: boolean; has_odometer_digital?: boolean; has_voice_assist?: boolean;
@@ -116,12 +116,12 @@ const emptyVariant: VariantForm = {
 
 const defaultFeatures = {
   front_brakes: "Disc", rear_brakes: "Disc", drivetrain: "FWD",
-  seating_capacity: "5", front_suspension: "", rear_suspension: "",
+  seating_capacity: null, front_suspension: "", rear_suspension: "",
   headlight_type: "LED", has_sunroof: false, has_climate_control: false,
   has_cruise_control: false, has_wireless_charger: false, has_keyless_entry: false,
   screen_size_inches: null, speaker_count: "4",
   has_wireless_carplay_android_auto: false, has_connected_car_app: false,
-  has_ota_updates: false, airbag_count: null, has_abs_ebd: true,
+  has_ota_updates: false, airbag_count: null, has_abs: true, has_ebd: true,
   has_esp: false, has_tpms: false, has_360_camera: false,
   adas_level: "0", ncap_safety_rating: null,
   has_speedometer_digital: false, has_odometer_digital: false, has_voice_assist: false,
@@ -405,7 +405,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             console.warn("Features save error:", res.error.message);
             // Try without unknown fields
             const safePayload: any = { variant_id: savedVariantId };
-            const knownKeys = ["front_brakes","rear_brakes","drivetrain","seating_capacity","front_suspension","rear_suspension","headlight_type","has_sunroof","has_climate_control","has_cruise_control","has_wireless_charger","has_keyless_entry","screen_size_inches","speaker_count","has_wireless_carplay_android_auto","has_connected_car_app","has_ota_updates","airbag_count","has_abs_ebd","has_esp","has_tpms","has_360_camera","adas_level","ncap_safety_rating","has_gps","has_navigation","has_mode_eco","has_mode_normal","has_mode_sports","has_mode_hyper","has_mode_cruise","has_mode_reverse","front_speakers","rear_speakers","boot_storage_litres","has_speedometer_digital","has_odometer_digital","has_voice_assist","has_stand_alarm","has_low_battery_indicator","has_clock","has_call_sms_alert","has_tripmeter","has_usb_charging_port","has_keyless_lock_unlock","has_start_type_self","has_boot_light","has_tail_light","has_break_light","has_turn_signal","has_drls"];
+            const knownKeys = ["front_brakes","rear_brakes","drivetrain","seating_capacity","front_suspension","rear_suspension","headlight_type","has_sunroof","has_climate_control","has_cruise_control","has_wireless_charger","has_keyless_entry","screen_size_inches","speaker_count","has_wireless_carplay_android_auto","has_connected_car_app","has_ota_updates","airbag_count","has_abs","has_ebd","has_esp","has_tpms","has_360_camera","adas_level","ncap_safety_rating","has_gps","has_navigation","has_mode_eco","has_mode_normal","has_mode_sports","has_mode_hyper","has_mode_cruise","has_mode_reverse","front_speakers","rear_speakers","boot_storage_litres","has_speedometer_digital","has_odometer_digital","has_voice_assist","has_stand_alarm","has_low_battery_indicator","has_clock","has_call_sms_alert","has_tripmeter","has_usb_charging_port","has_keyless_lock_unlock","has_start_type_self","has_boot_light","has_tail_light","has_break_light","has_turn_signal","has_drls"];
             for (const k of knownKeys) { if (featurePayload[k] !== undefined) safePayload[k] = featurePayload[k]; }
             const retry = await supabase.from("ev_variant_features").upsert(safePayload);
             if (retry.error) alert(`Features save failed: ${retry.error.message}`);
@@ -1296,7 +1296,8 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                           ["has_keyless_lock_unlock", "Keyless"],
                           ["has_cruise_control", "Cruise control"],
                           ["has_start_type_self", "Start type Self"],
-                          ["has_abs_ebd", "ABS+EBD"],
+                          ["has_abs", "ABS"],
+                          ["has_ebd", "EBD"],
                           ["has_esp", "ESP"],
                           ["has_tpms", "TPMS"],
                           ["has_360_camera", "360° Camera"],

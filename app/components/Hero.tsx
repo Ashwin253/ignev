@@ -13,7 +13,7 @@ import {
 import { triggerEnquiryModal } from "./EnquiryModal";
 import { useCompare } from "../context/CompareContext";
 import type { EvListing, HeroBanner } from "../lib/wordpress";
-import { formatLaunchDate, isLaunched } from "../lib/wordpress";
+import { formatLaunchDate, isLaunched, formatPricing } from "../lib/wordpress";
 
 type Product = {
   name: string; brand: string; type: string; pricing: string; photo: string; slug?: string;
@@ -98,7 +98,7 @@ function FeaturedCard({ listing, index }: { listing: EvListing; index: number })
           </div>
 
           <div className="flex flex-wrap gap-2 text-xs text-slate-500">
-            {listing.prices.length > 0 && <span className="font-semibold text-slate-800">₹{listing.prices[0]} Lakh</span>}
+            {listing.prices.length > 0 && <span className="font-semibold text-slate-800">{formatPricing(listing.prices)}</span>}
             
             {listing.topSpeed !== null && (
               <span className="inline-flex items-center gap-1">

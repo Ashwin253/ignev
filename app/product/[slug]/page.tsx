@@ -4,6 +4,8 @@ import {
   ArrowRight,
   BadgeCheck, CalendarDays, Zap,
 } from "lucide-react";
+import { ProductSkeleton } from "../../components/ProductSkeleton";
+import { SmoothCollapseEmptyState } from "../../components/SmoothCollapse";
 import {
   formatLaunchDate, isLaunched, formatPricing,
 } from "../../lib/wordpress";
@@ -128,7 +130,16 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         {/* <ProductOwnershipSection item={item} /> */}
 
         {/* Related */}
-        <Suspense fallback={<div className="mt-32 text-center text-slate-500 animate-pulse">Loading related EVs...</div>}>
+        <Suspense fallback={
+          <div className="mt-32">
+            <h2 className="mb-8 text-2xl font-semibold text-slate-900">More like this</h2>
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              <ProductSkeleton />
+              <ProductSkeleton />
+              <ProductSkeleton />
+            </div>
+          </div>
+        }>
           <RelatedListings slug={slug} currentItem={item} />
         </Suspense>
       </div>
@@ -157,7 +168,20 @@ async function RelatedListings({ slug, currentItem }: { slug: string; currentIte
       .slice(0, 3);
   } catch { /* skip related if DB is down */ }
 
-  if (related.length === 0) return null;
+  if (related.length === 0) {
+    return (
+      <SmoothCollapseEmptyState>
+        <div className="mt-32">
+          <h2 className="mb-8 text-2xl font-semibold text-slate-900">More like this</h2>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <ProductSkeleton />
+            <ProductSkeleton />
+            <ProductSkeleton />
+          </div>
+        </div>
+      </SmoothCollapseEmptyState>
+    );
+  }
 
   return (
     <div className="mt-32">

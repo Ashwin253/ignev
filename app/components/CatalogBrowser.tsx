@@ -6,15 +6,13 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import {
-  Search, Send, Truck, Zap, Gauge,
-  CalendarDays, BadgeCheck, ChevronDown, X, SlidersHorizontal, ChevronUp, ArrowUpRight,
-  Share2, Check,
+  Zap, CalendarDays, BadgeCheck, Share2, Check, ArrowRight, X, Sparkles, SlidersHorizontal, ChevronDown, ChevronUp, Truck, ArrowUpRight, Send, GitCompare, Search, Gauge
 } from "lucide-react";
+import { ProductSkeleton } from "./ProductSkeleton";
 import { motion, AnimatePresence } from "framer-motion";
 import { triggerEnquiryModal } from "./EnquiryModal";
 import { formatLaunchDate, isLaunched } from "../lib/wordpress";
 import { useCompare } from "../context/CompareContext";
-import { GitCompare } from "lucide-react";
 
 function toSlug(brand: string, name: string) {
   return `${brand}-${name}`
@@ -38,25 +36,7 @@ export type CatalogItem = {
   baas?: boolean;
 };
 
-function ProductSkeleton() {
-  return (
-    <div className="group overflow-hidden rounded-3xl border-2 border-slate-300 bg-slate-50 shadow-[0_4px_16px_rgba(15,23,42,0.08)] flex flex-col animate-pulse">
-      <div className="relative aspect-4/3 bg-slate-200" />
-      <div className="grow p-4 flex flex-col gap-3 mt-1">
-        <div className="h-2.5 w-16 bg-slate-200 rounded-full" />
-        <div className="h-5 w-3/4 bg-slate-200 rounded-full" />
-        <div className="flex gap-3 mt-1">
-          <div className="h-3 w-14 bg-slate-200 rounded-full" />
-          <div className="h-3 w-16 bg-slate-200 rounded-full" />
-        </div>
-      </div>
-      <div className="px-4 pb-4 flex gap-2">
-        <div className="h-10 flex-1 bg-slate-200 rounded-2xl" />
-        <div className="h-10 flex-1 bg-slate-200 rounded-2xl" />
-      </div>
-    </div>
-  );
-}
+
 
 // ── Price filter ──────────────────────────────────────────────────────────────
 
@@ -103,10 +83,11 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
   const [allItems, setAllItems] = useState<CatalogItem[]>(items);
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadingSkeleton, setLoadingSkeleton] = useState(false);
+  const [hasFetchedAll, setHasFetchedAll] = useState(false);
   const observerTarget = useRef<HTMLDivElement>(null);
 
   const fetchAllItems = async () => {
-    if (allItems.length > items.length) return; // already fetched
+    if (hasFetchedAll) return;
     setLoadingMore(true);
     try {
       const res = await fetch("/api/catalog-all");
@@ -117,6 +98,7 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
         }
       }
     } catch { /* use what we have */ }
+    setHasFetchedAll(true);
     setLoadingMore(false);
   };
 
@@ -181,7 +163,7 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
               setVisibleCount((v) => v + 3);
               setLoadingSkeleton(false);
             }, 600);
-          } else if (allItems.length <= items.length) {
+          } else if (!hasFetchedAll) {
             setLoadingSkeleton(true);
             fetchAllItems().then(() => {
               setVisibleCount((v) => v + 3);
@@ -195,7 +177,7 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
 
     if (observerTarget.current) observer.observe(observerTarget.current);
     return () => observer.disconnect();
-  }, [visibleCount, filteredItems.length, allItems.length, items.length, loadingMore, loadingSkeleton]);
+  }, [visibleCount, filteredItems.length, hasFetchedAll, loadingMore, loadingSkeleton]);
 
   // Reset visible count when filters change
   const filterKey = `${query}-${category}-${brand}-${price}-${commercialOnly}-${launchedOnly}-${comingSoonOnly}-${baasOnly}`;
@@ -510,7 +492,7 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
         </div>
         
         {/* Infinite Scroll Trigger & Skeleton Loaders */}
-        {(visibleCount < filteredItems.length || allItems.length <= items.length) && (
+        {(visibleCount < filteredItems.length || !hasFetchedAll) && (
           <div ref={observerTarget} className="mt-4 pt-4">
             {loadingSkeleton && (
               <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">

@@ -2,7 +2,7 @@ import React, { Suspense } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import CatalogBrowser from "../components/CatalogBrowser";
-import { fetchEvListings, fetchEvListingsREST } from "../lib/wordpress";
+import { fetchEvListings, fetchEvListingsREST, formatPricing } from "../lib/wordpress";
 import { fetchEvListingsFromSupabase } from "../lib/supabase";
 import { getSiteContent } from "../lib/site-content";
 
@@ -16,33 +16,6 @@ export const metadata = {
 
 export default async function CatalogPage() {
   let items: import("../components/CatalogBrowser").CatalogItem[] = [];
-
-  function formatPricing(prices: string[]): string {
-    if (!prices.length) return "";
-    // If the first entry already contains text like "Lakh", "₹", or words — show as-is
-    const first = prices[0].trim();
-    if (/[a-zA-Z]/.test(first) || first.includes("₹")) {
-      return prices.length === 1 ? first : prices.join(" | ");
-    }
-    // Numeric entries — show "From lowest"
-    const starts: number[] = [];
-    for (const p of prices) {
-      const cleaned = p.replace(/[₹,a-zA-Z\s]/g, "");
-      const parts = cleaned.split(/[–-]/);
-      for (const part of parts) {
-        const num = parseFloat(part.trim());
-        if (Number.isFinite(num) && num > 0) {
-          starts.push(num > 1000 ? num / 100000 : num);
-        }
-      }
-    }
-    if (!starts.length) return first; // fallback to raw text
-    const min = Math.min(...starts);
-    const max = Math.max(...starts);
-    const fmt = (v: number) => v % 1 === 0 ? String(v) : v.toFixed(2).replace(/\.?0+$/, "");
-    if (min === max) return `₹${fmt(min)} Lakh`;
-    return `₹${fmt(min)}–${fmt(max)} Lakh`;
-  }
 
   // 1. Try Supabase first (fastest, most reliable)
   try {

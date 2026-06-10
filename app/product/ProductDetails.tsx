@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import {
-  BatteryCharging, Zap, Gauge, CheckCircle2, CircleMinus, ChevronDown, ChevronUp, LayoutList, Lightbulb, Activity,
+  BatteryCharging, Zap, Gauge, CheckCircle2, CircleMinus, ChevronDown, ChevronUp, LayoutList, Lightbulb, Activity, Disc,
 } from "lucide-react";
 import type { EvListing } from "../lib/wordpress";
 import { useProductSelection } from "./ProductSelectionProvider";
@@ -66,10 +66,13 @@ export default function ProductDetails({ item }: { item: EvListing }) {
 
  const sectionHasContent = (fields: Array<{ label: string; value: string; kind?: "field" | "checkbox" | undefined }> | undefined) =>
   fields?.some((f) => f.label && (!isCheckboxExtra(f) ? f.value.trim() : isExtraChecked(f.value)));
-  const extraSections = (
+  const allExtraSections = (
     item.variantExtraSections?.find((v) => v.variantName === selectedVariant)
     ?? item.variantExtraSections?.[0]
   )?.sections?.filter((s) => s.title && sectionHasContent(s.fields)) ?? [];
+
+  const brakesAndWheelsSection = allExtraSections.find(s => s.title === "Brakes & Wheels");
+  const extraSections = allExtraSections.filter(s => s.title !== "Brakes & Wheels");
 
   const customFields = (
     item.variantCustomFields?.find((v) => v.variantName === selectedVariant)
@@ -81,6 +84,14 @@ export default function ProductDetails({ item }: { item: EvListing }) {
   const feat = item.variantFeatures?.find((f) => f.variantName === selectedVariant)
     ?? item.variantFeatures?.[0];
   const showFeatures = feat && hasFeatureContent(feat);
+
+  const brakesRows = [
+    feat?.front_brakes && { label: "Front Brakes", value: String(feat.front_brakes) },
+    feat?.rear_brakes && { label: "Rear Brakes", value: String(feat.rear_brakes) },
+    ...(brakesAndWheelsSection ? sectionFieldRows(brakesAndWheelsSection.fields) : []),
+  ].filter(Boolean) as { label: string; value: string }[];
+  
+  const brakesChecks = brakesAndWheelsSection ? sectionCheckboxLabels(brakesAndWheelsSection.fields) : [];
 
   return (
     <div className="mt-16 rounded-3xl border-2 border-slate-300 bg-slate-100 px-5 py-8 md:px-10 md:py-10 shadow-sm">
@@ -185,6 +196,19 @@ export default function ProductDetails({ item }: { item: EvListing }) {
           );
         })}
 
+        {(brakesRows.length > 0 || brakesChecks.length > 0) && (
+          <CollapsibleSection title="Brakes & Wheels" icon={<Disc size={16} className="text-slate-600" />}>
+            {brakesRows.length > 0 && (
+              <dl className="space-y-0.5">
+                {brakesRows.map((row, i) => (
+                  <SpecRow key={i} label={row.label} value={row.value} odd={i % 2 === 0} />
+                ))}
+              </dl>
+            )}
+            <SpecCheckboxChips labels={brakesChecks} />
+          </CollapsibleSection>
+        )}
+
         {(customFieldRows.length > 0 || customFieldChecks.length > 0) && (
           <CollapsibleSection title="Extra Specs" icon={<LayoutList size={16} className="text-violet-600" />}>
             {customFieldRows.length > 0 && (
@@ -201,8 +225,6 @@ export default function ProductDetails({ item }: { item: EvListing }) {
         {showFeatures && feat && (() => {
           const rows = [
             feat.drivetrain && { label: "Drivetrain", value: String(feat.drivetrain) },
-            feat.front_brakes && { label: "Front Brakes", value: String(feat.front_brakes) },
-            feat.rear_brakes && { label: "Rear Brakes", value: String(feat.rear_brakes) },
             feat.front_suspension && { label: "Front Suspension", value: String(feat.front_suspension) },
             feat.rear_suspension && { label: "Rear Suspension", value: String(feat.rear_suspension) },
             feat.seating_capacity && { label: "Seating Capacity", value: String(feat.seating_capacity) },

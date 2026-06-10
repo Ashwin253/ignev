@@ -127,6 +127,33 @@ export function isLaunched(launchdate: string | null | undefined): boolean {
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
+export function formatPricing(prices: string[]): string {
+  if (!prices || !prices.length) return "";
+  const first = prices[0].trim();
+  if (/[a-zA-Z]/.test(first) || first.includes("₹")) {
+    return prices.length === 1 ? first : prices.join(" | ");
+  }
+  const starts: number[] = [];
+  for (const p of prices) {
+    const cleaned = p.replace(/[₹,a-zA-Z\s]/g, "");
+    const parts = cleaned.split(/[–-]/);
+    for (const part of parts) {
+      const num = parseFloat(part.trim());
+      if (Number.isFinite(num) && num > 0) {
+        starts.push(num > 1000 ? num / 100000 : num);
+      }
+    }
+  }
+  if (!starts.length) return first;
+  const min = Math.min(...starts);
+  const max = Math.max(...starts);
+  const fmt = (v: number) => v % 1 === 0 ? String(v) : v.toFixed(2).replace(/\.?0+$/, "");
+  if (min === max) return `₹${fmt(min)} Lakh`;
+  return `₹${fmt(min)}–${fmt(max)} Lakh`;
+}
+
+// ── Types ─────────────────────────────────────────────────────────────────────
+
 export type EvListing = {
   id: string;
   databaseId: number;

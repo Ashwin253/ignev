@@ -5,7 +5,7 @@ import {
 } from "lucide-react";
 import {
   fetchEvListingsREST, fetchEvListingBySlugREST, fetchEvListingBySlug,
-  formatLaunchDate, isLaunched,
+  formatLaunchDate, isLaunched, formatPricing,
 } from "../../lib/wordpress";
 import { fetchEvListingBySlugFromSupabase, fetchEvListingsFromSupabase } from "../../lib/supabase";
 import ProductGallery from "../../components/ProductGallery";
@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     if (!item) return { title: "EVPULSE" };
     return {
       title: `${item.brand} ${item.title} | EVPULSE`,
-      description: `${item.brand} ${item.title} — ${item.types[0] ?? "EV"}. Starting at ₹${item.prices[0] || ""} Lakh.`,
+      description: `${item.brand} ${item.title} — ${item.types[0] ?? "EV"}. Starting at ${formatPricing(item.prices)}.`,
     };
   } catch {
     return { title: "EVPULSE" };
@@ -147,7 +147,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   <div className="p-5">
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-600">{rel.brand}</p>
                     <h3 className="mt-1 text-lg font-semibold text-slate-900">{rel.title}</h3>
-                    {rel.prices.length > 0 && <p className="mt-1 text-sm text-slate-500">₹{rel.prices[0]} Lakh</p>}
+                    {rel.prices.length > 0 && <p className="mt-1 text-sm text-slate-500">{formatPricing(rel.prices)}</p>}
                     <p className={`mt-1.5 text-xs font-medium ${isLaunched(rel.launchdate) ? "text-emerald-600" : "text-amber-600"}`}>
                       {formatLaunchDate(rel.launchdate)}
                     </p>

@@ -59,6 +59,15 @@ export function CompareProvider({ children }: { children: React.ReactNode }) {
 
 export function useCompare() {
   const context = useContext(CompareContext);
-  if (!context) throw new Error("useCompare must be used within a CompareProvider");
+  if (!context) {
+    // Return a safe mocked implementation for server-side or un-wrapped components
+    return {
+      selectedSlugs: [],
+      addToCompare: () => {},
+      removeFromCompare: () => {},
+      clearCompare: () => {},
+      isInCompare: () => false,
+    };
+  }
   return context;
 }

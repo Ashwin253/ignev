@@ -85,7 +85,11 @@ export function ProductSelectionProvider({ item, children }: { item: EvListing; 
 
   const setShowBaas = (value: boolean) => {
     setShowBaasState(value);
-    setSelectedIndex(0);
+    // Keep selection index intact if the variant exists at that index
+    const targetVariants = value ? item.baasVariants : item.batteryVariants;
+    if (selectedIndex >= targetVariants.length) {
+      setSelectedIndex(0);
+    }
   };
 
   const selectVariantByName = (variantName: string) => {

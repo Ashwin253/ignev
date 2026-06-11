@@ -212,6 +212,8 @@ export type BatteryVariant = {
   price_baas?: string;   // ₹/km rate (BAAS subscription)
   baseprice?: string;    // Lakhs (BAAS upfront base price)
   battery_subs?: string; // Battery subscription price fallback
+  has_exclusive_color?: boolean;
+  exclusive_colors?: string[];
 };
 
 export type EnergyCompareEntry = {

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Palette, LayoutGrid } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useProductSelection } from "../product/ProductSelectionProvider";
 
 interface ProductGalleryProps {
   photos: string[];
@@ -11,6 +12,22 @@ interface ProductGalleryProps {
 }
 
 export default function ProductGallery({ photos, name, colors = [] }: ProductGalleryProps) {
+  const selectionContext = (() => {
+    try {
+      return useProductSelection();
+    } catch {
+      return null;
+    }
+  })();
+
+  const activeVariant = selectionContext
+    ? selectionContext.activeVariants[selectionContext.selectedIndex]
+    : null;
+
+  const resolvedColors = activeVariant?.has_exclusive_color && activeVariant.exclusive_colors && activeVariant.exclusive_colors.length > 0
+    ? activeVariant.exclusive_colors
+    : colors;
+
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState(0);
   const [showColors, setShowColors] = useState(false);
@@ -95,7 +112,7 @@ export default function ProductGallery({ photos, name, colors = [] }: ProductGal
         {/* ── Floating action buttons (bottom-right) ── */}
         <div className="absolute bottom-12 right-3 flex flex-col gap-2 z-10">
           {/* Colors button */}
-          {colors.length > 0 && (
+          {resolvedColors.length > 0 && (
             <button
               onClick={() => { setShowColors(!showColors); setShowThumbs(false); }}
               className={`flex items-center gap-1.5 rounded-full px-3 py-2 text-[10px] font-bold shadow-lg transition-all ${
@@ -134,8 +151,18 @@ export default function ProductGallery({ photos, name, colors = [] }: ProductGal
               exit={{ opacity: 0, y: 10 }}
               className="absolute bottom-24 right-3 z-10 flex gap-2 rounded-2xl bg-slate-900/95 backdrop-blur-md border border-white/10 p-2.5 shadow-xl"
             >
-              {colors.map((hex, i) => {
-                const code = hex.startsWith("#") ? hex : `#${hex.replace("#", "")}`;
+              {resolvedColors.map((hex, i) => {
+                // Handle dualtone hexes (e.g. "ffffff/000000" or "ffffff,000000")
+                const splitColors = hex.includes("/") ? hex.split("/") : hex.includes(",") ? hex.split(",") : [hex];
+                const formattedColors = splitColors.map(c => c.trim().startsWith("#") ? c.trim() : `#${c.trim()}`);
+                
+                let backgroundStyle = "";
+                if (formattedColors.length > 1) {
+                  backgroundStyle = `linear-gradient(135deg, ${formattedColors[0]} 50%, ${formattedColors[1]} 50%)`;
+                } else {
+                  backgroundStyle = formattedColors[0];
+                }
+
                 return (
                   <button
                     key={i}
@@ -143,7 +170,7 @@ export default function ProductGallery({ photos, name, colors = [] }: ProductGal
                     className={`h-7 w-7 rounded-lg border-2 transition-all hover:scale-110 ${
                       i === current ? "border-white shadow-md" : "border-white/30 shadow-sm"
                     }`}
-                    style={{ backgroundColor: code }}
+                    style={{ background: backgroundStyle }}
                   />
                 );
               })}

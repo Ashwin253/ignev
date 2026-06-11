@@ -95,6 +95,8 @@ export type VariantForm = {
     extra_features?: Array<{ label: string; value: string; kind?: "field" | "checkbox" }>;
   };
   showFeatures?: boolean;
+  has_exclusive_color?: boolean;
+  exclusive_colors?: string[];
 };
 
 const emptyListing: ListingForm = {
@@ -112,6 +114,8 @@ const emptyVariant: VariantForm = {
   has_baas: false, baas_price_per_km: null, baas_upfront_price: null,
   baas_model_name: "", charging_time_ac_hours: null,
   charging_time_dc_mins: null, max_dc_charging_rate_kw: null,
+  has_exclusive_color: false,
+  exclusive_colors: [],
 };
 
 const defaultFeatures = {
@@ -164,6 +168,368 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
   const [sameForAllMotor, setSameForAllMotor] = useState(false);
   const [sameForAllCharging, setSameForAllCharging] = useState(false);
   const [sameForAllDimensions, setSameForAllDimensions] = useState(false);
+
+  const [isPasteModalOpen, setIsPasteModalOpen] = useState(false);
+  const [pastedJson, setPastedJson] = useState("");
+
+  const handleCopyFormat = () => {
+    const templateForm = {
+      title: form.title || "",
+      slug: form.slug || "",
+      brand: form.brand || "",
+      body_type: form.body_type || "",
+      commercial: form.commercial ?? false,
+      has_baas: form.has_baas ?? false,
+      launchdate: form.launchdate || null,
+      types: form.types || [],
+      pros: form.pros || [],
+      cons: form.cons || [],
+      price_bracket: form.price_bracket || "",
+      parent_id: form.parent_id || "",
+    };
+
+    const diffVariants = (base: any, current: any) => {
+      const diff: any = {};
+      const keys = Object.keys(current);
+      for (const k of keys) {
+        if (k === "variant_name") {
+          diff[k] = current[k];
+          continue;
+        }
+        if (k === "features") continue;
+        const valBase = base[k];
+        const valCurr = current[k];
+        const normalize = (v: any) => (v === null || v === undefined ? "" : String(v).trim());
+        if (normalize(valBase) !== normalize(valCurr)) {
+          diff[k] = valCurr;
+        }
+      }
+
+      if (current.features) {
+        const baseFeatures = base.features || {};
+        const currFeatures = current.features;
+        const diffFeats: any = {};
+        let hasFeatDiff = false;
+        for (const fk of Object.keys(currFeatures)) {
+          const fBase = baseFeatures[fk];
+          const fCurr = currFeatures[fk];
+          const normalize = (v: any) => (v === null || v === undefined ? "" : String(v).trim());
+          if (normalize(fBase) !== normalize(fCurr)) {
+            diffFeats[fk] = fCurr;
+            hasFeatDiff = true;
+          }
+        }
+        if (hasFeatDiff) {
+          diff.features = diffFeats;
+        }
+      }
+      return diff;
+    };
+
+    const cleanedVariants = variants.map((v) => {
+      const { id, listing_id, created_at, updated_at, variant_name, version_name, model_year, ...rest } = v as any;
+      return {
+        variant_name: variant_name || "",
+        version_name: version_name || "",
+        model_year: model_year || 2026,
+        price: rest.price || 0,
+        top_speed: rest.top_speed || "",
+        battery_capacity_kwh: rest.battery_capacity_kwh || "",
+        driving_range_km: rest.driving_range_km || "",
+        charging_time_mins: rest.charging_time_mins || "",
+        max_power_bhp: rest.max_power_bhp || "",
+        max_torque_nm: rest.max_torque_nm || "",
+        has_baas: rest.has_baas ?? false,
+        baas_price_per_km: rest.baas_price_per_km || "",
+        baas_upfront_price: rest.baas_upfront_price || "",
+        baas_model_name: rest.baas_model_name || "",
+        charging_time_ac_hours: rest.charging_time_ac_hours || "",
+        charging_time_dc_mins: rest.charging_time_dc_mins || "",
+        max_dc_charging_rate_kw: rest.max_dc_charging_rate_kw || "",
+
+        // Spec details
+        acceleration: rest.acceleration || "",
+        battery_type: rest.battery_type || "",
+        battery_portability: rest.battery_portability || "",
+        charger_type: rest.charger_type || "",
+        charger_output: rest.charger_output || "",
+        charger_cost_included: rest.charger_cost_included || "",
+
+        // Dimensions
+        length_mm: rest.length_mm || "",
+        width_mm: rest.width_mm || "",
+        height_mm: rest.height_mm || "",
+        wheelbase_mm: rest.wheelbase_mm || "",
+        ground_clearance_mm: rest.ground_clearance_mm || "",
+        boot_space_litres: rest.boot_space_litres || "",
+        turning_radius_m: rest.turning_radius_m || "",
+        kerb_weight_kg: rest.kerb_weight_kg || "",
+        seat_length_mm: rest.seat_length_mm || "",
+        seat_height_mm: rest.seat_height_mm || "",
+
+        // Chassis & Brakes
+        braking_system: rest.braking_system || "",
+        wheel_type: rest.wheel_type || "",
+        front_wheel_size: rest.front_wheel_size || "",
+        rear_wheel_size: rest.rear_wheel_size || "",
+        front_suspension: rest.front_suspension || "",
+        rear_suspension: rest.rear_suspension || "",
+        chassis_type: rest.chassis_type || "",
+
+        // Warranties
+        battery_warranty: rest.battery_warranty || "",
+        motor_warranty: rest.motor_warranty || "",
+
+        // Custom / Extra structures
+        custom_fields: rest.custom_fields || [],
+        extra_motor: rest.extra_motor || [],
+        extra_charging: rest.extra_charging || [],
+        extra_dimensions: rest.extra_dimensions || [],
+        extra_sections: rest.extra_sections || [],
+
+        ...rest,
+        features: rest.features ? {
+          front_brakes: rest.features.front_brakes || "Disc",
+          rear_brakes: rest.features.rear_brakes || "Disc",
+          drivetrain: rest.features.drivetrain || "FWD",
+          seating_capacity: rest.features.seating_capacity || null,
+          front_suspension: rest.features.front_suspension || "",
+          rear_suspension: rest.features.rear_suspension || "",
+          headlight_type: rest.features.headlight_type || "LED",
+          has_sunroof: rest.features.has_sunroof ?? false,
+          has_climate_control: rest.features.has_climate_control ?? false,
+          has_cruise_control: rest.features.has_cruise_control ?? false,
+          has_wireless_charger: rest.features.has_wireless_charger ?? false,
+          has_keyless_entry: rest.features.has_keyless_entry ?? false,
+          screen_size_inches: rest.features.screen_size_inches || null,
+          speaker_count: rest.features.speaker_count || "4",
+          has_wireless_carplay_android_auto: rest.features.has_wireless_carplay_android_auto ?? false,
+          has_connected_car_app: rest.features.has_connected_car_app ?? false,
+          has_ota_updates: rest.features.has_ota_updates ?? false,
+          airbag_count: rest.features.airbag_count || null,
+          has_abs: rest.features.has_abs ?? true,
+          has_ebd: rest.features.has_ebd ?? true,
+          has_esp: rest.features.has_esp ?? false,
+          has_tpms: rest.features.has_tpms ?? false,
+          has_360_camera: rest.features.has_360_camera ?? false,
+          adas_level: rest.features.adas_level || "0",
+          ncap_safety_rating: rest.features.ncap_safety_rating || null,
+        } : defaultFeatures,
+      };
+    });
+
+    const templateVariants = cleanedVariants.map((v, idx) => {
+      if (idx === 0) return v;
+      return diffVariants(cleanedVariants[0], v);
+    });
+
+    const templateEnergyComps = energyComps.map((e) => {
+      const { id, listing_id, created_at, updated_at, ...rest } = e as any;
+      return rest;
+    });
+
+    const exportData = {
+      _instruction: "Return a compact JSON where only the differing fields are updated per variant. All other specifications, features, and specs (like dimensions, brakes, warranties, etc.) are assumed to be inherited from the first variant (index 0). Do not repeat common fields in subsequent variants.",
+      _hints: {
+        types_options: ["2 Wheeler", "3 Wheeler", "4 Wheeler"],
+        price_bracket_options: ["0-5", "5-15", "15-30", "30+"],
+        body_type_options: ["Scooter", "Sedan", "SUV", "Hatchback", "Compact SUV", "MUV", "Bike", "Tempo", "Other"]
+      },
+      form: templateForm,
+      variants: templateVariants.length > 0 ? templateVariants : [emptyVariant],
+      energyComps: templateEnergyComps,
+    };
+
+    navigator.clipboard.writeText(JSON.stringify(exportData, null, 2))
+      .then(() => alert("Listing JSON format copied to clipboard!"))
+      .catch((err) => alert("Failed to copy format: " + err));
+  };
+
+  const handleApplyPaste = (parsedData: any) => {
+    if (!parsedData) return;
+    
+    const updatedForm = {
+      ...emptyListing,
+      ...parsedData.form,
+      photo: parsedData.form?.photo || form.photo || "",
+      gallery_images: (parsedData.form?.gallery_images && parsedData.form.gallery_images.length > 0)
+        ? parsedData.form.gallery_images
+        : form.gallery_images || [],
+    };
+
+    let firstVariantParsed: any = null;
+    const updatedVariants = Array.isArray(parsedData.variants) 
+      ? parsedData.variants.map((v: any, idx: number) => {
+          if (idx === 0) {
+            firstVariantParsed = {
+              ...emptyVariant,
+              ...v,
+              features: v.features ? { ...defaultFeatures, ...v.features } : { ...defaultFeatures },
+            };
+            return firstVariantParsed;
+          } else {
+            const baseFeatures = firstVariantParsed?.features || defaultFeatures;
+            return {
+              ...emptyVariant,
+              ...firstVariantParsed,
+              ...v,
+              features: {
+                ...baseFeatures,
+                ...(v.features || {}),
+              },
+            };
+          }
+        })
+      : [{ ...emptyVariant }];
+
+    const updatedEnergyComps = Array.isArray(parsedData.energyComps)
+      ? parsedData.energyComps.map((e: any) => ({
+          category: e.category || "fuel",
+          name: e.name || "",
+          fuel_type: e.fuel_type || "",
+          mileage: e.mileage || "",
+          fuel_price: e.fuel_price || "",
+          model_used: e.model_used || "",
+          brand: e.brand || "",
+        }))
+      : [];
+
+    setForm(updatedForm);
+    setVariants(updatedVariants);
+    setEnergyComps(updatedEnergyComps);
+    setActiveVariantIndex(0);
+    setIsPasteModalOpen(false);
+    setPastedJson("");
+    alert("Data successfully applied to the form!");
+  };
+
+  const [isPasteVariantModalOpen, setIsPasteVariantModalOpen] = useState(false);
+  const [pastedVariantJson, setPastedVariantJson] = useState("");
+
+  const handleCopyVariant = () => {
+    const current = variants[activeVariantIndex];
+    if (!current) {
+      alert("No active variant to copy!");
+      return;
+    }
+    const { id, listing_id, created_at, updated_at, variant_name, version_name, model_year, ...rest } = current as any;
+    const cleanVariant = {
+      variant_name: variant_name || "",
+      version_name: version_name || "",
+      model_year: model_year || 2026,
+      price: rest.price || 0,
+      top_speed: rest.top_speed || "",
+      battery_capacity_kwh: rest.battery_capacity_kwh || "",
+      driving_range_km: rest.driving_range_km || "",
+      charging_time_mins: rest.charging_time_mins || "",
+      max_power_bhp: rest.max_power_bhp || "",
+      max_torque_nm: rest.max_torque_nm || "",
+      has_baas: rest.has_baas ?? false,
+      baas_price_per_km: rest.baas_price_per_km || "",
+      baas_upfront_price: rest.baas_upfront_price || "",
+      baas_model_name: rest.baas_model_name || "",
+      charging_time_ac_hours: rest.charging_time_ac_hours || "",
+      charging_time_dc_mins: rest.charging_time_dc_mins || "",
+      max_dc_charging_rate_kw: rest.max_dc_charging_rate_kw || "",
+
+      // Spec details
+      acceleration: rest.acceleration || "",
+      battery_type: rest.battery_type || "",
+      battery_portability: rest.battery_portability || "",
+      charger_type: rest.charger_type || "",
+      charger_output: rest.charger_output || "",
+      charger_cost_included: rest.charger_cost_included || "",
+
+      // Dimensions
+      length_mm: rest.length_mm || "",
+      width_mm: rest.width_mm || "",
+      height_mm: rest.height_mm || "",
+      wheelbase_mm: rest.wheelbase_mm || "",
+      ground_clearance_mm: rest.ground_clearance_mm || "",
+      boot_space_litres: rest.boot_space_litres || "",
+      turning_radius_m: rest.turning_radius_m || "",
+      kerb_weight_kg: rest.kerb_weight_kg || "",
+      seat_length_mm: rest.seat_length_mm || "",
+      seat_height_mm: rest.seat_height_mm || "",
+
+      // Chassis & Brakes
+      braking_system: rest.braking_system || "",
+      wheel_type: rest.wheel_type || "",
+      front_wheel_size: rest.front_wheel_size || "",
+      rear_wheel_size: rest.rear_wheel_size || "",
+      front_suspension: rest.front_suspension || "",
+      rear_suspension: rest.rear_suspension || "",
+      chassis_type: rest.chassis_type || "",
+
+      // Warranties
+      battery_warranty: rest.battery_warranty || "",
+      motor_warranty: rest.motor_warranty || "",
+
+      // Custom / Extra structures
+      custom_fields: rest.custom_fields || [],
+      extra_motor: rest.extra_motor || [],
+      extra_charging: rest.extra_charging || [],
+      extra_dimensions: rest.extra_dimensions || [],
+      extra_sections: rest.extra_sections || [],
+
+      ...rest,
+      features: rest.features ? {
+        front_brakes: rest.features.front_brakes || "Disc",
+        rear_brakes: rest.features.rear_brakes || "Disc",
+        drivetrain: rest.features.drivetrain || "FWD",
+        seating_capacity: rest.features.seating_capacity || null,
+        front_suspension: rest.features.front_suspension || "",
+        rear_suspension: rest.features.rear_suspension || "",
+        headlight_type: rest.features.headlight_type || "LED",
+        has_sunroof: rest.features.has_sunroof ?? false,
+        has_climate_control: rest.features.has_climate_control ?? false,
+        has_cruise_control: rest.features.has_cruise_control ?? false,
+        has_wireless_charger: rest.features.has_wireless_charger ?? false,
+        has_keyless_entry: rest.features.has_keyless_entry ?? false,
+        screen_size_inches: rest.features.screen_size_inches || null,
+        speaker_count: rest.features.speaker_count || "4",
+        has_wireless_carplay_android_auto: rest.features.has_wireless_carplay_android_auto ?? false,
+        has_connected_car_app: rest.features.has_connected_car_app ?? false,
+        has_ota_updates: rest.features.has_ota_updates ?? false,
+        airbag_count: rest.features.airbag_count || null,
+        has_abs: rest.features.has_abs ?? true,
+        has_ebd: rest.features.has_ebd ?? true,
+        has_esp: rest.features.has_esp ?? false,
+        has_tpms: rest.features.has_tpms ?? false,
+        has_360_camera: rest.features.has_360_camera ?? false,
+        adas_level: rest.features.adas_level || "0",
+        ncap_safety_rating: rest.features.ncap_safety_rating || null,
+      } : defaultFeatures,
+    };
+
+    navigator.clipboard.writeText(JSON.stringify(cleanVariant, null, 2))
+      .then(() => alert(`Variant "${cleanVariant.variant_name || "Variant"}" JSON copied!`))
+      .catch((err) => alert("Failed to copy variant: " + err));
+  };
+
+  const handleApplyPasteVariant = (parsedData: any) => {
+    if (!parsedData) return;
+
+    const newVariant = {
+      ...emptyVariant,
+      ...parsedData,
+      features: parsedData.features ? { ...defaultFeatures, ...parsedData.features } : { ...defaultFeatures },
+    };
+
+    setVariants((prev) => {
+      const next = [...prev];
+      if (next.length === 0) {
+        next.push(newVariant);
+      } else {
+        next[activeVariantIndex] = newVariant;
+      }
+      return next;
+    });
+
+    setIsPasteVariantModalOpen(false);
+    setPastedVariantJson("");
+    alert("Variant details successfully applied!");
+  };
 
   useEffect(() => { supabase.auth.getUser().then(({ data }: any) => { if (data.user) setUser(data.user); }); }, []);
   useEffect(() => { if (user) fetchListings(); }, [user]);
@@ -265,7 +631,24 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
       const { data: feats } = await supabase.from("ev_variant_features").select("*").in("variant_id", variantIds);
       for (const f of (feats ?? [])) featuresMap.set(f.variant_id, f);
     }
-    const loadedVariants = l.variants.map((v) => ({ ...v, id: v.id, features: featuresMap.get(v.id) || undefined })) as any;
+    const loadedVariants = l.variants.map((v) => {
+      const custom_fields = (v as any).custom_fields || [];
+      const hasExclusiveColorCf = custom_fields.find((cf: any) => cf.label === "_has_exclusive_color");
+      const exclusiveColorsCf = custom_fields.find((cf: any) => cf.label === "_exclusive_colors");
+      
+      const has_exclusive_color = hasExclusiveColorCf?.value === "true";
+      const exclusive_colors = exclusiveColorsCf?.value ? exclusiveColorsCf.value.split(",") : [];
+      const visibleCustomFields = custom_fields.filter((cf: any) => cf.label !== "_has_exclusive_color" && cf.label !== "_exclusive_colors");
+
+      return {
+        ...v,
+        id: v.id,
+        features: featuresMap.get(v.id) || undefined,
+        has_exclusive_color,
+        exclusive_colors,
+        custom_fields: visibleCustomFields
+      };
+    }) as any;
     setVariants(loadedVariants);
     // Load energy comparisons
     const { data: ec } = await supabase.from("ev_energy_comparisons").select("*").eq("listing_id", l.id).order("created_at");
@@ -335,6 +718,14 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
       for (const v of variants) {
         const features = (v as any).features;
         const variantId = (v as any).id;
+        const rawCustomFields = (v as any).custom_fields || [];
+        const filteredCustomFields = rawCustomFields.filter((cf: any) => cf.label !== "_has_exclusive_color" && cf.label !== "_exclusive_colors");
+        const finalCustomFields = [
+          ...filteredCustomFields,
+          { label: "_has_exclusive_color", value: (v as any).has_exclusive_color ? "true" : "false" },
+          { label: "_exclusive_colors", value: Array.isArray((v as any).exclusive_colors) ? (v as any).exclusive_colors.join(",") : "" }
+        ];
+
         const varPayload: any = {
           listing_id: listingId,
           variant_name: v.variant_name,
@@ -381,7 +772,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
           chassis_type: v.chassis_type || null,
           battery_warranty: v.battery_warranty || null,
           motor_warranty: v.motor_warranty || null,
-          custom_fields: (v as any).custom_fields || [],
+          custom_fields: finalCustomFields,
           extra_motor: (v as any).extra_motor || [],
           extra_charging: (v as any).extra_charging || [],
           extra_sections: (v as any).extra_sections || [],
@@ -573,9 +964,30 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
         {/* Edit Form */}
         {editing && (
           <div className="mb-8 rounded-2xl border-2 border-slate-300 bg-slate-50 p-6 shadow-sm text-sm">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-slate-900">{editing === "new" ? "New Listing" : "Edit Listing"}</h2>
-              <button onClick={() => setEditing(null)} className="text-slate-400 hover:text-slate-600"><X size={20} /></button>
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+              <div className="flex flex-wrap items-center gap-4">
+                <h2 className="text-lg font-bold text-slate-900">{editing === "new" ? "New Listing" : "Edit Listing"}</h2>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleCopyFormat}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-xs cursor-pointer"
+                  >
+                    Copy Format
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPastedJson("");
+                      setIsPasteModalOpen(true);
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-xs cursor-pointer"
+                  >
+                    Paste Format
+                  </button>
+                </div>
+              </div>
+              <button onClick={() => setEditing(null)} className="text-slate-400 hover:text-slate-600 cursor-pointer"><X size={20} /></button>
             </div>
 
             <div className="mb-5 flex flex-wrap gap-1 rounded-xl border-2 border-slate-300 bg-slate-200 p-1">
@@ -617,7 +1029,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
               <label className="block">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-700">Type</span>
                 <select value={form.types[0] || ""} onChange={(e) => setForm({ ...form, types: [e.target.value] })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none">
-                  <option value="">Select</option><option value="Scooter">Scooter</option><option value="2 Wheeler">2 Wheeler</option><option value="3 Wheeler">3 Wheeler</option><option value="4 Wheeler">4 Wheeler</option>
+                  <option value="">Select</option><option value="2 Wheeler">2 Wheeler</option><option value="3 Wheeler">3 Wheeler</option><option value="4 Wheeler">4 Wheeler</option>
                 </select>
               </label>
               <label className="block">
@@ -719,21 +1131,115 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
               </div>
               <input type="file" accept="image/*" multiple onChange={async (e) => { const files = Array.from(e.target.files ?? []); const urls: any[] = []; for (const file of files) { const path = `evlistings/${form.slug || Date.now()}/gallery-${Date.now()}-${file.name}`; const { data } = await supabase.storage.from("evphotos").upload(path, file, { upsert: true }); if (data) { const { data: u } = supabase.storage.from("evphotos").getPublicUrl(data.path); urls.push({ url: u.publicUrl, type: "", colorCode: "" }); } } setForm({ ...form, gallery_images: [...form.gallery_images, ...urls] }); }} className="text-xs rounded-lg border border-slate-200 bg-white px-3 py-2 file:mr-2 file:rounded-md file:border-0 file:bg-sky-50 file:px-2 file:py-1 file:text-[10px] file:font-bold file:text-sky-600" />
             </div>
-
+            
             {/* Colors */}
             <div className="mt-4 rounded-xl border-2 border-slate-300 bg-slate-200 p-4">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-xs font-bold uppercase tracking-wider text-slate-600">Colors</p>
-                <button onClick={() => setForm({ ...form, colors: [...form.colors, ""] })} className="text-[10px] font-bold text-sky-600">+ Add</button>
+                <button onClick={() => setForm({ ...form, colors: [...form.colors, ""] })} className="text-[10px] font-bold text-sky-600">+ Add Color</button>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {form.colors.map((hex, i) => (
-                  <div key={i} className="flex items-center gap-1.5">
-                    <div className="h-6 w-6 rounded-md border" style={{ backgroundColor: hex.startsWith("#") ? hex : `#${hex}` }} />
-                    <input value={hex} onChange={(e) => { const arr = [...form.colors]; arr[i] = e.target.value; setForm({ ...form, colors: arr }); }} placeholder="FF5733" className="w-20 rounded-md border border-slate-200 px-2 py-1 text-[11px] outline-none" />
-                    <button onClick={() => setForm({ ...form, colors: form.colors.filter((_, j) => j !== i) })} className="text-rose-400 text-xs">×</button>
-                  </div>
-                ))}
+              <div className="flex flex-wrap gap-2.5">
+                {form.colors.map((colorVal, i) => {
+                  const parts = colorVal.split("/");
+                  const isDual = parts.length > 1;
+                  const primary = parts[0] || "FFFFFF";
+                  const secondary = parts[1] || "FFFFFF";
+
+                  const primaryHex = primary.startsWith("#") ? primary : `#${primary}`;
+                  const secondaryHex = secondary.startsWith("#") ? secondary : `#${secondary}`;
+
+                  return (
+                    <div key={i} className="flex flex-col gap-1.5 bg-white rounded-xl border border-slate-200 p-2.5">
+                      <div className="flex items-center gap-2">
+                        {/* Visual Preview */}
+                        <div 
+                          className="h-7 w-7 rounded-lg border border-slate-300 shrink-0 shadow-xs" 
+                          style={{ 
+                            background: isDual 
+                              ? `linear-gradient(135deg, ${primaryHex} 50%, ${secondaryHex} 50%)` 
+                              : primaryHex 
+                          }}
+                        />
+
+                        {/* Primary Color Picker & Input */}
+                        <div className="flex items-center gap-1">
+                          <input
+                            type="color"
+                            value={primaryHex}
+                            onChange={(e) => {
+                              const newPrim = e.target.value.replace("#", "").toUpperCase();
+                              const arr = [...form.colors];
+                              arr[i] = isDual ? `${newPrim}/${secondary}` : newPrim;
+                              setForm({ ...form, colors: arr });
+                            }}
+                            className="h-6 w-6 rounded-md border border-slate-200 p-0 cursor-pointer overflow-hidden outline-none shrink-0"
+                          />
+                          <input
+                            value={primary}
+                            onChange={(e) => {
+                              const newPrim = e.target.value;
+                              const arr = [...form.colors];
+                              arr[i] = isDual ? `${newPrim}/${secondary}` : newPrim;
+                              setForm({ ...form, colors: arr });
+                            }}
+                            placeholder="Primary"
+                            className="w-16 rounded border border-slate-200 px-1 py-0.5 text-[10px] outline-none font-mono text-slate-800 text-center"
+                          />
+                        </div>
+
+                        {/* Secondary Color Picker & Input (if Dual) */}
+                        {isDual && (
+                          <div className="flex items-center gap-1 border-l border-slate-200 pl-2">
+                            <input
+                              type="color"
+                              value={secondaryHex}
+                              onChange={(e) => {
+                                const newSec = e.target.value.replace("#", "").toUpperCase();
+                                const arr = [...form.colors];
+                                arr[i] = `${primary}/${newSec}`;
+                                setForm({ ...form, colors: arr });
+                              }}
+                              className="h-6 w-6 rounded-md border border-slate-200 p-0 cursor-pointer overflow-hidden outline-none shrink-0"
+                            />
+                            <input
+                              value={secondary}
+                              onChange={(e) => {
+                                const newSec = e.target.value;
+                                const arr = [...form.colors];
+                                arr[i] = `${primary}/${newSec}`;
+                                setForm({ ...form, colors: arr });
+                              }}
+                              placeholder="Secondary"
+                              className="w-16 rounded border border-slate-200 px-1 py-0.5 text-[10px] outline-none font-mono text-slate-800 text-center"
+                            />
+                          </div>
+                        )}
+                        
+                        {/* Remove color box */}
+                        <button type="button" onClick={() => setForm({ ...form, colors: form.colors.filter((_, j) => j !== i) })} className="ml-2 text-rose-400 hover:text-rose-600 text-xs font-bold shrink-0 cursor-pointer">×</button>
+                      </div>
+
+                      {/* Dualtone Toggle Actions */}
+                      <div className="flex items-center justify-between border-t border-slate-100 pt-1.5 mt-0.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const arr = [...form.colors];
+                            if (isDual) {
+                              arr[i] = primary; // Revert to single
+                            } else {
+                              arr[i] = `${primary}/FFFFFF`; // Make dual
+                            }
+                            setForm({ ...form, colors: arr });
+                          }}
+                          className="text-[9px] font-semibold text-sky-600 hover:text-sky-700 cursor-pointer"
+                        >
+                          {isDual ? "Revert to Single" : "Split Dualtone"}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -761,20 +1267,28 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
               {/* Actions row */}
               <div className="flex flex-wrap gap-2 mb-4 rounded-xl bg-white border border-sky-200 p-3">
                 <button onClick={() => { setVariants([...variants, { ...emptyVariant }]); setActiveVariantIndex(variants.length); setEditingVariantId(null); }}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-3 py-2 text-xs font-bold text-white hover:bg-sky-700">
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-3 py-2 text-xs font-bold text-white hover:bg-sky-700 cursor-pointer">
                   <Plus size={12} /> Add New
                 </button>
                 <button onClick={() => { const current = variants[activeVariantIndex]; if (current) { const clone = { ...current, variant_name: `${current.variant_name} (Copy)`, id: undefined } as any; delete clone.id; setVariants([...variants, clone]); setActiveVariantIndex(variants.length); setEditingVariantId(null); } }}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-sky-200 bg-white px-3 py-2 text-xs font-bold text-sky-600 hover:bg-sky-50">
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-sky-200 bg-white px-3 py-2 text-xs font-bold text-sky-600 hover:bg-sky-50 cursor-pointer">
                   📋 Clone Current
+                </button>
+                <button onClick={handleCopyVariant}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-sky-200 bg-white px-3 py-2 text-xs font-bold text-sky-600 hover:bg-sky-50 cursor-pointer">
+                  Copy Variant
+                </button>
+                <button onClick={() => { setPastedVariantJson(""); setIsPasteVariantModalOpen(true); }}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-sky-200 bg-white px-3 py-2 text-xs font-bold text-sky-600 hover:bg-sky-50 cursor-pointer">
+                  Paste Variant
                 </button>
                 {variants.length > 1 && (
                   <button onClick={() => { if (!confirm(`Remove "${variants[activeVariantIndex]?.variant_name || "this variant"}"?`)) return; const arr = variants.filter((_, j) => j !== activeVariantIndex); setVariants(arr); setActiveVariantIndex(Math.max(0, activeVariantIndex - 1)); setEditingVariantId(null); }}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-3 py-2 text-xs font-bold text-rose-500 hover:bg-rose-50">
-                    <Trash2 size={12} /> Remove
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-3 py-2 text-xs font-bold text-rose-500 hover:bg-rose-50 cursor-pointer">
+                    <Trash2 size={12} /> Remove Variant
                   </button>
                 )}
-                {editingVariantId && <button onClick={() => setEditingVariantId(null)} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50">Show All</button>}
+                {editingVariantId && <button onClick={() => setEditingVariantId(null)} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50 cursor-pointer">Show All</button>}
               </div>
 
               {variants.length > 0 && !editingVariantId && (
@@ -801,7 +1315,6 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                       {v.variant_name || `Variant ${i + 1}`}
                       {v.price ? <span className="text-[10px] font-medium text-slate-400">₹{v.price}L</span> : null}
                     </span>
-                    <button onClick={(e) => { e.stopPropagation(); setVariants(variants.filter((_, j) => j !== i)); setActiveVariantIndex(Math.max(0, i - 1)); }} className="text-[10px] text-rose-500 font-bold">Remove Variant</button>
                   </div>
                   <div className="p-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
@@ -810,6 +1323,40 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                     <MiniInput label="Launch Date" value={v.launch_date || ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], launch_date: val }; setVariants(arr); }} />
                     <MiniInput label="Model Year" value={String(v.model_year)} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], model_year: cleanInt(val, 2026) }; setVariants(arr); }} />
                     <MiniInput label="Price (Lakh)" value={String(v.price || "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], price: cleanPriceLakh(val) }; setVariants(arr); }} />
+                  </div>
+                  
+                  {/* Exclusive Colors Toggle & Input */}
+                  <div className="mb-4 p-3 rounded-lg border-2 border-dashed border-sky-300 bg-sky-50/50 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                    <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={!!v.has_exclusive_color}
+                        onChange={(e) => {
+                          const arr = [...variants];
+                          arr[i] = { ...arr[i], has_exclusive_color: e.target.checked };
+                          setVariants(arr);
+                        }}
+                        className="rounded border-slate-300 text-sky-600 focus:ring-sky-500 h-4 w-4"
+                      />
+                      Has Exclusive Color
+                    </label>
+
+                    {v.has_exclusive_color && (
+                      <div className="flex-1 w-full">
+                        <MiniInput
+                          label="Exclusive Colors (comma/slash separated hex codes, e.g. ffffff, 000000, 333/fff)"
+                          value={Array.isArray(v.exclusive_colors) ? v.exclusive_colors.join(", ") : ""}
+                          onChange={(val) => {
+                            const arr = [...variants];
+                            arr[i] = {
+                              ...arr[i],
+                              exclusive_colors: val.split(",").map((c) => c.trim()).filter(Boolean),
+                            };
+                            setVariants(arr);
+                          }}
+                        />
+                      </div>
+                    )}
                   </div>
 
                   {(() => {
@@ -1437,6 +1984,231 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
         {!loading && listings.length === 0 && !editing && <div className="text-center py-12 text-slate-400">No listings yet. Add your first one!</div>}
         </>)}
       </div>
+
+      {isPasteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white p-6 shadow-xl flex flex-col max-h-[85vh]">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+              <h3 className="text-lg font-bold text-slate-950">Paste EV Listing JSON</h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsPasteModalOpen(false);
+                  setPastedJson("");
+                }}
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+              <div>
+                <p className="text-xs font-semibold text-slate-500 mb-1.5">PASTE JSON DATA</p>
+                <textarea
+                  rows={8}
+                  value={pastedJson}
+                  onChange={(e) => setPastedJson(e.target.value)}
+                  placeholder='Paste listing JSON here (e.g. {"form": {...}, "variants": [...]})'
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs font-mono text-slate-800 focus:bg-white focus:border-sky-500 focus:outline-none transition-colors resize-y"
+                />
+              </div>
+
+              {(() => {
+                if (!pastedJson.trim()) {
+                  return (
+                    <div className="rounded-xl bg-slate-50 border border-dashed border-slate-200 p-4 text-center">
+                      <p className="text-xs text-slate-500">Paste valid listing JSON to see a preview of the contents.</p>
+                    </div>
+                  );
+                }
+
+                try {
+                  const parsed = JSON.parse(pastedJson);
+                  const formTitle = parsed.form?.title || "(Untitled Model)";
+                  const formBrand = parsed.form?.brand || "(Unknown Brand)";
+                  const formType = parsed.form?.types?.[0] || "(No Type)";
+                  const numVariants = Array.isArray(parsed.variants) ? parsed.variants.length : 0;
+                  const numEnergy = Array.isArray(parsed.energyComps) ? parsed.energyComps.length : 0;
+
+                  return (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 text-emerald-600 font-bold text-xs bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-1.5 w-fit">
+                        <span>✓ Valid JSON Format</span>
+                      </div>
+
+                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3 text-xs">
+                        <p className="font-bold text-slate-800 border-b border-slate-200 pb-2">Parsed Content Summary</p>
+                        <div className="grid grid-cols-2 gap-2 text-slate-600">
+                          <div>
+                            <span className="font-semibold text-slate-400">Model:</span> {formBrand} {formTitle}
+                          </div>
+                          <div>
+                            <span className="font-semibold text-slate-400">Vehicle Type:</span> {formType}
+                          </div>
+                          <div>
+                            <span className="font-semibold text-slate-400">Price Bracket:</span> {parsed.form?.price_bracket || "N/A"}
+                          </div>
+                          <div>
+                            <span className="font-semibold text-slate-400">Body Type:</span> {parsed.form?.body_type || "N/A"}
+                          </div>
+                          <div>
+                            <span className="font-semibold text-slate-400">Variants:</span> {numVariants} variant(s)
+                          </div>
+                          <div>
+                            <span className="font-semibold text-slate-400">Competitors:</span> {numEnergy} item(s)
+                          </div>
+                        </div>
+
+                        {numVariants > 0 && (
+                          <div className="pt-2 border-t border-slate-200">
+                            <p className="font-semibold text-slate-500 mb-1">Variants detected:</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {parsed.variants.map((v: any, idx: number) => (
+                                <span key={idx} className="bg-sky-50 border border-sky-100 text-sky-700 px-2 py-0.5 rounded text-[10px] font-medium">
+                                  {v.variant_name || `Variant ${idx + 1}`}{v.version_name ? ` (${v.version_name})` : ""}{v.model_year ? ` '${String(v.model_year).slice(-2)}` : ""} {v.price ? `· ₹${v.price}L` : ""}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex justify-end pt-2">
+                        <button
+                          type="button"
+                          onClick={() => handleApplyPaste(parsed)}
+                          className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-sky-700 transition-colors shadow-sm cursor-pointer"
+                        >
+                          Apply to Form
+                        </button>
+                      </div>
+                    </div>
+                  );
+                } catch (err: any) {
+                  return (
+                    <div className="rounded-xl bg-rose-50 border border-rose-100 p-4 text-rose-700 text-xs space-y-1">
+                      <p className="font-bold">✗ Invalid JSON Structure</p>
+                      <p className="font-mono text-[10px] break-all">{err.message}</p>
+                    </div>
+                  );
+                }
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isPasteVariantModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white p-6 shadow-xl flex flex-col max-h-[85vh]">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+              <h3 className="text-lg font-bold text-slate-950">Paste EV Variant JSON</h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsPasteVariantModalOpen(false);
+                  setPastedVariantJson("");
+                }}
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+              <div>
+                <p className="text-xs font-semibold text-slate-500 mb-1.5">PASTE VARIANT JSON DATA</p>
+                <textarea
+                  rows={8}
+                  value={pastedVariantJson}
+                  onChange={(e) => setPastedVariantJson(e.target.value)}
+                  placeholder='Paste variant JSON here (e.g. {"variant_name": "Pro", "price": 15, "driving_range_km": "400", "features": {...}})'
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs font-mono text-slate-800 focus:bg-white focus:border-sky-500 focus:outline-none transition-colors resize-y"
+                />
+              </div>
+
+              {(() => {
+                if (!pastedVariantJson.trim()) {
+                  return (
+                    <div className="rounded-xl bg-slate-50 border border-dashed border-slate-200 p-4 text-center">
+                      <p className="text-xs text-slate-500">Paste valid variant JSON to see a preview of the contents.</p>
+                    </div>
+                  );
+                }
+
+                try {
+                  const parsed = JSON.parse(pastedVariantJson);
+                  const varName = parsed.variant_name || "(Untitled Variant)";
+                  const price = parsed.price ? `₹${parsed.price}L` : "N/A";
+                  const modelYear = parsed.model_year || "N/A";
+                  const drivingRange = parsed.driving_range_km ? `${parsed.driving_range_km} km` : "N/A";
+                  const batteryCapacity = parsed.battery_capacity_kwh ? `${parsed.battery_capacity_kwh} kWh` : "N/A";
+                  const hasBaas = parsed.has_baas ? "Yes" : "No";
+
+                  return (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 text-emerald-600 font-bold text-xs bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-1.5 w-fit">
+                        <span>✓ Valid Variant JSON Format</span>
+                      </div>
+
+                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3 text-xs">
+                        <p className="font-bold text-slate-800 border-b border-slate-200 pb-2">Parsed Variant Summary</p>
+                        <div className="grid grid-cols-2 gap-2 text-slate-600">
+                          <div>
+                            <span className="font-semibold text-slate-400">Variant Name:</span> {varName}
+                          </div>
+                          <div>
+                            <span className="font-semibold text-slate-400">Version:</span> {parsed.version_name || "N/A"}
+                          </div>
+                          <div>
+                            <span className="font-semibold text-slate-400">Price:</span> {price}
+                          </div>
+                          <div>
+                            <span className="font-semibold text-slate-400">Model Year:</span> {modelYear}
+                          </div>
+                          <div>
+                            <span className="font-semibold text-slate-400">Driving Range:</span> {drivingRange}
+                          </div>
+                          <div>
+                            <span className="font-semibold text-slate-400">Battery Capacity:</span> {batteryCapacity}
+                          </div>
+                          <div>
+                            <span className="font-semibold text-slate-400">Has BAAS:</span> {hasBaas}
+                          </div>
+                          <div>
+                            <span className="font-semibold text-slate-400">Top Speed:</span> {parsed.top_speed || "N/A"}
+                          </div>
+                          <div>
+                            <span className="font-semibold text-slate-400">Drivetrain:</span> {parsed.features?.drivetrain || "N/A"}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end pt-2">
+                        <button
+                          type="button"
+                          onClick={() => handleApplyPasteVariant(parsed)}
+                          className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-sky-700 transition-colors shadow-sm cursor-pointer"
+                        >
+                          Apply to Active Variant
+                        </button>
+                      </div>
+                    </div>
+                  );
+                } catch (err: any) {
+                  return (
+                    <div className="rounded-xl bg-rose-50 border border-rose-100 p-4 text-rose-700 text-xs space-y-1">
+                      <p className="font-bold">✗ Invalid JSON Structure</p>
+                      <p className="font-mono text-[10px] break-all">{err.message}</p>
+                    </div>
+                  );
+                }
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

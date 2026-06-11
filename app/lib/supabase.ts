@@ -152,28 +152,48 @@ function mapToEvListing(row: EvListingRow, variants: EvVariantRow[], features?: 
   ).filter(Boolean);
 
   // Standard variants (all)
-  const standardVariants: BatteryVariant[] = variants.map((v) => ({
-    modelName: v.variant_name,
-    capacity: v.battery_capacity_kwh ? String(v.battery_capacity_kwh) : "",
-    range: v.driving_range_km ? String(v.driving_range_km) : "",
-    charge: v.charging_time_mins ? String(v.charging_time_mins) : "",
-    price: v.price ? String(v.price) : "",
-    price_baas: v.baas_price_per_km ? String(v.baas_price_per_km) : "",
-    baseprice: v.baas_upfront_price ? String(v.baas_upfront_price) : "",
-  }));
+  const standardVariants: BatteryVariant[] = variants.map((v) => {
+    const customFields = (v as any).custom_fields || [];
+    const hasColorCf = customFields.find((cf: any) => cf.label === "_has_exclusive_color");
+    const colorsCf = customFields.find((cf: any) => cf.label === "_exclusive_colors");
+    const has_exclusive_color = hasColorCf?.value === "true";
+    const exclusive_colors = colorsCf?.value ? colorsCf.value.split(",").map((c: string) => c.trim()).filter(Boolean) : [];
+
+    return {
+      modelName: v.variant_name,
+      capacity: v.battery_capacity_kwh ? String(v.battery_capacity_kwh) : "",
+      range: v.driving_range_km ? String(v.driving_range_km) : "",
+      charge: v.charging_time_mins ? String(v.charging_time_mins) : "",
+      price: v.price ? String(v.price) : "",
+      price_baas: v.baas_price_per_km ? String(v.baas_price_per_km) : "",
+      baseprice: v.baas_upfront_price ? String(v.baas_upfront_price) : "",
+      has_exclusive_color,
+      exclusive_colors,
+    };
+  });
 
   // BAAS variants (only those with has_baas)
   const baasVariants: BatteryVariant[] = variants
     .filter((v) => v.has_baas === true || (v.has_baas as any) === "true")
-    .map((v) => ({
-      modelName: v.baas_model_name || v.variant_name,
-      capacity: v.battery_capacity_kwh ? String(v.battery_capacity_kwh) : "",
-      range: v.driving_range_km ? String(v.driving_range_km) : "",
-      charge: v.charging_time_mins ? String(v.charging_time_mins) : "",
-      price: v.baas_upfront_price ? String(v.baas_upfront_price) : "",
-      price_baas: v.baas_price_per_km ? String(v.baas_price_per_km) : "",
-      baseprice: v.baas_upfront_price ? String(v.baas_upfront_price) : "",
-    }));
+    .map((v) => {
+      const customFields = (v as any).custom_fields || [];
+      const hasColorCf = customFields.find((cf: any) => cf.label === "_has_exclusive_color");
+      const colorsCf = customFields.find((cf: any) => cf.label === "_exclusive_colors");
+      const has_exclusive_color = hasColorCf?.value === "true";
+      const exclusive_colors = colorsCf?.value ? colorsCf.value.split(",").map((c: string) => c.trim()).filter(Boolean) : [];
+
+      return {
+        modelName: v.variant_name,
+        capacity: v.battery_capacity_kwh ? String(v.battery_capacity_kwh) : "",
+        range: v.driving_range_km ? String(v.driving_range_km) : "",
+        charge: v.charging_time_mins ? String(v.charging_time_mins) : "",
+        price: v.baas_upfront_price ? String(v.baas_upfront_price) : "",
+        price_baas: v.baas_price_per_km ? String(v.baas_price_per_km) : "",
+        baseprice: v.baas_upfront_price ? String(v.baas_upfront_price) : "",
+        has_exclusive_color,
+        exclusive_colors,
+      };
+    });
 
   const hasBaas = row.has_baas || variants.some((v) => v.has_baas === true || (v.has_baas as any) === "true");
   const topSpeed = variants[0]?.top_speed ?? null;

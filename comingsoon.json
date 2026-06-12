@@ -3,7 +3,7 @@
     "electric_cars": [
       {
         "name": "Safari EV",
-        "brand": "Tata",
+        "brand": "TATA MOTORS",
         "type": "Electric Car",
         "pricing": "₹30 - 32 lakh (est.)",
         "launch": "May 2026",
@@ -11,7 +11,7 @@
       },
       {
         "name": "Sierra EV",
-        "brand": "Tata",
+        "brand": "TATA MOTORS",
         "type": "Electric Car",
         "pricing": "₹15 - 20 lakh (est.)",
         "launch": "May 2026",
@@ -19,7 +19,7 @@
       },
       {
         "name": "Urban Cruiser EV",
-        "brand": "Toyota",
+        "brand": "TOYOTA",
         "type": "Electric Car",
         "pricing": "₹18 - 21 lakh (est.)",
         "launch": "May 2026",
@@ -27,7 +27,7 @@
       },
       {
         "name": "Avinya",
-        "brand": "Tata",
+        "brand": "TATA MOTORS",
         "type": "Electric Car",
         "pricing": "₹35 - 40 lakh (est.)",
         "launch": "June 2026",
@@ -35,7 +35,7 @@
       },
       {
         "name": "Inster",
-        "brand": "Hyundai",
+        "brand": "HYUNDAI",
         "type": "Electric Car",
         "pricing": "₹10 - 12 lakh (est.)",
         "launch": "June 2026",
@@ -46,7 +46,7 @@
     "electric_two_wheelers": [
       {
         "name": "Activa Electric",
-        "brand": "Honda",
+        "brand": "HONDA",
         "type": "Electric Scooter",
         "pricing": "₹1 - 1.2 lakh (est.)",
         "launch": "2026",
@@ -54,7 +54,7 @@
       },
       {
         "name": "AEROX-E",
-        "brand": "Yamaha",
+        "brand": "YAMAHA",
         "type": "Electric Scooter",
         "pricing": "₹2.5 - 3 lakh (est.)",
         "launch": "May 2026",
@@ -62,7 +62,7 @@
       },
       {
         "name": "EL01",
-        "brand": "Ather",
+        "brand": "ATHER",
         "type": "Electric Scooter",
         "pricing": "₹90,000 - 1 lakh (est.)",
         "launch": "June 2026",
@@ -70,7 +70,7 @@
       },
       {
         "name": "Burgman Electric",
-        "brand": "Suzuki",
+        "brand": "SUZUKI",
         "type": "Electric Scooter",
         "pricing": "₹1.1 - 1.3 lakh (est.)",
         "launch": "Aug 2026",
@@ -89,7 +89,7 @@
     "electric_autos": [
       {
         "name": "Treo Plus",
-        "brand": "Mahindra Electric",
+        "brand": "MAHINDRA ELECTRIC",
         "type": "Electric Auto",
         "pricing": "₹3.5 - 4.5 lakh (est.)",
         "launch": "2026",
@@ -97,7 +97,7 @@
       },
       {
         "name": "E-Alfa Cargo",
-        "brand": "Mahindra Electric",
+        "brand": "MAHINDRA ELECTRIC",
         "type": "Electric Cargo Auto",
         "pricing": "₹3 - 4 lakh (est.)",
         "launch": "2026",
@@ -105,7 +105,7 @@
       },
       {
         "name": "RE Electric New Gen",
-        "brand": "Bajaj",
+        "brand": "BAJAJ",
         "type": "Electric Auto",
         "pricing": "₹3 - 4.5 lakh (est.)",
         "launch": "2026",
@@ -113,7 +113,7 @@
       },
       {
         "name": "Piaggio Ape E-City Next",
-        "brand": "Piaggio",
+        "brand": "PIAGGIO",
         "type": "Electric Auto",
         "pricing": "₹3 - 4 lakh (est.)",
         "launch": "2026",
@@ -121,7 +121,7 @@
       },
       {
         "name": "Euler HiLoad EV",
-        "brand": "Euler Motors",
+        "brand": "EULER MOTORS",
         "type": "Electric Cargo Auto",
         "pricing": "₹4 - 5 lakh (est.)",
         "launch": "2026",

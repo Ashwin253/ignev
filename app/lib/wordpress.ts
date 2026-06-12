@@ -170,6 +170,11 @@ export type EvListing = {
   topSpeed: number | null;
   commercial: boolean;
   launchdate: string | null;
+  discontinued?: boolean;
+  discontinued_date?: string | null;
+  video_links?: Array<{ url: string; title?: string; variantId?: string | null }>;
+  featured_photos?: Array<{ url: string; variantId?: string | null }>;
+  gallery_raw?: Array<{ url: string; type?: string; colorCode?: string; variantId?: string | null }>;
   // OpenFields top-level fields (JSON strings parsed client-side)
   batteryVariants: BatteryVariant[];
   // batteryVariants: BatteryVariant[]; // Standard
@@ -204,6 +209,7 @@ export type EvListing = {
 };
 
 export type BatteryVariant = {
+  id?: string;
   modelName?: string;
   capacity: string;      // kWh
   range: string;         // km
@@ -214,6 +220,8 @@ export type BatteryVariant = {
   battery_subs?: string; // Battery subscription price fallback
   has_exclusive_color?: boolean;
   exclusive_colors?: string[];
+  discontinued?: boolean;
+  discontinued_date?: string | null;
 };
 
 export type EnergyCompareEntry = {
@@ -489,7 +497,10 @@ function mapEvlistNode(n: RawEvlistNode): EvListing {
     slug: n.slug,
     date: n.date,
     photo: n.featuredImage?.node?.sourceUrl || parseJsonArray<string>(n.galleryImages)[0] || "",
-    brand: e?.brand ?? "",
+    brand: (() => {
+      const b = e?.brand ? e.brand.trim().toUpperCase() : "";
+      return b === "TATA" ? "TATA MOTORS" : b;
+    })(),
     types: e?.type ?? [],
     prices: Array.isArray(e?.price) ? e.price : (e?.price ? [e.price] : []),
     topSpeed: e?.topSpeed ?? null,
@@ -669,7 +680,10 @@ function mapRestListing(p: RestEvlisting): EvListing {
     slug: p.slug,
     date: p.date,
     photo,
-    brand: str("brand"),
+    brand: (() => {
+      const b = str("brand") ? str("brand").trim().toUpperCase() : "";
+      return b === "TATA" ? "TATA MOTORS" : b;
+    })(),
     types: arr("type"),
     prices: arr("price"),
     topSpeed: num("top_speed") ?? num("topSpeed"),

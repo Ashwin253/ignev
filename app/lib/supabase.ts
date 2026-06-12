@@ -34,6 +34,10 @@ export type EvListingRow = {
   cons: string[];
   has_baas: boolean;
   price_bracket?: string;
+  discontinued?: boolean;
+  discontinued_date?: string | null;
+  video_links?: Array<{ url: string; title?: string; variantId?: string | null }>;
+  featured_photos?: Array<{ url: string; variantId?: string | null }>;
   parent_id?: string | null;
   created_at: string;
   updated_at: string;
@@ -86,6 +90,8 @@ export type EvVariantRow = {
   chassis_type?: string | null;
   battery_warranty?: string | null;
   motor_warranty?: string | null;
+  discontinued?: boolean;
+  discontinued_date?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -160,6 +166,7 @@ function mapToEvListing(row: EvListingRow, variants: EvVariantRow[], features?: 
     const exclusive_colors = colorsCf?.value ? colorsCf.value.split(",").map((c: string) => c.trim()).filter(Boolean) : [];
 
     return {
+      id: v.id,
       modelName: v.variant_name,
       capacity: v.battery_capacity_kwh ? String(v.battery_capacity_kwh) : "",
       range: v.driving_range_km ? String(v.driving_range_km) : "",
@@ -169,6 +176,8 @@ function mapToEvListing(row: EvListingRow, variants: EvVariantRow[], features?: 
       baseprice: v.baas_upfront_price ? String(v.baas_upfront_price) : "",
       has_exclusive_color,
       exclusive_colors,
+      discontinued: v.discontinued ?? false,
+      discontinued_date: v.discontinued_date,
     };
   });
 
@@ -183,6 +192,7 @@ function mapToEvListing(row: EvListingRow, variants: EvVariantRow[], features?: 
       const exclusive_colors = colorsCf?.value ? colorsCf.value.split(",").map((c: string) => c.trim()).filter(Boolean) : [];
 
       return {
+        id: v.id,
         modelName: v.variant_name,
         capacity: v.battery_capacity_kwh ? String(v.battery_capacity_kwh) : "",
         range: v.driving_range_km ? String(v.driving_range_km) : "",
@@ -192,6 +202,8 @@ function mapToEvListing(row: EvListingRow, variants: EvVariantRow[], features?: 
         baseprice: v.baas_upfront_price ? String(v.baas_upfront_price) : "",
         has_exclusive_color,
         exclusive_colors,
+        discontinued: v.discontinued ?? false,
+        discontinued_date: v.discontinued_date,
       };
     });
 
@@ -243,20 +255,42 @@ function mapToEvListing(row: EvListingRow, variants: EvVariantRow[], features?: 
     title: row.title,
     slug: row.slug,
     date: row.created_at,
-    photo: row.photo || galleryUrls[0] || "",
-    brand: row.brand,
+    photo: row.photo || (() => {
+      const parsed = typeof row.featured_photos === "string" ? (() => { try { return JSON.parse(row.featured_photos); } catch { return []; } })() : row.featured_photos;
+      const list = Array.isArray(parsed) ? parsed : [];
+      return list.find((p: any) => !p.variantId)?.url || list[0]?.url || galleryUrls[0] || "";
+    })(),
+    brand: (() => {
+      const b = row.brand ? row.brand.trim().toUpperCase() : "";
+      return b === "TATA" ? "TATA MOTORS" : b;
+    })(),
     types: row.types ?? [],
     price_bracket: row.price_bracket || "",
     prices: prices.length > 0 ? prices : [],
     topSpeed: topSpeed ? Number(topSpeed) : null,
     commercial: row.commercial ?? false,
     launchdate: row.launchdate,
+    discontinued: row.discontinued ?? false,
+    discontinued_date: row.discontinued_date,
+    video_links: (() => {
+      const parsed = typeof row.video_links === "string" ? (() => { try { return JSON.parse(row.video_links); } catch { return []; } })() : row.video_links;
+      return Array.isArray(parsed) ? parsed : [];
+    })(),
+    featured_photos: (() => {
+      const parsed = typeof row.featured_photos === "string" ? (() => { try { return JSON.parse(row.featured_photos); } catch { return []; } })() : row.featured_photos;
+      const list = Array.isArray(parsed) ? parsed : [];
+      return list.length > 0 ? list : (row.photo ? [{ url: row.photo, variantId: null }] : []);
+    })(),
     batteryVariants: standardVariants,
     baasVariants,
     pros: row.pros ?? [],
     cons: row.cons ?? [],
     colors: row.colors ?? [],
     galleryImages: galleryUrls,
+    gallery_raw: (() => {
+      const parsed = typeof row.gallery_images === "string" ? (() => { try { return JSON.parse(row.gallery_images); } catch { return []; } })() : row.gallery_images;
+      return Array.isArray(parsed) ? parsed : [];
+    })(),
     energyComparison: [],
     batterySpecs,
     chargingSpecs,

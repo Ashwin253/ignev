@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import {
-  BatteryCharging, Zap, Gauge, CheckCircle2, CircleMinus, ChevronDown, ChevronUp, LayoutList, Lightbulb, Activity, Disc,
+  BatteryCharging, Zap, Gauge, CheckCircle2, CircleMinus, ChevronDown, ChevronUp, LayoutList, Lightbulb, Activity, Disc, PlayCircle,
 } from "lucide-react";
 import type { EvListing } from "../lib/wordpress";
 import { useProductSelection } from "./ProductSelectionProvider";
@@ -49,6 +49,17 @@ export default function ProductDetails({ item }: { item: EvListing }) {
   const selectedVariant = selectedVariantName && variants.includes(selectedVariantName)
     ? selectedVariantName
     : localSelectedVariant || variants[0] || "";
+
+  const activeVariantId = useMemo(() => {
+    const v = item.batteryVariants.find(v => v.modelName === selectedVariant)
+      || item.baasVariants.find(v => v.modelName === selectedVariant);
+    return v?.id;
+  }, [item, selectedVariant]);
+
+  const relevantVideos = useMemo(() => {
+    const rawVideos = item.video_links || [];
+    return rawVideos.filter(v => v.url && (v.variantId === activeVariantId || !v.variantId));
+  }, [item.video_links, activeVariantId]);
 
   if (!listingHasSpecifications(item)) return null;
 
@@ -344,9 +355,65 @@ export default function ProductDetails({ item }: { item: EvListing }) {
             </ul>
           </CollapsibleSection>
         )}
+
+        {relevantVideos.length > 0 && (
+          <CollapsibleSection
+            title="Videos & Walkarounds"
+            icon={<PlayCircle size={16} className="text-sky-600" />}
+            defaultOpen
+          >
+            <div className="space-y-6">
+              {relevantVideos.map((video, idx) => {
+                const embedUrl = getEmbedUrl(video.url);
+                return (
+                  <div key={idx} className="space-y-2.5">
+                    {video.title && (
+                      <p className="text-xs font-bold text-slate-700 uppercase tracking-wider">{video.title}</p>
+                    )}
+                    {embedUrl ? (
+                      <div className="relative aspect-video w-full rounded-2xl overflow-hidden border border-slate-200 shadow bg-black">
+                        <iframe
+                          src={embedUrl}
+                          title={video.title || "Video Player"}
+                          className="absolute inset-0 w-full h-full"
+                          allowFullScreen
+                        />
+                      </div>
+                    ) : (
+                      <a
+                        href={video.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 p-3.5 rounded-2xl border border-slate-200 bg-white hover:bg-sky-50 hover:border-sky-300 transition-all group"
+                      >
+                        <div className="p-2.5 rounded-xl bg-sky-50 text-sky-600 group-hover:bg-sky-100 shrink-0">
+                          <PlayCircle size={20} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-slate-800 truncate">{video.title || "Watch Video Guide"}</p>
+                          <p className="text-[10px] text-slate-500 truncate">{video.url}</p>
+                        </div>
+                      </a>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </CollapsibleSection>
+        )}
       </div>
     </div>
   );
+}
+
+function getEmbedUrl(url: string): string | null {
+  if (!url) return null;
+  const ytRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+  const match = url.match(ytRegex);
+  if (match && match[1]) {
+    return `https://www.youtube.com/embed/${match[1]}`;
+  }
+  return null;
 }
 
 function SpecCheckboxChips({ labels }: { labels: string[] }) {

@@ -1,17 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { ChevronLeft, ChevronRight, Palette, LayoutGrid } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useProductSelection } from "../product/ProductSelectionProvider";
+import type { EvListing } from "../lib/wordpress";
 
 interface ProductGalleryProps {
   photos: string[];
   name: string;
   colors?: string[];
+  item?: EvListing;
 }
 
-export default function ProductGallery({ photos, name, colors = [] }: ProductGalleryProps) {
+export default function ProductGallery({ photos, name, colors = [], item }: ProductGalleryProps) {
   const selectionContext = (() => {
     try {
       return useProductSelection();
@@ -33,21 +35,56 @@ export default function ProductGallery({ photos, name, colors = [] }: ProductGal
   const [showColors, setShowColors] = useState(false);
   const [showThumbs, setShowThumbs] = useState(false);
 
+  // Compute resolved list of photos based on selected variant
+  const resolvedPhotos = useMemo(() => {
+    if (!item) return photos;
+
+    const selectedVariantId = activeVariant?.id;
+
+    const featured = item.featured_photos || [];
+    const gallery = item.gallery_raw || [];
+
+    const variantFeatured = featured.filter(p => p.url && p.variantId === selectedVariantId);
+    const defaultFeatured = featured.filter(p => p.url && !p.variantId);
+
+    const variantGallery = gallery.filter(p => p.url && p.variantId === selectedVariantId);
+    const defaultGallery = gallery.filter(p => p.url && !p.variantId);
+
+    const finalFeatured = variantFeatured.length > 0 ? variantFeatured : defaultFeatured;
+    const finalGallery = variantGallery.length > 0 ? variantGallery : defaultGallery;
+
+    const urls = [
+      ...finalFeatured.map(p => p.url),
+      ...finalGallery.map(p => p.url)
+    ];
+
+    const uniqueUrls = Array.from(new Set(urls)).filter(Boolean);
+
+    if (uniqueUrls.length > 0) return uniqueUrls;
+
+    return item.galleryImages.length > 0 ? item.galleryImages : (item.photo ? [item.photo] : []);
+  }, [item, activeVariant?.id, photos]);
+
+  // Reset image view index when variant changes
+  useEffect(() => {
+    setCurrent(0);
+  }, [activeVariant?.id]);
+
   // Listen for color-triggered image switch
   useEffect(() => {
     const handler = (e: Event) => {
       const { index } = (e as CustomEvent<{ index: number }>).detail;
-      if (index >= 0 && index < photos.length) {
+      if (index >= 0 && index < resolvedPhotos.length) {
         setDirection(index > current ? 1 : -1);
         setCurrent(index);
       }
     };
     window.addEventListener("gallery-set-image", handler);
     return () => window.removeEventListener("gallery-set-image", handler);
-  }, [current, photos.length]);
+  }, [current, resolvedPhotos.length]);
 
-  const prev = () => { setDirection(-1); setCurrent((c) => (c - 1 + photos.length) % photos.length); };
-  const next = () => { setDirection(1); setCurrent((c) => (c + 1) % photos.length); };
+  const prev = () => { setDirection(-1); setCurrent((c) => (c - 1 + resolvedPhotos.length) % resolvedPhotos.length); };
+  const next = () => { setDirection(1); setCurrent((c) => (c + 1) % resolvedPhotos.length); };
 
   const variants = {
     enter: (dir: number) => ({ x: dir > 0 ? 60 : -60, opacity: 0 }),
@@ -56,7 +93,7 @@ export default function ProductGallery({ photos, name, colors = [] }: ProductGal
   };
 
   const handleColorClick = (index: number) => {
-    if (index < photos.length) {
+    if (index < resolvedPhotos.length) {
       setDirection(index > current ? 1 : -1);
       setCurrent(index);
     }
@@ -71,7 +108,7 @@ export default function ProductGallery({ photos, name, colors = [] }: ProductGal
         <AnimatePresence initial={false} custom={direction} mode="wait">
           <motion.img
             key={current}
-            src={photos[current]}
+            src={resolvedPhotos[current]}
             alt={`${name} photo ${current + 1}`}
             custom={direction}
             variants={variants}
@@ -86,7 +123,7 @@ export default function ProductGallery({ photos, name, colors = [] }: ProductGal
         </AnimatePresence>
 
         {/* Prev / Next arrows */}
-        {photos.length > 1 && (
+        {resolvedPhotos.length > 1 && (
           <>
             <button onClick={prev} aria-label="Previous photo"
               className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-white/80 backdrop-blur-sm p-2 shadow-md hover:bg-white transition-colors">
@@ -99,7 +136,7 @@ export default function ProductGallery({ photos, name, colors = [] }: ProductGal
 
             {/* Dot indicators */}
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-              {photos.map((_, i) => (
+              {resolvedPhotos.map((_, i) => (
                 <button key={i}
                   onClick={() => { setDirection(i > current ? 1 : -1); setCurrent(i); }}
                   className={`h-1.5 rounded-full transition-all duration-300 ${i === current ? "w-5 bg-sky-500" : "w-1.5 bg-white/60 hover:bg-white"}`}
@@ -127,7 +164,7 @@ export default function ProductGallery({ photos, name, colors = [] }: ProductGal
           )}
 
           {/* Photos button */}
-          {photos.length > 1 && (
+          {resolvedPhotos.length > 1 && (
             <button
               onClick={() => { setShowThumbs(!showThumbs); setShowColors(false); }}
               className={`flex items-center gap-1.5 rounded-full px-3 py-2 text-[10px] font-bold shadow-lg transition-all ${
@@ -158,7 +195,7 @@ export default function ProductGallery({ photos, name, colors = [] }: ProductGal
                 
                 let backgroundStyle = "";
                 if (formattedColors.length > 1) {
-                  backgroundStyle = `linear-gradient(135deg, ${formattedColors[0]} 50%, ${formattedColors[1]} 50%)`;
+                   backgroundStyle = `linear-gradient(135deg, ${formattedColors[0]} 50%, ${formattedColors[1]} 50%)`;
                 } else {
                   backgroundStyle = formattedColors[0];
                 }
@@ -187,7 +224,7 @@ export default function ProductGallery({ photos, name, colors = [] }: ProductGal
               exit={{ opacity: 0, y: 10 }}
               className="absolute bottom-24 right-3 z-10 flex gap-1.5 rounded-2xl bg-slate-900/95 backdrop-blur-md border border-white/10 p-2 shadow-xl max-w-[75%] overflow-x-auto"
             >
-              {photos.map((photo, i) => (
+              {resolvedPhotos.map((photo, i) => (
                 <button
                   key={i}
                   onClick={() => { setDirection(i > current ? 1 : -1); setCurrent(i); setShowThumbs(false); }}
@@ -204,9 +241,9 @@ export default function ProductGallery({ photos, name, colors = [] }: ProductGal
       </div>
 
       {/* Desktop thumbnails — always visible on md+ */}
-      {photos.length > 1 && (
+      {resolvedPhotos.length > 1 && (
         <div className="hidden md:flex gap-3 overflow-x-auto pb-1">
-          {photos.map((photo, i) => (
+          {resolvedPhotos.map((photo, i) => (
             <button
               key={i}
               onClick={() => { setDirection(i > current ? 1 : -1); setCurrent(i); }}

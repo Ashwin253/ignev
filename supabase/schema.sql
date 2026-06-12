@@ -28,6 +28,10 @@ create table if not exists public.evlistings (
   cons text[] default '{}',
   has_baas boolean default false,
   price_bracket text default '',
+  discontinued boolean default false,
+  discontinued_date text default null,
+  video_links jsonb default '[]',
+  featured_photos jsonb default '[]',
   parent_id uuid references public.evlistings(id) on delete set null,
   created_by uuid references auth.users(id) default auth.uid(),
   created_by_email text default '',
@@ -88,6 +92,8 @@ create table if not exists public.ev_variants (
   extra_charging jsonb default '[]',
   extra_sections jsonb default '[]',
   extra_dimensions jsonb default '[]',
+  discontinued boolean default false,
+  discontinued_date text default null,
   created_at timestamptz default now(),
   updated_at timestamptz default now(),
   constraint ev_variants_slug_year_unique unique (slug, model_year)
@@ -269,3 +275,32 @@ create policy "Team photo update" on storage.objects
   for update to authenticated using (bucket_id = 'evphotos');
 create policy "Team photo delete" on storage.objects
   for delete to authenticated using (bucket_id = 'evphotos');
+
+-- ── Brand Capitalization & Triggers ──────────────────────────────────────────
+
+-- Trigger to enforce uppercase brand names on evlistings
+create or replace function public.clean_brand_name()
+returns trigger as $$
+begin
+  new.brand = upper(trim(new.brand));
+  return new;
+end;
+$$ language plpgsql;
+
+create or replace trigger enforce_uppercase_brand
+  before insert or update on public.evlistings
+  for each row execute function public.clean_brand_name();
+
+-- Trigger to enforce uppercase brand names on ev_energy_comparisons
+create or replace function public.clean_energy_brand_name()
+returns trigger as $$
+begin
+  new.brand = upper(trim(new.brand));
+  return new;
+end;
+$$ language plpgsql;
+
+create or replace trigger enforce_uppercase_energy_brand
+  before insert or update on public.ev_energy_comparisons
+  for each row execute function public.clean_energy_brand_name();
+

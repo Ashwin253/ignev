@@ -91,7 +91,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
           {/* ── Gallery (with built-in color + photo buttons) ── */}
           <div className="min-w-0 overflow-hidden">
-            <ProductGallery photos={photos} name={`${item.brand} ${item.title}`} colors={item.colors} />
+            <ProductGallery photos={photos} name={`${item.brand} ${item.title}`} colors={item.colors} item={item} />
           </div>
 
           {/* ── Details Area ── */}

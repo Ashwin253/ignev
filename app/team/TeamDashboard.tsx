@@ -48,6 +48,10 @@ type ListingForm = {
   price_bracket: string;
   parent_id?: string;
   editors_emails?: string[];
+  discontinued: boolean;
+  discontinued_date: string | null;
+  video_links: Array<{ url: string; title?: string; variantId?: string | null }>;
+  featured_photos: Array<{ url: string; variantId?: string | null }>;
 };
 
 export type VariantForm = {
@@ -71,6 +75,8 @@ export type VariantForm = {
   braking_system?: string | null; wheel_type?: string | null; front_wheel_size?: string | null; rear_wheel_size?: string | null;
   front_suspension?: string | null; rear_suspension?: string | null; chassis_type?: string | null;
   battery_warranty?: string | null; motor_warranty?: string | null;
+  discontinued?: boolean;
+  discontinued_date?: string | null;
   // Features
   features?: {
     front_brakes: string; rear_brakes: string; drivetrain: string;
@@ -105,6 +111,10 @@ const emptyListing: ListingForm = {
   types: [], pros: [], cons: [], price_bracket: "",
   parent_id: "",
   editors_emails: [],
+  discontinued: false,
+  discontinued_date: null,
+  video_links: [],
+  featured_photos: [],
 };
 
 const emptyVariant: VariantForm = {
@@ -116,6 +126,8 @@ const emptyVariant: VariantForm = {
   charging_time_dc_mins: null, max_dc_charging_rate_kw: null,
   has_exclusive_color: false,
   exclusive_colors: [],
+  discontinued: false,
+  discontinued_date: null,
 };
 
 const defaultFeatures = {
@@ -154,10 +166,18 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
   const [expandedListing, setExpandedListing] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<"listings" | "leads" | "prices" | "analytics">("listings");
   const [selectedModelId, setSelectedModelId] = useState<string>("");
+  const [selectedBrand, setSelectedBrand] = useState<string>("");
+  const uniqueBrands = useMemo(() => {
+    return [...new Set(listings.map((l) => l.brand).filter(Boolean))].sort();
+  }, [listings]);
+  const filteredListings = useMemo(() => {
+    if (!selectedBrand) return [];
+    return listings.filter((l) => l.brand === selectedBrand);
+  }, [listings, selectedBrand]);
   const [editingVariantId, setEditingVariantId] = useState<string | null>(null);
   const [energyComps, setEnergyComps] = useState<Array<{ id?: string; category: string; name: string; fuel_type: string; mileage: string; fuel_price: string; model_used: string; brand: string }>>([]);
   const [variantSpecSection, setVariantSpecSection] = useState<Record<number, string>>({});
-  const [listingFormTab, setListingFormTab] = useState<"core" | "variants" | "energy">("core");
+  const [listingFormTab, setListingFormTab] = useState<"core" | "variants" | "energy" | "media">("core");
   const [activeVariantIndex, setActiveVariantIndex] = useState(0);
   const [initialSnapshot, setInitialSnapshot] = useState<{form: any, variants: any, energyComps: any} | null>(null);
 
@@ -176,11 +196,16 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
     const templateForm = {
       title: form.title || "",
       slug: form.slug || "",
-      brand: form.brand || "",
+      brand: (() => {
+        const b = form.brand ? form.brand.trim().toUpperCase() : "";
+        return b === "TATA" ? "TATA MOTORS" : b;
+      })(),
       body_type: form.body_type || "",
       commercial: form.commercial ?? false,
       has_baas: form.has_baas ?? false,
       launchdate: form.launchdate || null,
+      discontinued: form.discontinued ?? false,
+      discontinued_date: form.discontinued_date || null,
       types: form.types || [],
       pros: form.pros || [],
       cons: form.cons || [],
@@ -324,8 +349,14 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
     });
 
     const templateEnergyComps = energyComps.map((e) => {
-      const { id, listing_id, created_at, updated_at, ...rest } = e as any;
-      return rest;
+      const { id, listing_id, created_at, updated_at, brand, ...rest } = e as any;
+      return {
+        ...rest,
+        brand: (() => {
+          const b = brand ? brand.trim().toUpperCase() : "";
+          return b === "TATA" ? "TATA MOTORS" : b;
+        })()
+      };
     });
 
     const exportData = {
@@ -607,14 +638,18 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
 
   const startNew = () => {
     setEditing("new");
-    setForm(emptyListing);
+    const initialForm = {
+      ...emptyListing,
+      brand: selectedBrand || "",
+    };
+    setForm(initialForm);
     setVariants([{ ...emptyVariant }]);
     setActiveVariantIndex(0);
     setEnergyComps([]);
     setListingFormTab("core");
     setVariantSpecSection({});
     setInitialSnapshot({
-      form: JSON.parse(JSON.stringify(emptyListing)),
+      form: JSON.parse(JSON.stringify(initialForm)),
       variants: JSON.parse(JSON.stringify([{ ...emptyVariant }])),
       energyComps: [],
     });
@@ -622,7 +657,46 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
   const startEdit = async (l: EvListingRow & { variants: EvVariantRow[] }) => {
     setEditing(l.id);
     setListingFormTab("core");
-    const loadedForm = { slug: l.slug, title: l.title, brand: l.brand, body_type: l.body_type || "", commercial: l.commercial, has_baas: l.has_baas || false, launchdate: l.launchdate, photo: l.photo, gallery_images: l.gallery_images ?? [], colors: l.colors ?? [], types: l.types ?? [], pros: l.pros ?? [], cons: l.cons ?? [], price_bracket: (l as any).price_bracket || "", parent_id: l.parent_id || "", editors_emails: l.editors_emails ?? [] };
+    const safeParseJson = (val: any, fallback: any = []) => {
+      if (!val) return fallback;
+      if (typeof val === "string") {
+        try {
+          return JSON.parse(val);
+        } catch (e) {
+          return fallback;
+        }
+      }
+      return val;
+    };
+
+    const rawFeaturedPhotos = safeParseJson((l as any).featured_photos, []);
+    const rawVideoLinks = safeParseJson((l as any).video_links, []);
+    const rawGalleryImages = safeParseJson(l.gallery_images, []);
+
+    const loadedForm = {
+      slug: l.slug,
+      title: l.title,
+      brand: l.brand,
+      body_type: l.body_type || "",
+      commercial: l.commercial,
+      has_baas: l.has_baas || false,
+      launchdate: l.launchdate,
+      photo: l.photo,
+      gallery_images: rawGalleryImages,
+      colors: l.colors ?? [],
+      types: l.types ?? [],
+      pros: l.pros ?? [],
+      cons: l.cons ?? [],
+      price_bracket: (l as any).price_bracket || "",
+      parent_id: l.parent_id || "",
+      editors_emails: l.editors_emails ?? [],
+      discontinued: l.discontinued || false,
+      discontinued_date: l.discontinued_date || null,
+      video_links: rawVideoLinks,
+      featured_photos: rawFeaturedPhotos.length > 0
+        ? rawFeaturedPhotos
+        : (l.photo ? [{ url: l.photo, variantId: null }] : [])
+    };
     setForm(loadedForm);
     // Load features for each variant
     const variantIds = l.variants.map((v) => v.id);
@@ -691,8 +765,18 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
       newEditors.push(user.email);
     }
 
+    const defaultPhoto = form.featured_photos.find((p) => !p.variantId)?.url 
+      || form.featured_photos[0]?.url 
+      || form.photo 
+      || "";
+
     const listingPayload: any = { 
       ...formWithoutParent, 
+      photo: defaultPhoto,
+      brand: (() => {
+        const b = form.brand ? form.brand.trim().toUpperCase() : "";
+        return b === "TATA" ? "TATA MOTORS" : b;
+      })(),
       parent_id: parent_id || null,
       slug: sanitizedSlug,
       editors_emails: newEditors,
@@ -772,6 +856,8 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
           chassis_type: v.chassis_type || null,
           battery_warranty: v.battery_warranty || null,
           motor_warranty: v.motor_warranty || null,
+          discontinued: v.discontinued ?? false,
+          discontinued_date: v.discontinued_date || null,
           custom_fields: finalCustomFields,
           extra_motor: (v as any).extra_motor || [],
           extra_charging: (v as any).extra_charging || [],
@@ -810,7 +896,10 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
       const existingEcIds = energyComps.filter((e) => e.id).map((e) => e.id!);
       await supabase.from("ev_energy_comparisons").delete().eq("listing_id", listingId).not("id", "in", `(${existingEcIds.join(",")})`);
       for (const ec of energyComps) {
-        const payload = { listing_id: listingId, category: ec.category, name: ec.name, fuel_type: ec.fuel_type, mileage: ec.mileage, fuel_price: ec.fuel_price, model_used: ec.model_used, brand: ec.brand };
+        const payload = { listing_id: listingId, category: ec.category, name: ec.name, fuel_type: ec.fuel_type, mileage: ec.mileage, fuel_price: ec.fuel_price, model_used: ec.model_used, brand: (() => {
+          const b = ec.brand ? ec.brand.trim().toUpperCase() : "";
+          return b === "TATA" ? "TATA MOTORS" : b;
+        })() };
         if (ec.id) {
           await supabase.from("ev_energy_comparisons").update(payload).eq("id", ec.id);
         } else {
@@ -851,46 +940,53 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
   return (
     <div className="min-h-screen bg-slate-200 py-28 px-4">
       <div className="mx-auto max-w-5xl">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-2xl font-black text-slate-900">Team Dashboard</h1>
-            <p className="text-sm text-slate-500">{user.email}</p>
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 leading-tight">Team Dashboard</h1>
+            <p className="text-xs sm:text-sm text-slate-500 truncate max-w-[150px] sm:max-w-none">{user.email}</p>
           </div>
-          <div className="flex gap-2">
-            {activeSection === "listings" && (
-              <>
-                <button onClick={startNew} className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-sky-700 transition-colors">
-                  <Plus size={16} /> Add Listing
-                </button>
-                {editing && (
-                  <button onClick={() => { setEditing(null); }} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
-                    View Listings
-                  </button>
-                )}
-              </>
+          <div className="flex gap-1.5 sm:gap-2 shrink-0">
+            {editing ? (
+              <button onClick={() => { setEditing(null); }} className="inline-flex items-center gap-1 sm:gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
+                View Listings
+              </button>
+            ) : (
+              <button onClick={handleLogout} className="inline-flex items-center gap-1 sm:gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
+                <LogOut size={14} className="sm:w-4 sm:h-4" /> Logout
+              </button>
             )}
-            <button onClick={handleLogout} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
-              <LogOut size={16} /> Logout
-            </button>
           </div>
         </div>
 
-        {/* Section tabs */}
-        <div className="flex gap-2 mb-6">
+        {/* Section tabs - select dropdown on mobile, buttons on desktop */}
+        <div className="block sm:hidden mb-6">
+          <select
+            value={activeSection}
+            onChange={(e) => setActiveSection(e.target.value as any)}
+            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-bold text-slate-800 outline-none cursor-pointer"
+          >
+            <option value="listings">EV Listings</option>
+            <option value="leads">Enquiries</option>
+            <option value="prices">⛽ Fuel Prices</option>
+            <option value="analytics">📊 Analytics</option>
+          </select>
+        </div>
+
+        <div className="hidden sm:flex gap-2 mb-6 overflow-x-auto">
           <button onClick={() => setActiveSection("listings")}
-            className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all ${activeSection === "listings" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+            className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all shrink-0 ${activeSection === "listings" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
             EV Listings
           </button>
           <button onClick={() => setActiveSection("leads")}
-            className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all ${activeSection === "leads" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+            className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all shrink-0 ${activeSection === "leads" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
             <MessageSquare size={14} /> Enquiries
           </button>
           <button onClick={() => setActiveSection("prices")}
-            className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all ${activeSection === "prices" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+            className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all shrink-0 ${activeSection === "prices" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
             ⛽ Fuel Prices
           </button>
           <button onClick={() => setActiveSection("analytics")}
-            className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all ${activeSection === "analytics" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+            className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all shrink-0 ${activeSection === "analytics" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
             📊 Analytics
           </button>
         </div>
@@ -899,63 +995,133 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
         {activeSection === "prices" && <FuelPricesPanel supabase={supabase} userEmail={user.email} />}
         {activeSection === "analytics" && <AnalyticsPanel supabase={supabase} />}
 
-        {activeSection === "listings" && (<>
-
-        {/* Quick Add Variant — select model then add variant */}
+        {activeSection === "listings" && (
+        <>
+        {/* Brand & Model Management Panel */}
         {!editing && listings.length > 0 && (() => {
           const selectedModel = listings.find((l) => l.id === selectedModelId);
           return (
             <div className="mb-6 rounded-2xl border border-sky-200 bg-sky-50 p-5">
-              <p className="text-sm font-bold text-sky-700 mb-3">Manage Variants</p>
-              <div className="flex items-center gap-3 mb-4">
-                <select
-                  className="flex-1 rounded-xl border border-sky-200 bg-white px-4 py-3 text-sm font-bold text-slate-800 outline-none cursor-pointer"
-                  value={selectedModelId}
-                  onChange={(e) => setSelectedModelId(e.target.value)}
-                >
-                  <option value="">Select a model...</option>
-                  {listings.map((l) => (
-                    <option key={l.id} value={l.id}>{l.brand} {l.title} ({l.variants.length} variants)</option>
-                  ))}
-                </select>
-                {selectedModel && (
-                  <>
-                    <button onClick={() => { startEdit(selectedModel); setListingFormTab("variants"); setEditingVariantId(null); }}
-                      className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-3 text-sm font-bold text-white hover:bg-sky-700 shrink-0">
-                      <Plus size={14} /> Add Variant
+              <div className="grid gap-4 sm:grid-cols-2 mb-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-sky-700 mb-1">Select Brand</label>
+                  <select
+                    className="w-full rounded-xl border border-sky-200 bg-white px-4 py-3 text-sm font-bold text-slate-800 outline-none cursor-pointer"
+                    value={selectedBrand}
+                    onChange={(e) => { setSelectedBrand(e.target.value); setSelectedModelId(""); }}
+                  >
+                    <option value="">Select a brand...</option>
+                    {uniqueBrands.map((ub) => (
+                      <option key={ub} value={ub}>{ub}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                {selectedBrand ? (
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-sky-700 mb-1">Select Model</label>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <select
+                        className="w-full sm:flex-1 min-w-0 rounded-xl border border-sky-200 bg-white px-4 py-3 text-sm font-bold text-slate-800 outline-none cursor-pointer"
+                        value={selectedModelId}
+                        onChange={(e) => setSelectedModelId(e.target.value)}
+                      >
+                        <option value="">Select a model...</option>
+                        {filteredListings.map((l) => {
+                          const years = Array.from(new Set(l.variants.map((v) => v.model_year).filter(Boolean))).sort();
+                          const yearsStr = years.length > 0 ? ` [${years.join(", ")}]` : "";
+                          const discStr = (l as any).discontinued ? " (Discontinued)" : "";
+                          return (
+                            <option key={l.id} value={l.id}>{l.brand} {l.title} ({l.variants.length} variants){yearsStr}{discStr}</option>
+                          );
+                        })}
+                      </select>
+                      <button onClick={startNew} className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-xl bg-sky-600 px-3.5 py-3 text-xs sm:text-sm font-bold text-white hover:bg-sky-700 transition-colors shrink-0">
+                        <Plus size={16} /> Add Model
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-end">
+                    <button onClick={startNew} className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-xl bg-sky-600 px-4 py-3 text-sm font-bold text-white hover:bg-sky-700 transition-colors">
+                      <Plus size={16} /> Add Model
                     </button>
-                    <button onClick={() => { startEdit(selectedModel); setListingFormTab("core"); setEditingVariantId(null); }}
-                      className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 shrink-0">
-                      Edit Model
-                    </button>
-                    <button onClick={() => { if (confirm(`Delete "${selectedModel.brand} ${selectedModel.title}" and all its variants?`)) { handleDelete(selectedModel.id); setSelectedModelId(""); } }}
-                      className="inline-flex items-center gap-2 rounded-xl border border-rose-200 bg-white px-4 py-3 text-sm font-bold text-rose-500 hover:bg-rose-50 shrink-0">
-                      <Trash2 size={14} /> Delete
-                    </button>
-                  </>
+                  </div>
                 )}
               </div>
-              {/* Variants list for selected model */}
-              {selectedModel && selectedModel.variants.length > 0 && (
-                <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
-                  {selectedModel.variants.map((v) => (
-                    <div key={v.id} className="flex items-center justify-between px-4 py-3 border-b border-slate-100 last:border-0">
-                      <div>
-                        <p className="text-sm font-bold text-slate-800">{v.variant_name}</p>
-                        <p className="text-[10px] text-slate-500">₹{v.price}L · {v.driving_range_km}km · {v.battery_capacity_kwh}kWh {v.has_baas && <span className="text-emerald-600 font-bold">· BAAS</span>}</p>
-                      </div>
-                      <div className="flex gap-2">
-                        <button onClick={() => { startEdit(selectedModel); setListingFormTab("variants"); setEditingVariantId(v.id); }}
-                          className="text-xs font-bold text-sky-600 hover:text-sky-700">Edit</button>
-                        <button onClick={async () => { if (!confirm(`Delete variant "${v.variant_name}"?`)) return; await supabase.from("ev_variants").delete().eq("id", v.id); fetchListings(); }}
-                          className="text-xs font-bold text-rose-500 hover:text-rose-600">Delete</button>
-                      </div>
+
+              {selectedBrand && (
+                <div className="mt-4 pt-4 border-t border-sky-200/50">
+                  <div className="flex items-center gap-1.5 mb-3">
+                    {selectedModel && (
+                      <button 
+                        onClick={() => { if (confirm(`Delete "${selectedModel.brand} ${selectedModel.title}" and all its variants?`)) { handleDelete(selectedModel.id); setSelectedModelId(""); } }}
+                        className="p-1 rounded text-rose-500 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                        title={`Delete ${selectedModel.title}`}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    )}
+                    <p className="text-sm font-bold text-sky-700 flex items-center flex-wrap gap-2">
+                      {selectedModel ? `${selectedModel.brand} ${selectedModel.title}` : `Manage Models (${selectedBrand})`}
+                      {selectedModel && (selectedModel as any).discontinued && (
+                        <span className="inline-flex items-center gap-1 rounded bg-rose-100 px-2 py-0.5 text-xs font-bold text-rose-700 border border-rose-200">
+                          Discontinued {(selectedModel as any).discontinued_date ? `(${ (selectedModel as any).discontinued_date })` : ""}
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                  
+                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-3 mb-4">
+                    {selectedModel && (
+                      <>
+                        <button onClick={() => { startEdit(selectedModel); setListingFormTab("variants"); setEditingVariantId(null); }}
+                          className="inline-flex items-center gap-1 sm:gap-2 rounded-xl bg-sky-600 px-2.5 py-1.5 sm:px-4 sm:py-3 text-xs sm:text-sm font-bold text-white hover:bg-sky-700 shrink-0">
+                          <Plus size={14} /> Add Variant
+                        </button>
+                        <button onClick={() => { startEdit(selectedModel); setListingFormTab("core"); setEditingVariantId(null); }}
+                          className="inline-flex items-center gap-1 sm:gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 sm:px-4 sm:py-3 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-50 shrink-0">
+                          Edit Model
+                        </button>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Variants list for selected model */}
+                  {selectedModel && selectedModel.variants.length > 0 && (
+                    <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+                      {selectedModel.variants.map((v) => (
+                        <div key={v.id} className="flex items-center justify-between px-4 py-3 border-b border-slate-100 last:border-0">
+                          <div className="flex items-center gap-2">
+                            <button 
+                              onClick={async () => { if (!confirm(`Delete variant "${v.variant_name}"?`)) return; await supabase.from("ev_variants").delete().eq("id", v.id); fetchListings(); }}
+                              className="p-1 rounded text-rose-500 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                              title={`Delete variant ${v.variant_name}`}
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                            <div>
+                              <p className="text-sm font-bold text-slate-800 flex items-center flex-wrap gap-1.5">
+                                {v.variant_name}
+                                {(v as any).version_name && <span className="text-[10px] font-semibold text-sky-600 bg-sky-50 px-2 py-0.5 rounded border border-sky-100">{(v as any).version_name}</span>}
+                                {v.model_year && <span className="text-[10px] font-bold text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-200">{v.model_year}</span>}
+                                {(v as any).discontinued && <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">Discontinued</span>}
+                              </p>
+                              <p className="text-[10px] text-slate-500">₹{v.price}L · {v.driving_range_km}km · {v.battery_capacity_kwh}kWh {v.has_baas && <span className="text-emerald-600 font-bold">· BAAS</span>}</p>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <button onClick={() => { startEdit(selectedModel); setListingFormTab("variants"); setEditingVariantId(v.id); }}
+                              className="text-xs font-bold text-sky-600 hover:text-sky-700 cursor-pointer">Edit</button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
+                  {selectedModel && selectedModel.variants.length === 0 && (
+                    <p className="text-xs text-slate-400 text-center py-4">No variants yet. Click &quot;Add Variant&quot; to add one.</p>
+                  )}
                 </div>
-              )}
-              {selectedModel && selectedModel.variants.length === 0 && (
-                <p className="text-xs text-slate-400 text-center py-4">No variants yet. Click &quot;Add Variant&quot; to add one.</p>
               )}
             </div>
           );
@@ -990,9 +1156,25 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
               <button onClick={() => setEditing(null)} className="text-slate-400 hover:text-slate-600 cursor-pointer"><X size={20} /></button>
             </div>
 
-            <div className="mb-5 flex flex-wrap gap-1 rounded-xl border-2 border-slate-300 bg-slate-200 p-1">
+            {/* Tab dropdown for mobile */}
+            <div className="block sm:hidden mb-5">
+              <select
+                value={listingFormTab}
+                onChange={(e) => setListingFormTab(e.target.value as any)}
+                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-bold text-slate-800 outline-none cursor-pointer"
+              >
+                <option value="core">Core Details</option>
+                <option value="media">Media</option>
+                <option value="variants">Variants ({variants.length})</option>
+                <option value="energy">Energy Comparison ({energyComps.length})</option>
+              </select>
+            </div>
+
+            {/* Tab buttons for desktop */}
+            <div className="hidden sm:flex flex-wrap gap-1 rounded-xl border-2 border-slate-300 bg-slate-200 p-1 mb-5">
               {([
                 { id: "core" as const, label: "Core Details" },
+                { id: "media" as const, label: "Media" },
                 { id: "variants" as const, label: "Variants", count: variants.length },
                 { id: "energy" as const, label: "Energy Comparison", count: energyComps.length },
               ]).map((tab) => (
@@ -1025,7 +1207,24 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <Field label="Model" value={form.title} onChange={(v) => setForm({ ...form, title: v })} />
               <Field label="Slug" value={form.slug} onChange={(v) => setForm({ ...form, slug: v })} placeholder="auto-generated" />
-              <Field label="Brand" value={form.brand} onChange={(v) => setForm({ ...form, brand: v })} />
+              <div className="flex flex-col gap-1">
+                <Field label="Brand" value={form.brand} onChange={(v) => setForm({ ...form, brand: v.toUpperCase() })} />
+                {uniqueBrands.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    <span className="text-[10px] text-slate-400 self-center mr-1">Quick Select:</span>
+                    {uniqueBrands.slice(0, 8).map((ub) => (
+                      <button
+                        key={ub}
+                        type="button"
+                        onClick={() => setForm({ ...form, brand: ub })}
+                        className="text-[10px] px-2 py-0.5 rounded border border-slate-200 bg-white hover:bg-slate-100 font-semibold text-slate-600"
+                      >
+                        {ub}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <label className="block">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-700">Type</span>
                 <select value={form.types[0] || ""} onChange={(e) => setForm({ ...form, types: [e.target.value] })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none">
@@ -1073,6 +1272,8 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                         cons: p.cons ?? [],
                         price_bracket: (p as any).price_bracket || "",
                         has_baas: p.has_baas || false,
+                        featured_photos: (p as any).featured_photos && (p as any).featured_photos.length > 0 ? (p as any).featured_photos : (p.photo ? [{ url: p.photo, variantId: null }] : []),
+                        video_links: (p as any).video_links ?? [],
                       });
                       return;
                     }
@@ -1086,51 +1287,22 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                 </select>
               </label>
             </div>
-            <label className="flex items-center gap-2 mt-3 text-sm"><input type="checkbox" checked={form.commercial} onChange={(e) => setForm({ ...form, commercial: e.target.checked })} /> Commercial</label>
-            <label className="flex items-center gap-2 mt-1 text-sm"><input type="checkbox" checked={form.has_baas} onChange={(e) => setForm({ ...form, has_baas: e.target.checked })} /> Has BAAS (Battery as a Service)</label>
-
-            {/* Photo */}
-            <div className="mt-5 rounded-xl border-2 border-slate-300 bg-slate-200 p-4">
-              <p className="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Featured Photo</p>
-              <div className="flex items-center gap-3">
-                {form.photo && <img src={form.photo} alt="preview" className="h-16 w-20 rounded-lg object-cover border" />}
-                <input type="file" accept="image/*" onChange={async (e) => { const file = e.target.files?.[0]; if (!file) return; const path = `evlistings/${form.slug || Date.now()}/${file.name}`; const { data } = await supabase.storage.from("evphotos").upload(path, file, { upsert: true }); if (data) { const { data: u } = supabase.storage.from("evphotos").getPublicUrl(data.path); setForm({ ...form, photo: u.publicUrl }); } }} className="text-xs rounded-lg border border-slate-200 bg-white px-3 py-2 file:mr-2 file:rounded-md file:border-0 file:bg-sky-50 file:px-2 file:py-1 file:text-[10px] file:font-bold file:text-sky-600" />
-                <Field label="" value={form.photo} onChange={(v) => setForm({ ...form, photo: v })} placeholder="Or paste URL" />
-              </div>
+            <div className="flex flex-wrap items-center gap-4 mt-3">
+              <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.commercial} onChange={(e) => setForm({ ...form, commercial: e.target.checked })} /> Commercial</label>
+              <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.has_baas} onChange={(e) => setForm({ ...form, has_baas: e.target.checked })} /> Has BAAS (Battery as a Service)</label>
+              <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.discontinued} onChange={(e) => setForm({ ...form, discontinued: e.target.checked })} /> Discontinued</label>
             </div>
 
-            {/* Gallery */}
-            <div className="mt-4 rounded-xl border-2 border-slate-300 bg-slate-200 p-4">
-              <p className="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Gallery</p>
-              <div className="space-y-2 mb-3">
-                {form.gallery_images.map((item, i) => {
-                  const isObj = typeof item === "object" && item !== null;
-                  const url = isObj ? (item as any).url : item;
-                  const imgType = isObj ? (item as any).type || "" : "";
-                  const colorCode = isObj ? (item as any).colorCode || "" : "";
-                  return (
-                    <div key={i} className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-2">
-                      <img src={url} alt="" className="h-12 w-16 rounded-md object-cover border shrink-0" />
-                      <select value={imgType} onChange={(e) => { const arr = [...form.gallery_images]; arr[i] = { url, type: e.target.value, colorCode } as any; setForm({ ...form, gallery_images: arr }); }} className="rounded-md border border-slate-200 px-2 py-1 text-[10px] outline-none">
-                        <option value="">No tag</option>
-                        <option value="color">Color</option>
-                        <option value="interior">Interior</option>
-                        <option value="exterior">Exterior</option>
-                      </select>
-                      {imgType === "color" && (
-                        <select value={colorCode} onChange={(e) => { const arr = [...form.gallery_images]; arr[i] = { url, type: imgType, colorCode: e.target.value } as any; setForm({ ...form, gallery_images: arr }); }} className="rounded-md border border-slate-200 px-2 py-1 text-[10px] outline-none">
-                          <option value="">Pick color</option>
-                          {form.colors.map((c, ci) => (<option key={ci} value={c}>{c}</option>))}
-                        </select>
-                      )}
-                      {imgType === "color" && colorCode && <div className="h-5 w-5 rounded border" style={{ backgroundColor: colorCode.startsWith("#") ? colorCode : `#${colorCode}` }} />}
-                      <button onClick={() => setForm({ ...form, gallery_images: form.gallery_images.filter((_, j) => j !== i) })} className="ml-auto text-rose-400 hover:text-rose-600 text-xs font-bold shrink-0">×</button>
-                    </div>
-                  );
-                })}
+            {form.discontinued && (
+              <div className="mt-3 max-w-xs">
+                <label className="block">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-700">Discontinued Date</span>
+                  <input type="date" value={form.discontinued_date ?? ""} onChange={(e) => setForm({ ...form, discontinued_date: e.target.value || null })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" />
+                </label>
               </div>
-              <input type="file" accept="image/*" multiple onChange={async (e) => { const files = Array.from(e.target.files ?? []); const urls: any[] = []; for (const file of files) { const path = `evlistings/${form.slug || Date.now()}/gallery-${Date.now()}-${file.name}`; const { data } = await supabase.storage.from("evphotos").upload(path, file, { upsert: true }); if (data) { const { data: u } = supabase.storage.from("evphotos").getPublicUrl(data.path); urls.push({ url: u.publicUrl, type: "", colorCode: "" }); } } setForm({ ...form, gallery_images: [...form.gallery_images, ...urls] }); }} className="text-xs rounded-lg border border-slate-200 bg-white px-3 py-2 file:mr-2 file:rounded-md file:border-0 file:bg-sky-50 file:px-2 file:py-1 file:text-[10px] file:font-bold file:text-sky-600" />
-            </div>
+            )}
+
+
             
             {/* Colors */}
             <div className="mt-4 rounded-xl border-2 border-slate-300 bg-slate-200 p-4">
@@ -1257,6 +1429,328 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             </>
             )}
 
+            {listingFormTab === "media" && (
+              <div className="space-y-4">
+                {/* Featured Photos Section */}
+                <div className="rounded-xl border-2 border-slate-300 bg-slate-200 p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs font-bold uppercase tracking-wider text-slate-600">Featured Photos</p>
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, featured_photos: [...form.featured_photos, { url: "", variantId: null }] })}
+                      className="text-xs font-bold text-sky-600 hover:text-sky-700 cursor-pointer"
+                    >
+                      + Add Photo
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {form.featured_photos.map((item, idx) => (
+                      <div key={idx} className="flex flex-col sm:flex-row gap-3 rounded-lg border border-slate-200 bg-white p-3 items-start sm:items-center">
+                        {item.url && (
+                          <img src={item.url} alt="preview" className="h-12 w-16 rounded-md object-cover border shrink-0 bg-slate-50" />
+                        )}
+                        <div className="flex-1 min-w-0 w-full space-y-2">
+                          <div className="flex flex-col sm:flex-row gap-2 w-full min-w-0">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                const path = `evlistings/${form.slug || Date.now()}/featured-${Date.now()}-${file.name}`;
+                                const { data } = await supabase.storage.from("evphotos").upload(path, file, { upsert: true });
+                                if (data) {
+                                  const { data: u } = supabase.storage.from("evphotos").getPublicUrl(data.path);
+                                  const arr = [...form.featured_photos];
+                                  arr[idx] = { ...arr[idx], url: u.publicUrl };
+                                  setForm({ ...form, featured_photos: arr });
+                                }
+                              }}
+                              className="w-full sm:w-auto text-xs cursor-pointer file:mr-2 file:rounded-md file:border-0 file:bg-sky-50 file:px-2 file:py-1 file:text-[10px] file:font-bold file:text-sky-600 min-w-0"
+                            />
+                            <input
+                              type="text"
+                              placeholder="Or paste image URL"
+                              value={item.url}
+                              onChange={(e) => {
+                                const arr = [...form.featured_photos];
+                                arr[idx] = { ...arr[idx], url: e.target.value };
+                                setForm({ ...form, featured_photos: arr });
+                              }}
+                              className="w-full sm:flex-1 min-w-0 rounded border border-slate-200 px-2.5 py-1 text-xs outline-none"
+                            />
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Variant:</span>
+                            <select
+                              value={item.variantId || ""}
+                              onChange={(e) => {
+                                const arr = [...form.featured_photos];
+                                arr[idx] = { ...arr[idx], variantId: e.target.value || null };
+                                setForm({ ...form, featured_photos: arr });
+                              }}
+                              className="rounded border border-slate-200 px-2 py-1 text-xs outline-none bg-slate-50 cursor-pointer"
+                            >
+                              <option value="">Model (Default)</option>
+                              {variants.filter(v => v.variant_name).map((v, vidx) => (
+                                <option key={v.id || vidx} value={v.id}>{v.variant_name} {v.model_year ? `(${v.model_year})` : ""}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setForm({ ...form, featured_photos: form.featured_photos.filter((_, i) => i !== idx) })}
+                          className="text-rose-400 hover:text-rose-600 text-sm font-bold shrink-0 self-start sm:self-center"
+                        >
+                          × Remove
+                        </button>
+                      </div>
+                    ))}
+                    {form.featured_photos.length === 0 && (
+                      <div className="text-center py-4 text-xs text-slate-500 bg-white/50 rounded-lg border border-dashed border-slate-300">
+                        No featured photos added yet. Click "+ Add Photo" to add one.
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Gallery Section */}
+                <div className="rounded-xl border-2 border-slate-300 bg-slate-200 p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs font-bold uppercase tracking-wider text-slate-600">Gallery</p>
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, gallery_images: [...form.gallery_images, { url: "", type: "", colorCode: "", variantId: null }] })}
+                      className="text-xs font-bold text-sky-600 hover:text-sky-700 cursor-pointer"
+                    >
+                      + Add Image
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {form.gallery_images.map((item, idx) => {
+                      const isObj = typeof item === "object" && item !== null;
+                      const url = isObj ? (item as any).url : item;
+                      const imgType = isObj ? (item as any).type || "" : "";
+                      const colorCode = isObj ? (item as any).colorCode || "" : "";
+                      const variantId = isObj ? (item as any).variantId || "" : "";
+
+                      return (
+                        <div key={idx} className="flex flex-col gap-2 rounded-lg border border-slate-200 bg-white p-3">
+                          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                            {url && (
+                              <img src={url} alt="preview" className="h-12 w-16 rounded-md object-cover border shrink-0 bg-slate-50" />
+                            )}
+                            <div className="flex-1 min-w-0 w-full flex flex-col sm:flex-row gap-2">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  const path = `evlistings/${form.slug || Date.now()}/gallery-${Date.now()}-${file.name}`;
+                                  const { data } = await supabase.storage.from("evphotos").upload(path, file, { upsert: true });
+                                  if (data) {
+                                    const { data: u } = supabase.storage.from("evphotos").getPublicUrl(data.path);
+                                    const arr = [...form.gallery_images];
+                                    arr[idx] = { url: u.publicUrl, type: imgType, colorCode, variantId };
+                                    setForm({ ...form, gallery_images: arr });
+                                  }
+                                }}
+                                className="text-xs max-w-xs cursor-pointer file:mr-2 file:rounded-md file:border-0 file:bg-sky-50 file:px-2 file:py-1 file:text-[10px] file:font-bold file:text-sky-600 min-w-0"
+                              />
+                              <input
+                                type="text"
+                                placeholder="Paste gallery image URL"
+                                value={url}
+                                onChange={(e) => {
+                                  const arr = [...form.gallery_images];
+                                  arr[idx] = { url: e.target.value, type: imgType, colorCode, variantId };
+                                  setForm({ ...form, gallery_images: arr });
+                                }}
+                                className="flex-1 min-w-0 rounded border border-slate-200 px-2.5 py-1 text-xs outline-none"
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setForm({ ...form, gallery_images: form.gallery_images.filter((_, i) => i !== idx) })}
+                              className="text-rose-400 hover:text-rose-600 text-sm font-bold shrink-0 self-start sm:self-center"
+                            >
+                              × Remove
+                            </button>
+                          </div>
+                          
+                          <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-slate-100 text-xs">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] font-bold text-slate-500 uppercase">Tag:</span>
+                              <select
+                                value={imgType}
+                                onChange={(e) => {
+                                  const arr = [...form.gallery_images];
+                                  arr[idx] = { url, type: e.target.value, colorCode, variantId };
+                                  setForm({ ...form, gallery_images: arr });
+                                }}
+                                className="rounded border border-slate-200 px-2 py-1 text-xs outline-none bg-slate-50"
+                              >
+                                <option value="">No tag</option>
+                                <option value="color">Color</option>
+                                <option value="interior">Interior</option>
+                                <option value="exterior">Exterior</option>
+                              </select>
+                            </div>
+                            
+                            {imgType === "color" && (
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[10px] font-bold text-slate-500 uppercase">Color:</span>
+                                <select
+                                  value={colorCode}
+                                  onChange={(e) => {
+                                    const arr = [...form.gallery_images];
+                                    arr[idx] = { url, type: imgType, colorCode: e.target.value, variantId };
+                                    setForm({ ...form, gallery_images: arr });
+                                  }}
+                                  className="rounded border border-slate-200 px-2 py-1 text-xs outline-none bg-slate-50"
+                                >
+                                  <option value="">Pick color</option>
+                                  {form.colors.map((c, ci) => (<option key={ci} value={c}>{c}</option>))}
+                                </select>
+                                {colorCode && (
+                                  <div className="h-5 w-5 rounded border" style={{ backgroundColor: colorCode.startsWith("#") ? colorCode : `#${colorCode}` }} />
+                                )}
+                              </div>
+                            )}
+
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] font-bold text-slate-500 uppercase">Variant:</span>
+                              <select
+                                value={variantId}
+                                onChange={(e) => {
+                                  const arr = [...form.gallery_images];
+                                  arr[idx] = { url, type: imgType, colorCode, variantId: e.target.value || null };
+                                  setForm({ ...form, gallery_images: arr });
+                                }}
+                                className="rounded border border-slate-200 px-2 py-1 text-xs outline-none bg-slate-50"
+                              >
+                                <option value="">Model (Default)</option>
+                                {variants.filter(v => v.variant_name).map((v, vidx) => (
+                                  <option key={v.id || vidx} value={v.id}>{v.variant_name} {v.model_year ? `(${v.model_year})` : ""}</option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {form.gallery_images.length === 0 && (
+                      <div className="text-center py-4 text-xs text-slate-500 bg-white/50 rounded-lg border border-dashed border-slate-300">
+                        No gallery images added yet. Click "+ Add Image" to add one, or select files.
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="mt-3">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={async (e) => {
+                        const files = Array.from(e.target.files ?? []);
+                        const urls: any[] = [];
+                        for (const file of files) {
+                          const path = `evlistings/${form.slug || Date.now()}/gallery-${Date.now()}-${file.name}`;
+                          const { data } = await supabase.storage.from("evphotos").upload(path, file, { upsert: true });
+                          if (data) {
+                            const { data: u } = supabase.storage.from("evphotos").getPublicUrl(data.path);
+                            urls.push({ url: u.publicUrl, type: "", colorCode: "", variantId: null });
+                          }
+                        }
+                        setForm({ ...form, gallery_images: [...form.gallery_images, ...urls] });
+                      }}
+                      className="w-full text-xs rounded-lg border border-slate-200 bg-white px-3 py-2 file:mr-2 file:rounded-md file:border-0 file:bg-sky-50 file:px-2 file:py-1 file:text-[10px] file:font-bold file:text-sky-600"
+                    />
+                  </div>
+                </div>
+
+                {/* Video Links Section */}
+                <div className="rounded-xl border-2 border-slate-300 bg-slate-200 p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs font-bold uppercase tracking-wider text-slate-600">Video Links</p>
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, video_links: [...form.video_links, { url: "", title: "", variantId: null }] })}
+                      className="text-xs font-bold text-sky-600 hover:text-sky-700 cursor-pointer"
+                    >
+                      + Add Video
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {form.video_links.map((item, idx) => (
+                      <div key={idx} className="flex flex-col gap-2 rounded-lg border border-slate-200 bg-white p-3">
+                        <div className="flex flex-col sm:flex-row gap-2 min-w-0">
+                          <input
+                            type="text"
+                            placeholder="Video Title / Label (e.g. Walkaround, Review)"
+                            value={item.title || ""}
+                            onChange={(e) => {
+                              const arr = [...form.video_links];
+                              arr[idx] = { ...arr[idx], title: e.target.value };
+                              setForm({ ...form, video_links: arr });
+                            }}
+                            className="w-full sm:w-1/3 min-w-0 rounded border border-slate-200 px-2.5 py-1 text-xs outline-none"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Paste Video URL (e.g. YouTube link)"
+                            value={item.url}
+                            onChange={(e) => {
+                              const arr = [...form.video_links];
+                              arr[idx] = { ...arr[idx], url: e.target.value };
+                              setForm({ ...form, video_links: arr });
+                            }}
+                            className="flex-1 min-w-0 rounded border border-slate-200 px-2.5 py-1 text-xs outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setForm({ ...form, video_links: form.video_links.filter((_, i) => i !== idx) })}
+                            className="text-rose-400 hover:text-rose-600 text-sm font-bold shrink-0 self-end sm:self-center"
+                          >
+                            × Remove
+                          </button>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 text-xs pt-1 border-t border-slate-100">
+                          <span className="text-[10px] font-bold text-slate-500 uppercase">Variant</span>
+                          <select
+                            value={item.variantId || ""}
+                            onChange={(e) => {
+                              const arr = [...form.video_links];
+                              arr[idx] = { ...arr[idx], variantId: e.target.value || null };
+                              setForm({ ...form, video_links: arr });
+                            }}
+                            className="rounded border border-slate-200 px-2 py-1 text-xs outline-none bg-slate-50 cursor-pointer"
+                          >
+                            <option value="">Model (Default)</option>
+                            {variants.filter(v => v.variant_name).map((v, vidx) => (
+                              <option key={v.id || vidx} value={v.id}>{v.variant_name} {v.model_year ? `(${v.model_year})` : ""}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    ))}
+                    {form.video_links.length === 0 && (
+                      <div className="text-center py-4 text-xs text-slate-500 bg-white/50 rounded-lg border border-dashed border-slate-300">
+                        No video links added yet. Click "+ Add Video" to add one.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {listingFormTab === "variants" && (
             <div className="rounded-xl border-2 border-sky-300 bg-sky-100 p-4">
               <div className="flex items-center justify-between mb-3">
@@ -1354,6 +1848,38 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                             };
                             setVariants(arr);
                           }}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Discontinued Variant Option */}
+                  <div className="mb-4 p-3 rounded-lg border-2 border-dashed border-rose-300 bg-rose-50/50 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                    <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={!!v.discontinued}
+                        onChange={(e) => {
+                          const arr = [...variants];
+                          arr[i] = { ...arr[i], discontinued: e.target.checked };
+                          setVariants(arr);
+                        }}
+                        className="rounded border-slate-300 text-rose-600 focus:ring-rose-500 h-4 w-4"
+                      />
+                      Discontinued Variant
+                    </label>
+                    {v.discontinued && (
+                      <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                        <span>Discontinued Date:</span>
+                        <input
+                          type="date"
+                          value={v.discontinued_date ?? ""}
+                          onChange={(e) => {
+                            const arr = [...variants];
+                            arr[i] = { ...arr[i], discontinued_date: e.target.value || null };
+                            setVariants(arr);
+                          }}
+                          className="rounded border border-slate-300 px-2 py-1 bg-white font-normal outline-none"
                         />
                       </div>
                     )}

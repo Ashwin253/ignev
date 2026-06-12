@@ -201,6 +201,14 @@ export type EvListing = {
     variantName: string;
     fields: Array<{ label: string; value: string; kind?: "field" | "checkbox" }>;
   }>;
+  city_pricing?: Array<{
+    id?: string;
+    location_name: string;
+    location_type: "City" | "District";
+    showroom_price: string;
+    on_road_price: string;
+    variant_id?: string | null;
+  }>;
   // Legacy / optional
   batteryCapacity?: number | null;
   chargingSpeed?: number | null;

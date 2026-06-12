@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { Plus, Pencil, Trash2, LogOut, Save, X, Loader2, ChevronDown, ChevronUp, MessageSquare, Mic, MicOff } from "lucide-react";
+import { Plus, Pencil, Trash2, LogOut, Save, X, Loader2, ChevronDown, ChevronUp, MessageSquare, Mic, MicOff, Sparkles, Copy, Clipboard, Eye } from "lucide-react";
 import type { EvListingRow, EvVariantRow } from "../lib/supabase";
 import LeadsPanel from "./LeadsPanel";
 import FuelPricesPanel from "./FuelPricesPanel";
@@ -52,6 +52,14 @@ type ListingForm = {
   discontinued_date: string | null;
   video_links: Array<{ url: string; title?: string; variantId?: string | null }>;
   featured_photos: Array<{ url: string; variantId?: string | null }>;
+  city_pricing: Array<{
+    id?: string;
+    location_name: string;
+    location_type: "City" | "District";
+    showroom_price: string;
+    on_road_price: string;
+    variant_id?: string | null;
+  }>;
 };
 
 export type VariantForm = {
@@ -115,6 +123,7 @@ const emptyListing: ListingForm = {
   discontinued_date: null,
   video_links: [],
   featured_photos: [],
+  city_pricing: [],
 };
 
 const emptyVariant: VariantForm = {
@@ -163,6 +172,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
   const [form, setForm] = useState<ListingForm>(emptyListing);
   const [variants, setVariants] = useState<(VariantForm & { id?: string })[]>([]);
   const [saving, setSaving] = useState(false);
+  const [rebuildingAI, setRebuildingAI] = useState(false);
   const [expandedListing, setExpandedListing] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<"listings" | "leads" | "prices" | "analytics">("listings");
   const [selectedModelId, setSelectedModelId] = useState<string>("");
@@ -177,7 +187,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
   const [editingVariantId, setEditingVariantId] = useState<string | null>(null);
   const [energyComps, setEnergyComps] = useState<Array<{ id?: string; category: string; name: string; fuel_type: string; mileage: string; fuel_price: string; model_used: string; brand: string }>>([]);
   const [variantSpecSection, setVariantSpecSection] = useState<Record<number, string>>({});
-  const [listingFormTab, setListingFormTab] = useState<"core" | "variants" | "energy" | "media">("core");
+  const [listingFormTab, setListingFormTab] = useState<"core" | "variants" | "energy" | "media" | "pricing">("core");
   const [activeVariantIndex, setActiveVariantIndex] = useState(0);
   const [initialSnapshot, setInitialSnapshot] = useState<{form: any, variants: any, energyComps: any} | null>(null);
 
@@ -386,6 +396,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
       gallery_images: (parsedData.form?.gallery_images && parsedData.form.gallery_images.length > 0)
         ? parsedData.form.gallery_images
         : form.gallery_images || [],
+      city_pricing: form.city_pricing || [],
     };
 
     let firstVariantParsed: any = null;
@@ -672,6 +683,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
     const rawFeaturedPhotos = safeParseJson((l as any).featured_photos, []);
     const rawVideoLinks = safeParseJson((l as any).video_links, []);
     const rawGalleryImages = safeParseJson(l.gallery_images, []);
+    const rawCityPricing = safeParseJson((l as any).city_pricing, []);
 
     const loadedForm = {
       slug: l.slug,
@@ -695,7 +707,8 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
       video_links: rawVideoLinks,
       featured_photos: rawFeaturedPhotos.length > 0
         ? rawFeaturedPhotos
-        : (l.photo ? [{ url: l.photo, variantId: null }] : [])
+        : (l.photo ? [{ url: l.photo, variantId: null }] : []),
+      city_pricing: rawCityPricing,
     };
     setForm(loadedForm);
     // Load features for each variant
@@ -744,6 +757,22 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
       setActiveVariantIndex(next.length - 1);
       return next;
     });
+  };
+
+  const handleRebuildAI = async () => {
+    setRebuildingAI(true);
+    try {
+      const res = await fetch("/api/build-summary");
+      if (res.ok) {
+        alert("AI files successfully rebuilt!");
+      } else {
+        const err = await res.json();
+        alert(`Failed to rebuild AI files: ${err.error || "Unknown error"}`);
+      }
+    } catch (err: any) {
+      alert(`Network error rebuilding AI files: ${err.message}`);
+    }
+    setRebuildingAI(false);
   };
 
   const handleSave = async () => {
@@ -907,6 +936,8 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
         }
       }
     }
+    // Auto rebuild search summary
+    fetch("/api/build-summary").catch((e) => console.error("Error rebuilding summary:", e));
     setSaving(false); setEditing(null); fetchListings();
   };
 
@@ -932,6 +963,8 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
       alert(`Failed to delete: ${error.message}`);
     }
     
+    // Auto rebuild search summary
+    fetch("/api/build-summary").catch((e) => console.error("Error rebuilding summary:", e));
     fetchListings();
   };
 
@@ -997,6 +1030,25 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
 
         {activeSection === "listings" && (
         <>
+        {/* {!editing && (
+          <div className="mb-6 rounded-2xl border border-slate-300 bg-white p-5 shadow-sm">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <p className="text-xs text-slate-500 mt-1">
+                  Rebuild structured files (`summary.json` and `llms.txt`) for external AI crawlers (ChatGPT, Gemini, Perplexity).
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleRebuildAI}
+                disabled={rebuildingAI}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50 transition-colors px-4 py-2.5 text-xs font-bold shrink-0 cursor-pointer"
+              >
+                {rebuildingAI ? "Rebuilding..." : "Rebuild AI Files"}
+              </button>
+            </div>
+          </div>
+        )} */}
         {/* Brand & Model Management Panel */}
         {!editing && listings.length > 0 && (() => {
           const selectedModel = listings.find((l) => l.id === selectedModelId);
@@ -1165,6 +1217,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
               >
                 <option value="core">Core Details</option>
                 <option value="media">Media</option>
+                <option value="pricing">Pricing ({form.city_pricing?.length || 0})</option>
                 <option value="variants">Variants ({variants.length})</option>
                 <option value="energy">Energy Comparison ({energyComps.length})</option>
               </select>
@@ -1175,6 +1228,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
               {([
                 { id: "core" as const, label: "Core Details" },
                 { id: "media" as const, label: "Media" },
+                { id: "pricing" as const, label: "Pricing", count: form.city_pricing?.length || 0 },
                 { id: "variants" as const, label: "Variants", count: variants.length },
                 { id: "energy" as const, label: "Energy Comparison", count: energyComps.length },
               ]).map((tab) => (
@@ -1759,30 +1813,35 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                 </p>
               </div>
               {/* Actions row */}
-              <div className="flex flex-wrap gap-2 mb-4 rounded-xl bg-white border border-sky-200 p-3">
+              <div className="grid grid-cols-2 gap-2 mb-4 rounded-xl bg-white border border-sky-200 p-3 sm:flex sm:flex-wrap">
                 <button onClick={() => { setVariants([...variants, { ...emptyVariant }]); setActiveVariantIndex(variants.length); setEditingVariantId(null); }}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-3 py-2 text-xs font-bold text-white hover:bg-sky-700 cursor-pointer">
-                  <Plus size={12} /> Add New
+                  className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-sky-600 px-3 py-2 text-xs font-bold text-white hover:bg-sky-700 cursor-pointer transition-colors w-full sm:w-auto">
+                  <Plus size={12} className="shrink-0" /> Add New
                 </button>
                 <button onClick={() => { const current = variants[activeVariantIndex]; if (current) { const clone = { ...current, variant_name: `${current.variant_name} (Copy)`, id: undefined } as any; delete clone.id; setVariants([...variants, clone]); setActiveVariantIndex(variants.length); setEditingVariantId(null); } }}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-sky-200 bg-white px-3 py-2 text-xs font-bold text-sky-600 hover:bg-sky-50 cursor-pointer">
-                  📋 Clone Current
+                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-sky-200 bg-white px-3 py-2 text-xs font-bold text-sky-600 hover:bg-sky-50 cursor-pointer transition-colors w-full sm:w-auto">
+                  <Copy size={12} className="shrink-0" /> Clone Current
                 </button>
                 <button onClick={handleCopyVariant}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-sky-200 bg-white px-3 py-2 text-xs font-bold text-sky-600 hover:bg-sky-50 cursor-pointer">
-                  Copy Variant
+                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-sky-200 bg-white px-3 py-2 text-xs font-bold text-sky-600 hover:bg-sky-50 cursor-pointer transition-colors w-full sm:w-auto">
+                  <Clipboard size={12} className="shrink-0" /> Copy Variant
                 </button>
                 <button onClick={() => { setPastedVariantJson(""); setIsPasteVariantModalOpen(true); }}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-sky-200 bg-white px-3 py-2 text-xs font-bold text-sky-600 hover:bg-sky-50 cursor-pointer">
-                  Paste Variant
+                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-sky-200 bg-white px-3 py-2 text-xs font-bold text-sky-600 hover:bg-sky-50 cursor-pointer transition-colors w-full sm:w-auto">
+                  <Clipboard size={12} className="shrink-0 opacity-70" /> Paste Variant
                 </button>
                 {variants.length > 1 && (
                   <button onClick={() => { if (!confirm(`Remove "${variants[activeVariantIndex]?.variant_name || "this variant"}"?`)) return; const arr = variants.filter((_, j) => j !== activeVariantIndex); setVariants(arr); setActiveVariantIndex(Math.max(0, activeVariantIndex - 1)); setEditingVariantId(null); }}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-3 py-2 text-xs font-bold text-rose-500 hover:bg-rose-50 cursor-pointer">
-                    <Trash2 size={12} /> Remove Variant
+                    className="col-span-2 inline-flex items-center justify-center gap-1.5 rounded-lg border border-rose-200 bg-white px-3 py-2 text-xs font-bold text-rose-500 hover:bg-rose-50 cursor-pointer transition-colors w-full sm:col-span-auto sm:w-auto">
+                    <Trash2 size={12} className="shrink-0" /> Remove Variant
                   </button>
                 )}
-                {editingVariantId && <button onClick={() => setEditingVariantId(null)} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50 cursor-pointer">Show All</button>}
+                {editingVariantId && (
+                  <button onClick={() => setEditingVariantId(null)}
+                    className="col-span-2 inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50 cursor-pointer transition-colors w-full sm:col-span-auto sm:w-auto">
+                    <Eye size={12} className="shrink-0" /> Show All
+                  </button>
+                )}
               </div>
 
               {variants.length > 0 && !editingVariantId && (
@@ -2477,6 +2536,299 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                 </div>
               ))}
               {energyComps.length === 0 && <p className="text-[10px] text-amber-600/60">No comparisons added. Add fuel type or model competitors.</p>}
+            </div>
+            )}
+
+            {listingFormTab === "pricing" && (
+            <div className="rounded-xl border-2 border-sky-300 bg-sky-100 p-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
+                <p className="text-xs font-bold uppercase tracking-wider text-sky-700">City & District Pricing ({form.city_pricing?.length || 0})</p>
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" onClick={() => {
+                    const defaultCities = ["Delhi", "Mumbai", "Bangalore", "Chennai", "Hyderabad", "Pune", "Kolkata", "Kochi", "Jaipur", "Ahmedabad"];
+                    const variantNames = variants.map(v => v.variant_name).filter(Boolean);
+                    
+                    // Map existing pricing to help with lookup
+                    const existingMap = new Map<string, string>(); // key: "city|variantName", value: on_road_price
+                    if (form.city_pricing) {
+                      form.city_pricing.forEach(p => {
+                        const vName = p.variant_id 
+                          ? (variants.find(v => v.id === p.variant_id || v.variant_name === p.variant_id)?.variant_name || p.variant_id)
+                          : "Main Model / Base";
+                        const key = `${p.location_name.toLowerCase().trim()}|${vName.toLowerCase().trim()}`;
+                        existingMap.set(key, p.on_road_price);
+                      });
+                    }
+
+                    const pricingList: any[] = [];
+
+                    // Populate 10 default cities
+                    defaultCities.forEach(city => {
+                      // 1. Base model
+                      const baseKey = `${city.toLowerCase()}|main model / base`;
+                      pricingList.push({
+                        location_name: city,
+                        location_type: "City",
+                        variant_name: "Main Model / Base",
+                        on_road_price: existingMap.get(baseKey) || "",
+                      });
+
+                      // 2. Variants
+                      variantNames.forEach(vName => {
+                        const varKey = `${city.toLowerCase()}|${vName.toLowerCase()}`;
+                        pricingList.push({
+                          location_name: city,
+                          location_type: "City",
+                          variant_name: vName,
+                          on_road_price: existingMap.get(varKey) || "",
+                        });
+                      });
+                    });
+
+                    // Append any other cities that exist in current pricing but are not in defaultCities
+                    if (form.city_pricing) {
+                      form.city_pricing.forEach(p => {
+                        const isDefault = defaultCities.some(dc => dc.toLowerCase() === p.location_name.toLowerCase().trim());
+                        if (!isDefault) {
+                          const vName = p.variant_id 
+                            ? (variants.find(v => v.id === p.variant_id || v.variant_name === p.variant_id)?.variant_name || p.variant_id)
+                            : "Main Model / Base";
+                          pricingList.push({
+                            location_name: p.location_name,
+                            location_type: p.location_type,
+                            variant_name: vName,
+                            on_road_price: p.on_road_price,
+                          });
+                        }
+                      });
+                    }
+
+                    const exportData = {
+                      brand: form.brand || "",
+                      model: form.title || "",
+                      variants_available: ["Main Model / Base", ...variantNames],
+                      pricing: pricingList,
+                    };
+
+                    navigator.clipboard.writeText(JSON.stringify(exportData, null, 2))
+                      .then(() => alert("Pricing template copied to clipboard!"))
+                      .catch((err) => alert("Failed to copy pricing: " + err));
+                  }} className="inline-flex items-center gap-1.5 rounded-lg border border-sky-200 bg-white px-3 py-1.5 text-xs font-bold text-sky-600 hover:bg-sky-50 cursor-pointer shadow-xs transition-colors">
+                    <Copy size={12} /> Copy Pricing
+                  </button>
+                  <button type="button" onClick={() => {
+                    const text = prompt("Paste your pricing JSON here:");
+                    if (text === null) return;
+                    try {
+                      let cleanedText = text.trim();
+                      
+                      // Extract JSON block out of text containing markdown, prefaces, or notes
+                      const extractJson = (str: string): string => {
+                        let candidate = str.trim();
+                        // Strip markdown code block wrappers if they exist
+                        if (candidate.startsWith("```")) {
+                          candidate = candidate.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
+                        }
+                        
+                        try {
+                          JSON.parse(candidate);
+                          return candidate;
+                        } catch (e) {
+                          // Find first { or [ and last } or ]
+                          const firstBrace = candidate.indexOf('{');
+                          const firstBracket = candidate.indexOf('[');
+                          let start = -1;
+                          if (firstBrace !== -1 && firstBracket !== -1) {
+                            start = Math.min(firstBrace, firstBracket);
+                          } else if (firstBrace !== -1) {
+                            start = firstBrace;
+                          } else if (firstBracket !== -1) {
+                            start = firstBracket;
+                          }
+
+                          const lastBrace = candidate.lastIndexOf('}');
+                          const lastBracket = candidate.lastIndexOf(']');
+                          let end = -1;
+                          if (lastBrace !== -1 && lastBracket !== -1) {
+                            end = Math.max(lastBrace, lastBracket);
+                          } else if (lastBrace !== -1) {
+                            end = lastBrace;
+                          } else if (lastBracket !== -1) {
+                            end = lastBracket;
+                          }
+
+                          if (start !== -1 && end !== -1 && end > start) {
+                            const sub = candidate.substring(start, end + 1);
+                            try {
+                              JSON.parse(sub);
+                              return sub;
+                            } catch (err) {
+                              return candidate;
+                            }
+                          }
+                          return candidate;
+                        }
+                      };
+
+                      cleanedText = extractJson(cleanedText);
+                      const parsed = JSON.parse(cleanedText);
+                      
+                      // Handle both wrapped object and direct array format
+                      const rawList = Array.isArray(parsed) ? parsed : (parsed.pricing || null);
+                      if (!Array.isArray(rawList)) {
+                        alert("Invalid format: JSON must be an array or contain a 'pricing' array.");
+                        return;
+                      }
+
+                      const cleanAndConvertToLakh = (valStr: string): string => {
+                        if (!valStr || valStr.trim() === "") return "";
+                        // Remove currency symbols, commas, letters (like L or lakh) and spaces
+                        const cleaned = valStr.replace(/[₹\s,a-zA-Z]/g, "");
+                        const num = parseFloat(cleaned);
+                        if (isNaN(num)) return "";
+                        // If it's full rupees (e.g. > 1000), convert to lakhs
+                        if (num > 1000) {
+                          const numLakh = num / 100000;
+                          return parseFloat(numLakh.toFixed(2)).toString();
+                        }
+                        return parseFloat(num.toFixed(2)).toString();
+                      };
+
+                      const validated = rawList
+                        .map((item: any) => {
+                          const rawLocationName = String(item.location_name || "").trim();
+                          const rawOnRoadPrice = item.on_road_price !== undefined && item.on_road_price !== null ? String(item.on_road_price) : "";
+                          const cleanedOnRoadPrice = cleanAndConvertToLakh(rawOnRoadPrice);
+
+                          // Resolve variant name to ID
+                          let resolvedVariantId: string | null = null;
+                          const vName = item.variant_name || item.variant_id;
+                          if (vName && vName !== "Main Model / Base") {
+                            const matched = variants.find(v => 
+                              v.variant_name?.toLowerCase().trim() === String(vName).toLowerCase().trim() ||
+                              v.id === vName
+                            );
+                            resolvedVariantId = matched ? (matched.id || matched.variant_name) : String(vName);
+                          }
+
+                          return {
+                            id: item.id || Math.random().toString(36).substring(2, 9),
+                            location_name: rawLocationName,
+                            location_type: (item.location_type === "District" ? "District" : "City") as "City" | "District",
+                            showroom_price: String(item.showroom_price || ""),
+                            on_road_price: cleanedOnRoadPrice,
+                            variant_id: resolvedVariantId,
+                          };
+                        })
+                        .filter((entry: any) => entry.location_name !== "" && entry.on_road_price !== "");
+
+                      setForm({ ...form, city_pricing: validated });
+                      alert(`Successfully applied ${validated.length} pricing entries!`);
+                    } catch (e: any) {
+                      alert("Invalid JSON format: " + e.message);
+                    }
+                  }} className="inline-flex items-center gap-1.5 rounded-lg border border-sky-200 bg-white px-3 py-1.5 text-xs font-bold text-sky-600 hover:bg-sky-50 cursor-pointer shadow-xs transition-colors">
+                    <Clipboard size={12} className="opacity-75" /> Paste Pricing
+                  </button>
+                  <button type="button" onClick={() => {
+                    const newEntry = {
+                      id: Math.random().toString(36).substring(2, 9),
+                      location_name: "",
+                      location_type: "City" as const,
+                      showroom_price: "",
+                      on_road_price: "",
+                      variant_id: null,
+                    };
+                    setForm({ ...form, city_pricing: [...(form.city_pricing || []), newEntry] });
+                  }} className="inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-sky-700 cursor-pointer shadow-xs transition-colors">
+                    <Plus size={12} /> Add Pricing Entry
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {form.city_pricing && form.city_pricing.map((p, index) => (
+                  <div key={p.id || index} className="rounded-xl border border-sky-200 bg-white p-3 shadow-xs">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
+                      <MiniInput 
+                        label="Location Name" 
+                        value={p.location_name} 
+                        onChange={(val) => {
+                          const arr = [...form.city_pricing];
+                          arr[index] = { ...arr[index], location_name: val };
+                          setForm({ ...form, city_pricing: arr });
+                        }} 
+                        placeholder="e.g. Bangalore, Kochi" 
+                      />
+
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Location Type</span>
+                        <select 
+                          value={p.location_type} 
+                          onChange={(e) => {
+                            const arr = [...form.city_pricing];
+                            arr[index] = { ...arr[index], location_type: e.target.value as "City" | "District" };
+                            setForm({ ...form, city_pricing: arr });
+                          }} 
+                          className="w-full rounded-lg border border-slate-200 px-2.5 py-2 text-xs outline-none bg-slate-50 cursor-pointer h-9 mt-0.5"
+                        >
+                          <option value="City">City</option>
+                          <option value="District">District</option>
+                        </select>
+                      </div>
+
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Apply To (Variant)</span>
+                        <select 
+                          value={p.variant_id || ""} 
+                          onChange={(e) => {
+                            const arr = [...form.city_pricing];
+                            arr[index] = { ...arr[index], variant_id: e.target.value || null };
+                            setForm({ ...form, city_pricing: arr });
+                          }} 
+                          className="w-full rounded-lg border border-slate-200 px-2.5 py-2 text-xs outline-none bg-slate-50 cursor-pointer h-9 mt-0.5"
+                        >
+                          <option value="">Main Model / Base</option>
+                          {variants.map((v, vidx) => (
+                            <option key={v.id || vidx} value={v.id || v.variant_name}>
+                              {v.variant_name} ({v.model_year})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <MiniInput 
+                        label="On-Road Price (Lakh)" 
+                        value={p.on_road_price} 
+                        onChange={(val) => {
+                          const arr = [...form.city_pricing];
+                          arr[index] = { ...arr[index], on_road_price: val };
+                          setForm({ ...form, city_pricing: arr });
+                        }} 
+                        placeholder="e.g. 13.20" 
+                      />
+                    </div>
+
+                    <div className="mt-2.5 flex justify-start">
+                      <button 
+                        type="button" 
+                        onClick={() => {
+                          const arr = form.city_pricing.filter((_, idx) => idx !== index);
+                          setForm({ ...form, city_pricing: arr });
+                        }} 
+                        className="text-[10px] font-bold text-rose-500 hover:text-rose-700 cursor-pointer transition-colors"
+                      >
+                        ✕ Remove Entry
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {(!form.city_pricing || form.city_pricing.length === 0) && (
+                  <div className="text-center py-6 bg-white/50 rounded-xl border border-dashed border-sky-300 text-sky-600/70 text-xs font-semibold">
+                    No city or district-wise pricing added yet. Click "+ Add Pricing Entry" to begin.
+                  </div>
+                )}
+              </div>
             </div>
             )}
             </div>

@@ -73,8 +73,59 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
 
 
+  // Find pricing range for JSON-LD schema
+  const priceVals = item.prices ? item.prices.map((p) => parseFloat(p.replace(/[^\d.]/g, ""))).filter(n => !isNaN(n)) : [];
+  const minPrice = priceVals.length > 0 ? Math.min(...priceVals) : null;
+  const maxPrice = priceVals.length > 0 ? Math.max(...priceVals) : null;
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": `${item.brand} ${item.title}`,
+    "image": photos,
+    "description": `${item.brand} ${item.title} — Electric ${item.types[0] || "vehicle"}.` +
+      (item.pros && item.pros.length > 0 ? ` Highlights: ${item.pros.slice(0, 3).join(", ")}.` : ""),
+    "brand": {
+      "@type": "Brand",
+      "name": item.brand
+    },
+    "category": item.types[0] || "Electric Vehicle",
+    ...(minPrice !== null && {
+      "offers": {
+        "@type": "AggregateOffer",
+        "priceCurrency": "INR",
+        "lowPrice": minPrice * 100000,
+        ...(maxPrice !== null && { "highPrice": maxPrice * 100000 }),
+        "offerCount": item.batteryVariants ? item.batteryVariants.length : 1,
+        "availability": launched ? "https://schema.org/InStock" : "https://schema.org/PreOrder"
+      }
+    }),
+    "additionalProperty": [
+      ...(item.topSpeed ? [{
+        "@type": "PropertyValue",
+        "name": "Top Speed",
+        "value": `${item.topSpeed} km/h`
+      }] : []),
+      ...(item.batteryVariants && item.batteryVariants[0]?.range ? [{
+        "@type": "PropertyValue",
+        "name": "Driving Range",
+        "value": `${item.batteryVariants[0].range} km`
+      }] : []),
+      ...(item.batteryVariants && item.batteryVariants[0]?.capacity ? [{
+        "@type": "PropertyValue",
+        "name": "Battery Capacity",
+        "value": `${item.batteryVariants[0].capacity} kWh`
+      }] : [])
+    ]
+  };
+
   return (
     <section className="min-h-screen bg-slate-100 py-28 overflow-x-hidden">
+      {/* JSON-LD Schema for AI Crawlers / SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 overflow-hidden">
 
         {/* Breadcrumb */}

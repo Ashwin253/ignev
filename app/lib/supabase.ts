@@ -38,6 +38,14 @@ export type EvListingRow = {
   discontinued_date?: string | null;
   video_links?: Array<{ url: string; title?: string; variantId?: string | null }>;
   featured_photos?: Array<{ url: string; variantId?: string | null }>;
+  city_pricing?: Array<{
+    id?: string;
+    location_name: string;
+    location_type: "City" | "District";
+    showroom_price: string;
+    on_road_price: string;
+    variant_id?: string | null;
+  }> | null;
   parent_id?: string | null;
   created_at: string;
   updated_at: string;
@@ -354,6 +362,10 @@ function mapToEvListing(row: EvListingRow, variants: EvVariantRow[], features?: 
       variantName: v.variant_name,
       fields: (v as { custom_fields?: Array<{ label: string; value: string }> }).custom_fields ?? [],
     })),
+    city_pricing: (() => {
+      const parsed = typeof row.city_pricing === "string" ? (() => { try { return JSON.parse(row.city_pricing); } catch { return []; } })() : row.city_pricing;
+      return Array.isArray(parsed) ? parsed : [];
+    })(),
   };
 }
 
@@ -447,5 +459,15 @@ export async function fetchEnergyComparisons(listingId: string) {
     .select("*")
     .eq("listing_id", listingId)
     .order("created_at");
+  return data ?? [];
+}
+
+export async function fetchCityPrices(variantIds: string[]) {
+  if (!variantIds.length) return [];
+  const { data } = await supabase
+    .from("ev_city_prices")
+    .select("*")
+    .in("variant_id", variantIds)
+    .order("city");
   return data ?? [];
 }

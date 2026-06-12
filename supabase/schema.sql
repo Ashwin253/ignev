@@ -32,6 +32,7 @@ create table if not exists public.evlistings (
   discontinued_date text default null,
   video_links jsonb default '[]',
   featured_photos jsonb default '[]',
+  city_pricing jsonb default '[]',
   parent_id uuid references public.evlistings(id) on delete set null,
   created_by uuid references auth.users(id) default auth.uid(),
   created_by_email text default '',
@@ -212,6 +213,26 @@ returns table(path text, count bigint) as $$
   order by count desc
   limit 10;
 $$ language sql security definer;
+
+-- ── City-wise On Road Prices ──────────────────────────────────────────────────
+
+create table if not exists public.ev_city_prices (
+  id uuid default gen_random_uuid() primary key,
+  variant_id uuid references public.ev_variants(id) on delete cascade not null,
+  city text not null default '',
+  on_road_price numeric not null default 0,
+  ex_showroom numeric default null,
+  rto numeric default null,
+  insurance numeric default null,
+  subsidy numeric default null,
+  created_at timestamptz default now()
+);
+
+alter table public.ev_city_prices enable row level security;
+create policy "Public read city prices" on public.ev_city_prices for select using (true);
+create policy "Team manage city prices" on public.ev_city_prices for insert to authenticated with check (true);
+create policy "Team update city prices" on public.ev_city_prices for update to authenticated using (true) with check (true);
+create policy "Team delete city prices" on public.ev_city_prices for delete to authenticated using (true);
 
 -- ── Fuel Prices Table ─────────────────────────────────────────────────────────
 

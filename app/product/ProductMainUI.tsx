@@ -181,6 +181,7 @@ export default function ProductMainUI({ item, slug }: { item: EvListing; slug: s
               showBaas={showBaas}
               onToggleBaas={onToggleBaas}
               hideVariantSelector
+              cityPricing={item.city_pricing}
             />
 
             {(item.topSpeed !== null || activeBatterySpec?.maxPower || activeBatterySpec?.maxTorque) && (

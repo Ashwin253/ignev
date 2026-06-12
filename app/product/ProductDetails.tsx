@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import {
-  BatteryCharging, Zap, Gauge, CheckCircle2, CircleMinus, ChevronDown, ChevronUp, LayoutList, Lightbulb, Activity, Disc, PlayCircle,
+  BatteryCharging, Zap, Gauge, CheckCircle2, CircleMinus, ChevronDown, ChevronUp, LayoutList, Lightbulb, Activity, Disc, PlayCircle, MapPin,
 } from "lucide-react";
 import type { EvListing } from "../lib/wordpress";
 import { useProductSelection } from "./ProductSelectionProvider";
@@ -111,6 +111,25 @@ export default function ProductDetails({ item }: { item: EvListing }) {
   
   const brakesChecks = brakesAndWheelsSection ? sectionCheckboxLabels(brakesAndWheelsSection.fields) : [];
 
+  const relevantCityPricing = useMemo(() => {
+    if (!item.city_pricing || item.city_pricing.length === 0) return [];
+    
+    // Find active variant matching details
+    const activeVar = item.batteryVariants.find(v => v.modelName === selectedVariant)
+      || item.baasVariants.find(v => v.modelName === selectedVariant);
+    const activeVarId = activeVar?.id || "";
+
+    return item.city_pricing.filter(p => {
+      const pVariant = p.variant_id;
+      if (!pVariant || pVariant === "Main Model / Base") {
+        return !selectedVariant || selectedVariant === "Main Model / Base" || selectedVariant === item.title || selectedVariant === (variants[0] || "");
+      }
+      const isMatchById = activeVarId && String(pVariant) === String(activeVarId);
+      const isMatchByName = String(pVariant).toLowerCase().trim() === selectedVariant.toLowerCase().trim();
+      return isMatchById || isMatchByName;
+    });
+  }, [item.city_pricing, item.batteryVariants, item.baasVariants, selectedVariant, item.title, variants]);
+
   return (
     <div className="mt-16 rounded-3xl border-2 border-slate-300 bg-slate-100 px-5 py-8 md:px-10 md:py-10 shadow-sm">
       <div className="text-center mb-5">
@@ -147,6 +166,8 @@ export default function ProductDetails({ item }: { item: EvListing }) {
       )}
 
       <div className="space-y-3">
+        
+
         {(motorRows.length > 0 || motorChecks.length > 0) && (
           <CollapsibleSection
             title="Motor & Engine"
@@ -323,6 +344,59 @@ export default function ProductDetails({ item }: { item: EvListing }) {
             </>
           );
         })()}
+{relevantCityPricing.length > 0 && (
+          <CollapsibleSection
+            title="City-wise On-Road Prices"
+            icon={<MapPin size={16} className="text-rose-600" />}
+            defaultOpen
+          >
+            <dl className="space-y-0.5">
+              {relevantCityPricing.map((row, i) => (
+                <SpecRow
+                  key={row.id || i}
+                  label={`${row.location_name} (${row.location_type})`}
+                  value={row.on_road_price ? `₹${row.on_road_price} Lakh` : "—"}
+                  odd={i % 2 === 0}
+                />
+              ))}
+            </dl>
+          </CollapsibleSection>
+        )}
+        {/* City-wise On Road Price */}
+        {(item as any).cityPrices && (item as any).cityPrices.length > 0 && (
+          <CollapsibleSection title="City-wise On Road Price" icon={<Gauge size={16} className="text-amber-500" />} defaultOpen={true}>
+            <div className="overflow-x-auto -mx-4 px-4 pb-2">
+              <div className="flex gap-3 min-w-max">
+                {(() => {
+                  const prices = (item as any).cityPrices as Array<{ variantId: string; variantName: string; city: string; on_road_price: number; subsidy?: number }>;
+                  // Group by variant
+                  const byVariant = new Map<string, typeof prices>();
+                  for (const cp of prices) {
+                    const arr = byVariant.get(cp.variantName) ?? [];
+                    arr.push(cp);
+                    byVariant.set(cp.variantName, arr);
+                  }
+                  return Array.from(byVariant.entries()).map(([variantName, cities]) => (
+                    <div key={variantName} className="shrink-0">
+                      {byVariant.size > 1 && <p className="text-[10px] font-bold text-slate-500 mb-2">{variantName}</p>}
+                      <div className="flex gap-2">
+                        {cities.map((cp, ci) => (
+                          <div key={ci} className="shrink-0 w-40 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                            <p className="text-[10px] font-bold text-slate-500 uppercase">{cp.city}</p>
+                            <p className="text-lg font-black text-slate-900 mt-1">₹{(cp.on_road_price > 1000 ? (cp.on_road_price / 100000).toFixed(2).replace(/\.?0+$/, "") : cp.on_road_price)} L</p>
+                            {cp.subsidy && cp.subsidy > 0 && (
+                              <p className="text-[9px] text-emerald-600 font-bold mt-0.5">-₹{(cp.subsidy / 1000).toFixed(0)}K subsidy</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ));
+                })()}
+              </div>
+            </div>
+          </CollapsibleSection>
+        )}
 
         {item.pros.length > 0 && (
           <CollapsibleSection

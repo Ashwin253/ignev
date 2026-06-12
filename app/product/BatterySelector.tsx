@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { BatteryCharging, Zap, IndianRupee, HelpCircle, X } from "lucide-react";
+import { useState, useMemo } from "react";
+import { BatteryCharging, Zap, IndianRupee, HelpCircle, X, MapPin } from "lucide-react";
 
 interface BatteryVariant {
+  id?: string;
   modelName?: string;
   capacity: string;
   range: string;
@@ -23,6 +24,14 @@ interface BatterySelectorProps {
   showBaas: boolean;
   onToggleBaas: (value: boolean) => void;
   hideVariantSelector?: boolean;
+  cityPricing?: Array<{
+    id?: string;
+    location_name: string;
+    location_type: "City" | "District";
+    showroom_price: string;
+    on_road_price: string;
+    variant_id?: string | null;
+  }>;
 }
 
 /** Format charge time: if < 60 show as minutes, else convert to hours */
@@ -59,6 +68,7 @@ export default function BatterySelector({
   showBaas,
   onToggleBaas,
   hideVariantSelector = false,
+  cityPricing = [],
 }: BatterySelectorProps) {
   const [showHelp, setShowHelp] = useState(false);
   const activeVariants = showBaas ? baasVariants : standardVariants;
@@ -68,6 +78,32 @@ export default function BatterySelector({
   const canToggle = hasBaas && baasVariants.length > 0 && standardVariants.length > 0;
   const chargeTime = formatChargeTime(active.charge);
   const priceDisplay = formatPrice(active.price);
+
+  // Filter city pricing for active variant
+  const activeVarName = active.modelName || "";
+  const activeVarId = active.id || "";
+
+  const relevantPricing = useMemo(() => {
+    return (cityPricing || []).filter(p => {
+      const pVariant = p.variant_id;
+      if (!pVariant || pVariant === "Main Model / Base") {
+        return !activeVarName || activeVarName === "Main Model / Base";
+      }
+      const isMatchById = activeVarId && String(pVariant) === String(activeVarId);
+      const isMatchByName = activeVarName && String(pVariant).toLowerCase().trim() === activeVarName.toLowerCase().trim();
+      return isMatchById || isMatchByName;
+    });
+  }, [cityPricing, activeVarName, activeVarId]);
+
+  const availableCities = useMemo(() => {
+    return relevantPricing.map(p => p.location_name).filter(Boolean);
+  }, [relevantPricing]);
+
+  const [selectedCity, setSelectedCity] = useState<string>("");
+
+  const activeCity = selectedCity && availableCities.includes(selectedCity)
+    ? selectedCity
+    : availableCities[0] || "";
 
   return (
     <div className="rounded-2xl border-2 border-slate-300 bg-slate-100 p-4">
@@ -144,67 +180,112 @@ export default function BatterySelector({
       )}
 
       {/* Specs grid */}
-      <div className={`grid gap-2 ${showBaas ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-3"}`}>
-        {/* Range */}
-        <div className="rounded-xl bg-white border border-slate-300 p-3">
-          <div className="flex items-center gap-1 text-slate-400 mb-0.5">
-            <Zap size={11} />
-            <span className="text-[9px] font-bold uppercase tracking-wider">Range</span>
-          </div>
-          <p className="text-lg font-black text-slate-900 leading-tight tabular-nums">
-            {active.range || "—"}<span className="text-[10px] font-bold text-slate-400 ml-0.5">km</span>
-          </p>
-        </div>
+      {(() => {
+        const hasOnRoad = availableCities.length > 0;
+        const totalCards = 2 + 
+          (showBaas || chargeTime.value !== "N/A" ? 1 : 0) + 
+          (showBaas && active.baseprice ? 1 : 0) + 
+          (hasOnRoad ? 1 : 0);
+        const gridCols = totalCards >= 4 ? "grid-cols-2 sm:grid-cols-4" : totalCards === 3 ? "grid-cols-3" : "grid-cols-2";
 
-        {/* Charge time — always show in BAAS, conditional in standard */}
-        {(showBaas || chargeTime.value !== "N/A") && (
-          <div className="rounded-xl bg-white border border-slate-300 p-3">
-            <div className="flex items-center gap-1 text-slate-400 mb-0.5">
-              <BatteryCharging size={11} />
-              <span className="text-[9px] font-bold uppercase tracking-wider">Charge</span>
+        return (
+          <div className={`grid gap-2 ${gridCols}`}>
+            {/* Range */}
+            <div className="rounded-xl bg-white border border-slate-300 p-3">
+              <div className="flex items-center gap-1 text-slate-400 mb-0.5">
+                <Zap size={11} />
+                <span className="text-[9px] font-bold uppercase tracking-wider">Range</span>
+              </div>
+              <p className="text-lg font-black text-slate-900 leading-tight tabular-nums">
+                {active.range || "—"}<span className="text-[10px] font-bold text-slate-400 ml-0.5">km</span>
+              </p>
             </div>
-            <p className="text-lg font-black text-slate-900 leading-tight tabular-nums">
-              {chargeTime.value}<span className="text-[10px] font-bold text-slate-400 ml-0.5">{chargeTime.unit}</span>
-            </p>
-          </div>
-        )}
 
-        {/* BAAS: ₹/km rate */}
-        {showBaas && active.price_baas ? (
-          <div className="rounded-xl bg-emerald-100 border border-emerald-300 p-3">
-            <div className="flex items-center gap-1 text-emerald-600 mb-0.5">
-              <IndianRupee size={11} />
-              <span className="text-[9px] font-bold uppercase tracking-wider">₹/km</span>
-            </div>
-            <p className="text-lg font-black text-emerald-700 leading-tight tabular-nums">
-              ₹{active.price_baas}<span className="text-[10px] font-bold text-emerald-500 ml-0.5">/km</span>
-            </p>
-          </div>
-        ) : priceDisplay ? (
-          <div className="rounded-xl bg-white border border-slate-300 p-3">
-            <div className="flex items-center gap-1 text-slate-400 mb-0.5">
-              <IndianRupee size={11} />
-              <span className="text-[9px] font-bold uppercase tracking-wider">Price</span>
-            </div>
-            <p className="text-lg font-black text-slate-900 leading-tight tabular-nums">
-              {priceDisplay.value}<span className="text-[10px] font-bold text-slate-400 ml-0.5">{priceDisplay.unit}</span>
-            </p>
-          </div>
-        ) : null}
+            {/* Charge time — always show in BAAS, conditional in standard */}
+            {(showBaas || chargeTime.value !== "N/A") && (
+              <div className="rounded-xl bg-white border border-slate-300 p-3">
+                <div className="flex items-center gap-1 text-slate-400 mb-0.5">
+                  <BatteryCharging size={11} />
+                  <span className="text-[9px] font-bold uppercase tracking-wider">Charge</span>
+                </div>
+                <p className="text-lg font-black text-slate-900 leading-tight tabular-nums">
+                  {chargeTime.value}<span className="text-[10px] font-bold text-slate-400 ml-0.5">{chargeTime.unit}</span>
+                </p>
+              </div>
+            )}
 
-        {/* BAAS: Base price (upfront) */}
-        {showBaas && active.baseprice && (
-          <div className="rounded-xl bg-emerald-100 border border-emerald-300 p-3">
-            <div className="flex items-center gap-1 text-emerald-600 mb-0.5">
-              <IndianRupee size={11} />
-              <span className="text-[9px] font-bold uppercase tracking-wider">Upfront</span>
-            </div>
-            <p className="text-lg font-black text-emerald-700 leading-tight tabular-nums">
-              ₹{formatPrice(active.baseprice)?.value}<span className="text-[10px] font-bold text-emerald-500 ml-0.5">{formatPrice(active.baseprice)?.unit}</span>
-            </p>
+            {/* BAAS: ₹/km rate */}
+            {showBaas && active.price_baas ? (
+              <div className="rounded-xl bg-emerald-100 border border-emerald-300 p-3">
+                <div className="flex items-center gap-1 text-emerald-600 mb-0.5">
+                  <IndianRupee size={11} />
+                  <span className="text-[9px] font-bold uppercase tracking-wider">₹/km</span>
+                </div>
+                <p className="text-lg font-black text-emerald-700 leading-tight tabular-nums">
+                  ₹{active.price_baas}<span className="text-[10px] font-bold text-emerald-500 ml-0.5">/km</span>
+                </p>
+              </div>
+            ) : priceDisplay ? (
+              <div className="rounded-xl bg-white border border-slate-300 p-3">
+                <div className="flex items-center gap-1 text-slate-400 mb-0.5">
+                  <IndianRupee size={11} />
+                  <span className="text-[9px] font-bold uppercase tracking-wider">Price</span>
+                </div>
+                <p className="text-lg font-black text-slate-900 leading-tight tabular-nums">
+                  {priceDisplay.value}<span className="text-[10px] font-bold text-slate-400 ml-0.5">{priceDisplay.unit}</span>
+                </p>
+              </div>
+            ) : null}
+
+            {/* BAAS: Base price (upfront) */}
+            {showBaas && active.baseprice && (
+              <div className="rounded-xl bg-emerald-100 border border-emerald-300 p-3">
+                <div className="flex items-center gap-1 text-emerald-600 mb-0.5">
+                  <IndianRupee size={11} />
+                  <span className="text-[9px] font-bold uppercase tracking-wider">Upfront</span>
+                </div>
+                <p className="text-lg font-black text-emerald-700 leading-tight tabular-nums">
+                  ₹{formatPrice(active.baseprice)?.value}<span className="text-[10px] font-bold text-emerald-500 ml-0.5">{formatPrice(active.baseprice)?.unit}</span>
+                </p>
+              </div>
+            )}
+
+            {/* On-Road Price */}
+            {hasOnRoad && (
+              <div className="rounded-xl bg-sky-50 border border-sky-300 p-3 flex flex-col justify-between">
+                <div className="flex items-center justify-between text-sky-600 mb-0.5">
+                  <div className="flex items-center gap-1">
+                    <MapPin size={11} className="text-sky-500" />
+                    <span className="text-[9px] font-bold uppercase tracking-wider">On-Road</span>
+                  </div>
+                  {availableCities.length > 1 && (
+                    <select
+                      value={activeCity}
+                      onChange={(e) => setSelectedCity(e.target.value)}
+                      className="bg-transparent text-[9px] font-bold text-sky-700 outline-none cursor-pointer border-none p-0 max-w-[65px] text-right"
+                    >
+                      {availableCities.map(city => (
+                        <option key={city} value={city}>{city}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+                <p className="text-lg font-black text-slate-900 leading-tight tabular-nums mt-1">
+                  {(() => {
+                    const match = relevantPricing.find(p => p.location_name === activeCity);
+                    if (!match || !match.on_road_price) return "—";
+                    return `₹${match.on_road_price}`;
+                  })()}
+                  <span className="text-[10px] font-bold text-slate-400 ml-0.5">L</span>
+                </p>
+                {availableCities.length <= 1 && activeCity && (
+                  <span className="text-[8px] font-bold text-slate-400 leading-none mt-0.5 truncate">{activeCity}</span>
+                )}
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        );
+      })()}
 
       {showBaas && (
         <p className="mt-3 text-[10px] text-slate-500 flex items-center gap-1.5">

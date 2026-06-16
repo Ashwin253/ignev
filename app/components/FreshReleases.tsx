@@ -16,8 +16,8 @@ export default function FreshReleases({ listings }: { listings: EvListing[] }) {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500 shadow-lg shadow-emerald-500/25">
-              <Sparkles size={20} className="text-white" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl shadow-lg" style={{ backgroundColor: "#34ebb1" }}>
+              <Sparkles size={20} className="text-slate-900" />
             </div>
             <div>
               <h2 className="text-2xl font-black text-slate-900">Fresh Releases</h2>
@@ -55,7 +55,7 @@ export default function FreshReleases({ listings }: { listings: EvListing[] }) {
                     />
                   )}
                   <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent" />
-                  <span className="absolute top-3 left-3 inline-flex items-center gap-1 rounded-full bg-emerald-500 px-2.5 py-1 text-[10px] font-bold text-white shadow-sm">
+                  <span className="absolute top-3 left-3 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold text-slate-900 shadow-sm" style={{ backgroundColor: "#34ebb1" }}>
                     <Sparkles size={10} /> New
                   </span>
                 </div>
@@ -88,7 +88,7 @@ export default function FreshReleases({ listings }: { listings: EvListing[] }) {
                     </div>
                     <button
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); triggerEnquiryModal(`${listing.brand} ${listing.title}`); }}
-                      className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 transition-colors active:scale-95"
+                      className="flex-1 bg-slate-900 hover:bg-slate-700 text-white py-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 transition-colors active:scale-95"
                     >
                       Enquire <Send size={10} />
                     </button>

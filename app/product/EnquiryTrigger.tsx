@@ -6,7 +6,7 @@ export default function EnquiryTrigger({ vehicle }: { vehicle: string }) {
   return (
     <button
       onClick={() => triggerEnquiryModal(vehicle)}
-      className="flex-1 rounded-full bg-sky-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 transition-colors active:scale-95"
+      className="flex-1 rounded-full bg-gradient-to-r from-[#34ebb1] to-[#14a375] px-6 py-3 text-sm font-extrabold text-slate-950 shadow-[0_0_15px_rgba(52,235,177,0.2)] hover:brightness-110 hover:shadow-[0_0_25px_rgba(52,235,177,0.4)] transition-all duration-300 active:scale-95"
     >
       Enquire Now
     </button>

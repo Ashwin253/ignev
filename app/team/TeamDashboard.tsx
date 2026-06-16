@@ -5,8 +5,9 @@ import { createClient } from "@supabase/supabase-js";
 import { Plus, Pencil, Trash2, LogOut, Save, X, Loader2, ChevronDown, ChevronUp, MessageSquare, Mic, MicOff, Sparkles, Copy, Clipboard, Eye } from "lucide-react";
 import type { EvListingRow, EvVariantRow } from "../lib/supabase";
 import LeadsPanel from "./LeadsPanel";
-import FuelPricesPanel from "./FuelPricesPanel";
 import AnalyticsPanel from "./AnalyticsPanel";
+import MapPanel from "./MapPanel";
+import FuelPricesPanel from "./FuelPricesPanel";
 import { useVoiceDictation, MicButton } from "./VoiceInput";
 import { appendExtra, isCheckboxExtra, isExtraChecked, normalizeExtras, type SpecExtraItem } from "../lib/spec-extras";
 
@@ -157,6 +158,185 @@ const defaultFeatures = {
   has_turn_signal: false, has_drls: false,
 };
 
+const getListingSlug = (brand: string, title: string): string => {
+  const brandClean = (brand || "").trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+  const titleClean = (title || "").trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+  return brandClean && titleClean ? `${brandClean}-${titleClean}` : (brandClean || titleClean || "");
+};
+
+const getVariantSlug = (parentSlug: string, variant: Partial<VariantForm>): string => {
+  const parts: string[] = [];
+  if (parentSlug) parts.push(parentSlug);
+  
+  if (variant.battery_capacity_kwh) {
+    const bat = String(variant.battery_capacity_kwh).trim().toLowerCase().replace(/[^a-z0-9.]/g, "");
+    if (bat) parts.push(`${bat}kwh`);
+  }
+  
+  if (variant.variant_name) {
+    const name = variant.variant_name.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    if (name) parts.push(name);
+  }
+  
+  let year = variant.model_year ? String(variant.model_year) : "";
+  if (!year && variant.launch_date) {
+    const matches = variant.launch_date.match(/\d{4}/);
+    if (matches) year = matches[0];
+  }
+  if (year) {
+    parts.push(year);
+  }
+  
+  return parts.join("-").toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+};
+
+const isListingSlugDefault = (slug: string, brand: string, title: string): boolean => {
+  if (!slug) return true;
+  const s = slug.toLowerCase().trim();
+  
+  const newFormat = getListingSlug(brand, title).toLowerCase().trim();
+  if (s === newFormat) return true;
+  
+  const oldFormat = title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "").trim();
+  if (s === oldFormat) return true;
+  
+  return false;
+};
+
+const isVariantSlugDefault = (slug: string, parentSlug: string, variant: Partial<VariantForm>): boolean => {
+  if (!slug) return true;
+  const s = slug.toLowerCase().trim();
+  
+  const newFormat = getVariantSlug(parentSlug, variant).toLowerCase().trim();
+  if (s === newFormat) return true;
+  
+  const variantNameClean = (variant.variant_name || "").toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "").trim();
+  if (!variantNameClean) return true;
+  
+  const oldFormat = `${parentSlug}-${variantNameClean}`.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "").trim();
+  if (s === oldFormat) return true;
+  
+  const variantOnlyFormat = variantNameClean;
+  if (s === variantOnlyFormat) return true;
+  
+  return false;
+};
+
+const getNextAvailableListingSlug = (baseSlug: string, currentId: string | null, existingListings: Array<{ id: string; slug: string }>): string => {
+  let candidate = baseSlug;
+  let counter = 1;
+  while (existingListings.some(l => l.id !== currentId && l.slug === candidate)) {
+    candidate = `${baseSlug}-${counter}`;
+    counter++;
+  }
+  return candidate;
+};
+
+const getNextAvailableVariantSlug = (
+  baseSlug: string,
+  currentVariantIdx: number,
+  parentSlug: string,
+  currentVariants: Array<{ id?: string; slug?: string; variant_name?: string; battery_capacity_kwh?: string | null; model_year?: number; launch_date?: string | null }>,
+  existingListings: Array<{ id: string; slug: string; variants: Array<{ id: string; slug: string; variant_name: string }> }>,
+  currentEditingListingId: string | null
+): string => {
+  let candidate = baseSlug;
+  let counter = 1;
+
+  const isClashing = (slugToCheck: string) => {
+    const localClash = currentVariants.some((varItem, idx) => {
+      if (idx === currentVariantIdx) return false;
+      const otherComputed = varItem.slug || getVariantSlug(parentSlug, varItem);
+      return otherComputed === slugToCheck;
+    });
+    if (localClash) return true;
+
+    for (const l of existingListings) {
+      if (l.id === currentEditingListingId) continue;
+      for (const otherV of l.variants) {
+        if ((otherV.slug || "").toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "") === slugToCheck) {
+          return true;
+        }
+      }
+    }
+    return false;
+  };
+
+  while (isClashing(candidate)) {
+    candidate = `${baseSlug}-${counter}`;
+    counter++;
+  }
+  return candidate;
+};
+
+const PRESET_COMPETITORS = [
+  // 4 Wheelers
+  { "type": "4 Wheeler", "model": "Maruti Suzuki Dzire", "priceBracket": "5-10", "variants": { "petrol": "24.79", "cng": "33.73", "ev": null } },
+  { "type": "4 Wheeler", "model": "Maruti Suzuki Swift", "priceBracket": "5-10", "variants": { "petrol": "25.75", "cng": "32.85", "ev": null } },
+  { "type": "4 Wheeler", "model": "Maruti Suzuki Wagon R", "priceBracket": "under-5L", "variants": { "petrol": "25.19", "cng": "34.05", "ev": null } },
+  { "type": "4 Wheeler", "model": "Maruti Suzuki Baleno", "priceBracket": "5-10", "variants": { "petrol": "22.35", "cng": "30.61", "ev": null } },
+  { "type": "4 Wheeler", "model": "Maruti Suzuki Fronx", "priceBracket": "5-10", "variants": { "petrol": "21.79", "cng": "28.51", "ev": null } },
+  { "type": "4 Wheeler", "model": "Maruti Suzuki Brezza", "priceBracket": "5-15", "variants": { "petrol": "22.15", "cng": "25.51", "ev": null } },
+  { "type": "4 Wheeler", "model": "Maruti Suzuki Ertiga", "priceBracket": "5-15", "variants": { "petrol": "20.51", "cng": "26.11", "ev": null } },
+  { "type": "4 Wheeler", "model": "Maruti Suzuki Celerio", "priceBracket": "under-5L", "variants": { "petrol": "26.68", "cng": "34.43", "ev": null } },
+  { "type": "4 Wheeler", "model": "Maruti Suzuki Alto K10", "priceBracket": "under-5L", "variants": { "petrol": "24.39", "cng": "33.85", "ev": null } },
+  { "type": "4 Wheeler", "model": "Hyundai Exter", "priceBracket": "5-10", "variants": { "petrol": "19.40", "cng": "27.10", "ev": null } },
+  { "type": "4 Wheeler", "model": "Tata Punch", "priceBracket": "5-15", "variants": { "petrol": "20.09", "cng": "26.99", "ev": "421" } },
+  { "type": "4 Wheeler", "model": "Tata Nexon", "priceBracket": "5-15", "variants": { "petrol": "17.44", "cng": "26.99", "ev": "325" } },
+  { "type": "4 Wheeler", "model": "Tata Tiago", "priceBracket": "under-5L", "variants": { "petrol": "20.09", "cng": "26.49", "ev": "315" } },
+  { "type": "4 Wheeler", "model": "Tata Tigor", "priceBracket": "5-10", "variants": { "petrol": "19.28", "cng": "26.49", "ev": "315" } },
+  { "type": "4 Wheeler", "model": "Tata Altroz", "priceBracket": "5-10", "variants": { "petrol": "19.33", "cng": "26.20", "ev": null } },
+  { "type": "4 Wheeler", "model": "Mahindra Scorpio N", "priceBracket": "15-30", "variants": { "petrol": "12.70", "cng": null, "ev": null } },
+  { "type": "4 Wheeler", "model": "Mahindra XUV 3XO", "priceBracket": "5-15", "variants": { "petrol": "20.10", "cng": null, "ev": null } },
+  { "type": "4 Wheeler", "model": "Hyundai Creta", "priceBracket": "15-30", "variants": { "petrol": "17.40", "cng": null, "ev": "473" } },
+  { "type": "4 Wheeler", "model": "MG Windsor", "priceBracket": "15-30", "variants": { "petrol": null, "cng": null, "ev": "332" } },
+  { "type": "4 Wheeler", "model": "Mahindra BE 6", "priceBracket": "15-30", "variants": { "petrol": null, "cng": null, "ev": "557" } },
+
+  // 2 Wheelers
+  { "type": "2 Wheeler", "model": "Hero Splendor Plus", "priceBracket": "under-1L", "variants": { "petrol": "70", "cng": null, "ev": null } },
+  { "type": "2 Wheeler", "model": "Honda Activa 6G", "priceBracket": "under-1L", "variants": { "petrol": "59.5", "cng": null, "ev": null } },
+  { "type": "2 Wheeler", "model": "Honda Shine 125", "priceBracket": "under-1L", "variants": { "petrol": "55", "cng": null, "ev": null } },
+  { "type": "2 Wheeler", "model": "Bajaj Pulsar 125", "priceBracket": "under-1L", "variants": { "petrol": "51", "cng": null, "ev": null } },
+  { "type": "2 Wheeler", "model": "TVS Apache RTR 160", "priceBracket": "1-1.5", "variants": { "petrol": "47", "cng": null, "ev": null } },
+  { "type": "2 Wheeler", "model": "Royal Enfield Classic 350", "priceBracket": "2-3", "variants": { "petrol": "41.5", "cng": null, "ev": null } },
+  { "type": "2 Wheeler", "model": "TVS Jupiter", "priceBracket": "under-1L", "variants": { "petrol": "48", "cng": null, "ev": null } },
+  { "type": "2 Wheeler", "model": "Suzuki Access 125", "priceBracket": "under-1L", "variants": { "petrol": "45", "cng": null, "ev": null } },
+  { "type": "2 Wheeler", "model": "TVS NTorq 125", "priceBracket": "under-1L", "variants": { "petrol": "48.5", "cng": null, "ev": null } },
+  { "type": "2 Wheeler", "model": "Yamaha RayZR 125", "priceBracket": "under-1L", "variants": { "petrol": "52", "cng": null, "ev": null } },
+  { "type": "2 Wheeler", "model": "Suzuki Burgman Street 125", "priceBracket": "1-1.5", "variants": { "petrol": "48", "cng": null, "ev": null } },
+  { "type": "2 Wheeler", "model": "Hero Destini 125", "priceBracket": "under-1L", "variants": { "petrol": "59", "cng": null, "ev": null } },
+  { "type": "2 Wheeler", "model": "TVS iQube", "priceBracket": "1-2", "variants": { "petrol": null, "cng": null, "ev": "75 / 100 / 150" } },
+  { "type": "2 Wheeler", "model": "Bajaj Chetak", "priceBracket": "1-1.5", "variants": { "petrol": null, "cng": null, "ev": "127 / 153" } },
+  { "type": "2 Wheeler", "model": "Ather 450X", "priceBracket": "1.5-2", "variants": { "petrol": null, "cng": null, "ev": "126 / 161" } },
+  { "type": "2 Wheeler", "model": "Ather Rizta", "priceBracket": "1-1.5", "variants": { "petrol": null, "cng": null, "ev": "123 / 159" } },
+  { "type": "2 Wheeler", "model": "Ola S1 Pro", "priceBracket": "1-1.5", "variants": { "petrol": null, "cng": null, "ev": "242" } },
+  { "type": "2 Wheeler", "model": "Vida V2", "priceBracket": "1-1.5", "variants": { "petrol": null, "cng": null, "ev": "94 / 165" } },
+  { "type": "2 Wheeler", "model": "Revolt RV400", "priceBracket": "1-2", "variants": { "petrol": null, "cng": null, "ev": "150" } },
+  { "type": "2 Wheeler", "model": "Ultraviolette F77", "priceBracket": "3L+", "variants": { "petrol": null, "cng": null, "ev": "211 / 323" } },
+
+  // 3 Wheelers
+  { "type": "3 Wheeler", "model": "Bajaj RE", "priceBracket": "3-5", "variants": { "petrol": "35", "cng": "27", "ev": null } },
+  { "type": "3 Wheeler", "model": "TVS King Deluxe", "priceBracket": "3-5", "variants": { "petrol": "34", "cng": "28", "ev": null } },
+  { "type": "3 Wheeler", "model": "TVS King Duramax", "priceBracket": "3-5", "variants": { "petrol": null, "cng": "30", "ev": null } },
+  { "type": "3 Wheeler", "model": "Bajaj Maxima Z", "priceBracket": "3-5", "variants": { "petrol": null, "cng": "26", "ev": null } },
+  { "type": "3 Wheeler", "model": "Bajaj Maxima X Wide", "priceBracket": "3-5", "variants": { "petrol": null, "cng": "25", "ev": null } },
+  { "type": "3 Wheeler", "model": "Piaggio Ape City", "priceBracket": "3-5", "variants": { "petrol": "30", "cng": "28", "ev": null } },
+  { "type": "3 Wheeler", "model": "Piaggio Ape Xtra LDX", "priceBracket": "3-5", "variants": { "petrol": null, "cng": "28", "ev": null } },
+  { "type": "3 Wheeler", "model": "Mahindra Alfa DX", "priceBracket": "3-5", "variants": { "petrol": null, "cng": "29", "ev": null } },
+  { "type": "3 Wheeler", "model": "Mahindra Jeeto Strong CNG", "priceBracket": "5-7", "variants": { "petrol": null, "cng": "32", "ev": null } },
+  { "type": "3 Wheeler", "model": "Bajaj Qute", "priceBracket": "3-5", "variants": { "petrol": null, "cng": "35", "ev": null } },
+  { "type": "3 Wheeler", "model": "Mahindra Treo", "priceBracket": "3-5", "variants": { "petrol": null, "cng": null, "ev": "131" } },
+  { "type": "3 Wheeler", "model": "Mahindra Treo Plus", "priceBracket": "3-5", "variants": { "petrol": null, "cng": null, "ev": "150" } },
+  { "type": "3 Wheeler", "model": "Mahindra Treo Zor", "priceBracket": "3-5", "variants": { "petrol": null, "cng": null, "ev": "125" } },
+  { "type": "3 Wheeler", "model": "Mahindra e-Alfa Plus", "priceBracket": "under-3L", "variants": { "petrol": null, "cng": null, "ev": "95" } },
+  { "type": "3 Wheeler", "model": "Bajaj RE E-TEC 9.0", "priceBracket": "3-5", "variants": { "petrol": null, "cng": null, "ev": "178" } },
+  { "type": "3 Wheeler", "model": "Bajaj GoGo P5009", "priceBracket": "5-7", "variants": { "petrol": null, "cng": null, "ev": "171" } },
+  { "type": "3 Wheeler", "model": "Bajaj GoGo P7012", "priceBracket": "7-10", "variants": { "petrol": null, "cng": null, "ev": "251" } },
+  { "type": "3 Wheeler", "model": "Piaggio Ape E-City FX", "priceBracket": "3-5", "variants": { "petrol": null, "cng": null, "ev": "145" } },
+  { "type": "3 Wheeler", "model": "Euler HiLoad EV", "priceBracket": "5-7", "variants": { "petrol": null, "cng": null, "ev": "170" } },
+  { "type": "3 Wheeler", "model": "Omega Seiki Stream City", "priceBracket": "3-5", "variants": { "petrol": null, "cng": null, "ev": "126" } }
+];
+
 let browserSupabaseClient: any = null;
 
 export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supabaseUrl: string; supabaseAnonKey: string }) {
@@ -171,10 +351,29 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
   const [editing, setEditing] = useState<string | null>(null);
   const [form, setForm] = useState<ListingForm>(emptyListing);
   const [variants, setVariants] = useState<(VariantForm & { id?: string })[]>([]);
+
+  const updateVariantField = (idx: number, updatedFields: Partial<VariantForm>) => {
+    setVariants((prev) => {
+      const arr = [...prev];
+      const v = arr[idx];
+      if (!v) return prev;
+      const parentSlug = (form.slug || getListingSlug(form.brand, form.title)).toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+      
+      const isSlugDefaultOrEmpty = isVariantSlugDefault(v.slug, parentSlug, v);
+      
+      const nextVariant = { ...v, ...updatedFields };
+      const nextSlug = (updatedFields.slug !== undefined)
+        ? updatedFields.slug
+        : (isSlugDefaultOrEmpty ? getVariantSlug(parentSlug, nextVariant) : v.slug);
+      
+      arr[idx] = { ...nextVariant, slug: nextSlug } as any;
+      return arr;
+    });
+  };
   const [saving, setSaving] = useState(false);
   const [rebuildingAI, setRebuildingAI] = useState(false);
   const [expandedListing, setExpandedListing] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<"listings" | "leads" | "prices" | "analytics">("listings");
+  const [activeSection, setActiveSection] = useState<"listings" | "leads" | "prices" | "analytics" | "map">("listings");
   const [selectedModelId, setSelectedModelId] = useState<string>("");
   const [selectedBrand, setSelectedBrand] = useState<string>("");
   const uniqueBrands = useMemo(() => {
@@ -189,7 +388,14 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
   const [variantSpecSection, setVariantSpecSection] = useState<Record<number, string>>({});
   const [listingFormTab, setListingFormTab] = useState<"core" | "variants" | "energy" | "media" | "pricing">("core");
   const [activeVariantIndex, setActiveVariantIndex] = useState(0);
+  const [selectedPresetType, setSelectedPresetType] = useState<"2 Wheeler" | "3 Wheeler" | "4 Wheeler" | "">("");
+  const [selectedPresetModel, setSelectedPresetModel] = useState("");
   const [initialSnapshot, setInitialSnapshot] = useState<{form: any, variants: any, energyComps: any} | null>(null);
+  const [dbFuelPrices, setDbFuelPrices] = useState<any[]>([]);
+  const fetchDbFuelPrices = async () => {
+    const { data } = await supabase.from("fuel_prices").select("*").order("city");
+    setDbFuelPrices(data || []);
+  };
 
   const [motorClipboard, setMotorClipboard] = useState<any>(null);
   const [chargingClipboard, setChargingClipboard] = useState<any>(null);
@@ -373,7 +579,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
       _instruction: "Return a compact JSON where only the differing fields are updated per variant. All other specifications, features, and specs (like dimensions, brakes, warranties, etc.) are assumed to be inherited from the first variant (index 0). Do not repeat common fields in subsequent variants.",
       _hints: {
         types_options: ["2 Wheeler", "3 Wheeler", "4 Wheeler"],
-        price_bracket_options: ["0-5", "5-15", "15-30", "30+"],
+        price_bracket_options: ["under-2L", "under-5L", "5-10", "5-15", "10-25", "15-30", "30+", "50+"],
         body_type_options: ["Scooter", "Sedan", "SUV", "Hatchback", "Compact SUV", "MUV", "Bike", "Tempo", "Other"]
       },
       form: templateForm,
@@ -574,7 +780,12 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
   };
 
   useEffect(() => { supabase.auth.getUser().then(({ data }: any) => { if (data.user) setUser(data.user); }); }, []);
-  useEffect(() => { if (user) fetchListings(); }, [user]);
+  useEffect(() => {
+    if (user) {
+      fetchListings();
+      fetchDbFuelPrices();
+    }
+  }, [user]);
 
   const updateVariantMotorField = (idx: number, fieldName: string, value: any) => {
     setVariants(prev => prev.map((v, i) => {
@@ -696,7 +907,11 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
       photo: l.photo,
       gallery_images: rawGalleryImages,
       colors: l.colors ?? [],
-      types: l.types ?? [],
+      types: Array.isArray((l as any).types)
+        ? (l as any).types
+        : (typeof (l as any).types === "string" && (l as any).types
+            ? (((l as any).types as string).startsWith("[") ? safeParseJson((l as any).types, [(l as any).types]) : [(l as any).types])
+            : []),
       pros: l.pros ?? [],
       cons: l.cons ?? [],
       price_bracket: (l as any).price_bracket || "",
@@ -779,7 +994,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
     setSaving(true);
     // Sanitize slug by replacing spaces with '-' and removing non-alphanumeric chars
     // Fallback to timestamp if both are empty to avoid unique constraints
-    const baseSlug = form.slug || form.title || `listing-${Date.now()}`;
+    const baseSlug = form.slug || getListingSlug(form.brand, form.title) || `listing-${Date.now()}`;
     const sanitizedSlug = baseSlug
       .toLowerCase()
       .replace(/\s+/g, "-")
@@ -844,7 +1059,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
           variant_name: v.variant_name,
           version_name: v.version_name || null,
           launch_date: v.launch_date || null,
-          slug: v.slug || `${sanitizedSlug}-${v.variant_name}`.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
+          slug: v.slug || getVariantSlug(sanitizedSlug, v),
           model_year: v.model_year,
           price: v.price,
           top_speed: v.top_speed,
@@ -1002,31 +1217,37 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             <option value="leads">Enquiries</option>
             <option value="prices">⛽ Fuel Prices</option>
             <option value="analytics">📊 Analytics</option>
+            <option value="map">📍 Map</option>
           </select>
         </div>
 
         <div className="hidden sm:flex gap-2 mb-6 overflow-x-auto">
           <button onClick={() => setActiveSection("listings")}
-            className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all shrink-0 ${activeSection === "listings" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${activeSection === "listings" ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-950 border border-slate-300"}`}>
             EV Listings
           </button>
           <button onClick={() => setActiveSection("leads")}
-            className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all shrink-0 ${activeSection === "leads" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${activeSection === "leads" ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-950 border border-slate-300"}`}>
             <MessageSquare size={14} /> Enquiries
           </button>
           <button onClick={() => setActiveSection("prices")}
-            className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all shrink-0 ${activeSection === "prices" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${activeSection === "prices" ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-950 border border-slate-300"}`}>
             ⛽ Fuel Prices
           </button>
           <button onClick={() => setActiveSection("analytics")}
-            className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all shrink-0 ${activeSection === "analytics" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${activeSection === "analytics" ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-950 border border-slate-300"}`}>
             📊 Analytics
+          </button>
+          <button onClick={() => setActiveSection("map")}
+            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${activeSection === "map" ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-950 border border-slate-300"}`}>
+            📍 Map
           </button>
         </div>
 
         {activeSection === "leads" && <LeadsPanel supabase={supabase} userId={user.id} />}
-        {activeSection === "prices" && <FuelPricesPanel supabase={supabase} userEmail={user.email} />}
+        {activeSection === "prices" && <FuelPricesPanel supabase={supabase} userEmail={user.email || ""} />}
         {activeSection === "analytics" && <AnalyticsPanel supabase={supabase} />}
+        {activeSection === "map" && <MapPanel supabase={supabase} userEmail={user.email || ""} />}
 
         {activeSection === "listings" && (
         <>
@@ -1153,13 +1374,13 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                               <Trash2 size={14} />
                             </button>
                             <div>
-                              <p className="text-sm font-bold text-slate-800 flex items-center flex-wrap gap-1.5">
+                              <p className="text-sm font-extrabold text-slate-900 flex items-center flex-wrap gap-1.5">
                                 {v.variant_name}
-                                {(v as any).version_name && <span className="text-[10px] font-semibold text-sky-600 bg-sky-50 px-2 py-0.5 rounded border border-sky-100">{(v as any).version_name}</span>}
-                                {v.model_year && <span className="text-[10px] font-bold text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-200">{v.model_year}</span>}
-                                {(v as any).discontinued && <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">Discontinued</span>}
+                                {(v as any).version_name && <span className="text-xs font-bold text-sky-700 bg-sky-100 px-2 py-0.5 rounded border border-sky-200">{(v as any).version_name}</span>}
+                                {v.model_year && <span className="text-xs font-bold text-slate-850 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-300">{v.model_year}</span>}
+                                {(v as any).discontinued && <span className="text-xs font-bold text-rose-700 bg-rose-100 px-1.5 py-0.5 rounded border border-rose-300">Discontinued</span>}
                               </p>
-                              <p className="text-[10px] text-slate-500">₹{v.price}L · {v.driving_range_km}km · {v.battery_capacity_kwh}kWh {v.has_baas && <span className="text-emerald-600 font-bold">· BAAS</span>}</p>
+                              <p className="text-xs font-bold text-slate-800 mt-0.5">₹{v.price}L · {v.driving_range_km}km · {v.battery_capacity_kwh}kWh {v.has_baas && <span className="text-emerald-700 font-black bg-emerald-50 px-1 rounded border border-emerald-200">· BAAS</span>}</p>
                             </div>
                           </div>
                           <div className="flex gap-2">
@@ -1224,7 +1445,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             </div>
 
             {/* Tab buttons for desktop */}
-            <div className="hidden sm:flex flex-wrap gap-1 rounded-xl border-2 border-slate-300 bg-slate-200 p-1 mb-5">
+            <div className="hidden sm:flex flex-wrap gap-1 rounded-xl border-2 border-slate-400 bg-slate-300 p-1 mb-5">
               {([
                 { id: "core" as const, label: "Core Details" },
                 { id: "media" as const, label: "Media" },
@@ -1236,16 +1457,16 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   key={tab.id}
                   type="button"
                   onClick={() => setListingFormTab(tab.id)}
-                  className={`flex-1 min-w-[120px] rounded-lg px-3 py-2.5 text-xs font-bold transition-colors ${
+                  className={`flex-1 min-w-[120px] rounded-lg px-4 py-3 text-sm font-extrabold transition-colors ${
                     listingFormTab === tab.id
-                      ? "bg-white text-slate-900 shadow-sm"
-                      : "text-slate-600 hover:bg-slate-300/60"
+                      ? "bg-slate-950 text-white shadow-md"
+                      : "text-slate-800 hover:bg-slate-200/80 hover:text-slate-950"
                   }`}
                 >
                   {tab.label}
                   {tab.count != null && tab.count > 0 && (
-                    <span className={`ml-1.5 inline-flex min-w-[1.25rem] justify-center rounded-full px-1.5 py-0.5 text-[9px] ${
-                      listingFormTab === tab.id ? "bg-slate-200 text-slate-700" : "bg-slate-400/30 text-slate-600"
+                    <span className={`ml-1.5 inline-flex min-w-[1.25rem] justify-center rounded-full px-2 py-0.5 text-xs font-bold ${
+                      listingFormTab === tab.id ? "bg-slate-800 text-white" : "bg-slate-400/50 text-slate-900"
                     }`}>
                       {tab.count}
                     </span>
@@ -1259,45 +1480,194 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             <>
             {/* Basic fields */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <Field label="Model" value={form.title} onChange={(v) => setForm({ ...form, title: v })} />
-              <Field label="Slug" value={form.slug} onChange={(v) => setForm({ ...form, slug: v })} placeholder="auto-generated" />
+              <Field
+                label="Model"
+                value={form.title}
+                onChange={(v) => {
+                  const oldListingSlug = form.slug || getListingSlug(form.brand, form.title);
+                  const newListingSlug = getListingSlug(form.brand, v);
+                  
+                  if (isListingSlugDefault(form.slug, form.brand, form.title)) {
+                    setForm({ ...form, title: v, slug: newListingSlug });
+
+                    const updatedVariants = variants.map((varItem) => {
+                      if (isVariantSlugDefault(varItem.slug, oldListingSlug, varItem)) {
+                        return {
+                          ...varItem,
+                          slug: getVariantSlug(newListingSlug, varItem)
+                        };
+                      }
+                      return varItem;
+                    });
+                    setVariants(updatedVariants);
+                  } else {
+                    setForm({ ...form, title: v });
+                  }
+                }}
+              />
               <div className="flex flex-col gap-1">
-                <Field label="Brand" value={form.brand} onChange={(v) => setForm({ ...form, brand: v.toUpperCase() })} />
+                <Field
+                  label="Slug"
+                  value={form.slug}
+                  onChange={(v) => {
+                    const sanitized = v.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+                    const oldSlug = form.slug || getListingSlug(form.brand, form.title);
+                    setForm({ ...form, slug: sanitized });
+
+                    const updatedVariants = variants.map((varItem) => {
+                      if (isVariantSlugDefault(varItem.slug, oldSlug, varItem)) {
+                        return {
+                          ...varItem,
+                          slug: getVariantSlug(sanitized, varItem)
+                        };
+                      }
+                      return varItem;
+                    });
+                    setVariants(updatedVariants);
+                  }}
+                  placeholder="auto-generated"
+                />
+                {(() => {
+                  const computedListingSlug = form.slug || getListingSlug(form.brand, form.title);
+                  if (!computedListingSlug) {
+                    return <span className="text-[10px] text-slate-400">ℹ️ Slug will be auto-generated from Brand & Model</span>;
+                  }
+                  const clashing = listings.find((l) => l.id !== editing && l.slug === computedListingSlug);
+                  if (clashing) {
+                    const recommended = getNextAvailableListingSlug(computedListingSlug, editing, listings);
+                    return (
+                      <span className="text-[10px] text-rose-600 font-bold flex flex-col gap-0.5 mt-0.5">
+                        <span>⚠️ Taken: clashes with {clashing.brand} {clashing.title}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const oldSlug = form.slug || getListingSlug(form.brand, form.title);
+                            setForm({ ...form, slug: recommended });
+
+                            const updatedVariants = variants.map((varItem) => {
+                              if (isVariantSlugDefault(varItem.slug, oldSlug, varItem)) {
+                                return {
+                                  ...varItem,
+                                  slug: getVariantSlug(recommended, varItem)
+                                };
+                              }
+                              return varItem;
+                            });
+                            setVariants(updatedVariants);
+                          }}
+                          className="text-sky-600 hover:text-sky-700 underline text-left cursor-pointer"
+                        >
+                          Use recommended slug: {recommended}
+                        </button>
+                      </span>
+                    );
+                  }
+                  return (
+                    <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-1 mt-0.5">
+                      ✓ Available: {computedListingSlug}
+                    </span>
+                  );
+                })()}
+              </div>
+              <div className="flex flex-col gap-1">
+                <Field
+                  label="Brand"
+                  value={form.brand}
+                  onChange={(v) => {
+                    const uBrand = v.toUpperCase();
+                    const oldListingSlug = form.slug || getListingSlug(form.brand, form.title);
+                    const newListingSlug = getListingSlug(uBrand, form.title);
+
+                    if (isListingSlugDefault(form.slug, form.brand, form.title)) {
+                      setForm({ ...form, brand: uBrand, slug: newListingSlug });
+
+                      const updatedVariants = variants.map((varItem) => {
+                        if (isVariantSlugDefault(varItem.slug, oldListingSlug, varItem)) {
+                          return {
+                            ...varItem,
+                            slug: getVariantSlug(newListingSlug, varItem)
+                          };
+                        }
+                        return varItem;
+                      });
+                      setVariants(updatedVariants);
+                    } else {
+                      setForm({ ...form, brand: uBrand });
+                    }
+                  }}
+                />
                 {uniqueBrands.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    <span className="text-[10px] text-slate-400 self-center mr-1">Quick Select:</span>
-                    {uniqueBrands.slice(0, 8).map((ub) => (
-                      <button
-                        key={ub}
-                        type="button"
-                        onClick={() => setForm({ ...form, brand: ub })}
-                        className="text-[10px] px-2 py-0.5 rounded border border-slate-200 bg-white hover:bg-slate-100 font-semibold text-slate-600"
-                      >
-                        {ub}
-                      </button>
-                    ))}
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <span className="text-[10px] text-slate-400 font-semibold shrink-0">Quick Select:</span>
+                    <select
+                      value=""
+                      onChange={(e) => {
+                        const ub = e.target.value;
+                        if (!ub) return;
+                        const oldListingSlug = form.slug || getListingSlug(form.brand, form.title);
+                        const newListingSlug = getListingSlug(ub, form.title);
+                        if (isListingSlugDefault(form.slug, form.brand, form.title)) {
+                          setForm({ ...form, brand: ub, slug: newListingSlug });
+
+                          const updatedVariants = variants.map((varItem) => {
+                            if (isVariantSlugDefault(varItem.slug, oldListingSlug, varItem)) {
+                              return {
+                                ...varItem,
+                                slug: getVariantSlug(newListingSlug, varItem)
+                              };
+                            }
+                            return varItem;
+                          });
+                          setVariants(updatedVariants);
+                        } else {
+                          setForm({ ...form, brand: ub });
+                        }
+                      }}
+                      className="text-[10px] px-2 py-0.5 rounded border border-slate-200 bg-white font-semibold text-slate-600 outline-none cursor-pointer max-w-[120px]"
+                    >
+                      <option value="">Choose Brand</option>
+                      {uniqueBrands.map((ub) => (
+                        <option key={ub} value={ub}>
+                          {ub}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 )}
               </div>
               <label className="block">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-700">Type</span>
-                <select value={form.types[0] || ""} onChange={(e) => setForm({ ...form, types: [e.target.value] })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none">
+                <span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-800">Type</span>
+                <select value={(Array.isArray(form.types) ? form.types[0] : form.types) || ""} onChange={(e) => setForm({ ...form, types: [e.target.value] })} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm font-semibold text-slate-900 outline-none cursor-pointer">
                   <option value="">Select</option><option value="2 Wheeler">2 Wheeler</option><option value="3 Wheeler">3 Wheeler</option><option value="4 Wheeler">4 Wheeler</option>
                 </select>
               </label>
               <label className="block">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-700">Price Bracket</span>
-                <select value={form.price_bracket} onChange={(e) => setForm({ ...form, price_bracket: e.target.value })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none">
+                <span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-800">Price Bracket</span>
+                <select value={form.price_bracket} onChange={(e) => setForm({ ...form, price_bracket: e.target.value })} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm font-semibold text-slate-900 outline-none cursor-pointer">
                   <option value="">Select Bracket</option>
-                  <option value="0-5">Under ₹5L</option>
+                  <option value="under-1L">Under ₹1 Lakh</option>
+                  <option value="1-1.5">₹1L – ₹1.5L</option>
+                  <option value="1.5-2">₹1.5L – ₹2L</option>
+                  <option value="1-2">₹1L – ₹2L</option>
+                  <option value="under-2L">Under ₹2 Lakh</option>
+                  <option value="2-3">₹2L – ₹3L</option>
+                  <option value="under-3L">Under ₹3 Lakh</option>
+                  <option value="3-5">₹3L – ₹5L</option>
+                  <option value="3L+">₹3L+</option>
+                  <option value="under-5L">Under ₹5 Lakh</option>
+                  <option value="5-7">₹5L – ₹7L</option>
+                  <option value="7-10">₹7L – ₹10L</option>
+                  <option value="5-10">₹5L – ₹10L</option>
                   <option value="5-15">₹5L – ₹15L</option>
+                  <option value="10-25">₹10L – ₹25L</option>
                   <option value="15-30">₹15L – ₹30L</option>
                   <option value="30+">₹30L+</option>
+                  <option value="50+">₹50L+</option>
                 </select>
               </label>
               <label className="block">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-700">Body Type</span>
-                <select value={form.body_type} onChange={(e) => setForm({ ...form, body_type: e.target.value })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none">
+                <span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-800">Body Type</span>
+                <select value={form.body_type} onChange={(e) => setForm({ ...form, body_type: e.target.value })} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm font-semibold text-slate-900 outline-none cursor-pointer">
                   <option value="">Select</option><option value="Scooter">Scooter</option><option value="Sedan">Sedan</option><option value="SUV">SUV</option><option value="Hatchback">Hatchback</option><option value="Compact SUV">Compact SUV</option><option value="MUV">MUV</option><option value="Bike">Bike</option><option value="Tempo">Tempo</option><option value="Other">Other</option>
                 </select>
               </label>
@@ -1818,7 +2188,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-sky-600 px-3 py-2 text-xs font-bold text-white hover:bg-sky-700 cursor-pointer transition-colors w-full sm:w-auto">
                   <Plus size={12} className="shrink-0" /> Add New
                 </button>
-                <button onClick={() => { const current = variants[activeVariantIndex]; if (current) { const clone = { ...current, variant_name: `${current.variant_name} (Copy)`, id: undefined } as any; delete clone.id; setVariants([...variants, clone]); setActiveVariantIndex(variants.length); setEditingVariantId(null); } }}
+                <button onClick={() => { const current = variants[activeVariantIndex]; if (current) { const clone = { ...current, variant_name: `${current.variant_name} (Copy)`, slug: "", id: undefined } as any; delete clone.id; setVariants([...variants, clone]); setActiveVariantIndex(variants.length); setEditingVariantId(null); } }}
                   className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-sky-200 bg-white px-3 py-2 text-xs font-bold text-sky-600 hover:bg-sky-50 cursor-pointer transition-colors w-full sm:w-auto">
                   <Copy size={12} className="shrink-0" /> Clone Current
                 </button>
@@ -1871,10 +2241,75 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   </div>
                   <div className="p-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
-                    <MiniInput label="Variant Name" value={v.variant_name} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], variant_name: val }; setVariants(arr); }} />
+                    <MiniInput
+                      label="Variant Name"
+                      value={v.variant_name}
+                      onChange={(val) => updateVariantField(i, { variant_name: val })}
+                    />
+                    <div className="flex flex-col gap-1">
+                      <MiniInput
+                        label="Variant Slug"
+                        value={v.slug || ""}
+                        placeholder="auto-generated"
+                        onChange={(val) => updateVariantField(i, { slug: val.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "") })}
+                      />
+                      {(() => {
+                        const parentSlug = (form.slug || getListingSlug(form.brand, form.title)).toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+                        const computedVariantSlug = v.slug || getVariantSlug(parentSlug, v);
+                        
+                        if (!computedVariantSlug) {
+                          return <span className="text-[10px] text-slate-400">ℹ️ Auto-generated on save</span>;
+                        }
+                        
+                        const localClashIdx = variants.findIndex((varItem, idx) => {
+                          if (idx === i) return false;
+                          const otherComputed = varItem.slug || getVariantSlug(parentSlug, varItem);
+                          return otherComputed === computedVariantSlug;
+                        });
+                        
+                        let dbClashStr = null;
+                        if (localClashIdx === -1) {
+                          for (const l of listings) {
+                            if (l.id === editing) continue;
+                            for (const otherV of l.variants) {
+                              if ((otherV.slug || "").toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "") === computedVariantSlug) {
+                                dbClashStr = `${l.brand} ${l.title} (${otherV.variant_name})`;
+                                break;
+                              }
+                            }
+                            if (dbClashStr) break;
+                          }
+                        }
+                        
+                        if (localClashIdx !== -1 || dbClashStr) {
+                          const recommended = getNextAvailableVariantSlug(computedVariantSlug, i, parentSlug, variants, listings, editing);
+                          const clashMsg = localClashIdx !== -1 
+                            ? `Variant ${localClashIdx + 1}`
+                            : dbClashStr;
+                          return (
+                            <span className="text-[10px] text-rose-600 font-bold flex flex-col gap-0.5 mt-0.5">
+                              <span>⚠️ Taken: clashes with {clashMsg}</span>
+                              <button
+                                type="button"
+                                onClick={() => updateVariantField(i, { slug: recommended })}
+                                className="text-sky-600 hover:text-sky-700 underline text-left cursor-pointer"
+                              >
+                                Use recommended slug: {recommended}
+                              </button>
+                            </span>
+                          );
+                        }
+                        
+                        return (
+                          <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-1 mt-0.5">
+                            ✓ Available: {computedVariantSlug}
+                          </span>
+                        );
+                      })()}
+                    </div>
                     <MiniInput label="Version/Refresh" value={v.version_name || ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], version_name: val }; setVariants(arr); }} />
-                    <MiniInput label="Launch Date" value={v.launch_date || ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], launch_date: val }; setVariants(arr); }} />
-                    <MiniInput label="Model Year" value={String(v.model_year)} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], model_year: cleanInt(val, 2026) }; setVariants(arr); }} />
+                    <MiniInput label="Launch Date" value={v.launch_date || ""} onChange={(val) => updateVariantField(i, { launch_date: val })} />
+                    <MiniInput label="Model Year" value={String(v.model_year)} onChange={(val) => updateVariantField(i, { model_year: cleanInt(val, 2026) })} />
                     <MiniInput label="Price (Lakh)" value={String(v.price || "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], price: cleanPriceLakh(val) }; setVariants(arr); }} />
                   </div>
                   
@@ -2170,7 +2605,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      <MiniInput label="Battery Capacity" value={v.battery_capacity_kwh ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], battery_capacity_kwh: val }; setVariants(arr); }} />
+                      <MiniInput label="Battery Capacity" value={v.battery_capacity_kwh ?? ""} onChange={(val) => updateVariantField(i, { battery_capacity_kwh: val })} />
                       <MiniInput label="AC Charge (hrs)" value={v.charging_time_ac_hours ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], charging_time_ac_hours: val }; setVariants(arr); }} />
                       <MiniInput label="DC Charge (min)" value={v.charging_time_dc_mins ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], charging_time_dc_mins: val }; setVariants(arr); }} />
                       <MiniInput label="Max DC Rate" value={v.max_dc_charging_rate_kw ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], max_dc_charging_rate_kw: val }; setVariants(arr); }} />
@@ -2375,8 +2810,8 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
                         <MiniInput label="Braking System" value={v.braking_system ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], braking_system: val }; setVariants(arr); }} />
                         <MiniInput label="Wheel Type" value={v.wheel_type ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], wheel_type: val }; setVariants(arr); }} />
-                        <label className="block"><span className="text-[8px] font-bold uppercase text-slate-500">Front Brakes</span><select value={v.features?.front_brakes || "Disc"} onChange={(e) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, front_brakes: e.target.value } }; setVariants(arr); }} className="mt-0.5 w-full rounded-md border border-slate-200 px-2 py-1.5 text-[11px] outline-none"><option value="Disc">Disc</option><option value="Ventilated Disc">Ventilated Disc</option><option value="Drum">Drum</option></select></label>
-                        <label className="block"><span className="text-[8px] font-bold uppercase text-slate-400">Rear Brakes</span><select value={v.features?.rear_brakes || "Disc"} onChange={(e) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, rear_brakes: e.target.value } }; setVariants(arr); }} className="mt-0.5 w-full rounded-md border border-slate-200 px-2 py-1.5 text-[11px] outline-none"><option value="Disc">Disc</option><option value="Solid Disc">Solid Disc</option><option value="Drum">Drum</option></select></label>
+                        <label className="block"><span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-800">Front Brakes</span><select value={v.features?.front_brakes || "Disc"} onChange={(e) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, front_brakes: e.target.value } }; setVariants(arr); }} className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2.5 py-2.5 text-sm font-semibold text-slate-900 outline-none"><option value="Disc">Disc</option><option value="Ventilated Disc">Ventilated Disc</option><option value="Drum">Drum</option></select></label>
+                        <label className="block"><span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-800">Rear Brakes</span><select value={v.features?.rear_brakes || "Disc"} onChange={(e) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, rear_brakes: e.target.value } }; setVariants(arr); }} className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2.5 py-2.5 text-sm font-semibold text-slate-900 outline-none"><option value="Disc">Disc</option><option value="Solid Disc">Solid Disc</option><option value="Drum">Drum</option></select></label>
                         <MiniInput label="Front Wheel Size" value={v.front_wheel_size ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], front_wheel_size: val }; setVariants(arr); }} />
                         <MiniInput label="Rear Wheel Size" value={v.rear_wheel_size ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], rear_wheel_size: val }; setVariants(arr); }} />
                       </div>
@@ -2452,7 +2887,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   {resolvedSpec === "lights" && (
                     <div className="mt-4 rounded-xl border-2 border-slate-300 bg-slate-200 p-4">
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
-                        <label className="block"><span className="text-[8px] font-bold uppercase text-slate-400">Headlights</span><select value={v.features?.headlight_type || "LED"} onChange={(e) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, headlight_type: e.target.value } }; setVariants(arr); }} className="mt-0.5 w-full rounded-md border border-slate-200 px-2 py-1.5 text-[11px] outline-none"><option value="Halogen">Halogen</option><option value="LED">LED</option><option value="Projector LED">Projector LED</option></select></label>
+                        <label className="block"><span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-800">Headlights</span><select value={v.features?.headlight_type || "LED"} onChange={(e) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, headlight_type: e.target.value } }; setVariants(arr); }} className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2.5 py-2.5 text-sm font-semibold text-slate-900 outline-none"><option value="Halogen">Halogen</option><option value="LED">LED</option><option value="Projector LED">Projector LED</option></select></label>
                       </div>
                       <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-3">
                         {([
@@ -2504,14 +2939,336 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             )}
 
             {listingFormTab === "energy" && (
-            <div className="rounded-xl border-2 border-amber-300 bg-amber-100 p-4">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-xs font-bold uppercase tracking-wider text-amber-700">Energy Comparisons</p>
-                <div className="flex gap-2">
-                  <button onClick={() => setEnergyComps([...energyComps, { category: "fuel", name: "", fuel_type: "Petrol", mileage: "", fuel_price: "", model_used: "", brand: "" }])} className="text-[10px] font-bold text-amber-600 hover:text-amber-700">+ Fuel Type</button>
-                  {/* <button onClick={() => setEnergyComps([...energyComps, { category: "model", name: "", fuel_type: "EV", mileage: "", fuel_price: "", model_used: "", brand: "" }])} className="text-[10px] font-bold text-sky-600 hover:text-sky-700">+ Model</button> */}
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
+              {form.price_bracket && (() => {
+                const isBracketMatch = (presetB: string, formB: string) => {
+                  if (presetB === formB) return true;
+                  const pb = presetB.toLowerCase().replace(/\s+/g, "");
+                  const fb = formB.toLowerCase().replace(/\s+/g, "");
+                  if (pb === fb) return true;
+
+                  if (fb === "under-5l" || fb === "0-5" || fb === "under-5lakh" || fb === "under5l") {
+                    return ["under-1l", "1-1.5", "1.5-2", "1-2", "under-2l", "2-3", "under-3l", "3-5", "3l+", "under-5l"].includes(pb);
+                  }
+                  if (fb === "under-2l" || fb === "under-2lakh" || fb === "under2l" || fb === "0-2") {
+                    return ["under-1l", "1-1.5", "1.5-2", "1-2", "under-2l"].includes(pb);
+                  }
+                  if (fb === "under-3l" || fb === "under-3lakh" || fb === "under3l" || fb === "0-3") {
+                    return ["under-1l", "1-1.5", "1.5-2", "1-2", "under-2l", "2-3", "under-3l"].includes(pb);
+                  }
+                  if (fb === "under-1l" || fb === "under-1lakh" || fb === "under1l" || fb === "under-1L") {
+                    return ["under-1l"].includes(pb);
+                  }
+                  if (fb === "5-10" || fb === "5l-10l" || fb === "5-10l") {
+                    return ["5-7", "7-10", "5-10"].includes(pb);
+                  }
+                  if (fb === "5-15" || fb === "5l-15l" || fb === "5-15l") {
+                    return ["5-7", "7-10", "5-10", "5-15"].includes(pb);
+                  }
+                  if (fb === "10-25" || fb === "10l-25l" || fb === "10-25l") {
+                    return ["10-25", "15-30"].includes(pb);
+                  }
+                  if (fb === "15-30" || fb === "15l-30l" || fb === "15-30l") {
+                    return ["15-30", "10-25"].includes(pb);
+                  }
+                  if (fb === "30+" || fb === "30l+") {
+                    return ["30+", "50+"].includes(pb);
+                  }
+                  if (fb === "50+" || fb === "50l+") {
+                    return ["50+", "30+"].includes(pb);
+                  }
+                  return false;
+                };
+
+                const currentType = Array.isArray(form.types) ? form.types[0] : (typeof form.types === "string" ? form.types : "");
+                const matchedPresets = PRESET_COMPETITORS.filter(
+                  pc => isBracketMatch(pc.priceBracket, form.price_bracket) && 
+                        (!currentType || pc.type === currentType)
+                );
+                if (matchedPresets.length === 0) return null;
+                const getBracketLabel = (b: string) => {
+                  switch(b) {
+                    case "under-1L": return "Under ₹1 Lakh";
+                    case "1-1.5": return "₹1L – ₹1.5L";
+                    case "1.5-2": return "₹1.5L – ₹2L";
+                    case "1-2": return "₹1L – ₹2L";
+                    case "under-2L": return "Under ₹2 Lakh";
+                    case "2-3": return "₹2L – ₹3L";
+                    case "under-3L": return "Under ₹3 Lakh";
+                    case "3-5": return "₹3L – ₹5L";
+                    case "3L+": return "₹3L+";
+                    case "under-5L": return "Under ₹5 Lakh";
+                    case "5-7": return "₹5L – ₹7L";
+                    case "7-10": return "₹7L – ₹10L";
+                    case "5-10": return "₹5L – ₹10L";
+                    case "5-15": return "₹5L – ₹15L";
+                    case "10-25": return "₹10L – ₹25L";
+                    case "15-30": return "₹15L – ₹30L";
+                    case "30+": return "₹30L+";
+                    case "50+": return "₹50L+";
+                    default: return b;
+                  }
+                };
+                return (
+                  <div className="mb-4 p-4 bg-sky-50 rounded-xl border border-sky-200">
+                    <p className="text-xs font-extrabold text-sky-800 uppercase tracking-wider mb-3">Quick Add Recommended Presets ({getBracketLabel(form.price_bracket)}):</p>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {matchedPresets.map((pc) => {
+                        const brandParts = pc.model.split(" ");
+                        const brand = brandParts[0] || "";
+                        return (
+                          <div key={pc.model} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2 bg-white rounded-lg border border-sky-100 shadow-xs">
+                            <span className="text-xs font-bold text-slate-800">{pc.model}</span>
+                            <div className="flex flex-wrap gap-1.5">
+                              {pc.variants.petrol && (
+                                <div className="flex items-center gap-1 bg-amber-50 text-amber-900 border border-amber-200 rounded-md px-1.5 py-0.5 text-[10px] font-bold">
+                                  <span>Petrol ({pc.variants.petrol})</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setEnergyComps([
+                                        ...energyComps,
+                                        {
+                                          category: "fuel",
+                                          name: `${pc.model} Petrol`,
+                                          fuel_type: "Petrol",
+                                          mileage: pc.variants.petrol || "",
+                                          fuel_price: "100",
+                                          model_used: pc.model,
+                                          brand: brand
+                                        }
+                                      ]);
+                                    }}
+                                    className="bg-amber-600 hover:bg-amber-700 text-white font-extrabold rounded-md px-1.5 py-0.5 transition-colors cursor-pointer"
+                                  >
+                                    + Add
+                                  </button>
+                                </div>
+                              )}
+                              {pc.variants.cng && (
+                                <div className="flex items-center gap-1 bg-emerald-50 text-emerald-900 border border-emerald-200 rounded-md px-1.5 py-0.5 text-[10px] font-bold">
+                                  <span>CNG ({pc.variants.cng})</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setEnergyComps([
+                                        ...energyComps,
+                                        {
+                                          category: "fuel",
+                                          name: `${pc.model} CNG`,
+                                          fuel_type: "CNG",
+                                          mileage: pc.variants.cng || "",
+                                          fuel_price: "85",
+                                          model_used: pc.model,
+                                          brand: brand
+                                        }
+                                      ]);
+                                    }}
+                                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-md px-1.5 py-0.5 transition-colors cursor-pointer"
+                                  >
+                                    + Add
+                                  </button>
+                                </div>
+                              )}
+                              {pc.variants.ev && (
+                                <div className="flex items-center gap-1 bg-sky-50 text-sky-900 border border-sky-200 rounded-md px-1.5 py-0.5 text-[10px] font-bold">
+                                  <span>EV ({pc.variants.ev})</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setEnergyComps([
+                                        ...energyComps,
+                                        {
+                                          category: "fuel",
+                                          name: `${pc.model} EV`,
+                                          fuel_type: "EV",
+                                          mileage: pc.variants.ev || "",
+                                          fuel_price: "8",
+                                          model_used: pc.model,
+                                          brand: brand
+                                        }
+                                      ]);
+                                    }}
+                                    className="bg-sky-600 hover:bg-sky-700 text-white font-extrabold rounded-md px-1.5 py-0.5 transition-colors cursor-pointer"
+                                  >
+                                    + Add
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
+              <div className="flex flex-col gap-2 md:flex-row md:items-center justify-between mb-4 mt-6">
+                <div className="flex flex-wrap gap-2">
+                  <select
+                    value={selectedPresetType}
+                    onChange={(e) => {
+                      setSelectedPresetType(e.target.value as any);
+                      setSelectedPresetModel("");
+                    }}
+                    className="text-xs px-3 py-2 rounded-lg border border-slate-300 bg-white font-bold text-slate-700 outline-none cursor-pointer focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                  >
+                    <option value="">-- Vehicle Type --</option>
+                    <option value="2 Wheeler">2 Wheeler</option>
+                    <option value="3 Wheeler">3 Wheeler</option>
+                    <option value="4 Wheeler">4 Wheeler</option>
+                  </select>
+
+                  <select
+                    value={selectedPresetModel}
+                    onChange={(e) => setSelectedPresetModel(e.target.value)}
+                    disabled={!selectedPresetType}
+                    className="text-xs px-3 py-2 rounded-lg border border-slate-300 bg-white font-bold text-slate-700 outline-none cursor-pointer disabled:opacity-50 focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                  >
+                    <option value="">-- Choose Model --</option>
+                    {PRESET_COMPETITORS.filter(pc => pc.type === selectedPresetType).map((pc) => (
+                      <option key={pc.model} value={pc.model}>{pc.model}</option>
+                    ))}
+                  </select>
+
+                  {dbFuelPrices.length > 0 && (
+                    <select
+                      value=""
+                      onChange={(e) => {
+                        const cityName = e.target.value;
+                        if (!cityName) return;
+                        const cityPrice = dbFuelPrices.find(p => p.city === cityName);
+                        if (!cityPrice) return;
+                        
+                        const updated = energyComps.map(ec => {
+                          let newPrice = ec.fuel_price;
+                          if (ec.fuel_type === "Petrol") newPrice = String(cityPrice.petrol_per_litre ?? "");
+                          else if (ec.fuel_type === "Diesel") newPrice = String(cityPrice.diesel_per_litre ?? "");
+                          else if (ec.fuel_type === "CNG") newPrice = String(cityPrice.cng_per_kg ?? "");
+                          else if (ec.fuel_type === "EV" || ec.fuel_type === "self") newPrice = String(cityPrice.electricity_per_kwh ?? "");
+                          
+                          return { ...ec, fuel_price: newPrice };
+                        });
+                        
+                        setEnergyComps(updated);
+                        alert(`Applied ${cityName} fuel & electricity prices to all items!`);
+                      }}
+                      className="text-xs px-3 py-2 rounded-lg border border-emerald-300 bg-emerald-50 font-bold text-emerald-800 outline-none cursor-pointer focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                    >
+                      <option value="">⚡ Apply City Rates</option>
+                      {dbFuelPrices.map((p) => (
+                        <option key={p.id} value={p.city}>{p.city}</option>
+                      ))}
+                    </select>
+                  )}
+
+                  <button onClick={() => setEnergyComps([...energyComps, { category: "fuel", name: "", fuel_type: "Petrol", mileage: "", fuel_price: "", model_used: "", brand: "" }])} className="text-xs bg-slate-900 text-white font-bold px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors shadow-sm cursor-pointer">+ Custom Fuel Type</button>
                 </div>
               </div>
+
+              {selectedPresetModel && (() => {
+                const pc = PRESET_COMPETITORS.find(p => p.model === selectedPresetModel);
+                if (!pc) return null;
+                const brandParts = pc.model.split(" ");
+                const brand = brandParts[0] || "";
+                return (
+                  <div className="mb-4 p-4 bg-sky-50 rounded-xl border border-sky-200 shadow-sm flex flex-col gap-3">
+                    <div className="flex justify-between items-center border-b border-sky-100 pb-2">
+                      <span className="text-xs font-extrabold text-sky-900">Add Competitor Model: <span className="underline font-black">{pc.model}</span></span>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedPresetModel("")}
+                        className="text-xs font-extrabold text-slate-500 hover:text-rose-500 bg-white border border-slate-200 hover:border-rose-200 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-3">
+                      {pc.variants.petrol && (
+                        <div className="flex items-center gap-2 bg-white text-slate-900 border border-amber-200 rounded-lg p-2 text-xs font-bold shadow-xs">
+                          <span className="bg-amber-100 text-amber-800 px-2 py-1 rounded text-[10px]">Petrol</span>
+                          <span>{pc.variants.petrol} kmpl</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEnergyComps([
+                                ...energyComps,
+                                {
+                                  category: "fuel",
+                                  name: `${pc.model} Petrol`,
+                                  fuel_type: "Petrol",
+                                  mileage: pc.variants.petrol || "",
+                                  fuel_price: "100",
+                                  model_used: pc.model,
+                                  brand: brand
+                                }
+                              ]);
+                              setSelectedPresetModel("");
+                            }}
+                            className="bg-amber-600 hover:bg-amber-700 text-white font-extrabold rounded-md px-2 py-1 transition-colors cursor-pointer text-[10px]"
+                          >
+                            Add +
+                          </button>
+                        </div>
+                      )}
+                      {pc.variants.cng && (
+                        <div className="flex items-center gap-2 bg-white text-slate-900 border border-emerald-200 rounded-lg p-2 text-xs font-bold shadow-xs">
+                          <span className="bg-emerald-100 text-emerald-800 px-2 py-1 rounded text-[10px]">CNG</span>
+                          <span>{pc.variants.cng} km/kg</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEnergyComps([
+                                ...energyComps,
+                                {
+                                  category: "fuel",
+                                  name: `${pc.model} CNG`,
+                                  fuel_type: "CNG",
+                                  mileage: pc.variants.cng || "",
+                                  fuel_price: "85",
+                                  model_used: pc.model,
+                                  brand: brand
+                                }
+                              ]);
+                              setSelectedPresetModel("");
+                            }}
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-md px-2 py-1 transition-colors cursor-pointer text-[10px]"
+                          >
+                            Add +
+                          </button>
+                        </div>
+                      )}
+                      {pc.variants.ev && (
+                        <div className="flex items-center gap-2 bg-white text-slate-900 border border-sky-200 rounded-lg p-2 text-xs font-bold shadow-xs">
+                          <span className="bg-sky-100 text-sky-800 px-2 py-1 rounded text-[10px]">EV</span>
+                          <span>{pc.variants.ev}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEnergyComps([
+                                ...energyComps,
+                                {
+                                  category: "fuel",
+                                  name: `${pc.model} EV`,
+                                  fuel_type: "EV",
+                                  mileage: pc.variants.ev || "",
+                                  fuel_price: "8",
+                                  model_used: pc.model,
+                                  brand: brand
+                                }
+                              ]);
+                              setSelectedPresetModel("");
+                            }}
+                            className="bg-sky-600 hover:bg-sky-700 text-white font-extrabold rounded-md px-2 py-1 transition-colors cursor-pointer text-[10px]"
+                          >
+                            Add +
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
               {energyComps.map((ec, i) => (
                 <div key={i} className="mb-3 rounded-lg border border-slate-200 bg-white overflow-hidden">
                   <div className="flex items-center justify-between px-3 py-2 bg-slate-50 cursor-pointer" onClick={() => { const arr = [...energyComps]; (arr[i] as any).collapsed = !(arr[i] as any).collapsed; setEnergyComps(arr); }}>
@@ -3102,7 +3859,7 @@ function Field({ label, value, onChange, placeholder }: { label: string; value: 
     r.onend = () => setMicActive(false); r.onerror = () => setMicActive(false);
     r.start(); setMicActive(true);
   };
-  return (<label className="block"><span className="text-xs font-bold uppercase tracking-wider text-slate-500">{label}</span><div className="mt-1 flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2.5"><input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="flex-1 text-sm outline-none bg-transparent" /><button type="button" onClick={startMic} className={`shrink-0 h-6 w-6 rounded-full flex items-center justify-center transition-all ${micActive ? "bg-rose-500 text-white animate-pulse" : "bg-slate-100 text-slate-400 hover:bg-sky-100 hover:text-sky-600"}`}>{micActive ? <MicOff size={10} /> : <Mic size={10} />}</button></div></label>);
+  return (<label className="block"><span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-800">{label}</span><div className="mt-1 flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2.5"><input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="flex-1 text-sm sm:text-base font-semibold text-slate-900 outline-none bg-transparent" /><button type="button" onClick={startMic} className={`shrink-0 h-6 w-6 rounded-full flex items-center justify-center transition-all ${micActive ? "bg-rose-500 text-white animate-pulse" : "bg-slate-100 text-slate-400 hover:bg-sky-100 hover:text-sky-600"}`}>{micActive ? <MicOff size={10} /> : <Mic size={10} />}</button></div></label>);
 }
 
 function MiniInput({ label, value, onChange, placeholder, onBlur }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; onBlur?: () => void }) {
@@ -3139,7 +3896,7 @@ function MiniInput({ label, value, onChange, placeholder, onBlur }: { label: str
     r.onend = () => setMicActive(false); r.onerror = () => setMicActive(false);
     r.start(); setMicActive(true);
   };
-  return (<label className="block"><span className="text-xs font-bold uppercase tracking-wider text-slate-600">{label}</span><div className="mt-0.5 flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2.5 py-2"><input value={localValue} onChange={(e) => { setLocalValue(e.target.value); onChange(e.target.value); }} onBlur={() => { if (onBlur) onBlur(); }} placeholder={placeholder} className="flex-1 text-sm outline-none bg-transparent min-w-0" /><button type="button" onClick={startMic} className={`shrink-0 h-5 w-5 rounded-full flex items-center justify-center transition-all ${micActive ? "bg-rose-500 text-white animate-pulse" : "bg-slate-100 text-slate-400 hover:bg-sky-100 hover:text-sky-600"}`}>{micActive ? <MicOff size={9} /> : <Mic size={9} />}</button></div></label>);
+  return (<label className="block"><span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-800">{label}</span><div className="mt-1 flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2.5 py-2"><input value={localValue} onChange={(e) => { setLocalValue(e.target.value); onChange(e.target.value); }} onBlur={() => { if (onBlur) onBlur(); }} placeholder={placeholder} className="flex-1 text-sm sm:text-base font-semibold text-slate-900 outline-none bg-transparent min-w-0" /><button type="button" onClick={startMic} className={`shrink-0 h-5 w-5 rounded-full flex items-center justify-center transition-all ${micActive ? "bg-rose-500 text-white animate-pulse" : "bg-slate-100 text-slate-400 hover:bg-sky-100 hover:text-sky-600"}`}>{micActive ? <MicOff size={9} /> : <Mic size={9} />}</button></div></label>);
 }
 
 function VariantExtrasEditor({

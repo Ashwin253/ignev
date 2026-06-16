@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import dynamic from "next/dynamic";
 import BatterySelector from "./BatterySelector";
 import EnquiryTrigger from "./EnquiryTrigger";
@@ -37,7 +37,7 @@ function rupees(v: number) {
   return new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(Math.round(v));
 }
 
-export default function ProductMainUI({ item, slug }: { item: EvListing; slug: string }) {
+export default function ProductMainUI({ item, slug, dbFuelPrices = [] }: { item: EvListing; slug: string; dbFuelPrices?: any[] }) {
   const { selectedIndex, showBaas, activeVariants, setSelectedIndex: onSelect, setShowBaas: onToggleBaas } = useProductSelection();
   const [activeTab, setActiveTab] = useState<TabKey>("battery");
 
@@ -77,12 +77,12 @@ export default function ProductMainUI({ item, slug }: { item: EvListing; slug: s
   };
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="rounded-3xl border-2 border-slate-300 bg-slate-50 p-4 shadow-[0_10px_30px_rgba(15,23,42,0.08)] sm:p-5">
+    <div className="flex flex-col gap-5 text-slate-900">
+      <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-[0_10px_30px_rgba(52,235,177,0.08)] sm:p-5">
       {activeVariants.length > 0 && (
-        <label className="mb-3 flex items-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-3 py-2.5">
-          <BatteryCharging size={15} className={showBaas ? "text-emerald-500" : "text-sky-500"} />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Model</span>
+        <label className="mb-3 flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 shadow-xs">
+          <BatteryCharging size={15} className="text-[#10855f]" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Model</span>
           {activeVariants.length > 1 ? (
             <select
               value={selectedIndex}
@@ -90,7 +90,7 @@ export default function ProductMainUI({ item, slug }: { item: EvListing; slug: s
               className="min-w-0 flex-1 bg-transparent text-sm font-bold text-slate-800 outline-none appearance-none cursor-pointer"
             >
               {activeVariants.map((variant, index) => (
-                <option key={`${showBaas ? "baas" : "standard"}-${index}`} value={index}>
+                <option key={`${showBaas ? "baas" : "standard"}-${index}`} value={index} className="bg-white text-slate-900">
                   {variant.modelName || `${variant.capacity} kWh`}
                 </option>
               ))}
@@ -106,23 +106,23 @@ export default function ProductMainUI({ item, slug }: { item: EvListing; slug: s
       <div className="flex flex-col gap-2 mb-4">
         <div className={`flex items-center justify-between rounded-2xl px-4 py-3 border transition-all duration-300 ${
           showBaas
-            ? "bg-emerald-100 border-emerald-300"
-            : "bg-slate-100 border-slate-300"
+            ? "bg-[#34ebb1]/15 border-[#34ebb1]/40 shadow-xs"
+            : "bg-slate-50 border-slate-200"
         }`}>
           <div className="flex items-center gap-2.5">
-            <Tag size={16} className={showBaas ? "text-emerald-500" : "text-slate-400"} />
+            <Tag size={16} className={showBaas ? "text-[#10855f]" : "text-slate-400"} />
             <div>
-              <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
+              <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">
                 {showBaas ? "BAAS Starting" : "Ex-Showroom Starting"}
               </span>
               <p className="text-2xl font-black text-slate-900 leading-none tracking-tight">
-                ₹{specificPriceStr} <span className="text-sm font-bold text-slate-500">Lakh</span>
+                ₹{specificPriceStr} <span className="text-sm font-bold text-slate-650">Lakh</span>
               </p>
             </div>
           </div>
           <button
             onClick={() => triggerEnquiryModal(`Offers: ${item.brand} ${item.title}`)}
-            className="shrink-0 inline-flex items-center gap-1.5 rounded-md  bg-linear-to-r from-green-300 to-blue-500 hover:from-amber-600 hover:to-orange-600 text-white text-[15px] font-black uppercase tracking-wider px-4 py-2 shadow-lg shadow-amber-500/30 transition-all hover:shadow-amber-500/50 hover:scale-105 active:scale-95"
+            className="shrink-0 inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-[#34ebb1] to-[#14a375] hover:brightness-110 text-slate-950 text-[15px] font-black uppercase tracking-wider px-4 py-2 shadow-[0_0_15px_rgba(52,235,177,0.2)] transition-all hover:shadow-[0_0_25px_rgba(52,235,177,0.4)] hover:scale-105 active:scale-95"
           >
             <DotLottieReact src="/Giftpremiumanimation.lottie" loop autoplay className="h-10 w-10" />
             Latest Offers
@@ -147,7 +147,7 @@ export default function ProductMainUI({ item, slug }: { item: EvListing; slug: s
       </div>
 
       {/* ── Tab bar ── */}
-      <div className="flex rounded-2xl border-2 border-slate-300 bg-slate-200 p-1 gap-1">
+      <div className="flex rounded-2xl border border-slate-250 bg-slate-100 p-1 gap-1">
         {TABS.map((tab) => {
           const isActive = activeTab === tab.key;
           const Icon = tab.icon;
@@ -156,7 +156,7 @@ export default function ProductMainUI({ item, slug }: { item: EvListing; slug: s
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
               className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold transition-all ${
-                isActive ? "bg-white text-slate-950 shadow-sm" : "text-slate-600 hover:text-slate-800"
+                isActive ? "bg-[#34ebb1] text-slate-950 font-black shadow-sm" : "text-slate-500 hover:text-slate-850 hover:bg-slate-200"
               }`}
             >
               <Icon size={14} />
@@ -185,32 +185,32 @@ export default function ProductMainUI({ item, slug }: { item: EvListing; slug: s
             />
 
             {(item.topSpeed !== null || activeBatterySpec?.maxPower || activeBatterySpec?.maxTorque) && (
-              <div className="grid grid-cols-3 gap-2 rounded-2xl border-2 border-slate-300 bg-slate-200 p-2">
+              <div className="grid grid-cols-3 gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-2">
                 {item.topSpeed !== null && (
-                  <div className="rounded-xl border border-slate-300 bg-white px-3 py-2.5">
+                  <div className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 shadow-xs">
                     <div className="mb-1 flex items-center gap-1 text-slate-400">
-                      <Gauge size={12} className="text-amber-500" />
+                      <Gauge size={12} className="text-amber-600" />
                       <p className="text-[9px] uppercase tracking-wider font-bold">Top speed</p>
                     </div>
-                    <p className="text-sm font-black text-slate-900">{item.topSpeed}<span className="ml-0.5 text-[10px] text-slate-400">km/h</span></p>
+                    <p className="text-sm font-black text-slate-900">{item.topSpeed}<span className="ml-0.5 text-[10px] text-slate-400 font-medium">km/h</span></p>
                   </div>
                 )}
                 {activeBatterySpec?.maxPower && (
-                  <div className="rounded-xl border border-slate-300 bg-white px-3 py-2.5">
+                  <div className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 shadow-xs">
                     <div className="mb-1 flex items-center gap-1 text-slate-400">
-                      <Zap size={12} className="text-sky-500" />
+                      <Zap size={12} className="text-[#10855f]" />
                       <p className="text-[9px] uppercase tracking-wider font-bold">Max power</p>
                     </div>
-                    <p className="text-sm font-black text-slate-900">{activeBatterySpec.maxPower}<span className="ml-0.5 text-[10px] text-slate-400">bhp</span></p>
+                    <p className="text-sm font-black text-slate-900">{activeBatterySpec.maxPower}<span className="ml-0.5 text-[10px] text-slate-400 font-medium">bhp</span></p>
                   </div>
                 )}
                 {activeBatterySpec?.maxTorque && (
-                  <div className="rounded-xl border border-slate-300 bg-white px-3 py-2.5">
+                  <div className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 shadow-xs">
                     <div className="mb-1 flex items-center gap-1 text-slate-400">
-                      <Gauge size={12} className="text-emerald-500" />
+                      <Gauge size={12} className="text-[#10855f]" />
                       <p className="text-[9px] uppercase tracking-wider font-bold">Max torque</p>
                     </div>
-                    <p className="text-sm font-black text-slate-900">{activeBatterySpec.maxTorque}<span className="ml-0.5 text-[10px] text-slate-400">Nm</span></p>
+                    <p className="text-sm font-black text-slate-900">{activeBatterySpec.maxTorque}<span className="ml-0.5 text-[10px] text-slate-400 font-medium">Nm</span></p>
                   </div>
                 )}
               </div>
@@ -223,15 +223,15 @@ export default function ProductMainUI({ item, slug }: { item: EvListing; slug: s
           <div className="space-y-4">
             {/* Variant selector for EMI */}
             {item.batteryVariants.length > 1 && (
-              <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5">
-                <Banknote size={14} className="text-sky-500 shrink-0" />
+              <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 shadow-xs">
+                <Banknote size={14} className="text-[#10855f] shrink-0" />
                 <select
                   value={selectedIndex}
                   onChange={(e) => onSelect(Number(e.target.value))}
                   className="flex-1 bg-transparent text-sm font-semibold text-slate-800 outline-none appearance-none cursor-pointer"
                 >
                   {item.batteryVariants.map((v, i) => (
-                    <option key={i} value={i}>
+                    <option key={i} value={i} className="bg-white text-slate-950">
                       {v.modelName || `${v.capacity} kWh`}
                     </option>
                   ))}
@@ -240,42 +240,42 @@ export default function ProductMainUI({ item, slug }: { item: EvListing; slug: s
               </label>
             )}
 
-            <div className="rounded-3xl border border-sky-200 bg-sky-50 p-6">
+            <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6 shadow-xs">
               <div className="flex items-center justify-between mb-3">
-                <p className="text-[10px] font-black uppercase tracking-widest text-sky-500">Estimated monthly EMI</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-[#10855f]">Estimated monthly EMI</p>
                 <button
                   onClick={() => triggerEnquiryModal(`EMI Enquiry: ${item.brand} ${item.title}`)}
-                  className="shrink-0 inline-flex items-center gap-1.5 rounded-md bg-linear-to-r from-emerald-400 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white text-[15px] font-black uppercase tracking-wider px-4 py-2 shadow-lg shadow-emerald-500/30 transition-all hover:shadow-emerald-500/50 hover:scale-105 active:scale-95"
+                  className="shrink-0 inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-[#34ebb1] to-[#14a375] hover:brightness-110 text-slate-950 text-[15px] font-black uppercase tracking-wider px-4 py-2 shadow-[0_0_15px_rgba(52,235,177,0.2)] transition-all hover:shadow-[0_0_25px_rgba(52,235,177,0.4)] hover:scale-105 active:scale-95"
                 >
                  <DotLottieReact src="/rupeediscount.lottie" loop autoplay className="h-10 w-10" />
                  Get Best Rate
                 </button>
               </div>
               <p className="text-4xl font-black text-slate-900">
-                ₹{rupees(emiMonthly)}<span className="text-base font-medium text-slate-400">/mo</span>
+                ₹{rupees(emiMonthly)}<span className="text-base font-medium text-slate-500">/mo</span>
               </p>
               <div className="mt-4 grid grid-cols-3 gap-2 text-xs">
-                <div className="rounded-xl bg-white p-3 border border-sky-100">
-                  <p className="text-slate-400 mb-0.5">Down (20%)</p>
+                <div className="rounded-xl bg-white p-3 border border-slate-200">
+                  <p className="text-slate-500 mb-0.5">Down (20%)</p>
                   <p className="font-bold text-slate-800">₹{rupees(currentPrice * 0.2)}</p>
                 </div>
-                <div className="rounded-xl bg-white p-3 border border-sky-100">
-                  <p className="text-slate-400 mb-0.5">Rate</p>
+                <div className="rounded-xl bg-white p-3 border border-slate-200">
+                  <p className="text-slate-500 mb-0.5">Rate</p>
                   <p className="font-bold text-slate-800">9.5%</p>
                 </div>
-                <div className="rounded-xl bg-white p-3 border border-sky-100">
-                  <p className="text-slate-400 mb-0.5">Tenure</p>
+                <div className="rounded-xl bg-white p-3 border border-slate-200">
+                  <p className="text-slate-500 mb-0.5">Tenure</p>
                   <p className="font-bold text-slate-800">3 years</p>
                 </div>
               </div>
-              <p className="mt-4 text-[10px] text-slate-400">
+              <p className="mt-4 text-[10px] text-slate-500">
                 * Indicative. Actual EMI depends on bank, credit score, and tenure.
               </p>
             </div>
 
             <button
               onClick={scrollToOwnership}
-              className="w-full flex items-center justify-center gap-2 rounded-2xl border border-sky-200 bg-white px-5 py-3.5 text-sm font-bold text-sky-600 hover:bg-sky-50 transition-colors"
+              className="w-full flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-sm font-bold text-[#10855f] hover:bg-[#34ebb1]/15 hover:border-[#34ebb1]/40 transition-colors shadow-xs"
             >
               <ArrowDown size={15} /> Detailed EMI Calculator below
             </button>
@@ -284,7 +284,7 @@ export default function ProductMainUI({ item, slug }: { item: EvListing; slug: s
 
         {/* Energy tab */}
         {activeTab === "energy" && (
-          <EnergyTabContent item={item} evCostPerKm={evCostPerKm} petrolCostPerKm={petrolCostPerKm} cngCostPerKm={cngCostPerKm} />
+          <EnergyTabContent item={item} evEfficiency={evEfficiency} dbFuelPrices={dbFuelPrices} />
         )}
       </div>
 
@@ -294,7 +294,7 @@ export default function ProductMainUI({ item, slug }: { item: EvListing; slug: s
         <EnquiryTrigger vehicle={`${item.brand} ${item.title}`} />
         <CompareButton slug={slug} name={`${item.brand} ${item.title}`} />
         <Link href="/catalog"
-          className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
+          className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-350 bg-white px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors shadow-xs">
           <ArrowLeft size={15} /> Catalog
         </Link>
       </div>
@@ -306,58 +306,155 @@ export default function ProductMainUI({ item, slug }: { item: EvListing; slug: s
 
 type EnergySubTab = "fuel" | "models";
 
-function EnergyTabContent({ item, evCostPerKm, petrolCostPerKm, cngCostPerKm }: {
-  item: EvListing; evCostPerKm: number; petrolCostPerKm: number; cngCostPerKm: number;
+const MAJOR_CITIES = [
+  { value: "delhi", label: "Delhi" },
+  { value: "mumbai", label: "Mumbai" },
+  { value: "bangalore", label: "Bangalore" },
+  { value: "chennai", label: "Chennai" },
+  { value: "hyderabad", label: "Hyderabad" },
+  { value: "pune", label: "Pune" },
+  { value: "kolkata", label: "Kolkata" },
+  { value: "ahmedabad", label: "Ahmedabad" },
+  { value: "jaipur", label: "Jaipur" },
+  { value: "kochi", label: "Kochi" },
+];
+
+function EnergyTabContent({ item, evEfficiency, dbFuelPrices = [] }: {
+  item: EvListing; evEfficiency: number; dbFuelPrices?: any[];
 }) {
   const [subTab, setSubTab] = useState<EnergySubTab>("fuel");
-  const [dailyKm, setDailyKm] = useState(50);
-  const [editingKm, setEditingKm] = useState(false);
+  const [selectedCity, setSelectedCity] = useState("");
+  const [loadingPrice, setLoadingPrice] = useState(false);
+  const [localPrices, setLocalPrices] = useState<any[]>(dbFuelPrices || []);
+
+  useEffect(() => {
+    setLocalPrices(dbFuelPrices || []);
+  }, [dbFuelPrices]);
+
+  const { selectedIndex, activeVariants } = useProductSelection();
+  const activeVariant = activeVariants?.[selectedIndex];
+
+  const handleCityChange = async (cityName: string) => {
+    setSelectedCity(cityName);
+    if (!cityName) return;
+
+    const existing = localPrices.find(p => p.city.toLowerCase() === cityName.toLowerCase());
+    
+    if (!existing || MAJOR_CITIES.some(c => c.label.toLowerCase() === cityName.toLowerCase())) {
+      setLoadingPrice(true);
+      try {
+        const res = await fetch(`/api/team/live-fuel-prices?city=${encodeURIComponent(cityName.toLowerCase())}`);
+        const data = await res.json();
+        if (data.success) {
+          const newRate = {
+            city: data.city,
+            petrol_per_litre: data.petrol,
+            diesel_per_litre: data.diesel,
+            cng_per_kg: data.cng,
+            electricity_per_kwh: data.electricity,
+          };
+          
+          setLocalPrices(prev => {
+            const filtered = prev.filter(p => p.city.toLowerCase() !== data.city.toLowerCase());
+            return [...filtered, newRate];
+          });
+        }
+      } catch (err) {
+        console.error("Error fetching live price:", err);
+      } finally {
+        setLoadingPrice(false);
+      }
+    }
+  };
+
+  const allCityOptions = useMemo(() => {
+    const optionsMap = new Map<string, string>();
+    
+    MAJOR_CITIES.forEach(c => optionsMap.set(c.label.toLowerCase(), c.label));
+    dbFuelPrices.forEach(p => optionsMap.set(p.city.toLowerCase(), p.city));
+    
+    return Array.from(optionsMap.values()).sort();
+  }, [dbFuelPrices]);
+
+  const cityPrice = localPrices.find(p => p.city.toLowerCase() === selectedCity.toLowerCase());
+
+  const petrolPrice = cityPrice ? (cityPrice.petrol_per_litre ?? 104) : 104;
+  const dieselPrice = cityPrice ? (cityPrice.diesel_per_litre ?? 90) : 90;
+  const cngPrice = cityPrice ? (cityPrice.cng_per_kg ?? 80) : 80;
+  const electricityPrice = cityPrice ? (cityPrice.electricity_per_kwh ?? 9) : 9;
+
+  const evCostPerKm = evEfficiency * electricityPrice;
+  const petrolCostPerKm = petrolPrice / 18;
+  const cngCostPerKm = cngPrice / 28;
+  const dieselCostPerKm = dieselPrice / 22;
 
   const selfEntry = item.energyComparison.find(c => c.fuelType?.toLowerCase() === "self");
   const parsedSelfCost = selfEntry ? parseFloat(selfEntry.fuelPrice) : NaN;
-  const selfCostPerKm = Number.isFinite(parsedSelfCost) ? parsedSelfCost : evCostPerKm;
+  const selfCostPerKm = selectedCity
+    ? evCostPerKm
+    : (Number.isFinite(parsedSelfCost) ? parsedSelfCost : evCostPerKm);
+
   const currentVehicleSubtitle = selfEntry
-    ? `${selfEntry.modelused ? `${selfEntry.modelused} - ` : ""}Rs ${selfEntry.fuelPrice}/km - ${selfEntry.mileage} km range`
-    : "Estimated from selected battery and range";
+    ? `${selfEntry.modelused ? `${selfEntry.modelused} - ` : ""}Rs ${selfCostPerKm.toFixed(1)}/km - ${selfEntry.mileage || activeVariant?.range || "300"} km range`
+    : `Estimated at ₹${selfCostPerKm.toFixed(1)}/km (${(activeVariant?.range || 300)} km range)`;
 
   // Models = all entries from Supabase/WP energy comparisons (except "self")
   const modelEntries = item.energyComparison.filter(c => c.fuelType?.toLowerCase() !== "self");
 
   return (
     <div className="space-y-4">
-      {/* Sub-tabs: Fuel Type | Models */}
-      <div className="flex rounded-xl border-2 border-slate-300 bg-slate-200 p-1 gap-1">
-        <button onClick={() => setSubTab("fuel")} className={`flex-1 rounded-lg py-2 text-[10px] font-bold transition-all ${subTab === "fuel" ? "bg-white text-slate-950 shadow-sm" : "text-slate-600 hover:text-slate-800"}`}>
-          Fuel Type
-        </button>
-        <button onClick={() => setSubTab("models")} className={`flex-1 rounded-lg py-2 text-[10px] font-bold transition-all ${subTab === "models" ? "bg-white text-slate-950 shadow-sm" : "text-slate-600 hover:text-slate-800"}`}>
-          Models {modelEntries.length > 0 && <span className="ml-1 text-[8px] bg-sky-100 text-sky-600 rounded-full px-1.5">{modelEntries.length}</span>}
-        </button>
+      {/* City selector dropdown */}
+      <div className="flex flex-col gap-1.5">
+        <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-bold text-slate-600 shadow-xs focus-within:border-[#34ebb1]/50">
+          <span className="text-[#10855f]">⚡ Select City:</span>
+          <select
+            value={selectedCity}
+            onChange={(e) => handleCityChange(e.target.value)}
+            className="flex-1 bg-transparent text-xs font-extrabold text-[#10855f] outline-none cursor-pointer"
+            disabled={loadingPrice}
+          >
+            <option value="" className="bg-white text-slate-900 font-semibold">National Average</option>
+            {allCityOptions.map((city) => (
+              <option key={city} value={city} className="bg-white text-slate-900 font-semibold">
+                {city}
+              </option>
+            ))}
+          </select>
+          {loadingPrice && (
+            <span className="animate-pulse text-[10px] text-[#10855f] shrink-0">
+              Fetching live rates...
+            </span>
+          )}
+        </div>
+        
+        {/* Inline showing of rates for the selected city */}
+        {selectedCity && cityPrice && !loadingPrice && (
+          <div className="flex flex-wrap gap-x-3 gap-y-1 px-3 py-1.5 bg-[#34ebb1]/15 rounded-xl text-[10px] font-bold text-slate-800 border border-[#34ebb1]/30 shadow-xs">
+            <span>Petrol: <span className="text-[#10855f]">₹{cityPrice.petrol_per_litre?.toFixed(1)}/L</span></span>
+            <span>Diesel: <span className="text-[#10855f]">₹{cityPrice.diesel_per_litre?.toFixed(1)}/L</span></span>
+            <span>CNG: <span className="text-[#10855f]">₹{cityPrice.cng_per_kg?.toFixed(1)}/kg</span></span>
+            <span>EV: <span className="text-[#10855f]">₹{cityPrice.electricity_per_kwh?.toFixed(1)}/kWh</span></span>
+          </div>
+        )}
       </div>
 
-      {/* Daily km editor */}
-      {/* {subTab === "models" && (
-        <div className="flex items-center gap-2 text-[10px] font-medium text-slate-600">
-          <span>Based on</span>
-          {editingKm ? (
-            <input type="number" value={dailyKm} onChange={(e) => setDailyKm(Number(e.target.value) || 50)} onBlur={() => setEditingKm(false)} autoFocus
-              className="w-12 rounded-md border border-sky-300 bg-white px-1.5 py-0.5 text-[10px] font-bold text-slate-800 outline-none text-center" />
-          ) : (
-            <button onClick={() => setEditingKm(true)} className="inline-flex items-center gap-1 font-bold text-sky-600 hover:text-sky-700">
-              {dailyKm} km <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-            </button>
-          )}
-          <span>daily ride</span>
-        </div>
-      )} */}
+      {/* Sub-tabs: Fuel Type | Models */}
+      <div className="flex rounded-xl border border-slate-200 bg-slate-100 p-1 gap-1">
+        <button onClick={() => setSubTab("fuel")} className={`flex-1 rounded-lg py-2 text-[10px] font-bold transition-all ${subTab === "fuel" ? "bg-[#34ebb1] text-slate-950 font-black shadow-sm" : "text-slate-500 hover:text-slate-800 hover:bg-slate-200"}`}>
+          Fuel Type
+        </button>
+        <button onClick={() => setSubTab("models")} className={`flex-1 rounded-lg py-2 text-[10px] font-bold transition-all ${subTab === "models" ? "bg-[#34ebb1] text-slate-950 font-black shadow-sm" : "text-slate-500 hover:text-slate-800 hover:bg-slate-200"}`}>
+          Models {modelEntries.length > 0 && <span className="ml-1 text-[8px] bg-slate-200 text-slate-700 rounded-full px-1.5">{modelEntries.length}</span>}
+        </button>
+      </div>
 
       {/* Fuel Type — generic commodity comparison */}
       {subTab === "fuel" && (
         <>
           <CurrentVehicleCostCard name={item.title} subtitle={currentVehicleSubtitle} costPerKm={selfCostPerKm} />
-          <CompareCard name="Avg Petrol Vehicle" subtitle="Petrol · ₹104/L · 18 km/L" costPerKm={petrolCostPerKm} isEv={false} />
-          <CompareCard name="Avg Diesel Vehicle" subtitle="Diesel · ₹90/L · 22 km/L" costPerKm={90 / 22} isEv={false} />
-          <CompareCard name="Avg CNG Vehicle" subtitle="CNG · ₹80/kg · 28 km/kg" costPerKm={cngCostPerKm} isEv={false} />
+          <CompareCard name="Avg Petrol Vehicle" subtitle={`Petrol · ₹${petrolPrice.toFixed(1)}/L · 18 km/L`} costPerKm={petrolCostPerKm} isEv={false} />
+          <CompareCard name="Avg Diesel Vehicle" subtitle={`Diesel · ₹${dieselPrice.toFixed(1)}/L · 22 km/L`} costPerKm={dieselCostPerKm} isEv={false} />
+          <CompareCard name="Avg CNG Vehicle" subtitle={`CNG · ₹${cngPrice.toFixed(1)}/kg · 28 km/kg`} costPerKm={cngCostPerKm} isEv={false} />
         </>
       )}
 
@@ -366,28 +463,42 @@ function EnergyTabContent({ item, evCostPerKm, petrolCostPerKm, cngCostPerKm }: 
         <>
           <CurrentVehicleCostCard name={item.title} subtitle={currentVehicleSubtitle} costPerKm={selfCostPerKm} />
           {modelEntries.length > 0 ? modelEntries.map((comp, i) => {
-            const fuelPrice = parseFloat(comp.fuelPrice) || 0;
-            const mileage = parseFloat(comp.mileage) || 1;
             const fuel = comp.fuelType?.toLowerCase() ?? "petrol";
             const isEv = fuel === "ev" || fuel === "self";
-            const costPerKm = isEv ? fuelPrice : fuelPrice / mileage;
             const isCng = fuel === "cng";
+
+            let fuelPrice = parseFloat(comp.fuelPrice) || 0;
+            if (selectedCity && cityPrice) {
+              if (fuel === "petrol") fuelPrice = petrolPrice;
+              else if (fuel === "diesel") fuelPrice = dieselPrice;
+              else if (fuel === "cng") fuelPrice = cngPrice;
+              else if (isEv) fuelPrice = electricityPrice;
+            }
+
+            const mileage = parseFloat(comp.mileage) || 1;
+            
+            const baseEvRate = 8;
+            const costPerKm = isEv 
+              ? (selectedCity ? (fuelPrice * (electricityPrice / baseEvRate)) : fuelPrice)
+              : (fuelPrice / mileage);
+
+            const displayPriceStr = isEv
+              ? (selectedCity ? (fuelPrice * (electricityPrice / baseEvRate)).toFixed(1) : fuelPrice.toFixed(1))
+              : fuelPrice.toFixed(1);
+
             const subtitle = isEv
-              ? `${comp.fuelType} · ₹${comp.fuelPrice}/km · ${comp.mileage} km range`
-              : `${comp.fuelType} · ₹${comp.fuelPrice}/${isCng ? "kg" : "L"} · ${comp.mileage} km/${isCng ? "kg" : "L"}`;
+              ? `${comp.fuelType} · ₹${displayPriceStr}/km · ${comp.mileage} km range`
+              : `${comp.fuelType} · ₹${displayPriceStr}/${isCng ? "kg" : "L"} · ${comp.mileage} km/${isCng ? "kg" : "L"}`;
+
             return (
               <CompareCard key={i} name={comp.name} subtitle={subtitle}
                 costPerKm={costPerKm} isEv={isEv} modelused={comp.modelused} />
             );
           }) : (
-            <p className="text-center text-xs text-slate-400 py-6">No competitor models added yet.</p>
+            <p className="text-center text-xs text-slate-500 py-6">No competitor models added yet.</p>
           )}
         </>
       )}
-
-      {/* <button onClick={scrollToOwnership} className="w-full flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
-        <ArrowDown size={15} /> Full ownership cost analysis below
-      </button> */}
     </div>
   );
 }
@@ -396,20 +507,20 @@ function CurrentVehicleCostCard({ name, subtitle, costPerKm }: {
   name: string; subtitle: string; costPerKm: number;
 }) {
   return (
-    <div className="rounded-2xl border-2 border-emerald-400 bg-emerald-100 p-4">
+    <div className="rounded-2xl border border-[#34ebb1] bg-[#34ebb1] p-4 shadow-sm">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-emerald-500 flex items-center justify-center">
-            <Zap size={18} className="text-white" />
+          <div className="h-10 w-10 rounded-xl bg-slate-950 flex items-center justify-center">
+            <Zap size={18} className="text-[#34ebb1]" />
           </div>
           <div>
-            <p className="text-sm font-bold text-slate-900">{name}</p>
-            <p className="text-[10px] text-emerald-700">{subtitle}</p>
+            <p className="text-sm font-extrabold text-slate-955">{name}</p>
+            <p className="text-[10px] text-slate-800 font-semibold">{subtitle}</p>
           </div>
         </div>
         <div className="text-right">
-          <p className="text-[9px] font-bold text-emerald-600 uppercase">Cost/km</p>
-          <p className="text-2xl font-black text-emerald-800">₹{costPerKm.toFixed(1)}</p>
+          <p className="text-[9px] font-bold text-slate-900 uppercase">Cost/km</p>
+          <p className="text-2xl font-black text-slate-955">₹{costPerKm.toFixed(1)}</p>
         </div>
       </div>
     </div>
@@ -420,23 +531,23 @@ function CompareCard({ name, subtitle, costPerKm, isEv, modelused }: {
   name: string; subtitle: string; costPerKm: number; isEv: boolean; modelused?: string;
 }) {
   return (
-    <div className="rounded-2xl border-2 border-slate-300 bg-slate-100 p-4">
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-slate-300 flex items-center justify-center">
-            {isEv ? <Zap size={18} className="text-slate-600" /> : <Fuel size={18} className="text-slate-600" />}
+          <div className="h-10 w-10 rounded-xl bg-slate-100 border border-[#34ebb1]/20 flex items-center justify-center text-slate-500">
+            {isEv ? <Zap size={18} /> : <Fuel size={18} />}
           </div>
           <div>
-            <p className="text-sm font-bold text-slate-900">{name}</p>
+            <p className="text-sm font-bold text-slate-800">{name}</p>
             <p className="text-[10px] text-slate-500">
-              {modelused && <span className="font-medium text-slate-600">{modelused} · </span>}
+              {modelused && <span className="font-medium text-slate-650">{modelused} · </span>}
               {subtitle}
             </p>
           </div>
         </div>
         <div className="text-right">
-          <p className="text-[9px] font-bold text-slate-400 uppercase">Cost/km</p>
-          <p className="text-xl font-black text-slate-900">₹{costPerKm.toFixed(1)}</p>
+          <p className="text-[9px] font-bold text-slate-500 uppercase">Cost/km</p>
+          <p className="text-xl font-black text-slate-800">₹{costPerKm.toFixed(1)}</p>
         </div>
       </div>
     </div>

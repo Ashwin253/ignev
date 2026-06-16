@@ -26,17 +26,17 @@ function CollapsibleSection({ title, icon, defaultOpen = false, children }: {
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="rounded-2xl border-2 border-slate-300 overflow-hidden shadow-sm">
+    <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-2 px-5 py-4 bg-slate-200 hover:bg-slate-300/80 transition-colors border-b border-slate-300"
+        className="w-full flex items-center gap-2 px-5 py-4 bg-slate-50 hover:bg-slate-100/80 transition-colors border-b border-slate-200"
       >
         {icon}
-        <p className="text-xs font-bold uppercase tracking-wider text-slate-800 flex-1 text-left">{title}</p>
-        {open ? <ChevronUp size={16} className="text-slate-600" /> : <ChevronDown size={16} className="text-slate-600" />}
+        <p className="text-xs font-extrabold uppercase tracking-wider text-slate-800 flex-1 text-left">{title}</p>
+        {open ? <ChevronUp size={16} className="text-slate-500" /> : <ChevronDown size={16} className="text-slate-500" />}
       </button>
-      {open && <div className="px-5 py-4 bg-slate-50 max-w-2xl mx-auto">{children}</div>}
+      {open && <div className="px-5 py-4 bg-white max-w-2xl mx-auto">{children}</div>}
     </div>
   );
 }
@@ -131,17 +131,17 @@ export default function ProductDetails({ item }: { item: EvListing }) {
   }, [item.city_pricing, item.batteryVariants, item.baasVariants, selectedVariant, item.title, variants]);
 
   return (
-    <div className="mt-16 rounded-3xl border-2 border-slate-300 bg-slate-100 px-5 py-8 md:px-10 md:py-10 shadow-sm">
+    <div className="mt-16 rounded-3xl border border-slate-200 bg-white p-5 md:p-10 shadow-lg">
       <div className="text-center mb-5">
         <h2 className="text-2xl font-black text-slate-900 md:text-3xl">
-          <span className="text-sky-700">Specification</span>
+          <span>Specifications</span>
         </h2>
       </div>
 
       {variants.length > 0 && (
         <div className="mb-5 flex justify-center">
-          <label className="relative inline-flex items-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-4 py-2.5 shadow-sm">
-            <Gauge size={14} className="text-sky-600 shrink-0" />
+          <label className="relative inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 shadow-inner">
+            <Gauge size={14} className="text-[#10855f] shrink-0" />
             {variants.length > 1 ? (
               <select
                 value={selectedVariant}
@@ -149,17 +149,17 @@ export default function ProductDetails({ item }: { item: EvListing }) {
                   setLocalSelectedVariant(e.target.value);
                   selectVariantByName(e.target.value);
                 }}
-                className="bg-transparent text-sm font-bold text-slate-900 outline-none appearance-none pr-6 cursor-pointer"
+                className="bg-transparent text-sm font-bold text-slate-800 outline-none appearance-none pr-6 cursor-pointer"
               >
                 {variants.map((v) => (
-                  <option key={v} value={v}>{v}</option>
+                  <option key={v} value={v} className="bg-white text-slate-900">{v}</option>
                 ))}
               </select>
             ) : (
-              <span className="text-sm font-bold text-slate-900">{variants[0]}</span>
+              <span className="text-sm font-bold text-slate-800">{variants[0]}</span>
             )}
             {variants.length > 1 && (
-              <ChevronDown size={14} className="text-slate-500 absolute right-3 pointer-events-none" />
+              <ChevronDown size={14} className="text-slate-400 absolute right-3 pointer-events-none" />
             )}
           </label>
         </div>
@@ -171,7 +171,7 @@ export default function ProductDetails({ item }: { item: EvListing }) {
         {(motorRows.length > 0 || motorChecks.length > 0) && (
           <CollapsibleSection
             title="Motor & Engine"
-            icon={<Zap size={16} className="text-sky-600" />}
+            icon={<Zap size={16} className="text-[#10855f]" />}
             defaultOpen
           >
             {motorRows.length > 0 && (
@@ -188,7 +188,7 @@ export default function ProductDetails({ item }: { item: EvListing }) {
         {(chargingRows.length > 0 || chargingChecks.length > 0) && (
           <CollapsibleSection
             title="Charging"
-            icon={<BatteryCharging size={16} className="text-emerald-600" />}
+            icon={<BatteryCharging size={16} className="text-[#10855f]" />}
           >
             {chargingRows.length > 0 && (
               <dl className="space-y-0.5">
@@ -202,7 +202,7 @@ export default function ProductDetails({ item }: { item: EvListing }) {
         )}
 
         {(dimensionRows.length > 0 || dimensionChecks.length > 0) && (
-          <CollapsibleSection title="Capacity & Dimensions" icon={<Gauge size={16} className="text-violet-600" />}>
+          <CollapsibleSection title="Capacity & Dimensions" icon={<Gauge size={16} className="text-[#10855f]" />}>
             {dimensionRows.length > 0 && (
               <dl className="space-y-0.5">
                 {dimensionRows.map((row, i) => (
@@ -221,7 +221,7 @@ export default function ProductDetails({ item }: { item: EvListing }) {
             <CollapsibleSection
               key={si}
               title={sec.title}
-              icon={<LayoutList size={16} className="text-amber-600" />}
+              icon={<LayoutList size={16} className="text-[#10855f]" />}
             >
               {rows.length > 0 && (
                 <dl className="space-y-0.5">
@@ -236,7 +236,7 @@ export default function ProductDetails({ item }: { item: EvListing }) {
         })}
 
         {(brakesRows.length > 0 || brakesChecks.length > 0) && (
-          <CollapsibleSection title="Brakes & Wheels" icon={<Disc size={16} className="text-slate-600" />}>
+          <CollapsibleSection title="Brakes & Wheels" icon={<Disc size={16} className="text-[#10855f]" />}>
             {brakesRows.length > 0 && (
               <dl className="space-y-0.5">
                 {brakesRows.map((row, i) => (
@@ -249,7 +249,7 @@ export default function ProductDetails({ item }: { item: EvListing }) {
         )}
 
         {(customFieldRows.length > 0 || customFieldChecks.length > 0) && (
-          <CollapsibleSection title="Extra Specs" icon={<LayoutList size={16} className="text-violet-600" />}>
+          <CollapsibleSection title="Extra Specs" icon={<LayoutList size={16} className="text-[#10855f]" />}>
             {customFieldRows.length > 0 && (
               <dl className="space-y-0.5">
                 {customFieldRows.map((f, i) => (
@@ -311,7 +311,7 @@ export default function ProductDetails({ item }: { item: EvListing }) {
           return (
             <>
               {(rows.length > 0 || boolFeatures.length > 0 || extraCheckLabels.length > 0) && (
-                <CollapsibleSection title="Features & Safety" icon={<CheckCircle2 size={16} className="text-sky-600" />}>
+                <CollapsibleSection title="Features & Safety" icon={<CheckCircle2 size={16} className="text-[#10855f]" />}>
                   {rows.length > 0 && (
                     <dl className="space-y-0.5 mb-3">
                       {rows.map((row, i) => (
@@ -324,7 +324,7 @@ export default function ProductDetails({ item }: { item: EvListing }) {
               )}
 
               {(lightsRows.length > 0 || lightsBoolFeatures.length > 0) && (
-                <CollapsibleSection title="Lights" icon={<Lightbulb size={16} className="text-yellow-500" />}>
+                <CollapsibleSection title="Lights" icon={<Lightbulb size={16} className="text-[#10855f]" />}>
                   {lightsRows.length > 0 && (
                     <dl className="space-y-0.5 mb-3">
                       {lightsRows.map((row, i) => (
@@ -337,7 +337,7 @@ export default function ProductDetails({ item }: { item: EvListing }) {
               )}
 
               {drivingModesBoolFeatures.length > 0 && (
-                <CollapsibleSection title="Driving Modes" icon={<Activity size={16} className="text-indigo-500" />}>
+                <CollapsibleSection title="Driving Modes" icon={<Activity size={16} className="text-[#10855f]" />}>
                   <SpecCheckboxChips labels={drivingModesBoolFeatures} />
                 </CollapsibleSection>
               )}
@@ -347,7 +347,7 @@ export default function ProductDetails({ item }: { item: EvListing }) {
 {relevantCityPricing.length > 0 && (
           <CollapsibleSection
             title="City-wise On-Road Prices"
-            icon={<MapPin size={16} className="text-rose-600" />}
+            icon={<MapPin size={16} className="text-[#10855f]" />}
             defaultOpen
           >
             <dl className="space-y-0.5">
@@ -364,7 +364,7 @@ export default function ProductDetails({ item }: { item: EvListing }) {
         )}
         {/* City-wise On Road Price */}
         {(item as any).cityPrices && (item as any).cityPrices.length > 0 && (
-          <CollapsibleSection title="City-wise On Road Price" icon={<Gauge size={16} className="text-amber-500" />} defaultOpen={true}>
+          <CollapsibleSection title="City-wise On Road Price" icon={<Gauge size={16} className="text-[#10855f]" />} defaultOpen={true}>
             <div className="overflow-x-auto -mx-4 px-4 pb-2">
               <div className="flex gap-3 min-w-max">
                 {(() => {
@@ -385,7 +385,7 @@ export default function ProductDetails({ item }: { item: EvListing }) {
                             <p className="text-[10px] font-bold text-slate-500 uppercase">{cp.city}</p>
                             <p className="text-lg font-black text-slate-900 mt-1">₹{(cp.on_road_price > 1000 ? (cp.on_road_price / 100000).toFixed(2).replace(/\.?0+$/, "") : cp.on_road_price)} L</p>
                             {cp.subsidy && cp.subsidy > 0 && (
-                              <p className="text-[9px] text-emerald-600 font-bold mt-0.5">-₹{(cp.subsidy / 1000).toFixed(0)}K subsidy</p>
+                              <p className="text-[9px] text-[#10855f] font-bold mt-0.5">-₹{(cp.subsidy / 1000).toFixed(0)}K subsidy</p>
                             )}
                           </div>
                         ))}
@@ -401,12 +401,12 @@ export default function ProductDetails({ item }: { item: EvListing }) {
         {item.pros.length > 0 && (
           <CollapsibleSection
             title="Things we like"
-            icon={<CheckCircle2 size={16} className="text-emerald-600" />}
+            icon={<CheckCircle2 size={16} className="text-[#10855f]" />}
           >
             <ul className="space-y-2.5">
               {item.pros.map((pro, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-slate-800">
-                  <CheckCircle2 size={15} className="mt-0.5 shrink-0 text-emerald-600" />
+                  <CheckCircle2 size={15} className="mt-0.5 shrink-0 text-[#10855f]" />
                   {pro}
                 </li>
               ))}
@@ -417,12 +417,12 @@ export default function ProductDetails({ item }: { item: EvListing }) {
         {item.cons.length > 0 && (
           <CollapsibleSection
             title="Weakness"
-            icon={<CircleMinus size={16} className="text-amber-600" />}
+            icon={<CircleMinus size={16} className="text-rose-600" />}
           >
             <ul className="space-y-2.5">
               {item.cons.map((con, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-slate-800">
-                  <CircleMinus size={15} className="mt-0.5 shrink-0 text-amber-600" />
+                  <CircleMinus size={15} className="mt-0.5 shrink-0 text-rose-600" />
                   {con}
                 </li>
               ))}
@@ -433,7 +433,7 @@ export default function ProductDetails({ item }: { item: EvListing }) {
         {relevantVideos.length > 0 && (
           <CollapsibleSection
             title="Videos & Walkarounds"
-            icon={<PlayCircle size={16} className="text-sky-600" />}
+            icon={<PlayCircle size={16} className="text-[#10855f]" />}
             defaultOpen
           >
             <div className="space-y-6">
@@ -442,7 +442,7 @@ export default function ProductDetails({ item }: { item: EvListing }) {
                 return (
                   <div key={idx} className="space-y-2.5">
                     {video.title && (
-                      <p className="text-xs font-bold text-slate-700 uppercase tracking-wider">{video.title}</p>
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">{video.title}</p>
                     )}
                     {embedUrl ? (
                       <div className="relative aspect-video w-full rounded-2xl overflow-hidden border border-slate-200 shadow bg-black">
@@ -458,13 +458,13 @@ export default function ProductDetails({ item }: { item: EvListing }) {
                         href={video.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-3 p-3.5 rounded-2xl border border-slate-200 bg-white hover:bg-sky-50 hover:border-sky-300 transition-all group"
+                        className="flex items-center gap-3 p-3.5 rounded-2xl border border-slate-200 bg-slate-50 hover:bg-white hover:border-[#34ebb1]/60 transition-all group shadow-xs"
                       >
-                        <div className="p-2.5 rounded-xl bg-sky-50 text-sky-600 group-hover:bg-sky-100 shrink-0">
+                        <div className="p-2.5 rounded-xl bg-slate-100 text-[#10855f] group-hover:bg-slate-200 shrink-0 border border-slate-200">
                           <PlayCircle size={20} />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-xs font-bold text-slate-800 truncate">{video.title || "Watch Video Guide"}</p>
+                          <p className="text-xs font-bold text-slate-800 truncate group-hover:text-[#10855f] transition-colors">{video.title || "Watch Video Guide"}</p>
                           <p className="text-[10px] text-slate-500 truncate">{video.url}</p>
                         </div>
                       </a>
@@ -493,10 +493,10 @@ function getEmbedUrl(url: string): string | null {
 function SpecCheckboxChips({ labels }: { labels: string[] }) {
   if (!labels.length) return null;
   return (
-    <div className="flex flex-wrap gap-1.5 pt-2 border-t-2 border-slate-200">
+    <div className="flex flex-wrap gap-1.5 pt-2 border-t border-slate-200">
       {labels.map((f) => (
-        <span key={f} className="inline-flex items-center gap-1 rounded-full bg-sky-100 border-2 border-sky-200 px-2 py-0.5 text-[10px] font-semibold text-sky-800">
-          <CheckCircle2 size={10} className="text-sky-600" /> {f}
+        <span key={f} className="inline-flex items-center gap-1 rounded-full bg-[#34ebb1]/15 border border-[#34ebb1]/30 px-2 py-0.5 text-[10px] font-semibold text-[#10855f]">
+          <CheckCircle2 size={10} className="text-[#10855f]" /> {f}
         </span>
       ))}
     </div>
@@ -505,8 +505,8 @@ function SpecCheckboxChips({ labels }: { labels: string[] }) {
 
 function SpecRow({ label, value, odd }: { label: string; value: string; odd?: boolean }) {
   return (
-    <div className={`flex items-start sm:items-center justify-between gap-4 rounded-lg px-3 py-2 border border-transparent ${odd ? "bg-white border-slate-200" : "bg-slate-100/80"}`}>
-      <dt className="text-xs font-medium text-slate-600 shrink-0">{label}</dt>
+    <div className={`flex items-start sm:items-center justify-between gap-4 rounded-lg px-3 py-2 border border-transparent ${odd ? "bg-slate-50 border-slate-150" : "bg-white"}`}>
+      <dt className="text-xs font-semibold text-slate-500 shrink-0">{label}</dt>
       <dd className="text-xs font-bold text-slate-900 text-right break-words max-w-[65%]">{value}</dd>
     </div>
   );

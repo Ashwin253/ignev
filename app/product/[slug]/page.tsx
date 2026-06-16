@@ -9,7 +9,7 @@ import { SmoothCollapseEmptyState } from "../../components/SmoothCollapse";
 import {
   formatLaunchDate, isLaunched, formatPricing,
 } from "../../lib/wordpress";
-import { fetchEvListingBySlugFromSupabase, fetchEvListingsFromSupabase } from "../../lib/supabase";
+import { fetchEvListingBySlugFromSupabase, fetchEvListingsFromSupabase, supabase } from "../../lib/supabase";
 import ProductGallery from "../../components/ProductGallery";
 import ProductMainUI from "../ProductMainUI";
 import { ProductSelectionProvider } from "../ProductSelectionProvider";
@@ -63,6 +63,15 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   // Fetch from Supabase
   let item = await fetchEvListingBySlugFromSupabase(slug);
   if (!item) notFound();
+
+  // Fetch city-wise fuel prices
+  let dbFuelPrices: any[] = [];
+  try {
+    const { data } = await supabase.from("fuel_prices").select("*").order("city");
+    dbFuelPrices = data || [];
+  } catch (err) {
+    console.error("Error fetching fuel prices:", err);
+  }
 
   const launched    = isLaunched(item.launchdate);
   const launchLabel = formatLaunchDate(item.launchdate);
@@ -120,21 +129,25 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   };
 
   return (
-    <section className="min-h-screen bg-slate-100 py-28 overflow-x-hidden">
+    <section className="min-h-screen bg-[#f3f9f7] text-slate-900 py-28 overflow-x-hidden relative">
+      {/* Decorative Ambient Glowing Blurs */}
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#34ebb1]/15 rounded-full blur-[130px] pointer-events-none"></div>
+      <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-[#34ebb1]/10 rounded-full blur-[130px] pointer-events-none"></div>
+
       {/* JSON-LD Schema for AI Crawlers / SEO */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 overflow-hidden relative z-10">
 
         {/* Breadcrumb */}
         <nav className="mb-8 flex items-center gap-2 text-sm text-slate-500">
-          <Link href="/" className="hover:text-sky-600 transition-colors">Home</Link>
+          <Link href="/" className="hover:text-[#10855f] transition-colors">Home</Link>
           <span>/</span>
-          <Link href="/catalog" className="hover:text-sky-600 transition-colors">Catalog</Link>
+          <Link href="/catalog" className="hover:text-[#10855f] transition-colors">Catalog</Link>
           <span>/</span>
-          <span className="font-medium text-slate-900 line-clamp-1">{item.brand} {item.title}</span>
+          <span className="font-semibold text-slate-900 line-clamp-1">{item.brand} {item.title}</span>
         </nav>
 
         <ProductSelectionProvider item={item}>
@@ -150,28 +163,28 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
             {/* Title + badges */}
             <div className="mb-2">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-600 mb-1">{item.brand}</p>
+              <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#10855f] mb-1">{item.brand}</p>
               <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">{item.title}</h1>
+                <h1 className="text-3xl font-black tracking-tight text-slate-950 md:text-4xl">{item.title}</h1>
                 <div className="flex flex-col gap-1 ml-auto shrink-0">
                   {item.types[0] && (
-                    <span className="inline-flex items-center gap-1 rounded-full border border-slate-300 bg-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-700">
-                      <Zap size={10} className="text-sky-500" />{item.types[0]}
+                    <span className="inline-flex items-center gap-1 rounded-full border border-[#34ebb1]/40 bg-[#34ebb1]/20 px-2 py-0.5 text-[10px] font-semibold text-[#10855f]">
+                      <Zap size={10} className="text-[#10855f]" />{item.types[0]}
                     </span>
                   )}
                   <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${
-                    launched ? "bg-emerald-100 border-emerald-300 text-emerald-800" : "bg-amber-100 border-amber-300 text-amber-800"
+                    launched ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-amber-50 border-amber-200 text-amber-700"
                   }`}>
                     {launched
-                      ? <><BadgeCheck size={10} className="text-emerald-500" /> {launchLabel}</>
-                      : <><CalendarDays size={10} /> {launchLabel}</>}
+                      ? <><BadgeCheck size={10} className="text-emerald-400" /> {launchLabel}</>
+                      : <><CalendarDays size={10} className="text-amber-450" /> {launchLabel}</>}
                   </span>
                 </div>
               </div>
             </div>
 
             {/* Interactive Area (Battery Selection, Tabs, Ownership) */}
-            <ProductMainUI item={item} slug={slug} />
+            <ProductMainUI item={item} slug={slug} dbFuelPrices={dbFuelPrices} />
           </div>
         </div>
         {/* ── Detailed Specs + Pros/Cons ── */}
@@ -183,7 +196,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         {/* Related */}
         <Suspense fallback={
           <div className="mt-32">
-            <h2 className="mb-8 text-2xl font-semibold text-slate-900">More like this</h2>
+            <h2 className="mb-8 text-2xl font-black text-white">More like this</h2>
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               <ProductSkeleton />
               <ProductSkeleton />
@@ -223,7 +236,7 @@ async function RelatedListings({ slug, currentItem }: { slug: string; currentIte
     return (
       <SmoothCollapseEmptyState>
         <div className="mt-32">
-          <h2 className="mb-8 text-2xl font-semibold text-slate-900">More like this</h2>
+          <h2 className="mb-8 text-2xl font-black text-white">More like this</h2>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             <ProductSkeleton />
             <ProductSkeleton />
@@ -236,11 +249,11 @@ async function RelatedListings({ slug, currentItem }: { slug: string; currentIte
 
   return (
     <div className="mt-32">
-      <h2 className="mb-8 text-2xl font-semibold text-slate-900">More like this</h2>
+      <h2 className="mb-8 text-2xl font-black text-white">More like this</h2>
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {related.map((rel) => (
           <Link key={rel.id} href={`/product/${rel.slug}`}
-            className="group flex flex-col h-full overflow-hidden rounded-3xl border-2 border-slate-300 bg-slate-50 shadow-[0_8px_24px_rgba(15,23,42,0.08)] hover:shadow-[0_16px_40px_rgba(15,23,42,0.12)] transition-all hover:-translate-y-0.5">
+            className="group flex flex-col h-full overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-md hover:border-[#34ebb1]/60 hover:shadow-xl transition-all duration-350 hover:-translate-y-1">
             <div className="relative aspect-4/3 overflow-hidden bg-slate-100 shrink-0">
               {rel.photo && (
                 <Image src={rel.photo} alt={rel.title} fill sizes="33vw"
@@ -249,15 +262,15 @@ async function RelatedListings({ slug, currentItem }: { slug: string; currentIte
             </div>
             <div className="p-5 flex flex-col grow">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-600">{rel.brand}</p>
-                <h3 className="mt-1 text-lg font-semibold text-slate-900">{rel.title}</h3>
-                {rel.prices.length > 0 && <p className="mt-1 text-sm text-slate-500">{formatPricing(rel.prices)}</p>}
+                <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#10855f]">{rel.brand}</p>
+                <h3 className="mt-1 text-lg font-black text-slate-900">{rel.title}</h3>
+                {rel.prices.length > 0 && <p className="mt-1 text-sm text-slate-650 font-bold">{formatPricing(rel.prices)}</p>}
                 <p className={`mt-1.5 text-xs font-medium ${isLaunched(rel.launchdate) ? "text-emerald-600" : "text-amber-600"}`}>
                   {formatLaunchDate(rel.launchdate)}
                 </p>
               </div>
               <div className="mt-auto pt-5">
-                <span className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-900 transition-colors group-hover:bg-sky-600 group-hover:text-white">
+                <span className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-50 border border-slate-250 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-all duration-300 group-hover:bg-[#34ebb1] group-hover:border-[#34ebb1] group-hover:text-slate-950 group-hover:font-extrabold shadow-inner group-hover:shadow-[0_0_15px_rgba(52,235,177,0.3)]">
                   View Details <ArrowRight size={16} />
                 </span>
               </div>

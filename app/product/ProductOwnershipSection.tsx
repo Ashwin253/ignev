@@ -37,25 +37,25 @@ function ProductOwnershipInner({ item }: { item: EvListing }) {
     : undefined;
 
   return (
-    <div className="mt-20 rounded-3xl bg-slate-50 border border-slate-200 px-5 py-10 md:px-10 md:py-14">
+    <div className="mt-20 rounded-3xl bg-white border border-slate-200 px-5 py-10 md:px-10 md:py-14 shadow-lg">
       {/* Header */}
       <div className="text-center mb-8">
         {/* <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500 shadow-sm mb-4">
           Ownership
         </span> */}
         <h2 className="text-2xl font-black text-slate-900 md:text-3xl">
-          Plan Your <span className="text-sky-600">Ownership</span>
+          Plan Your <span className="text-[#10855f]">Ownership</span>
         </h2>
       </div>
 
       {/* Tab switcher */}
-      <div className="flex rounded-2xl bg-white border border-slate-200 p-1 gap-1 mb-8">
+      <div className="flex rounded-2xl bg-slate-100 border border-slate-200 p-1 gap-1 mb-8">
         <button
           onClick={() => setActiveTab("emi")}
           className={`flex-1 flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition-all ${
             activeTab === "emi"
-              ? "bg-sky-600 text-white shadow-md"
-              : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+              ? "bg-[#34ebb1] text-slate-950 font-black shadow-md"
+              : "text-slate-500 hover:text-slate-900 hover:bg-white"
           }`}
         >
           <Banknote size={16} />
@@ -65,8 +65,8 @@ function ProductOwnershipInner({ item }: { item: EvListing }) {
           onClick={() => setActiveTab("cost")}
           className={`flex-1 flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition-all ${
             activeTab === "cost"
-              ? "bg-emerald-600 text-white shadow-md"
-              : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+              ? "bg-[#34ebb1] text-slate-950 font-black shadow-md"
+              : "text-slate-500 hover:text-slate-900 hover:bg-white"
           }`}
         >
           <Fuel size={16} />
@@ -80,9 +80,9 @@ function ProductOwnershipInner({ item }: { item: EvListing }) {
         {activeTab === "cost" && <CostEstimator initialPrice={currentPrice} efficiency={efficiency} />}
       </div>
 
-      <p className="mt-8 text-center text-[11px] text-slate-400 font-medium max-w-xl mx-auto leading-relaxed">
+      <p className="mt-8 text-center text-[11px] text-slate-500 font-medium max-w-xl mx-auto leading-relaxed">
         * Estimates may vary based on state subsidies, RTO charges, and insurance.{" "}
-        <span className="font-bold text-sky-600">Enquire for exact on-road pricing.</span>
+        <span className="font-bold text-[#10855f]">Enquire for exact on-road pricing.</span>
       </p>
     </div>
   );

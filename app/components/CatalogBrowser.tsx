@@ -194,7 +194,7 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
     <div className="space-y-5">
 
       {/* ── Unified filter panel ── */}
-      <div className="rounded-3xl border-2 border-slate-300 bg-slate-50 shadow-[0_4px_20px_rgba(15,23,42,0.08)] overflow-hidden">
+      <div className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden relative z-10">
 
         {/* Mobile collapsed bar — tap to expand */}
         <div
@@ -205,7 +205,7 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
           <span className="flex-1 text-sm font-semibold text-slate-700">
             {category !== "all" ? category : "All types"}
             {activeFilterCount > 0 && (
-              <span className="ml-2 inline-flex items-center justify-center h-5 w-5 rounded-full bg-sky-600 text-white text-[10px] font-bold">
+              <span className="ml-2 inline-flex items-center justify-center h-5 w-5 rounded-full bg-[#10855f] text-white text-[10px] font-bold">
                 {activeFilterCount}
               </span>
             )}
@@ -217,7 +217,7 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
           {/* Share — mobile */}
           <button
             onClick={(e) => { e.stopPropagation(); handleShare(); }}
-            className="ml-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 transition-colors"
+            className="ml-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-50 hover:bg-[#34ebb1]/15 hover:text-[#10855f] transition-colors"
             aria-label="Share catalog"
           >
             {shared ? <Check size={13} className="text-emerald-500" /> : <Share2 size={13} className="text-slate-500" />}
@@ -235,8 +235,8 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
                   key={opt.value}
                   onClick={() => updateFilters({ type: opt.value })}
                   className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 border shrink-0 ${category === opt.value
-                      ? "bg-slate-900 text-white border-slate-900 shadow-sm"
-                      : "bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-100"
+                      ? "bg-[#34ebb1] text-slate-950 font-black border-[#34ebb1] shadow-sm"
+                      : "bg-white text-slate-600 border-slate-200 hover:border-[#34ebb1]/50 hover:bg-[#34ebb1]/10"
                     }`}
                 >
                   {opt.label}
@@ -248,7 +248,7 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
           {/* Row 2: Search + dropdowns */}
           <div className="p-4 grid gap-3 sm:grid-cols-[1fr_auto_auto] md:grid-cols-[2fr_1fr_1fr]">
             {/* Search */}
-            <label className="flex items-center gap-2.5 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+            <label className="flex items-center gap-2.5 rounded-2xl border border-slate-200 bg-slate-50/50 px-4 py-3 focus-within:border-[#34ebb1] transition-all">
               <Search size={16} className="text-slate-400 shrink-0" />
               <input
                 value={query}
@@ -264,12 +264,12 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
             </label>
 
             {/* Brand */}
-            <label className="relative flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 cursor-pointer">
+            <label className="relative flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50/50 px-4 py-3 cursor-pointer focus-within:border-[#34ebb1] transition-all">
               <span className="text-xs font-semibold text-slate-400 shrink-0 hidden sm:block">Brand</span>
               <select
                 value={brand}
                 onChange={(e) => updateFilters({ brand: e.target.value })}
-                className="w-full bg-transparent text-sm outline-none text-slate-700 cursor-pointer appearance-none pr-5"
+                className="w-full bg-transparent text-sm outline-none text-slate-755 cursor-pointer appearance-none pr-5"
               >
                 {brandOptions.map((b) => (
                   <option key={b} value={b}>{b === "all" ? "All brands" : b}</option>
@@ -279,12 +279,12 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
             </label>
 
             {/* Price */}
-            <label className="relative flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 cursor-pointer">
+            <label className="relative flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50/50 px-4 py-3 cursor-pointer focus-within:border-[#34ebb1] transition-all">
               <span className="text-xs font-semibold text-slate-400 shrink-0 hidden sm:block">Price</span>
               <select
                 value={price}
                 onChange={(e) => updateFilters({ price: e.target.value })}
-                className="w-full bg-transparent text-sm outline-none text-slate-700 cursor-pointer appearance-none pr-5"
+                className="w-full bg-transparent text-sm outline-none text-slate-755 cursor-pointer appearance-none pr-5"
               >
                 <option value="all">All prices</option>
                 <option value="0-5">Under ₹5L</option>
@@ -302,8 +302,8 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
               <button
                 onClick={() => updateFilters({ comm: !commercialOnly })}
                 className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all duration-200 ${commercialOnly
-                    ? "bg-orange-500 border-orange-500 text-white"
-                    : "bg-white border-slate-200 text-slate-600 hover:border-orange-300 hover:text-orange-600"
+                    ? "bg-[#34ebb1] border-[#34ebb1] text-slate-950 font-black shadow-sm"
+                    : "bg-white border-slate-200 text-slate-600 hover:border-[#34ebb1]/60 hover:text-[#10855f] hover:bg-[#34ebb1]/5"
                   }`}
               >
                 <Truck size={12} /> Commercial
@@ -311,8 +311,8 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
               <button
                 onClick={() => updateFilters({ avail: !launchedOnly })}
                 className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all duration-200 ${launchedOnly
-                    ? "bg-emerald-500 border-emerald-500 text-white"
-                    : "bg-white border-slate-200 text-slate-600 hover:border-emerald-300 hover:text-emerald-600"
+                    ? "bg-[#34ebb1] border-[#34ebb1] text-slate-950 font-black shadow-sm"
+                    : "bg-white border-slate-200 text-slate-600 hover:border-[#34ebb1]/60 hover:text-[#10855f] hover:bg-[#34ebb1]/5"
                   }`}
               >
                 <BadgeCheck size={12} /> Available now
@@ -320,8 +320,8 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
               <button
                 onClick={() => updateFilters({ upcoming: !comingSoonOnly })}
                 className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all duration-200 ${comingSoonOnly
-                    ? "bg-amber-500 border-amber-500 text-white"
-                    : "bg-white border-slate-200 text-slate-600 hover:border-amber-300 hover:text-amber-600"
+                    ? "bg-[#34ebb1] border-[#34ebb1] text-slate-950 font-black shadow-sm"
+                    : "bg-white border-slate-200 text-slate-600 hover:border-[#34ebb1]/60 hover:text-[#10855f] hover:bg-[#34ebb1]/5"
                   }`}
               >
                 <CalendarDays size={12} /> Coming Soon
@@ -329,17 +329,17 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
               <button
                 onClick={() => updateFilters({ baas: !baasOnly })}
                 className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all duration-200 ${baasOnly
-                    ? "bg-sky-500 border-sky-500 text-white"
-                    : "bg-white border-slate-200 text-slate-600 hover:border-sky-300 hover:text-sky-600"
+                    ? "bg-[#34ebb1] border-[#34ebb1] text-slate-950 font-black shadow-sm"
+                    : "bg-white border-slate-200 text-slate-600 hover:border-[#34ebb1]/60 hover:text-[#10855f] hover:bg-[#34ebb1]/5"
                   }`}
               >
                 <Zap size={12} /> Battery not included (BAAS)
-                <span className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-slate-200 text-[9px] font-black text-slate-600" title="Battery as a Service — batteries are priced separately">?</span>
+                <span className={`inline-flex items-center justify-center h-4 w-4 rounded-full text-[9px] font-black ${baasOnly ? "bg-slate-950/20 text-slate-950" : "bg-slate-100 text-slate-500"}`} title="Battery as a Service — batteries are priced separately">?</span>
               </button>
               {hasActiveFilters && (
                 <button
                   onClick={clearAll}
-                  className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3.5 py-1.5 text-xs font-semibold text-slate-500 hover:text-rose-600 hover:border-rose-300 transition-colors"
+                  className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3.5 py-1.5 text-xs font-semibold text-slate-500 hover:text-[#10855f] hover:border-[#34ebb1]/60 transition-colors"
                 >
                   <X size={12} /> Clear
                 </button>
@@ -349,11 +349,11 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
               <span className="font-semibold text-slate-700">{filteredItems.length}</span> of {items.length}
               <button
                 onClick={handleShare}
-                className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:border-slate-300 hover:bg-slate-50 transition-all"
+                className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:border-[#34ebb1]/60 hover:bg-[#34ebb1]/10 hover:text-[#10855f] transition-all"
                 aria-label="Share catalog"
               >
                 {shared
-                  ? <><Check size={12} className="text-emerald-500" /> Copied!</>
+                  ? <><Check size={12} className="text-emerald-600" /> Copied!</>
                   : <><Share2 size={12} /> Share</>}
               </button>
             </p>

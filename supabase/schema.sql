@@ -214,6 +214,31 @@ returns table(path text, count bigint) as $$
   limit 10;
 $$ language sql security definer;
 
+-- ── EV Charging Stations ──────────────────────────────────────────────────────
+
+create table if not exists public.ev_stations (
+  id uuid default gen_random_uuid() primary key,
+  name text not null default '',
+  lat numeric not null,
+  lng numeric not null,
+  city text default '',
+  address text default '',
+  connector_types text[] default '{}',
+  power_kw numeric default null,
+  network text default '',
+  is_active boolean default true,
+  added_by_email text default '',
+  created_at timestamptz default now()
+);
+
+alter table public.ev_stations enable row level security;
+create policy "Public read stations" on public.ev_stations for select using (true);
+create policy "Team manage stations" on public.ev_stations for insert to authenticated with check (true);
+create policy "Team update stations" on public.ev_stations for update to authenticated using (true) with check (true);
+create policy "Team delete stations" on public.ev_stations for delete to authenticated using (true);
+
+create index if not exists idx_ev_stations_city on public.ev_stations(city);
+
 -- ── City-wise On Road Prices ──────────────────────────────────────────────────
 
 create table if not exists public.ev_city_prices (

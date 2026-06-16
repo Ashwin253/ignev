@@ -104,7 +104,7 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
   return (
     <div className="flex flex-col gap-4 w-full max-w-full overflow-hidden">
       {/* Main image */}
-      <div className="relative aspect-4/3 overflow-hidden rounded-[1.75rem] bg-slate-100 select-none">
+      <div className="relative aspect-4/3 overflow-hidden rounded-[1.75rem] bg-slate-50 border border-slate-200 shadow-sm select-none">
         <AnimatePresence initial={false} custom={direction} mode="wait">
           <motion.img
             key={current}
@@ -139,7 +139,7 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
               {resolvedPhotos.map((_, i) => (
                 <button key={i}
                   onClick={() => { setDirection(i > current ? 1 : -1); setCurrent(i); }}
-                  className={`h-1.5 rounded-full transition-all duration-300 ${i === current ? "w-5 bg-sky-500" : "w-1.5 bg-white/60 hover:bg-white"}`}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${i === current ? "w-5 bg-[#10855f] shadow-[0_0_8px_rgba(16,133,95,0.4)]" : "w-1.5 bg-slate-350 hover:bg-slate-400"}`}
                 />
               ))}
             </div>
@@ -152,10 +152,10 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
           {resolvedColors.length > 0 && (
             <button
               onClick={() => { setShowColors(!showColors); setShowThumbs(false); }}
-              className={`flex items-center gap-1.5 rounded-full px-3 py-2 text-[10px] font-bold shadow-lg transition-all ${
+              className={`flex items-center gap-1.5 rounded-full px-3 py-2 text-[10px] font-bold shadow-md transition-all ${
                 showColors
                   ? "bg-slate-900 text-white"
-                  : "bg-slate-800 text-white hover:bg-slate-700"
+                  : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200"
               }`}
             >
               <Palette size={13} />
@@ -167,10 +167,10 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
           {resolvedPhotos.length > 1 && (
             <button
               onClick={() => { setShowThumbs(!showThumbs); setShowColors(false); }}
-              className={`flex items-center gap-1.5 rounded-full px-3 py-2 text-[10px] font-bold shadow-lg transition-all ${
+              className={`flex items-center gap-1.5 rounded-full px-3 py-2 text-[10px] font-bold shadow-md transition-all ${
                 showThumbs
                   ? "bg-slate-900 text-white"
-                  : "bg-slate-800 text-white hover:bg-slate-700"
+                  : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200"
               }`}
             >
               <LayoutGrid size={13} />
@@ -186,7 +186,7 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              className="absolute bottom-24 right-3 z-10 flex gap-2 rounded-2xl bg-slate-900/95 backdrop-blur-md border border-white/10 p-2.5 shadow-xl"
+              className="absolute bottom-24 right-3 z-10 flex gap-2 rounded-2xl bg-white/95 backdrop-blur-md border border-slate-200 p-2.5 shadow-xl"
             >
               {resolvedColors.map((hex, i) => {
                 // Handle dualtone hexes (e.g. "ffffff/000000" or "ffffff,000000")
@@ -205,7 +205,7 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
                     key={i}
                     onClick={() => handleColorClick(i)}
                     className={`h-7 w-7 rounded-lg border-2 transition-all hover:scale-110 ${
-                      i === current ? "border-white shadow-md" : "border-white/30 shadow-sm"
+                      i === current ? "border-slate-900 shadow-md ring-2 ring-slate-100" : "border-slate-350 shadow-sm"
                     }`}
                     style={{ background: backgroundStyle }}
                   />
@@ -222,14 +222,14 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              className="absolute bottom-24 right-3 z-10 flex gap-1.5 rounded-2xl bg-slate-900/95 backdrop-blur-md border border-white/10 p-2 shadow-xl max-w-[75%] overflow-x-auto"
+              className="absolute bottom-24 right-3 z-10 flex gap-1.5 rounded-2xl bg-white/95 backdrop-blur-md border border-slate-200 p-2 shadow-xl max-w-[75%] overflow-x-auto"
             >
               {resolvedPhotos.map((photo, i) => (
                 <button
                   key={i}
                   onClick={() => { setDirection(i > current ? 1 : -1); setCurrent(i); setShowThumbs(false); }}
                   className={`shrink-0 h-12 w-16 overflow-hidden rounded-lg border-2 transition-all ${
-                    i === current ? "border-sky-400 shadow-sm" : "border-transparent opacity-70 hover:opacity-100"
+                    i === current ? "border-[#34ebb1] shadow-sm" : "border-transparent opacity-75 hover:opacity-100"
                   }`}
                 >
                   <img src={photo} alt={`${name} ${i + 1}`} className="w-full h-full object-cover" />
@@ -248,7 +248,7 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
               key={i}
               onClick={() => { setDirection(i > current ? 1 : -1); setCurrent(i); }}
               className={`shrink-0 h-20 w-28 overflow-hidden rounded-xl border-2 transition-all duration-200 ${
-                i === current ? "border-sky-500 shadow-md" : "border-transparent opacity-60 hover:opacity-100"
+                i === current ? "border-[#34ebb1] shadow-md" : "border-transparent opacity-60 hover:opacity-100"
               }`}
             >
               <img src={photo} alt={`${name} thumbnail ${i + 1}`} className="w-full h-full object-cover" />

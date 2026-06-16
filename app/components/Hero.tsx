@@ -24,7 +24,7 @@ type ProductsPayload = {
 type TabKey = "featured" | "fresh" | "buy" | "cars" | "twoWheelers" | "autos";
 
 const tabs: Array<{ key: TabKey; label: string; icon: typeof CarFront }> = [
-  { key: "featured",    label: "Featured",      icon: Star      },
+  { key: "featured",    label: "Newly Added",   icon: Star      },
   { key: "fresh",       label: "Fresh Release", icon: Sparkles  },
   { key: "cars",        label: "Cars",          icon: CarFront  },
   { key: "twoWheelers", label: "2 Wheelers",    icon: Bike      },
@@ -65,7 +65,7 @@ function FeaturedCard({ listing, index }: { listing: EvListing; index: number })
             <div className="absolute inset-0 bg-linear-to-br from-sky-50 to-slate-100" />
           )}
           <div className="absolute inset-0 bg-linear-to-t from-slate-900/30 via-transparent to-transparent" />
-          <span className={`absolute top-3 right-3 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold ${launched ? "bg-emerald-500 text-white" : "bg-amber-400 text-slate-900"}`}>
+          <span className={`absolute top-3 right-3 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold ${launched ? "text-slate-900" : "bg-amber-400 text-slate-900"}`} style={launched ? { backgroundColor: "#34ebb1" } : {}}>
             {launched ? <><BadgeCheck size={11} /> {launchLabel}</> : <><CalendarDays size={11} /> {launchLabel}</>}
           </span>
 
@@ -248,10 +248,10 @@ export default function Hero({
   const slide = slides[activeSlide];
 
   return (
-    <section id="home" className="relative overflow-hidden bg-linear-to-b from-white via-[#f5f8ff] to-[#edf3fb] pt-28 pb-16 text-slate-900">
+    <section id="home" className="relative overflow-hidden bg-linear-to-b from-[#34ebb1]/10 via-white to-[#edf3fb] pt-28 pb-16 text-slate-900">
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute -top-20 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-sky-300/25 blur-3xl" />
-        <div className="absolute right-0 top-24 h-80 w-80 rounded-full bg-lime-200/30 blur-3xl" />
+        <div className="absolute -top-20 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-[#34ebb1]/20 blur-3xl" />
+        <div className="absolute right-0 top-24 h-80 w-80 rounded-full bg-[#34ebb1]/15 blur-3xl" />
         <div className="absolute bottom-0 left-0 h-72 w-72 rounded-full bg-white/70 blur-3xl" />
       </div>
 
@@ -404,9 +404,9 @@ export default function Hero({
                         className={`inline-flex shrink-0 items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold transition-all duration-200 ${
                           isActive
                             ? tab.key === "featured"
-                              ? "border-amber-300 bg-amber-500 text-white shadow-[0_4px_16px_rgba(245,158,11,0.3)]"
+                              ? "border-[#34ebb1] bg-[#34ebb1] text-slate-900 shadow-[0_4px_16px_rgba(52,235,177,0.4)]"
                               : tab.key === "fresh"
-                              ? "border-emerald-300 bg-emerald-500 text-white shadow-[0_4px_16px_rgba(16,185,129,0.3)]"
+                              ? "border-[#34ebb1] bg-[#34ebb1] text-slate-900 shadow-[0_4px_16px_rgba(52,235,177,0.4)]"
                               : "border-sky-300 bg-sky-600 text-white shadow-[0_4px_16px_rgba(2,132,199,0.25)]"
                             : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
                         }`}
@@ -434,7 +434,7 @@ export default function Hero({
                     ? featured.map((listing, i) => <FeaturedCard key={listing.id} listing={listing} index={i} />)
                     : activeTab === "fresh"
                     ? freshReleases.map((listing, i) => <FeaturedCard key={listing.id} listing={listing} index={i} />)
-                    : catalogProducts.map((product, i) => <ProductCard key={`${activeTab}-${product.name}`} product={product} index={i} />)
+                    : catalogProducts.map((product, i) => <ProductCard key={`${activeTab}-${product.name}-${i}`} product={product} index={i} />)
                   }
                 </motion.div>
               </AnimatePresence>

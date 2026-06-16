@@ -9,11 +9,22 @@ import {
 } from "lucide-react";
 
 // ── Location data ─────────────────────────────────────────────────────────────
+import statiqStationsData from "../../public/statiq_stations.json";
+
+const statiqLocations = statiqStationsData.map((s, idx) => ({
+  id: `statiq-${idx}`,
+  type: "charging",
+  lat: s.lat,
+  lng: s.lng,
+  name: s.name,
+  address: "Statiq EV Station",
+}));
 
 const allLocations = [
   { id: "1", type: "charging", lat: 28.638807, lng: 77.085715, name: "EV Fast Charger",       address: "West Delhi" },
   { id: "3", type: "charging", lat: 28.600843, lng: 77.087613, name: "Supercharger IndianOil", address: "North Delhi" },
   { id: "4", type: "spare",    lat: 28.627204, lng: 77.071554, name: "EV Repair and Spare",    address: "West Delhi" },
+  ...statiqLocations,
 ];
 
 type Location = typeof allLocations[0];

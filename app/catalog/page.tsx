@@ -24,7 +24,7 @@ export default async function CatalogPage() {
         name: l.title,
         brand: l.brand,
         type: l.types[0] ?? "",
-        pricing: formatPricing(l.prices),
+        pricing: (l as any).price_bracket || formatPricing(l.prices),
         photo: l.photo,
         slug: l.slug,
         topSpeed: l.topSpeed,
@@ -38,15 +38,19 @@ export default async function CatalogPage() {
   } catch { /* Supabase failed or not configured */ }
 
   return (
-    <section className="bg-slate-100 py-28">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section className="min-h-screen bg-[#f3f9f7] text-slate-900 py-28 relative overflow-hidden">
+      {/* Decorative Ambient Glowing Blurs */}
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#34ebb1]/15 rounded-full blur-[130px] pointer-events-none"></div>
+      <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-[#34ebb1]/10 rounded-full blur-[130px] pointer-events-none"></div>
+
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <Link href="/" className="inline-flex items-center gap-2 text-sm font-medium text-sky-600 hover:text-sky-700">
+            <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-[#10855f] hover:text-[#0b6447]">
               <ArrowLeft size={16} />
               Back to home
             </Link>
-            <h1 className="mt-4 text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
+            <h1 className="mt-4 text-4xl font-black tracking-tight text-slate-950 md:text-5xl">
               EV Catalog
             </h1>
             {/* <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 md:text-base">

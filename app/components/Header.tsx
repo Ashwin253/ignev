@@ -83,7 +83,7 @@ export default function Header() {
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link href="/" className="z-50 hover:opacity-80 transition-opacity">
-            <img src="/nobglogo.png" alt="IgnEV Logo" className="h-16 w-auto" />
+            <img src="/newnobg.png" alt="IgnEV Logo" className="h-16 w-auto" />
           </Link>
 
           {/* Desktop Nav */}

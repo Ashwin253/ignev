@@ -129,7 +129,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   };
 
   return (
-    <section className="min-h-screen bg-[#f3f9f7] text-slate-900 py-28 overflow-x-hidden relative">
+    <section className="min-h-screen bg-[#f8f5f0] text-slate-900 py-28 overflow-x-hidden relative">
       {/* Decorative Ambient Glowing Blurs */}
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#34ebb1]/15 rounded-full blur-[130px] pointer-events-none"></div>
       <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-[#34ebb1]/10 rounded-full blur-[130px] pointer-events-none"></div>

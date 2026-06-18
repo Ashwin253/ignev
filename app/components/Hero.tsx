@@ -248,7 +248,7 @@ export default function Hero({
   const slide = slides[activeSlide];
 
   return (
-    <section id="home" className="relative overflow-hidden bg-linear-to-b from-[#34ebb1]/10 via-white to-[#edf3fb] pt-28 pb-16 text-slate-900">
+    <section id="home" className="relative overflow-hidden bg-[#f8f5f0] pt-28 pb-16 text-slate-900">
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute -top-20 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-[#34ebb1]/20 blur-3xl" />
         <div className="absolute right-0 top-24 h-80 w-80 rounded-full bg-[#34ebb1]/15 blur-3xl" />

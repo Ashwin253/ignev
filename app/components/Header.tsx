@@ -9,13 +9,13 @@ import { motion, AnimatePresence } from "framer-motion";
 const navLinks = [
   { name: "Home", href: "/", icon: Home },
   { name: "Catalog", href: "/catalog", icon: LayoutGrid },
-  { name: "Updates", href: "/updates", icon: Newspaper },
+  // { name: "Updates", href: "/updates", icon: Newspaper },
   { name: "Map", href: "/map", icon: MapPin },
   { name: "Compare", href: "/compare", icon: IndianRupee },
-  { name: "Quick", href: "/service", icon: Wrench },
-  { name: "Shop", href: "/shop", icon: ShoppingBag },
-  { name: "Offer", href: "/offers", icon: Percent },
-  { name: "Community", href: "https://evplse.online/community/", icon: MessageSquare, external: true },
+  // { name: "Quick", href: "/service", icon: Wrench },
+  // { name: "Shop", href: "/shop", icon: ShoppingBag },
+  // { name: "Offer", href: "/offers", icon: Percent },
+  // { name: "Community", href: "https://evplse.online/community/", icon: MessageSquare, external: true },
 ];
 
 // Pages that have a white/light background — nav text should be dark
@@ -83,7 +83,7 @@ export default function Header() {
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link href="/" className="z-50 hover:opacity-80 transition-opacity">
-            <img src="/newnobg.png" alt="IgnEV Logo" className="h-16 w-auto" />
+            <img src="/evplsenewtypenobgsmall.png" alt="IgnEV Logo" className="h-16 w-auto" />
           </Link>
 
           {/* Desktop Nav */}
@@ -112,7 +112,7 @@ export default function Header() {
 
           {/* CTA & Mobile Toggle */}
           <div className="flex items-center gap-3 z-50">
-            <button
+            {/* <button
               onClick={() => window.dispatchEvent(new CustomEvent("install-request"))}
               className={`hidden md:block font-semibold px-5 py-2.5 rounded-full text-sm transition-all shadow-sm hover:shadow-md active:scale-95 ${!isLightPage && !isScrolled
                 ? "bg-slate-900/10 hover:bg-slate-900/15 text-slate-800 border border-slate-300/60"
@@ -123,7 +123,7 @@ export default function Header() {
                 <Download size={16} />
                 Install now
               </span>
-            </button>
+            </button> */}
             <Link
               href="/assist"
               onClick={(e) => {

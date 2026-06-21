@@ -93,18 +93,37 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
   };
 
   const handleColorClick = (index: number) => {
-    if (index < resolvedPhotos.length) {
-      setDirection(index > current ? 1 : -1);
-      setCurrent(index);
+    const clickedColor = resolvedColors[index];
+    let targetIndex = index;
+
+    if (item && item.gallery_raw) {
+      const selectedVariantId = activeVariant?.id;
+      const variantGallery = item.gallery_raw.filter(p => p.url && p.variantId === selectedVariantId);
+      const defaultGallery = item.gallery_raw.filter(p => p.url && !p.variantId);
+      const finalGallery = variantGallery.length > 0 ? variantGallery : defaultGallery;
+      
+      const match = finalGallery.find(p => p.type === "color" && p.colorCode === clickedColor);
+      if (match) {
+        const foundIndex = resolvedPhotos.indexOf(match.url);
+        if (foundIndex !== -1) {
+          targetIndex = foundIndex;
+        }
+      }
     }
-    window.dispatchEvent(new CustomEvent("gallery-set-image", { detail: { index } }));
+
+    if (targetIndex >= 0 && targetIndex < resolvedPhotos.length) {
+      setDirection(targetIndex > current ? 1 : -1);
+      setCurrent(targetIndex);
+    }
+    
+    window.dispatchEvent(new CustomEvent("gallery-set-image", { detail: { index: targetIndex } }));
     setShowColors(false);
   };
 
   return (
     <div className="flex flex-col gap-4 w-full max-w-full overflow-hidden">
       {/* Main image */}
-      <div className="relative aspect-4/3 overflow-hidden rounded-[1.75rem] bg-slate-50 border border-slate-200 shadow-sm select-none">
+      <div className="relative aspect-4/3 overflow-hidden rounded-[1.75rem] bg-transparent select-none">
         <AnimatePresence initial={false} custom={direction} mode="wait">
           <motion.img
             key={current}

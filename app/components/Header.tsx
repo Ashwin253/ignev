@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const navLinks = [
   { name: "Home", href: "/", icon: Home },
-  { name: "Catalog", href: "/catalog", icon: LayoutGrid },
+  { name: "Explore", href: "/catalog", icon: LayoutGrid },
   // { name: "Updates", href: "/updates", icon: Newspaper },
   { name: "Map", href: "/map", icon: MapPin },
   { name: "Compare", href: "/compare", icon: IndianRupee },
@@ -82,8 +82,8 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <Link href="/" className="z-50 hover:opacity-80 transition-opacity">
-            <img src="/evplsenewtypenobgsmall.png" alt="IgnEV Logo" className="h-16 w-auto" />
+          <Link href="/" className="z-50 hover:opacity-80  transition-opacity">
+            <img src="/evplsenobg.png" alt="IgnEV Logo" className="h-16 w-auto" />
           </Link>
 
           {/* Desktop Nav */}

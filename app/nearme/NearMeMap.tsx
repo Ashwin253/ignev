@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
-import { Zap, Wrench, MapPin, Search, Navigation, Share2, Loader2, X } from "lucide-react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import { Zap, Wrench, MapPin, Search, Navigation, Share2, Loader2, PhoneCall, Download } from "lucide-react";
+import Map, { Marker, Source, Layer, MapRef } from "react-map-gl/maplibre";
+import "maplibre-gl/dist/maplibre-gl.css";
+import digipin from "digipinjs-lib";
 
 // ── Location data ─────────────────────────────────────────────────────────────
 import statiqStationsData from "../../statiq_stations.json";
 
-const statiqLocations = statiqStationsData.map((s, idx) => ({
+const statiqLocations = statiqStationsData.map((s: { lat: number; lng: number; name: string }, idx: number) => ({
   id: `statiq-${idx}`,
   type: "charging",
   lat: s.lat,
@@ -38,117 +41,35 @@ function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon
   return R * c;
 }
 
-// ── Leaflet hook ──────────────────────────────────────────────────────────────
+function createGeoJSONCircle(center: [number, number], radiusInKm: number, points: number = 64) {
+  const coords = { latitude: center[0], longitude: center[1] };
+  const km = radiusInKm;
+  const ret = [];
+  const distanceX = km / (111.320 * Math.cos((coords.latitude * Math.PI) / 180));
+  const distanceY = km / 110.574;
 
-function useLeafletMap(containerRef: React.RefObject<HTMLDivElement | null>) {
-  const mapRef     = useRef<import("leaflet").Map | null>(null);
-  const markersRef = useRef<Map<string, import("leaflet").Marker>>(new Map());
-  const centerMarkerRef = useRef<import("leaflet").Marker | null>(null);
-  const circleRef = useRef<import("leaflet").Circle | null>(null);
-  const onClickRef = useRef<((lat: number, lng: number) => void) | null>(null);
+  let theta, x, y;
+  for (let i = 0; i < points; i++) {
+    theta = (i / points) * (2 * Math.PI);
+    x = distanceX * Math.cos(theta);
+    y = distanceY * Math.sin(theta);
+    ret.push([coords.longitude + x, coords.latitude + y]);
+  }
+  ret.push(ret[0]);
 
-  useEffect(() => {
-    if (mapRef.current || !containerRef.current) return;
-    const container = containerRef.current as HTMLDivElement & { _leaflet_id?: number };
-    if (container._leaflet_id) delete container._leaflet_id;
-
-    import("leaflet").then((L) => {
-      if (mapRef.current || !containerRef.current) return;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      delete (L.Icon.Default.prototype as any)._getIconUrl;
-      L.Icon.Default.mergeOptions({
-        iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-        iconUrl:       "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-        shadowUrl:     "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-      });
-      const map = L.map(containerRef.current!, { center: [28.615, 77.079], zoom: 13, zoomControl: false });
-      L.control.zoom({ position: "bottomright" }).addTo(map);
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 19,
-      }).addTo(map);
-      map.on("click", (e) => onClickRef.current?.(e.latlng.lat, e.latlng.lng));
-      mapRef.current = map;
-    });
-
-    return () => {
-      mapRef.current?.remove();
-      mapRef.current = null;
-      markersRef.current.clear();
-      centerMarkerRef.current = null;
-      circleRef.current = null;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const syncMarkers = useCallback((locations: Location[], selectedId: string | null, onSelect: (loc: Location) => void) => {
-    if (!mapRef.current) return;
-    import("leaflet").then((L) => {
-      const map = mapRef.current!;
-      markersRef.current.forEach((m, id) => {
-        if (!locations.find((l) => l.id === id)) { m.remove(); markersRef.current.delete(id); }
-      });
-      locations.forEach((loc) => {
-        const isSelected = loc.id === selectedId;
-        const color = loc.type === "charging" ? "#10b981" : "#f59e0b";
-        const size  = isSelected ? 38 : 30;
-        const icon = L.divIcon({
-          className: "",
-          html: `<div style="width:${size}px;height:${size}px;border-radius:50% 50% 50% 0;background:${color};border:3px solid white;transform:rotate(-45deg);box-shadow:0 3px 10px rgba(0,0,0,0.4);transition:all 0.2s"></div>`,
-          iconSize: [size, size], iconAnchor: [size / 2, size],
-        });
-        const existing = markersRef.current.get(loc.id);
-        if (existing) { existing.setIcon(icon); }
-        else {
-          const marker = L.marker([loc.lat, loc.lng], { icon }).addTo(map).on("click", () => onSelect(loc));
-          markersRef.current.set(loc.id, marker);
-        }
-      });
-    });
-  }, []);
-
-  const syncCenter = useCallback((lat: number | null, lng: number | null, radiusKm: number = 5) => {
-    if (!mapRef.current) return;
-    import("leaflet").then((L) => {
-      const map = mapRef.current!;
-      if (centerMarkerRef.current) {
-        centerMarkerRef.current.remove();
-        centerMarkerRef.current = null;
-      }
-      if (circleRef.current) {
-        circleRef.current.remove();
-        circleRef.current = null;
-      }
-      
-      if (lat !== null && lng !== null) {
-        const icon = L.divIcon({
-          className: "",
-          html: `<div style="width:20px;height:20px;background:#3b82f6;border:3px solid white;border-radius:50%;box-shadow:0 0 15px rgba(59,130,246,0.8);animation:user-pulse 2s infinite"></div>
-                 <style>@keyframes user-pulse { 0% { box-shadow: 0 0 0 0 rgba(59,130,246,0.7); } 70% { box-shadow: 0 0 0 15px rgba(59,130,246,0); } 100% { box-shadow: 0 0 0 0 rgba(59,130,246,0); } }</style>`,
-          iconSize: [20, 20],
-          iconAnchor: [10, 10],
-        });
-        centerMarkerRef.current = L.marker([lat, lng], { icon, zIndexOffset: 1000 }).addTo(map);
-        circleRef.current = L.circle([lat, lng], {
-          color: '#3b82f6',
-          fillColor: '#3b82f6',
-          fillOpacity: 0.1,
-          radius: radiusKm * 1000,
-          weight: 2,
-          dashArray: '5, 5'
-        }).addTo(map);
-        
-        // Fit bounds to circle
-        map.fitBounds(circleRef.current.getBounds(), { padding: [20, 20] });
-      }
-    });
-  }, []);
-
-  const panTo = useCallback((lat: number, lng: number) => {
-    mapRef.current?.panTo([lat, lng], { animate: true });
-  }, []);
-
-  return { onClickRef, syncMarkers, syncCenter, panTo };
+  return {
+    type: "FeatureCollection" as const,
+    features: [
+      {
+        type: "Feature" as const,
+        geometry: {
+          type: "Polygon" as const,
+          coordinates: [ret],
+        },
+        properties: {},
+      },
+    ],
+  };
 }
 
 // ── Geocoding ─────────────────────────────────────────────────────────────────
@@ -161,8 +82,7 @@ async function geocodeLocation(query: string): Promise<[number, number] | null> 
       `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&countrycodes=in`,
       { headers: { "Accept-Language": "en", "User-Agent": "EVPULSE/1.0" } }
     );
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const data = await r.json() as any[];
+    const data = await r.json() as Array<{ lat: string; lon: string }>;
     return data[0] ? [parseFloat(data[0].lat), parseFloat(data[0].lon)] : null;
   } catch {
     return null;
@@ -171,45 +91,82 @@ async function geocodeLocation(query: string): Promise<[number, number] | null> 
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function NearMeMap() {
-  const containerRef = useRef<HTMLDivElement>(null);
+const defaultCenter = { lat: 28.615, lng: 77.079 };
 
+export default function NearMeMap() {
+  const mapRef = useRef<MapRef>(null);
+  
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [searchInput, setSearchInput] = useState("");
   const [centerPoint, setCenterPoint] = useState<[number, number] | null>(null);
   const [isLocating, setIsLocating] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [activeTab, setActiveTab] = useState<"charging" | "spare">("charging");
+
+  // PWA Install State
+  interface BeforeInstallPromptEvent extends Event {
+    readonly platforms: string[];
+    readonly userChoice: Promise<{
+      outcome: 'accepted' | 'dismissed';
+      platform: string;
+    }>;
+    prompt(): Promise<void>;
+  }
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [showInstallTooltip, setShowInstallTooltip] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null);
+      }
+    } else {
+      setShowInstallTooltip(true);
+      setTimeout(() => setShowInstallTooltip(false), 5000);
+    }
+  };
 
   const radiusKm = 5; // 5 km radius
 
-  // Filter locations within 5km of centerPoint
-  const displayedLocations = allLocations.filter((l) => {
-    if (!centerPoint) return false;
-    const dist = getDistanceFromLatLonInKm(centerPoint[0], centerPoint[1], l.lat, l.lng);
-    return dist <= radiusKm;
-  });
+  const activeCenter: [number, number] = useMemo(() => centerPoint || [defaultCenter.lat, defaultCenter.lng], [centerPoint]);
 
-  const { onClickRef, syncMarkers, syncCenter, panTo } = useLeafletMap(containerRef);
-
-  // Sync markers and center circle
-  useEffect(() => {
-    syncCenter(centerPoint?.[0] ?? null, centerPoint?.[1] ?? null, radiusKm);
-    syncMarkers(displayedLocations, selectedId, (loc) => {
-      setSelectedId((prev) => prev === loc.id ? null : loc.id);
-      panTo(loc.lat, loc.lng);
+  // Filter locations by radius and active tab
+  const displayedLocations = useMemo(() => {
+    return allLocations.filter((l) => {
+      if (l.type !== activeTab) return false;
+      const dist = getDistanceFromLatLonInKm(activeCenter[0], activeCenter[1], l.lat, l.lng);
+      return dist <= radiusKm;
     });
-  }, [centerPoint, displayedLocations, selectedId, syncMarkers, syncCenter, panTo]);
+  }, [activeCenter, activeTab]);
 
-  // Click on map to set center
-  useEffect(() => {
-    onClickRef.current = (lat, lng) => {
+  const panTo = useCallback((lat: number, lng: number) => {
+    mapRef.current?.flyTo({ center: [lng, lat], zoom: 14, duration: 1000 });
+  }, []);
+
+  const handleMapClick = (e: { lngLat: { lat: number; lng: number } }) => {
+    if (e.lngLat) {
+      const lat = e.lngLat.lat;
+      const lng = e.lngLat.lng;
       const coord = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
       setSearchInput(coord);
       setCenterPoint([lat, lng]);
       setErrorMsg("");
-    };
-  }, [onClickRef]);
+      panTo(lat, lng);
+    }
+  };
 
   // Handle Search / Coordinates Input
   const handleSearch = async () => {
@@ -221,6 +178,7 @@ export default function NearMeMap() {
     if (coords) {
       setCenterPoint(coords);
       setSearchInput(`${coords[0].toFixed(5)}, ${coords[1].toFixed(5)}`);
+      panTo(coords[0], coords[1]);
     } else {
       setErrorMsg("Location or coordinates not found. Try 'lat, lng'.");
     }
@@ -241,6 +199,7 @@ export default function NearMeMap() {
         const lng = pos.coords.longitude;
         setCenterPoint([lat, lng]);
         setSearchInput(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+        panTo(lat, lng);
       },
       () => {
         setIsLocating(false);
@@ -250,115 +209,242 @@ export default function NearMeMap() {
   };
 
   const handleShare = async (loc: Location) => {
-    const url = `https://www.openstreetmap.org/?mlat=${loc.lat}&mlon=${loc.lng}&zoom=16`;
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${loc.lat},${loc.lng}`;
     if (navigator.share) await navigator.share({ title: loc.name, text: loc.address, url }).catch(() => {});
     else { await navigator.clipboard.writeText(url); alert("Link copied!"); }
   };
 
-  return (
-    <div className="relative w-full h-full">
-      {/* Map Container taking full width and height */}
-      <div ref={containerRef} className="absolute inset-0 z-0 bg-slate-100" />
+  const circleGeojson = centerPoint ? createGeoJSONCircle(centerPoint, radiusKm) : null;
 
-      {/* Floating Center Overlay */}
-      <div className="absolute top-6 left-1/2 -translate-x-1/2 z-[1000] w-[95%] sm:w-[420px] max-w-full bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl flex flex-col max-h-[calc(100vh-140px)] border border-slate-200 overflow-hidden">
+  return (
+    <div className="relative w-full h-full flex flex-col bg-slate-100 overflow-hidden">
+      {/* Map Container taking the upper view */}
+      <div className="flex-1 w-full relative z-0">
+        <Map
+          ref={mapRef}
+          initialViewState={{
+            latitude: centerPoint ? centerPoint[0] : defaultCenter.lat,
+            longitude: centerPoint ? centerPoint[1] : defaultCenter.lng,
+            zoom: 13,
+          }}
+          mapStyle="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
+          onClick={handleMapClick}
+          interactiveLayerIds={[]}
+          style={{ width: "100%", height: "100%" }}
+        >
+          {centerPoint && circleGeojson && (
+            <>
+              <Source id="radius-source" type="geojson" data={circleGeojson}>
+                <Layer
+                  id="radius-layer-fill"
+                  type="fill"
+                  paint={{
+                    "fill-color": "#3b82f6",
+                    "fill-opacity": 0.1,
+                  }}
+                />
+                <Layer
+                  id="radius-layer-stroke"
+                  type="line"
+                  paint={{
+                    "line-color": "#3b82f6",
+                    "line-width": 2,
+                    "line-dasharray": [2, 2],
+                  }}
+                />
+              </Source>
+              
+              <Marker latitude={centerPoint[0]} longitude={centerPoint[1]} anchor="center">
+                <div className="w-5 h-5 bg-blue-500 rounded-full border-4 border-white shadow-lg animate-pulse" />
+              </Marker>
+            </>
+          )}
+
+          {displayedLocations.map((loc) => (
+            <Marker
+              key={loc.id}
+              latitude={loc.lat}
+              longitude={loc.lng}
+              anchor="bottom"
+              onClick={(e) => {
+                e.originalEvent.stopPropagation();
+                setSelectedId(selectedId === loc.id ? null : loc.id);
+                panTo(loc.lat, loc.lng);
+              }}
+            >
+              <div 
+                className={`flex items-center justify-center cursor-pointer transition-transform duration-300 ease-out drop-shadow-md ${selectedId === loc.id ? 'scale-110 z-50' : 'scale-100'} ${loc.type === "charging" ? "text-emerald-500" : "text-amber-500"}`}
+                style={{ transformOrigin: "bottom center" }}
+              >
+                <MapPin size={selectedId === loc.id ? 38 : 32} fill="currentColor" className="text-white" />
+                <div className="absolute top-[25%] left-1/2 -translate-x-1/2 text-white">
+                  {loc.type === "charging" ? <Zap size={selectedId === loc.id ? 14 : 12} /> : <Wrench size={selectedId === loc.id ? 14 : 12} />}
+                </div>
+              </div>
+            </Marker>
+          ))}
+        </Map>
+      </div>
+
+      {/* Floating Add to Home Screen Button (Right Side) */}
+      <div className="absolute right-4 bottom-[calc(45vh+20px)] md:bottom-[420px] z-50 flex flex-col items-end group">
+        <button 
+          onClick={handleInstallClick}
+          className="bg-indigo-600 text-white p-4 rounded-full shadow-xl hover:bg-indigo-700 transition-transform active:scale-95 flex flex-row-reverse items-center justify-center"
+        >
+          <Download size={24} />
+          <span className="max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-xs group-hover:mr-2 transition-all duration-300 ease-in-out font-bold">Install App</span>
+        </button>
+        {showInstallTooltip && (
+          <div className="mt-2 bg-slate-900 text-white text-xs font-bold p-3 rounded-xl shadow-lg w-48 relative animate-in fade-in zoom-in duration-200">
+            <div className="absolute -top-2 right-5 w-4 h-4 bg-slate-900 transform rotate-45"></div>
+            To install, tap Share and select &quot;Add to Home Screen&quot;.
+          </div>
+        )}
+      </div>
+
+      {/* Bottom Panel */}
+      <div className="z-10 w-full md:w-[600px] md:mx-auto md:absolute md:bottom-6 md:left-1/2 md:-translate-x-1/2 bg-white/95 backdrop-blur-md rounded-t-3xl md:rounded-3xl shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] md:shadow-2xl flex flex-col h-[45vh] md:h-auto md:max-h-[80vh] border-t md:border border-slate-200">
         
-        {/* Header */}
-        <div className="p-5 border-b border-slate-200/60 bg-white/50 shrink-0">
-          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2 mb-4">
-            <MapPin className="text-emerald-500" /> Stations Near Me
-          </h2>
-          
-          <div className="space-y-3">
-            <div className="flex gap-2">
+        {/* Header and Tabs */}
+        <div className="p-4 border-b border-slate-200/60 bg-white/50 shrink-0 rounded-t-3xl">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+              <MapPin className="text-emerald-500" /> Near Me
+            </h2>
+            <button
+              onClick={() => {
+                if (!centerPoint) {
+                  setErrorMsg("Please locate yourself first!");
+                  return;
+                }
+                const text = `I need assistance here! My DIGIPIN is: ${digipin.encode(centerPoint[0], centerPoint[1])}\n\nCoordinates: ${centerPoint[0].toFixed(5)}, ${centerPoint[1].toFixed(5)}\n\nVerify on IndiaPost portal: https://dac.indiapost.gov.in/mydigipin/home`;
+                if (navigator.share) {
+                  navigator.share({ title: 'My DIGIPIN Location', text }).catch(()=>{});
+                } else {
+                  navigator.clipboard.writeText(text);
+                  alert("Copied location to share!");
+                }
+              }}
+              className="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 transition-colors shadow-sm active:scale-95"
+              title="Share my exact location"
+            >
+              <Navigation size={14} /> Share DIGIPIN
+            </button>
+          </div>
+
+          {/* Search Row */}
+          <div className="flex gap-2 mb-3">
+            <div className="flex flex-1 gap-2 bg-slate-50 border border-slate-200 rounded-xl p-1 shadow-sm">
               <input 
                 value={searchInput} 
                 onChange={(e) => setSearchInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                placeholder="e.g. 28.6139, 77.2090"
-                className="flex-1 bg-white border border-slate-300 rounded-xl py-2.5 px-3 text-sm font-medium focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all shadow-sm"
+                placeholder="Search lat, lng..."
+                className="flex-1 bg-transparent py-2 px-3 text-sm font-medium focus:outline-none"
               />
               <button 
                 onClick={handleSearch}
                 disabled={searchLoading}
-                className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white p-2.5 rounded-xl transition-all shadow-md active:scale-95"
+                className="bg-emerald-100 hover:bg-emerald-200 text-emerald-700 p-2 rounded-lg transition-colors"
               >
-                {searchLoading ? <Loader2 size={20} className="animate-spin" /> : <Search size={20} />}
+                {searchLoading ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
+              </button>
+              <button 
+                onClick={handleGetLocation}
+                disabled={isLocating}
+                className="bg-slate-200 hover:bg-slate-300 text-slate-700 p-2 rounded-lg transition-colors"
+                title="Use My Location"
+              >
+                {isLocating ? <Loader2 size={18} className="animate-spin" /> : <Navigation size={18} />}
               </button>
             </div>
-            
-            <button 
-              onClick={handleGetLocation}
-              disabled={isLocating}
-              className="w-full bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white text-sm font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md active:scale-95"
-            >
-              {isLocating ? <><Loader2 size={18} className="animate-spin" /> Locating...</> : <><Navigation size={18} /> Use My Location</>}
-            </button>
+          </div>
+          
+          {errorMsg && (
+            <p className="text-xs font-medium text-rose-600 bg-rose-50/80 border border-rose-200 rounded-lg px-4 py-2 mb-3">{errorMsg}</p>
+          )}
 
-            {errorMsg && (
-              <p className="text-xs font-medium text-rose-600 bg-rose-50/80 border border-rose-200 rounded-lg px-4 py-3 mt-2">{errorMsg}</p>
-            )}
+          {/* Tabs */}
+          <div className="flex gap-2 bg-slate-100 p-1 rounded-xl">
+            <button
+              onClick={() => setActiveTab("charging")}
+              className={`flex-1 py-2 text-sm font-bold rounded-lg flex items-center justify-center gap-2 transition-all ${activeTab === "charging" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+            >
+              <Zap size={16} /> Charger
+            </button>
+            <button
+              onClick={() => setActiveTab("spare")}
+              className={`flex-1 py-2 text-sm font-bold rounded-lg flex items-center justify-center gap-2 transition-all ${activeTab === "spare" ? "bg-white text-amber-600 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+            >
+              <Wrench size={16} /> Repair
+            </button>
           </div>
         </div>
 
         {/* Results */}
-        <div className="flex-1 overflow-y-auto overscroll-contain p-4">
-          {!centerPoint ? (
-            <div className="text-center py-8">
-              <Navigation className="mx-auto h-8 w-8 mb-3 text-slate-300" />
-              <p className="text-sm font-medium text-slate-500">Provide your location to see<br/>stations within 5km.</p>
+        <div className="relative flex-1 overflow-y-auto overscroll-contain p-4 pb-24 md:pb-24">
+          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-3 px-1">
+            {displayedLocations.length} {activeTab === "charging" ? "Charger" : "Repair"} station{displayedLocations.length !== 1 ? "s" : ""} within 5km
+          </p>
+          
+          {displayedLocations.length === 0 ? (
+            <div className="text-center py-6">
+              <MapPin className="mx-auto h-8 w-8 mb-3 text-slate-300" />
+              <p className="text-sm font-medium text-slate-500">No {activeTab === "charging" ? "chargers" : "repair stations"} found nearby.</p>
             </div>
           ) : (
-            <>
-              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-3 px-1">
-                {displayedLocations.length} station{displayedLocations.length !== 1 ? "s" : ""} within 5km
-              </p>
-              
-              {displayedLocations.length === 0 ? (
-                <div className="text-center py-8">
-                  <MapPin className="mx-auto h-8 w-8 mb-3 text-slate-300" />
-                  <p className="text-sm font-medium text-slate-500">No stations found nearby.</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {displayedLocations.map((loc) => {
-                    const dist = getDistanceFromLatLonInKm(centerPoint[0], centerPoint[1], loc.lat, loc.lng);
-                    return (
-                      <div key={loc.id} onClick={() => { setSelectedId(selectedId === loc.id ? null : loc.id); panTo(loc.lat, loc.lng); }}
-                        className={`p-4 rounded-2xl cursor-pointer transition-all border ${selectedId === loc.id ? "bg-emerald-50/80 border-emerald-300 shadow-md" : "bg-white border-slate-200 shadow-sm hover:border-emerald-400 hover:shadow-md"}`}>
-                        <div className="flex items-start gap-3">
-                          <div className={`mt-0.5 shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${loc.type === "charging" ? "bg-emerald-100 text-emerald-600" : "bg-amber-100 text-amber-600"}`}>
-                            {loc.type === "charging" ? <Zap size={18} /> : <Wrench size={18} />}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex justify-between items-start">
-                              <p className="font-bold text-slate-900 truncate pr-2 text-[15px]">{loc.name}</p>
-                              <span className="text-[11px] font-bold text-emerald-700 shrink-0 bg-emerald-100/80 px-2.5 py-1 rounded-full">{dist.toFixed(1)} km</span>
-                            </div>
-                            <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">{loc.address}</p>
-                          </div>
-                        </div>
-                        {selectedId === loc.id && (
-                          <div className="flex gap-2 mt-4 pt-4 border-t border-slate-200/60">
-                            <a href={`https://www.google.com/maps/dir/?api=1&destination=${loc.lat},${loc.lng}`}
-                              target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}
-                              className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 rounded-xl shadow-sm transition-all active:scale-95">
-                              <Navigation size={14} /> Directions
-                            </a>
-                            <button onClick={(e) => { e.stopPropagation(); handleShare(loc); }}
-                              className="px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl shadow-sm transition-all active:scale-95 flex items-center justify-center">
-                              <Share2 size={16} />
-                            </button>
-                          </div>
-                        )}
+            <div className="space-y-3">
+              {displayedLocations.map((loc) => {
+                const dist = getDistanceFromLatLonInKm(activeCenter[0], activeCenter[1], loc.lat, loc.lng);
+                return (
+                  <div key={loc.id} onClick={() => { setSelectedId(selectedId === loc.id ? null : loc.id); panTo(loc.lat, loc.lng); }}
+                    className={`p-4 rounded-2xl cursor-pointer transition-all border ${selectedId === loc.id ? "bg-emerald-50/80 border-emerald-300 shadow-md" : "bg-white border-slate-200 shadow-sm hover:border-emerald-400 hover:shadow-md"}`}>
+                    <div className="flex items-start gap-3">
+                      <div className={`mt-0.5 shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${loc.type === "charging" ? "bg-emerald-100 text-emerald-600" : "bg-amber-100 text-amber-600"}`}>
+                        {loc.type === "charging" ? <Zap size={18} /> : <Wrench size={18} />}
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-            </>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex justify-between items-start">
+                          <p className="font-bold text-slate-900 truncate pr-2 text-[15px]">{loc.name}</p>
+                          <span className="text-[11px] font-bold text-emerald-700 shrink-0 bg-emerald-100/80 px-2.5 py-1 rounded-full">{dist.toFixed(1)} km</span>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">{loc.address}</p>
+                      </div>
+                    </div>
+                    {selectedId === loc.id && (
+                      <div className="flex gap-2 mt-4 pt-4 border-t border-slate-200/60">
+                        <a href={`https://www.google.com/maps/dir/?api=1&destination=${loc.lat},${loc.lng}`}
+                          target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}
+                          className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 rounded-xl shadow-sm transition-all active:scale-95">
+                          <Navigation size={14} /> Directions
+                        </a>
+                        <button onClick={(e) => { e.stopPropagation(); handleShare(loc); }}
+                          className="px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl shadow-sm transition-all active:scale-95 flex items-center justify-center">
+                          <Share2 size={16} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
+
+        {/* Bottom Actions */}
+        <div className="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-white via-white to-transparent md:rounded-b-3xl flex gap-3">
+          <button className="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl shadow-[0_4px_14px_0_rgba(15,23,42,0.39)] transition-all active:scale-95 flex items-center justify-center gap-2">
+            Pick Me UP
+          </button>
+          <a 
+            href="tel:+919876543210" 
+            className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl shadow-[0_4px_14px_0_rgba(16,185,129,0.39)] transition-all active:scale-95 flex items-center justify-center gap-2"
+          >
+            <PhoneCall size={20} /> Call Us
+          </a>
+        </div>
+
       </div>
     </div>
   );

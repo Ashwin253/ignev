@@ -16,5 +16,16 @@ export default function manifest(): MetadataRoute.Manifest {
         type: 'image/png',
       },
     ],
+    // @ts-ignore - Next.js MetadataRoute.Manifest may not include share_target yet
+    share_target: {
+      action: '/nearmelite',
+      method: 'GET',
+      enctype: 'application/x-www-form-urlencoded',
+      params: {
+        title: 'title',
+        text: 'text',
+        url: 'url'
+      }
+    }
   }
 }

@@ -35,6 +35,41 @@ export default function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // ── PWA Install State ──
+  interface BeforeInstallPromptEvent extends Event {
+    readonly platforms: string[];
+    readonly userChoice: Promise<{
+      outcome: 'accepted' | 'dismissed';
+      platform: string;
+    }>;
+    prompt(): Promise<void>;
+  }
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [showInstallTooltip, setShowInstallTooltip] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null);
+      }
+    } else {
+      setShowInstallTooltip(true);
+      setTimeout(() => setShowInstallTooltip(false), 5000);
+    }
+  };
+
   // ── Style helpers ──────────────────────────────────────────────────────────
   const headerBg = isLightPage
     ? isScrolled
@@ -192,13 +227,21 @@ export default function Header() {
                 );
               })}
               <div className="pt-4 border-t border-slate-200/50">
-                <button
-                  onClick={() => window.dispatchEvent(new CustomEvent("install-request"))}
-                  className="w-full mb-3 bg-white hover:bg-slate-100 text-slate-900 font-semibold px-6 py-3 rounded-full transition-all shadow-sm flex items-center justify-center gap-2"
-                >
-                  <Download size={16} />
-                  Install now
-                </button>
+                <div className="relative w-full mb-3">
+                  <button
+                    onClick={handleInstallClick}
+                    className="w-full bg-white hover:bg-slate-100 text-slate-900 font-semibold px-6 py-3 rounded-full transition-all shadow-sm flex items-center justify-center gap-2"
+                  >
+                    <Download size={16} />
+                    Install now
+                  </button>
+                  {showInstallTooltip && (
+                    <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs font-bold p-3 rounded-xl shadow-lg w-56 text-center animate-in fade-in zoom-in duration-200 z-50">
+                      <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-900 transform rotate-45"></div>
+                      To install, tap Share and select &quot;Add to Home Screen&quot;.
+                    </div>
+                  )}
+                </div>
                 <Link
                   href="/nearme"
                   onClick={() => setMobileMenuOpen(false)}

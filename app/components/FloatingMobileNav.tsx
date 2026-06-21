@@ -3,13 +3,13 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Map, Zap, ShoppingBag, X, Plus } from 'lucide-react';
+import { Map, Zap, ShoppingBag, X, MapPin } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const navItems = [
   { name: 'Shop', href: '/shop', icon: ShoppingBag, color: 'bg-emerald-500' },
   { name: 'Map', href: '/map', icon: Map, color: 'bg-blue-500' },
-  { name: 'Quick', href: '/service', icon: Zap, color: 'bg-amber-500' },
+  { name: 'Near Me', href: '/nearme', icon: MapPin, color: 'bg-amber-500' },
 ];
 
 export default function FloatingMobileNav() {

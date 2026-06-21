@@ -17,8 +17,8 @@ function NearMeLiteContent() {
   const handleSend = (type: string) => {
     const message = `I need: ${type}\n\nLocation Details:\n${sharedInfo || "Location not provided"}`;
     const encoded = encodeURIComponent(message);
-    // WhatsApp direct link to the requested number
-    window.location.href = `https://wa.me/919873762412?text=${encoded}`;
+    // SMS direct link to the requested number
+    window.location.href = `sms:+919873762412?body=${encoded}`;
   };
 
   return (

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
-import { Zap, Wrench, MapPin, Search, Navigation, Share2, Loader2, PhoneCall, Download } from "lucide-react";
+import { Zap, Wrench, MapPin, Search, Navigation, Share2, Loader2, PhoneCall } from "lucide-react";
 import Map, { Marker, Source, Layer, MapRef } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
 import digipin from "digipinjs-lib";
@@ -103,41 +103,6 @@ export default function NearMeMap() {
   const [searchLoading, setSearchLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [activeTab, setActiveTab] = useState<"charging" | "spare">("charging");
-
-  // PWA Install State
-  interface BeforeInstallPromptEvent extends Event {
-    readonly platforms: string[];
-    readonly userChoice: Promise<{
-      outcome: 'accepted' | 'dismissed';
-      platform: string;
-    }>;
-    prompt(): Promise<void>;
-  }
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [showInstallTooltip, setShowInstallTooltip] = useState(false);
-
-  useEffect(() => {
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-  }, []);
-
-  const handleInstallClick = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        setDeferredPrompt(null);
-      }
-    } else {
-      setShowInstallTooltip(true);
-      setTimeout(() => setShowInstallTooltip(false), 5000);
-    }
-  };
 
   const radiusKm = 5; // 5 km radius
 
@@ -284,23 +249,6 @@ export default function NearMeMap() {
             </Marker>
           ))}
         </Map>
-      </div>
-
-      {/* Floating Add to Home Screen Button (Right Side) */}
-      <div className="absolute right-4 bottom-[calc(45vh+20px)] md:bottom-[420px] z-50 flex flex-col items-end group">
-        <button 
-          onClick={handleInstallClick}
-          className="bg-indigo-600 text-white p-4 rounded-full shadow-xl hover:bg-indigo-700 transition-transform active:scale-95 flex flex-row-reverse items-center justify-center"
-        >
-          <Download size={24} />
-          <span className="max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-xs group-hover:mr-2 transition-all duration-300 ease-in-out font-bold">Install App</span>
-        </button>
-        {showInstallTooltip && (
-          <div className="mt-2 bg-slate-900 text-white text-xs font-bold p-3 rounded-xl shadow-lg w-48 relative animate-in fade-in zoom-in duration-200">
-            <div className="absolute -top-2 right-5 w-4 h-4 bg-slate-900 transform rotate-45"></div>
-            To install, tap Share and select &quot;Add to Home Screen&quot;.
-          </div>
-        )}
       </div>
 
       {/* Bottom Panel */}

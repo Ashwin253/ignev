@@ -445,7 +445,7 @@ function SidebarContent({
     <div className="flex flex-col h-full min-h-0 overflow-hidden bg-white">
       {/* Header with optional close */}
       <div className="flex items-center border-b border-slate-200 shrink-0 bg-white">
-        {(["route", "filters", "cost"] as const).map((tab) => (
+        {(["route", "filters"] as const).map((tab) => (
           <button key={tab} onClick={() => setActiveTab(tab)}
             className={`flex-1 py-4 text-xs font-bold flex items-center justify-center gap-2 transition-colors relative ${
               activeTab === tab
@@ -454,7 +454,6 @@ function SidebarContent({
             }`}>
             {tab === "route"   && <><Navigation size={14} /> Filter</>}
             {tab === "filters" && <><Filter size={14} /> Points</>}
-            {tab === "cost"    && <><IndianRupee size={14} /> Cost</>}
             {activeTab === tab && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-t-full" />}
           </button>
         ))}
@@ -537,13 +536,19 @@ function SidebarContent({
             </div>
             {routeActive && (
               <div className="bg-white border-t border-slate-200">
-                <div className="flex border-b border-slate-200">
-                  <button onClick={() => setRouteSubTab("points")} className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors relative flex items-center justify-center gap-2 ${routeSubTab === "points" ? "border-blue-600 text-blue-600 bg-blue-50/50" : "border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50"}`}>
-                    <MapPin size={16} /> Points Along Route
+                <div className="flex border-b border-slate-100 shrink-0">
+                  <button onClick={() => setRouteSubTab("points")} className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors ${routeSubTab === "points" ? "border-emerald-600 text-emerald-600 bg-emerald-50/50" : "border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50"}`}>
+                    <MapPin size={16} className="inline mr-1 -mt-0.5" /> Route Details
                   </button>
+                  {/* HIDDEN TEMPORARILY
                   <button onClick={() => setRouteSubTab("cost")} className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors relative flex items-center justify-center gap-2 ${routeSubTab === "cost" ? "border-emerald-600 text-emerald-600 bg-emerald-50/50" : "border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50"}`}>
                     <IndianRupee size={16} /> Trip Cost
+                    <span className="absolute top-2 right-2 flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
                   </button>
+                  */}
                 </div>
                 <div className="p-4 bg-slate-50/50 min-h-[300px]">
                   {routeSubTab === "points" && (
@@ -554,11 +559,6 @@ function SidebarContent({
                       <div className="px-4 space-y-2 pb-2">
                         {locationList}
                       </div>
-                    </div>
-                  )}
-                  {routeSubTab === "cost" && (
-                    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-                      <CostCalculator routeDistanceKm={routeDistanceKm} />
                     </div>
                   )}
                 </div>
@@ -575,15 +575,6 @@ function SidebarContent({
             </div>
             <div className="space-y-2">
               {locationList}
-            </div>
-          </div>
-        )}
-
-        {/* ── Cost comparison tab ── */}
-        {activeTab === "cost" && (
-          <div className="p-4">
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-              <CostCalculator routeDistanceKm={routeDistanceKm} />
             </div>
           </div>
         )}
@@ -912,14 +903,7 @@ export default function FullMap() {
 
         {/* ── Mobile FAB ── */}
         <div className="md:hidden absolute top-4 right-4 z-20 flex flex-col items-end gap-2">
-          <button
-            onClick={() => { setActiveTab("cost"); setSheetOpen(true); }}
-            className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-semibold px-3 py-2 rounded-full shadow-[0_4px_16px_rgba(245,158,11,0.5)] transition-all active:scale-95"
-            aria-label="Cost comparison"
-          >
-            <IndianRupee size={15} />
-            <span className="text-xs">Cost</span>
-          </button>
+
           <button
             onClick={() => { setActiveTab("route"); setSheetOpen(true); }}
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2.5 rounded-full shadow-[0_4px_20px_rgba(59,130,246,0.5)] transition-all active:scale-95"

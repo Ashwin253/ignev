@@ -123,6 +123,15 @@ export default function Header() {
               </span>
             </button> */}
             <Link
+              href="/nearme"
+              className={`hidden md:flex items-center gap-2 font-semibold px-5 py-2.5 rounded-full text-sm transition-all shadow-sm hover:shadow-md active:scale-95 ${!isLightPage && !isScrolled
+                ? "bg-slate-900/10 hover:bg-slate-900/15 text-slate-800 border border-slate-300/60"
+                : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                }`}
+            >
+              <MapPin size={16} /> Near Me
+            </Link>
+            <Link
               href="/assist"
               onClick={(e) => {
                 e.preventDefault();
@@ -190,6 +199,13 @@ export default function Header() {
                   <Download size={16} />
                   Install now
                 </button>
+                <Link
+                  href="/nearme"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full mb-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-3 rounded-full transition-all shadow-sm flex items-center justify-center gap-2"
+                >
+                  <MapPin size={18} /> Near Me
+                </Link>
                 <Link
                   href="/assist"
                   onClick={(e) => {

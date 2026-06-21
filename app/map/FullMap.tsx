@@ -240,7 +240,7 @@ function CostCalculator({ routeDistanceKm }: { routeDistanceKm: number | null })
         </p>
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3">
+      {/* <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3">
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-sm font-semibold text-slate-900">Use my prices</p>
@@ -279,7 +279,7 @@ function CostCalculator({ routeDistanceKm }: { routeDistanceKm: number | null })
             </label>
           </div>
         )}
-      </div>
+      </div> */}
 
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">

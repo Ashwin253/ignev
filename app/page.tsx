@@ -113,7 +113,7 @@ async function HomeContent() {
       <PopularBrands />
       <ElectricCore3D />
       <LatestUpdates updates={updates} />
-      <WhyEVPULSE />
+      {/* <WhyEVPULSE /> */}
     </>
   );
 }

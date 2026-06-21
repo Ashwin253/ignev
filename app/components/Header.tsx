@@ -26,10 +26,8 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
 
-  // Treat any route that starts with a light-bg prefix as a light page
-  const isLightPage = lightBgRoutes.some(
-    (r) => pathname === r || pathname.startsWith(r + "/")
-  );
+  // Apply homepage styling globally
+  const isLightPage = false;
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);

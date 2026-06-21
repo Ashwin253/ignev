@@ -135,7 +135,7 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
             animate="center"
             exit="exit"
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-contain"
             loading={current === 0 ? "eager" : "lazy"}
             fetchPriority={current === 0 ? "high" : "auto"}
           />

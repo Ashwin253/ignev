@@ -22,7 +22,7 @@ export default function Footer() {
               <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-primary hover:text-white transition-all"><Share2 size={18} /></a>
               {/* <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-primary hover:text-white transition-all"><MessageSquare size={18} /></a>
               <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-primary hover:text-white transition-all"><Hash size={18} /></a> */}
-            <a href="/team" className="w-10 h-10 rounded-md bg-white/5 flex items-center justify-center text-gray-400 hover:bg-primary hover:text-white transition-all"><MessageSquare size={10} />Team</a>
+            {/* <a href="/team" className="w-10 h-10 rounded-md bg-white/5 flex items-center justify-center text-gray-400 hover:bg-primary hover:text-white transition-all"><MessageSquare size={10} />Team</a> */}
             </div>
           </div>
 
@@ -41,18 +41,26 @@ export default function Footer() {
           </div> */}
 
           {/* Support */}
-          {/* <div>
-            <h3 className="text-lg font-bold text-white mb-6">Support</h3>
+          <div>
+            <h3 className="text-lg font-bold text-white mb-6">Company</h3>
             <ul className="space-y-3">
-              {['About Us', 'Contact Us', 'FAQs', 'Privacy Policy', 'Terms of Service'].map((link) => (
-                <li key={link}>
-                  <Link href="#" className="text-gray-400 hover:text-secondary transition-colors">
-                    {link}
-                  </Link>
-                </li>
-              ))}
+              <li>
+                <Link href="/about" className="text-gray-400 hover:text-secondary transition-colors">
+                  About Us
+                </Link>
+              </li>
+              <li>
+                <Link href="/privacy" className="text-gray-400 hover:text-secondary transition-colors">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms" className="text-gray-400 hover:text-secondary transition-colors">
+                  Terms of Service
+                </Link>
+              </li>
             </ul>
-          </div> */}
+          </div>
 
           {/* Contact */}
           {/* <div>
@@ -75,7 +83,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-500">
-          <p>&copy; {new Date().getFullYear()} EVPULSE Mobility. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} EVPULSE Future Mobility. All rights reserved.</p>
           <p className="mt-4 md:mt-0">Designed for the future.</p>
         </div>
       </div>

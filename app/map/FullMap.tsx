@@ -101,7 +101,7 @@ function useLeafletMap(containerRef: React.RefObject<HTMLDivElement | null>) {
     mapRef.current?.panTo([lat, lng], { animate: true });
   }, []);
 
-  const drawRoute = useCallback(async (originStr: string, destStr: string): Promise<{ ok: boolean; distanceKm?: number }> => {
+  const drawRoute = useCallback(async (originStr: string, destStr: string): Promise<{ ok: boolean; distanceKm?: number; coords?: [number, number][] }> => {
     if (!mapRef.current) return { ok: false };
     const L = await import("leaflet");
     const geocode = async (s: string): Promise<[number, number] | null> => {
@@ -127,7 +127,7 @@ function useLeafletMap(containerRef: React.RefObject<HTMLDivElement | null>) {
       const coords = data.routes[0].geometry.coordinates.map(([lng, lat]) => [lat, lng] as [number, number]);
       routeRef.current = L.polyline(coords, { color: "#3b82f6", weight: 5, opacity: 0.85 }).addTo(mapRef.current!);
       mapRef.current!.fitBounds(routeRef.current.getBounds(), { padding: [60, 60] });
-      return { ok: true, distanceKm: (data.routes[0].distance ?? 0) / 1000 };
+      return { ok: true, distanceKm: (data.routes[0].distance ?? 0) / 1000, coords };
     } catch { return { ok: false }; }
   }, []);
 
@@ -229,118 +229,114 @@ function CostCalculator({ routeDistanceKm }: { routeDistanceKm: number | null })
     new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(Math.max(0, Math.round(value)));
 
   return (
-    <div className="p-5 space-y-4">
-      <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4">
-        <div className="flex items-center gap-2 text-amber-300 mb-2">
-          <IndianRupee size={16} />
-          <p className="text-sm font-semibold">Trip cost estimate</p>
+    <div className="p-4 space-y-4">
+      <div className="rounded-xl border border-amber-200 bg-amber-50 p-3.5">
+        <div className="flex items-center gap-2 text-amber-700 mb-1.5">
+          <IndianRupee size={15} />
+          <p className="text-sm font-semibold">Estimate Details</p>
         </div>
-        <p className="text-xs text-amber-100/80 leading-5">
-          Currently showing a default 10km estimate. Update the route to compare actual EV charging costs with petrol or diesel for your specific trip.
+        <p className="text-xs text-amber-900/80 leading-relaxed">
+          {routeDistanceKm === null ? "Currently showing a default 10km estimate. Update the route to compare actual EV charging costs." : "Calculated based on your specific route distance."}
         </p>
       </div>
 
-      <div className="rounded-2xl border border-white/10 bg-black/25 p-4 space-y-3">
+      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-sm font-medium text-white">Use my prices</p>
-            <p className="text-xs text-gray-500 mt-1">Override the default rates with your own values.</p>
+            <p className="text-sm font-semibold text-slate-900">Use my prices</p>
+            <p className="text-xs text-slate-500 mt-0.5">Override default rates.</p>
           </div>
           <button
             onClick={() => setCustomPricesEnabled((prev) => !prev)}
-            className={`relative inline-flex h-7 w-12 items-center rounded-full border transition-colors ${
-              customPricesEnabled ? "bg-emerald-500 border-emerald-400/40" : "bg-white/10 border-white/10"
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              customPricesEnabled ? "bg-emerald-500" : "bg-slate-300"
             }`}
-            aria-pressed={customPricesEnabled}
-            aria-label="Toggle custom prices"
           >
             <span
-              className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
-                customPricesEnabled ? "translate-x-6" : "translate-x-1"
+              className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
+                customPricesEnabled ? "translate-x-5" : "translate-x-1"
               }`}
             />
           </button>
         </div>
 
         {customPricesEnabled && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <label className="space-y-1.5">
-              <span className="text-[11px] uppercase tracking-wider text-gray-500">EV price / kWh</span>
-              <input
-                value={evRatePerKwh}
-                onChange={(e) => setEvRatePerKwh(e.target.value)}
-                inputMode="decimal"
-                placeholder="9"
-                className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-emerald-400/60"
-              />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+            <label className="space-y-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">EV (Rs/kWh)</span>
+              <input value={evRatePerKwh} onChange={(e) => setEvRatePerKwh(e.target.value)} inputMode="decimal"
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
             </label>
-            <label className="space-y-1.5">
-              <span className="text-[11px] uppercase tracking-wider text-gray-500">Petrol price / L</span>
-              <input
-                value={petrolPricePerL}
-                onChange={(e) => setPetrolPricePerL(e.target.value)}
-                inputMode="decimal"
-                placeholder="104"
-                className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-emerald-400/60"
-              />
+            <label className="space-y-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Petrol (Rs/L)</span>
+              <input value={petrolPricePerL} onChange={(e) => setPetrolPricePerL(e.target.value)} inputMode="decimal"
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
             </label>
-            <label className="space-y-1.5">
-              <span className="text-[11px] uppercase tracking-wider text-gray-500">Diesel price / L</span>
-              <input
-                value={dieselPricePerL}
-                onChange={(e) => setDieselPricePerL(e.target.value)}
-                inputMode="decimal"
-                placeholder="92"
-                className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-emerald-400/60"
-              />
+            <label className="space-y-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Diesel (Rs/L)</span>
+              <input value={dieselPricePerL} onChange={(e) => setDieselPricePerL(e.target.value)} inputMode="decimal"
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
             </label>
           </div>
         )}
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
-          <p className="text-xs text-gray-400 mb-1">{routeDistanceKm !== null ? "Route distance" : "Default estimate"}</p>
-          <p className="text-2xl font-semibold text-white">{distanceKm.toFixed(1)} km</p>
+        <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">
+          <p className="text-xs font-medium text-slate-500 mb-1">Distance</p>
+          <p className="text-2xl font-bold text-slate-900">{distanceKm.toFixed(1)} km</p>
         </div>
-        <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4">
-          <p className="text-xs text-emerald-100/70 mb-1">EV savings</p>
-          <p className="text-2xl font-semibold text-emerald-300">Rs {fmt(savingsVsFossil)}</p>
-        </div>
-      </div>
-
-      <div className="space-y-3">
-        <div className="rounded-2xl border border-white/10 bg-black/30 p-4 flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-white">EV charging</p>
-            <p className="text-xs text-gray-500 mt-1">{evEfficiencyKwhPer100Km} kWh / 100 km at Rs {activeEvRate} per kWh</p>
-          </div>
-          <p className="text-lg font-semibold text-emerald-300">Rs {fmt(evCost)}</p>
-        </div>
-        <div className="rounded-2xl border border-white/10 bg-black/30 p-4 flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-white">Petrol</p>
-            <p className="text-xs text-gray-500 mt-1">{petrolMileageKmpl} km/l at Rs {activePetrolPrice} per litre</p>
-          </div>
-          <p className="text-lg font-semibold text-rose-300">Rs {fmt(petrolCost)}</p>
-        </div>
-        <div className="rounded-2xl border border-white/10 bg-black/30 p-4 flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-white">Diesel</p>
-            <p className="text-xs text-gray-500 mt-1">{dieselMileageKmpl} km/l at Rs {activeDieselPrice} per litre</p>
-          </div>
-          <p className="text-lg font-semibold text-sky-300">Rs {fmt(dieselCost)}</p>
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3.5 shadow-sm">
+          <p className="text-xs font-medium text-emerald-700 mb-1">EV Savings</p>
+          <p className="text-2xl font-bold text-emerald-600">Rs {fmt(savingsVsFossil)}</p>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex items-start gap-3">
-        <Fuel size={18} className="text-sky-400 mt-0.5 shrink-0" />
-        <p className="text-xs text-gray-400 leading-5">
-          This uses a simple distance-based estimate for quick comparison. If you want, we can later tune it with vehicle-specific mileage, battery size, and current fuel or electricity prices.
-        </p>
+      <div className="space-y-2">
+        <div className="rounded-xl border border-slate-200 bg-white p-3.5 flex items-center justify-between shadow-sm">
+          <div>
+            <p className="text-sm font-bold text-slate-900">EV</p>
+            <p className="text-xs text-slate-500 mt-0.5">Rs {activeEvRate}/kWh</p>
+          </div>
+          <p className="text-lg font-bold text-emerald-600">Rs {fmt(evCost)}</p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white p-3.5 flex items-center justify-between shadow-sm">
+          <div>
+            <p className="text-sm font-bold text-slate-900">Petrol</p>
+            <p className="text-xs text-slate-500 mt-0.5">Rs {activePetrolPrice}/L</p>
+          </div>
+          <p className="text-lg font-bold text-rose-600">Rs {fmt(petrolCost)}</p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white p-3.5 flex items-center justify-between shadow-sm">
+          <div>
+            <p className="text-sm font-bold text-slate-900">Diesel</p>
+            <p className="text-xs text-slate-500 mt-0.5">Rs {activeDieselPrice}/L</p>
+          </div>
+          <p className="text-lg font-bold text-slate-600">Rs {fmt(dieselCost)}</p>
+        </div>
       </div>
     </div>
   );
+}
+
+function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371; // Radius of the earth in km
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function isLocationNearRoute(locLat: number, locLng: number, routeCoords: [number, number][], maxDistKm = 5) {
+  if (!routeCoords || routeCoords.length === 0) return true;
+  for (const [lat, lng] of routeCoords) {
+    if (getDistanceFromLatLonInKm(locLat, locLng, lat, lng) <= maxDistKm) return true;
+  }
+  return false;
 }
 
 // ── Sidebar panel (shared between desktop sidebar and mobile sheet) ───────────
@@ -380,175 +376,221 @@ function SidebarContent({
   onPickMyLocation: () => void;
   onClose?: () => void;
 }) {
+  const [routeSubTab, setRouteSubTab] = useState<"points" | "cost">("points");
+
+  const placeTypeFilter = (
+    <>
+      <div className="flex gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200">
+        {(["all", "charging", "spare"] as const).map((t) => (
+          <button key={t} onClick={() => { setFilterType(t); setSelectedId(null); }}
+            className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
+              filterType === t
+                ? "bg-white text-blue-600 shadow-sm border border-slate-200/60"
+                : "text-slate-500 hover:text-slate-800 hover:bg-slate-200/50"
+            }`}>
+            {t === "charging" && <Zap size={13} className={filterType === t ? "text-emerald-500" : ""} />}
+            {t === "spare"    && <Wrench size={13} className={filterType === t ? "text-amber-500" : ""} />}
+            {t === "all" ? "All Points" : t === "charging" ? "Charging" : "Services"}
+          </button>
+        ))}
+      </div>
+    </>
+  );
+
+  const locationList = (
+    <>
+      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3 px-1">
+        {displayedLocations.length} match{displayedLocations.length !== 1 ? "es" : ""} found
+      </p>
+      {displayedLocations.length === 0 ? (
+        <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-300">
+          <MapPin className="mx-auto h-8 w-8 mb-3 text-slate-300" />
+          <p className="text-sm font-medium text-slate-500">No locations found.</p>
+        </div>
+      ) : displayedLocations.map((loc) => (
+        <div key={loc.id} onClick={() => setSelectedId(selectedId === loc.id ? null : loc.id)}
+          className={`p-4 rounded-xl cursor-pointer transition-all border ${selectedId === loc.id ? "bg-blue-50 border-blue-200 shadow-md" : "bg-white border-slate-200 shadow-sm hover:border-blue-300 hover:shadow-md"}`}>
+          <div className="flex items-start gap-3">
+            <div className={`mt-0.5 shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${loc.type === "charging" ? "bg-emerald-100 text-emerald-600" : "bg-amber-100 text-amber-600"}`}>
+              {loc.type === "charging" ? <Zap size={16} /> : <Wrench size={16} />}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-bold text-slate-900 truncate">{loc.name}</p>
+              <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{loc.address}</p>
+            </div>
+          </div>
+          {selectedId === loc.id && (
+            <div className="flex gap-2 mt-4 ml-11">
+              <button onClick={(e) => { e.stopPropagation(); onRouteHere(loc); }}
+                className="flex-1 flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2.5 rounded-lg shadow-sm transition-all active:scale-95">
+                <Navigation size={14} /> Route
+              </button>
+              <a href={`https://www.google.com/maps/dir/?api=1&destination=${loc.lat},${loc.lng}`}
+                target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}
+                className="flex-1 flex items-center justify-center gap-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold py-2.5 rounded-lg shadow-sm transition-all active:scale-95">
+                <MapPin size={14} /> Maps
+              </a>
+              <button onClick={(e) => { e.stopPropagation(); onShare(loc); }}
+                className="px-3 bg-white border border-slate-300 hover:bg-slate-50 text-slate-600 rounded-lg shadow-sm transition-all active:scale-95">
+                <Share2 size={15} />
+              </button>
+            </div>
+          )}
+        </div>
+      ))}
+    </>
+  );
+
   return (
-    <div className="flex flex-col h-full min-h-0 overflow-hidden">
+    <div className="flex flex-col h-full min-h-0 overflow-hidden bg-white">
       {/* Header with optional close */}
-      <div className="flex items-center border-b border-white/10 shrink-0">
+      <div className="flex items-center border-b border-slate-200 shrink-0 bg-white">
         {(["route", "filters", "cost"] as const).map((tab) => (
           <button key={tab} onClick={() => setActiveTab(tab)}
-            className={`flex-1 py-3.5 text-xs font-medium flex items-center justify-center gap-1.5 transition-colors ${
+            className={`flex-1 py-4 text-xs font-bold flex items-center justify-center gap-2 transition-colors relative ${
               activeTab === tab
-                ? tab === "route"   ? "text-blue-400 border-b-2 border-blue-400 bg-blue-500/5"
-                  : tab === "cost"  ? "text-amber-400 border-b-2 border-amber-400 bg-amber-500/5"
-                  : "text-emerald-400 border-b-2 border-emerald-400 bg-emerald-500/5"
-                : "text-gray-400 hover:text-white hover:bg-white/5"
+                ? "text-blue-600"
+                : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
             }`}>
-            {tab === "route"   && <><Navigation size={13} /> Filter</>}
-            {tab === "filters" && <><Filter size={13} /> Points</>}
-            {tab === "cost"    && <><IndianRupee size={13} /> Cost</>}
+            {tab === "route"   && <><Navigation size={14} /> Filter</>}
+            {tab === "filters" && <><Filter size={14} /> Points</>}
+            {tab === "cost"    && <><IndianRupee size={14} /> Cost</>}
+            {activeTab === tab && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-t-full" />}
           </button>
         ))}
         {onClose && (
-          <button onClick={onClose} className="px-4 text-gray-400 hover:text-white transition-colors">
+          <button onClick={onClose} className="px-5 text-slate-400 hover:text-slate-700 transition-colors">
             <ChevronDown size={20} />
           </button>
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto overscroll-contain">
+      <div className="flex-1 overflow-y-auto overscroll-contain bg-slate-50/50">
         {/* Route planner */}
         {activeTab === "route" && (
-          <div className="p-5 border-b border-white/10 space-y-4">
-            <div>
-              <div className="flex justify-between items-center mb-1.5">
-                <label className="text-xs text-gray-400">Starting point</label>
-                <div className="flex gap-1.5">
-                  <button onClick={onPickMyLocation} className="px-2 py-0.5 rounded text-xs bg-white/5 text-gray-400 hover:text-white transition-colors">
-                    Pick my location
-                  </button>
-                  <button onClick={() => setSelectingPoint(selectingPoint === "origin" ? null : "origin")}
-                    className={`px-2 py-0.5 rounded text-xs transition-colors ${selectingPoint === "origin" ? "bg-blue-500/20 text-blue-400 border border-blue-500/30" : "bg-white/5 text-gray-400 hover:text-white"}`}>
-                    {selectingPoint === "origin" ? "Click map…" : "Pick on map"}
-                  </button>
+          <>
+            <div className="p-5 bg-white border-b border-slate-200 space-y-5">
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wide">Starting point</label>
+                  <div className="flex gap-2">
+                    <button onClick={onPickMyLocation} className="px-2 py-1 rounded text-[10px] font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">
+                      My Location
+                    </button>
+                    <button onClick={() => setSelectingPoint(selectingPoint === "origin" ? null : "origin")}
+                      className={`px-2 py-1 rounded text-[10px] font-semibold transition-colors ${selectingPoint === "origin" ? "bg-blue-100 text-blue-700 border border-blue-200" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+                      {selectingPoint === "origin" ? "Click map…" : "Pick on map"}
+                    </button>
+                  </div>
+                </div>
+                <div className="relative">
+                  <div className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full border-2 border-white shadow-sm ${selectingPoint === "origin" ? "bg-blue-400 animate-pulse" : "bg-blue-500"}`} />
+                  <input value={originInput} onChange={(e) => setOriginInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && onFindRoute()}
+                    placeholder="e.g. Connaught Place, Delhi"
+                    className={`w-full bg-slate-50 border rounded-xl py-3 pl-9 pr-4 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white transition-colors shadow-inner ${selectingPoint === "origin" ? "border-blue-400 ring-2 ring-blue-100" : "border-slate-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100"}`} />
                 </div>
               </div>
-              <div className="relative">
-                <div className={`absolute left-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full ${selectingPoint === "origin" ? "bg-blue-400 animate-pulse" : "bg-blue-500"}`} />
-                <input value={originInput} onChange={(e) => setOriginInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && onFindRoute()}
-                  placeholder="e.g. Connaught Place, Delhi"
-                  className={`w-full bg-black/30 border rounded-xl py-3 pl-8 pr-4 text-sm text-white placeholder:text-gray-600 focus:outline-none transition-colors ${selectingPoint === "origin" ? "border-blue-500" : "border-white/10 focus:border-blue-500/50"}`} />
-              </div>
-            </div>
 
-            <div className="flex justify-center -my-1">
-              <button onClick={() => { setOriginInput(destInput); setDestInput(originInput); }}
-                className="text-gray-500 hover:text-white bg-white/5 hover:bg-white/10 rounded-full p-1.5 transition-colors" title="Swap">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/>
-                </svg>
-              </button>
-            </div>
-
-            <div>
-              <div className="flex justify-between items-center mb-1.5">
-                <label className="text-xs text-gray-400">Destination</label>
-                <button onClick={() => setSelectingPoint(selectingPoint === "dest" ? null : "dest")}
-                  className={`px-2 py-0.5 rounded text-xs transition-colors ${selectingPoint === "dest" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-white/5 text-gray-400 hover:text-white"}`}>
-                  {selectingPoint === "dest" ? "Click map…" : "Pick on map"}
+              <div className="flex justify-center -my-3 relative z-10">
+                <button onClick={() => { setOriginInput(destInput); setDestInput(originInput); }}
+                  className="text-slate-500 hover:text-blue-600 bg-white border border-slate-200 shadow-sm hover:shadow rounded-full p-2 transition-all active:scale-95" title="Swap">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/>
+                  </svg>
                 </button>
               </div>
-              <div className="relative">
-                <div className={`absolute left-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full ${selectingPoint === "dest" ? "bg-emerald-400 animate-pulse" : "bg-emerald-500"}`} />
-                <input value={destInput} onChange={(e) => setDestInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && onFindRoute()}
-                  placeholder="e.g. Noida Sector 18"
-                  className={`w-full bg-black/30 border rounded-xl py-3 pl-8 pr-4 text-sm text-white placeholder:text-gray-600 focus:outline-none transition-colors ${selectingPoint === "dest" ? "border-emerald-500" : "border-white/10 focus:border-emerald-500/50"}`} />
+
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wide">Destination</label>
+                  <button onClick={() => setSelectingPoint(selectingPoint === "dest" ? null : "dest")}
+                    className={`px-2 py-1 rounded text-[10px] font-semibold transition-colors ${selectingPoint === "dest" ? "bg-emerald-100 text-emerald-700 border border-emerald-200" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+                    {selectingPoint === "dest" ? "Click map…" : "Pick on map"}
+                  </button>
+                </div>
+                <div className="relative">
+                  <div className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full border-2 border-white shadow-sm ${selectingPoint === "dest" ? "bg-emerald-400 animate-pulse" : "bg-emerald-500"}`} />
+                  <input value={destInput} onChange={(e) => setDestInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && onFindRoute()}
+                    placeholder="e.g. Noida Sector 18"
+                    className={`w-full bg-slate-50 border rounded-xl py-3 pl-9 pr-4 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white transition-colors shadow-inner ${selectingPoint === "dest" ? "border-emerald-400 ring-2 ring-emerald-100" : "border-slate-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"}`} />
+                </div>
               </div>
-            </div>
 
-            {routeError && (
-              <p className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-lg px-3 py-2">{routeError}</p>
-            )}
-
-            <div className="flex gap-2">
-              <button onClick={onFindRoute} disabled={routeLoading || !originInput.trim() || !destInput.trim()}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors shadow-lg shadow-blue-500/20">
-                {routeLoading ? <><Loader2 size={16} className="animate-spin" /> Finding…</> : <><Search size={16} /> Find Route</>}
-              </button>
-              {routeActive && (
-                <button onClick={onClearRoute} className="px-4 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl border border-red-500/20 transition-colors">
-                  <X size={16} />
-                </button>
+              {routeError && (
+                <p className="text-xs font-medium text-rose-600 bg-rose-50 border border-rose-200 rounded-lg px-4 py-3">{routeError}</p>
               )}
+
+              <div className="flex gap-2 pt-1">
+                {!routeActive ? (
+                  <button onClick={onFindRoute} disabled={routeLoading || !originInput.trim() || !destInput.trim()}
+                    className="flex-1 bg-slate-900 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md active:scale-95">
+                    {routeLoading ? <><Loader2 size={18} className="animate-spin" /> Finding…</> : <><Search size={18} /> Find Route</>}
+                  </button>
+                ) : (
+                  <button onClick={onClearRoute} className="flex-1 bg-white hover:bg-rose-50 text-rose-500 text-sm font-bold py-3.5 rounded-xl border border-slate-200 hover:border-rose-200 shadow-sm flex items-center justify-center gap-2 transition-all active:scale-95">
+                    <X size={18} /> Cancel Route
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
+            {routeActive && (
+              <div className="bg-white border-t border-slate-200">
+                <div className="flex border-b border-slate-200">
+                  <button onClick={() => setRouteSubTab("points")} className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors relative flex items-center justify-center gap-2 ${routeSubTab === "points" ? "border-blue-600 text-blue-600 bg-blue-50/50" : "border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50"}`}>
+                    <MapPin size={16} /> Points Along Route
+                  </button>
+                  <button onClick={() => setRouteSubTab("cost")} className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors relative flex items-center justify-center gap-2 ${routeSubTab === "cost" ? "border-emerald-600 text-emerald-600 bg-emerald-50/50" : "border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50"}`}>
+                    <IndianRupee size={16} /> Trip Cost
+                  </button>
+                </div>
+                <div className="p-4 bg-slate-50/50 min-h-[300px]">
+                  {routeSubTab === "points" && (
+                    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden pb-2">
+                      <div className="px-4 py-3 mb-1">
+                        {placeTypeFilter}
+                      </div>
+                      <div className="px-4 space-y-2 pb-2">
+                        {locationList}
+                      </div>
+                    </div>
+                  )}
+                  {routeSubTab === "cost" && (
+                    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                      <CostCalculator routeDistanceKm={routeDistanceKm} />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* Points */}
         {activeTab === "filters" && (
-          <div className="p-5 border-b border-white/10">
-            <p className="text-xs text-gray-500 uppercase tracking-wider mb-3">Place type</p>
-            <div className="flex gap-1.5 bg-black/40 p-1 rounded-xl border border-white/5">
-              {(["all", "charging", "spare"] as const).map((t) => (
-                <button key={t} onClick={() => { setFilterType(t); setSelectedId(null); }}
-                  className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-1 ${
-                    filterType === t
-                      ? t === "charging" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                        : t === "spare"  ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
-                        : "bg-white/10 text-white"
-                      : "text-gray-400 hover:text-white hover:bg-white/5"
-                  }`}>
-                  {t === "charging" && <Zap size={12} />}
-                  {t === "spare"    && <Wrench size={12} />}
-                  {t === "all" ? "All" : t === "charging" ? "Charging" : "Spare Parts"}
-                </button>
-              ))}
+          <div className="p-4 space-y-4">
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+              {placeTypeFilter}
+            </div>
+            <div className="space-y-2">
+              {locationList}
             </div>
           </div>
         )}
 
         {/* ── Cost comparison tab ── */}
-        {activeTab === "cost" && <CostCalculator routeDistanceKm={routeDistanceKm} />}
-
-        {/* Location list — shown only on the dedicated 'Points' tab */}
-        {activeTab === "filters" && (
-        <div className="p-5 space-y-2">
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
-            {displayedLocations.length} point{displayedLocations.length !== 1 ? "s" : ""}
-          </p>
-          {displayedLocations.length === 0 ? (
-            <div className="text-center py-8 text-gray-600">
-              <MapPin className="mx-auto h-7 w-7 mb-2 opacity-30" />
-              <p className="text-sm">No points match.</p>
+        {activeTab === "cost" && (
+          <div className="p-4">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <CostCalculator routeDistanceKm={routeDistanceKm} />
             </div>
-          ) : displayedLocations.map((loc) => (
-            <div key={loc.id} onClick={() => setSelectedId(selectedId === loc.id ? null : loc.id)}
-              className={`p-4 rounded-xl cursor-pointer transition-all border ${selectedId === loc.id ? "bg-white/10 border-white/20 shadow-lg" : "bg-white/5 border-transparent hover:bg-white/8"}`}>
-              <div className="flex items-center gap-2 font-medium text-white mb-1">
-                {loc.type === "charging" ? <Zap size={15} className="text-emerald-400 shrink-0" /> : <Wrench size={15} className="text-amber-400 shrink-0" />}
-                <span className="truncate text-sm">{loc.name}</span>
-              </div>
-              <p className="text-xs text-gray-400 ml-5">{loc.address}</p>
-              {selectedId === loc.id && (
-                <div className="flex gap-2 mt-3 ml-5">
-                  <button onClick={(e) => { e.stopPropagation(); onRouteHere(loc); }}
-                    className="flex-1 flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2 rounded-lg transition-colors">
-                    <Navigation size={13} /> Route
-                  </button>
-                  <button onClick={(e) => { e.stopPropagation(); onRouteAndCost(loc); }}
-                    className="flex-1 flex items-center justify-center gap-1.5 bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 text-xs font-semibold py-2 rounded-lg border border-amber-500/20 transition-colors">
-                    <IndianRupee size={13} /> Cost
-                  </button>
-                  <a href={`https://www.google.com/maps/dir/?api=1&destination=${loc.lat},${loc.lng}`}
-                    target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}
-                    className="flex items-center justify-center gap-1 bg-white/10 hover:bg-white/15 text-gray-300 text-xs font-semibold px-3 py-2 rounded-lg transition-colors">
-                    <Navigation size={13} /> GMaps
-                  </a>
-                  <button onClick={(e) => { e.stopPropagation(); onShare(loc); }}
-                    className="px-3 bg-white/10 hover:bg-white/15 text-gray-300 rounded-lg transition-colors">
-                    <Share2 size={14} />
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+          </div>
         )}
       </div>
 
-      <div className="px-5 py-3 border-t border-white/5 text-[10px] text-gray-600 shrink-0">
-        Map © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" className="hover:text-gray-400 underline">OpenStreetMap</a> · Routing by <a href="https://project-osrm.org" target="_blank" rel="noopener noreferrer" className="hover:text-gray-400 underline">OSRM</a>
+      <div className="px-5 py-3 border-t border-slate-200 bg-slate-50 text-[10px] font-medium text-slate-400 shrink-0 text-center">
+        Map © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" className="hover:text-slate-600 underline decoration-slate-300">OpenStreetMap</a> · Routing by <a href="https://project-osrm.org" target="_blank" rel="noopener noreferrer" className="hover:text-slate-600 underline decoration-slate-300">OSRM</a>
       </div>
     </div>
   );
@@ -569,6 +611,7 @@ export default function FullMap() {
   const [routeLoading, setRouteLoading]     = useState(false);
   const [routeError, setRouteError]         = useState("");
   const [routeDistanceKm, setRouteDistanceKm] = useState<number | null>(null);
+  const [routeCoords, setRouteCoords]        = useState<[number, number][] | null>(null);
   const [mapSearchQuery, setMapSearchQuery]  = useState("");
   const [mapSearchLoading, setMapSearchLoading] = useState(false);
   const [mapSearchError, setMapSearchError]  = useState("");
@@ -579,9 +622,13 @@ export default function FullMap() {
     ? getMapSearchSuggestions(mapSearchQuery)
     : [];
 
-  const displayedLocations = allLocations.filter(
-    (l) => filterType === "all" || l.type === filterType
-  );
+  const displayedLocations = allLocations.filter((l) => {
+    if (filterType !== "all" && l.type !== filterType) return false;
+    if (routeActive && routeCoords) {
+      return isLocationNearRoute(l.lat, l.lng, routeCoords, 1); // 1km radius
+    }
+    return true;
+  });
   
   const { onClickRef, syncMarkers, panTo, drawRoute, clearRoute, syncUserMarker } = useLeafletMap(containerRef);
 
@@ -653,7 +700,8 @@ export default function FullMap() {
     if (result.ok) {
       setRouteActive(true);
       setRouteDistanceKm(result.distanceKm ?? null);
-      setActiveTab("cost");
+      if (result.coords) setRouteCoords(result.coords);
+      setActiveTab("route");
       setSheetOpen(false);
     }
     else setRouteError("Could not find a route. Try more specific addresses.");
@@ -663,6 +711,7 @@ export default function FullMap() {
     clearRoute();
     setRouteActive(false);
     setRouteDistanceKm(null);
+    setRouteCoords(null);
     setOriginInput("");
     setDestInput("");
     setRouteError("");
@@ -689,7 +738,8 @@ export default function FullMap() {
     if (result.ok) {
       setRouteActive(true);
       setRouteDistanceKm(result.distanceKm ?? null);
-      setActiveTab("cost");
+      if (result.coords) setRouteCoords(result.coords);
+      setActiveTab("route");
       setSheetOpen(false);
     } else {
       setActiveTab("route");
@@ -773,10 +823,10 @@ export default function FullMap() {
   };
 
   return (
-    <div className="flex flex-row flex-grow h-[calc(100vh-80px)] bg-[#0f1115] overflow-hidden relative">
+    <div className="flex flex-row flex-grow h-[calc(100vh-80px)] bg-slate-100 overflow-hidden relative">
 
       {/* ── Desktop sidebar ── */}
-      <div className="hidden md:flex w-[380px] bg-[#1a1d24] border-r border-white/10 flex-col z-20 shadow-2xl shrink-0">
+      <div className="hidden md:flex w-[400px] bg-white border-r border-slate-200 flex-col z-20 shadow-xl shrink-0">
         <SidebarContent {...sidebarProps} />
       </div>
 
@@ -900,12 +950,12 @@ export default function FullMap() {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#1a1d24] rounded-t-3xl shadow-2xl border-t border-white/10 flex flex-col overflow-hidden"
-              style={{ height: "80vh" }}
+              className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white rounded-t-[2rem] shadow-[0_-8px_30px_rgba(0,0,0,0.12)] border-t border-slate-200 flex flex-col overflow-hidden"
+              style={{ height: "85vh" }}
             >
               {/* Drag handle */}
-              <div className="flex justify-center pt-3 pb-1 shrink-0 cursor-grab active:cursor-grabbing touch-none">
-                <div className="w-10 h-1 rounded-full bg-white/20" />
+              <div className="flex justify-center pt-4 pb-2 shrink-0 cursor-grab active:cursor-grabbing touch-none bg-white">
+                <div className="w-12 h-1.5 rounded-full bg-slate-200" />
               </div>
 
               <SidebarContent {...sidebarProps} onClose={() => setSheetOpen(false)} />

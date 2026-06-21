@@ -31,7 +31,7 @@ export default function TermsPage() {
 
           <h2 className="text-2xl font-bold text-slate-900 mt-8 mb-4">5. Contact Us</h2>
           <p>
-            In order to resolve a complaint regarding the Site or to receive further information regarding use of the Site, please contact us at support@evpulse.com.
+            In order to resolve a complaint regarding the Site or to receive further information regarding use of the Site, please contact us at evplseadmin@gmail.com.
           </p>
         </div>
       </div>

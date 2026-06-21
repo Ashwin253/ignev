@@ -31,7 +31,7 @@ export default function PrivacyPage() {
 
           <h2 className="text-2xl font-bold text-white mt-8 mb-4">Contact Us</h2>
           <p>
-            If you have questions or comments about this Privacy Policy, please contact us at support@evpulse.com.
+            If you have questions or comments about this Privacy Policy, please contact us at evplseadmin@gmail.com.
           </p>
         </div>
       </div>

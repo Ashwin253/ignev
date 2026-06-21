@@ -76,7 +76,7 @@ export default function Footer() {
               </li>
               <li className="flex items-center">
                 <Mail size={20} className="text-primary mr-3 shrink-0" />
-                <span className="text-gray-400">support@EVPULSE.com</span>
+                <span className="text-gray-400">evplseadmin@gmail.com</span>
               </li>
             </ul>
           </div> */}

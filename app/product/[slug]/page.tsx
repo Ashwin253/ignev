@@ -9,7 +9,7 @@ import { SmoothCollapseEmptyState } from "../../components/SmoothCollapse";
 import {
   formatLaunchDate, isLaunched, formatPricing,
 } from "../../lib/wordpress";
-import { fetchEvListingBySlugFromSupabase, fetchEvListingsFromSupabase, supabase } from "../../lib/supabase";
+import { fetchEvListingBySlugFromSupabase, fetchEvListingsFromSupabase, fetchProductContent, fetchProductOffers, supabase } from "../../lib/supabase";
 import ProductGallery from "../../components/ProductGallery";
 import ProductMainUI from "../ProductMainUI";
 import { ProductSelectionProvider } from "../ProductSelectionProvider";
@@ -72,6 +72,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   } catch (err) {
     console.error("Error fetching fuel prices:", err);
   }
+
+  // Fetch linked product content (articles/videos)
+  const productContent = await fetchProductContent(slug);
+
+  // Fetch applicable offers
+  const offers = await fetchProductOffers(item.brand || "", slug);
 
   const launched    = isLaunched(item.launchdate);
   const launchLabel = formatLaunchDate(item.launchdate);
@@ -184,7 +190,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </div>
 
             {/* Interactive Area (Battery Selection, Tabs, Ownership) */}
-            <ProductMainUI item={item} slug={slug} dbFuelPrices={dbFuelPrices} />
+            <ProductMainUI item={item} slug={slug} dbFuelPrices={dbFuelPrices} content={productContent} />
           </div>
         </div>
         {/* ── Detailed Specs + Pros/Cons ── */}

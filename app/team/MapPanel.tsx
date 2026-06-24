@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react";
 import { MapPin, Plus, Trash2, Pencil, X, Save, Loader2 } from "lucide-react";
 
-type Station = { id?: string; name: string; lat: number; lng: number; city: string; address: string; connector_types: string[]; power_kw: number | null; network: string; is_active: boolean };
+type Station = { id?: string; name: string; type: string; lat: number; lng: number; city: string; address: string; connector_types: string[]; power_kw: number | null; network: string; is_active: boolean };
 
-const emptyStation: Station = { name: "", lat: 0, lng: 0, city: "", address: "", connector_types: [], power_kw: null, network: "", is_active: true };
+const emptyStation: Station = { name: "", type: "charging", lat: 0, lng: 0, city: "", address: "", connector_types: [], power_kw: null, network: "", is_active: true };
 
 export default function MapPanel({ supabase, userEmail }: { supabase: any; userEmail: string }) {
   const [stations, setStations] = useState<(Station & { id: string })[]>([]);
@@ -14,6 +14,8 @@ export default function MapPanel({ supabase, userEmail }: { supabase: any; userE
   const [editing, setEditing] = useState<string | null>(null); // id or "new"
   const [form, setForm] = useState<Station>(emptyStation);
   const [saving, setSaving] = useState(false);
+  const [mapsLink, setMapsLink] = useState("");
+  const [extracting, setExtracting] = useState(false);
 
   useEffect(() => { fetchStations(); }, []);
 
@@ -25,8 +27,33 @@ export default function MapPanel({ supabase, userEmail }: { supabase: any; userE
     setLoading(false);
   };
 
-  const startNew = () => { setEditing("new"); setForm(emptyStation); };
-  const startEdit = (s: Station & { id: string }) => { setEditing(s.id); setForm(s); };
+  const startNew = () => { setEditing("new"); setForm(emptyStation); setMapsLink(""); };
+  const startEdit = (s: Station & { id: string }) => { setEditing(s.id); setForm(s); setMapsLink(""); };
+
+  const handleAutoFill = async () => {
+    if (!mapsLink) return;
+    setExtracting(true);
+    try {
+      const res = await fetch("/api/expand-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: mapsLink })
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+
+      setForm(prev => ({
+        ...prev,
+        name: prev.name || data.name || "",
+        lat: data.lat || prev.lat,
+        lng: data.lng || prev.lng
+      }));
+    } catch (e: any) {
+      alert("Could not extract data: " + e.message);
+    } finally {
+      setExtracting(false);
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -62,6 +89,7 @@ export default function MapPanel({ supabase, userEmail }: { supabase: any; userE
         city: "",
         address: "",
         network: "Statiq", 
+        type: "charging",
         is_active: true,
         added_by_email: userEmail 
       }));
@@ -78,7 +106,7 @@ export default function MapPanel({ supabase, userEmail }: { supabase: any; userE
 
   const filtered = stations.filter((s) =>
     s.name.toLowerCase().includes(search.toLowerCase()) ||
-    s.city.toLowerCase().includes(search.toLowerCase())
+    (s.network || "").toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -105,15 +133,28 @@ export default function MapPanel({ supabase, userEmail }: { supabase: any; userE
             <p className="text-sm font-bold text-sky-700">{editing === "new" ? "New Station" : "Edit Station"}</p>
             <button onClick={() => setEditing(null)} className="text-slate-400 hover:text-slate-600"><X size={16} /></button>
           </div>
+          <div className="block sm:col-span-2 lg:col-span-3 bg-slate-100 p-3 rounded-lg border border-slate-200 mb-4">
+            <span className="text-xs font-bold text-slate-600 block mb-1">Auto-fill from Google Maps Link</span>
+            <div className="flex gap-2">
+              <input value={mapsLink} onChange={(e) => setMapsLink(e.target.value)} placeholder="https://maps.app.goo.gl/..." className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" />
+              <button onClick={handleAutoFill} disabled={extracting || !mapsLink} className="inline-flex items-center gap-2 rounded-lg bg-slate-800 px-4 py-2 text-xs font-bold text-white hover:bg-slate-900 disabled:opacity-50 shrink-0">
+                {extracting ? <Loader2 size={12} className="animate-spin" /> : "Extract"}
+              </button>
+            </div>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             <label className="block"><span className="text-xs font-bold text-slate-600">Name</span><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
-            <label className="block"><span className="text-xs font-bold text-slate-600">City</span><input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
+            <label className="block">
+              <span className="text-xs font-bold text-slate-600">Type</span>
+              <select value={form.type || "charging"} onChange={(e) => setForm({ ...form, type: e.target.value })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none bg-white">
+                <option value="charging">Charging Station</option>
+                <option value="spare">Repair / Spare</option>
+              </select>
+            </label>
             <label className="block"><span className="text-xs font-bold text-slate-600">Network</span><input value={form.network} onChange={(e) => setForm({ ...form, network: e.target.value })} placeholder="Statiq, Tata Power, etc" className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
             <label className="block"><span className="text-xs font-bold text-slate-600">Latitude</span><input type="number" step="any" value={form.lat || ""} onChange={(e) => setForm({ ...form, lat: Number(e.target.value) })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
             <label className="block"><span className="text-xs font-bold text-slate-600">Longitude</span><input type="number" step="any" value={form.lng || ""} onChange={(e) => setForm({ ...form, lng: Number(e.target.value) })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
-            <label className="block"><span className="text-xs font-bold text-slate-600">Power (kW)</span><input type="number" value={form.power_kw ?? ""} onChange={(e) => setForm({ ...form, power_kw: e.target.value ? Number(e.target.value) : null })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
-            <label className="block sm:col-span-2"><span className="text-xs font-bold text-slate-600">Address</span><input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
-            <label className="block"><span className="text-xs font-bold text-slate-600">Connectors (comma-sep)</span><input value={form.connector_types.join(", ")} onChange={(e) => setForm({ ...form, connector_types: e.target.value.split(",").map(s => s.trim()).filter(Boolean) })} placeholder="CCS2, Type2, CHAdeMO" className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
+            <label className="block sm:col-span-2 lg:col-span-3"><span className="text-xs font-bold text-slate-600">Connectors & Power (comma-sep)</span><input value={form.connector_types.join(", ")} onChange={(e) => setForm({ ...form, connector_types: e.target.value.split(",").map(s => s.trim()).filter(Boolean) })} placeholder="CCS2 60kW, Type2 22kW" className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
           </div>
           <div className="flex items-center gap-3 mt-4">
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} /> Active</label>
@@ -125,7 +166,7 @@ export default function MapPanel({ supabase, userEmail }: { supabase: any; userE
       )}
 
       {/* Search */}
-      <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name or city..."
+      <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name or network..."
         className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-sky-400" />
 
       {/* Station list */}
@@ -137,7 +178,12 @@ export default function MapPanel({ supabase, userEmail }: { supabase: any; userE
                 <MapPin size={16} className="text-sky-500 shrink-0" />
                 <div>
                   <p className="text-sm font-bold text-slate-800">{s.name}</p>
-                  <p className="text-[10px] text-slate-500">{s.city}{s.network ? ` · ${s.network}` : ""}{s.power_kw ? ` · ${s.power_kw}kW` : ""}</p>
+                  <p className="text-[10px] text-slate-500">
+                    <span className={`px-1.5 py-0.5 rounded text-[9px] mr-1 ${s.type === 'spare' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                      {s.type === 'spare' ? 'Repair' : 'Charger'}
+                    </span>
+                    {s.network ? s.network : "Unknown Network"}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">

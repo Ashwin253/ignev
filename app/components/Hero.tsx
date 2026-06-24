@@ -269,10 +269,23 @@ export default function Hero({
                 transition={{ duration: 0.45 }}
                 className="relative min-h-96 overflow-hidden md:min-h-136"
               >
-                {/* Images */}
+                {/* Media */}
                 <div className="absolute inset-0">
-                  <Image src={slide.imageHorizontal} alt={slide.cta} fill sizes="(max-width: 1280px) 100vw, 1280px" className="hidden object-cover md:block" priority />
-                  <Image src={slide.imageVertical}   alt={slide.cta} fill sizes="(max-width: 768px) 100vw, 768px" className="object-cover md:hidden" priority />
+                  {slide.video_url ? (
+                    <video
+                      src={slide.video_url}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="absolute inset-0 h-full w-full object-cover"
+                    />
+                  ) : (
+                    <>
+                      <Image src={slide.image_horizontal || slide.imageHorizontal} alt={slide.cta} fill sizes="(max-width: 1280px) 100vw, 1280px" className="hidden object-cover md:block" priority />
+                      <Image src={slide.image_vertical || slide.imageVertical || slide.image_horizontal || slide.imageHorizontal} alt={slide.cta} fill sizes="(max-width: 768px) 100vw, 768px" className="object-cover md:hidden" priority />
+                    </>
+                  )}
                 </div>
 
                 {/* Bottom gradient only — no colour overlay */}

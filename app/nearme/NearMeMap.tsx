@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
-import { Zap, Wrench, MapPin, Search, Navigation, Share2, Loader2, PhoneCall } from "lucide-react";
+import { Zap, Wrench, MapPin, Navigation, Share2, Loader2, PhoneCall } from "lucide-react";
 import Map, { Marker, Source, Layer, MapRef } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
 import digipin from "digipinjs-lib";
@@ -72,23 +72,6 @@ function createGeoJSONCircle(center: [number, number], radiusInKm: number, point
   };
 }
 
-// ── Geocoding ─────────────────────────────────────────────────────────────────
-
-async function geocodeLocation(query: string): Promise<[number, number] | null> {
-  const m = query.match(/^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)$/);
-  if (m) return [parseFloat(m[1]), parseFloat(m[2])];
-  try {
-    const r = await fetch(
-      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&countrycodes=in`,
-      { headers: { "Accept-Language": "en", "User-Agent": "EVPULSE/1.0" } }
-    );
-    const data = await r.json() as Array<{ lat: string; lon: string }>;
-    return data[0] ? [parseFloat(data[0].lat), parseFloat(data[0].lon)] : null;
-  } catch {
-    return null;
-  }
-}
-
 // ── Main component ────────────────────────────────────────────────────────────
 
 const defaultCenter = { lat: 28.615, lng: 77.079 };
@@ -97,10 +80,8 @@ export default function NearMeMap() {
   const mapRef = useRef<MapRef>(null);
   
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [searchInput, setSearchInput] = useState("");
   const [centerPoint, setCenterPoint] = useState<[number, number] | null>(null);
   const [isLocating, setIsLocating] = useState(false);
-  const [searchLoading, setSearchLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [activeTab, setActiveTab] = useState<"charging" | "spare">("charging");
 
@@ -125,27 +106,9 @@ export default function NearMeMap() {
     if (e.lngLat) {
       const lat = e.lngLat.lat;
       const lng = e.lngLat.lng;
-      const coord = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
-      setSearchInput(coord);
       setCenterPoint([lat, lng]);
       setErrorMsg("");
       panTo(lat, lng);
-    }
-  };
-
-  // Handle Search / Coordinates Input
-  const handleSearch = async () => {
-    if (!searchInput.trim()) return;
-    setErrorMsg("");
-    setSearchLoading(true);
-    const coords = await geocodeLocation(searchInput.trim());
-    setSearchLoading(false);
-    if (coords) {
-      setCenterPoint(coords);
-      setSearchInput(`${coords[0].toFixed(5)}, ${coords[1].toFixed(5)}`);
-      panTo(coords[0], coords[1]);
-    } else {
-      setErrorMsg("Location or coordinates not found. Try 'lat, lng'.");
     }
   };
 
@@ -163,7 +126,6 @@ export default function NearMeMap() {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
         setCenterPoint([lat, lng]);
-        setSearchInput(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
         panTo(lat, lng);
       },
       () => {
@@ -260,51 +222,33 @@ export default function NearMeMap() {
             <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
               <MapPin className="text-emerald-500" /> Near Me
             </h2>
-            <button
-              onClick={() => {
-                if (!centerPoint) {
-                  setErrorMsg("Please locate yourself first!");
-                  return;
-                }
-                const text = `I need assistance here! My DIGIPIN is: ${digipin.encode(centerPoint[0], centerPoint[1])}\n\nCoordinates: ${centerPoint[0].toFixed(5)}, ${centerPoint[1].toFixed(5)}\n\nVerify on IndiaPost portal: https://dac.indiapost.gov.in/mydigipin/home`;
-                if (navigator.share) {
-                  navigator.share({ title: 'My DIGIPIN Location', text }).catch(()=>{});
-                } else {
-                  navigator.clipboard.writeText(text);
-                  alert("Copied location to share!");
-                }
-              }}
-              className="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 transition-colors shadow-sm active:scale-95"
-              title="Share my exact location"
-            >
-              <Navigation size={14} /> Share DIGIPIN
-            </button>
-          </div>
-
-          {/* Search Row */}
-          <div className="flex gap-2 mb-3">
-            <div className="flex flex-1 gap-2 bg-slate-50 border border-slate-200 rounded-xl p-1 shadow-sm">
-              <input 
-                value={searchInput} 
-                onChange={(e) => setSearchInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                placeholder="Search lat, lng..."
-                className="flex-1 bg-transparent py-2 px-3 text-sm font-medium focus:outline-none"
-              />
-              <button 
-                onClick={handleSearch}
-                disabled={searchLoading}
-                className="bg-emerald-100 hover:bg-emerald-200 text-emerald-700 p-2 rounded-lg transition-colors"
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  if (!centerPoint) {
+                    setErrorMsg("Please locate yourself first!");
+                    return;
+                  }
+                  const text = `I need assistance here! My DIGIPIN is: ${digipin.encode(centerPoint[0], centerPoint[1])}\n\nCoordinates: ${centerPoint[0].toFixed(5)}, ${centerPoint[1].toFixed(5)}\n\nVerify on IndiaPost portal: https://dac.indiapost.gov.in/mydigipin/home`;
+                  if (navigator.share) {
+                    navigator.share({ title: 'My DIGIPIN Location', text }).catch(()=>{});
+                  } else {
+                    navigator.clipboard.writeText(text);
+                    alert("Copied location to share!");
+                  }
+                }}
+                className="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 transition-colors shadow-sm active:scale-95"
+                title="Share my exact location"
               >
-                {searchLoading ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
+                <Share2 size={14} /> Share DIGIPIN
               </button>
               <button 
                 onClick={handleGetLocation}
                 disabled={isLocating}
-                className="bg-slate-200 hover:bg-slate-300 text-slate-700 p-2 rounded-lg transition-colors"
+                className="bg-slate-200 hover:bg-slate-300 text-slate-700 p-1.5 rounded-full transition-colors flex items-center justify-center shadow-sm active:scale-95"
                 title="Use My Location"
               >
-                {isLocating ? <Loader2 size={18} className="animate-spin" /> : <Navigation size={18} />}
+                {isLocating ? <Loader2 size={16} className="animate-spin" /> : <Navigation size={16} />}
               </button>
             </div>
           </div>

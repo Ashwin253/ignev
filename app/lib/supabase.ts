@@ -16,7 +16,91 @@ export function getSupabaseConfig() {
   return { url: supabaseUrl, anonKey: supabaseAnonKey };
 }
 
+export async function fetchHeroBanners() {
+  if (!supabaseEnabled()) return [];
+  try {
+    const { data, error } = await supabase
+      .from("hero_banners")
+      .select("*")
+      .eq("is_active", true)
+      .order("order_index", { ascending: true });
+    if (error) {
+      console.warn("fetchHeroBanners error:", error.message);
+      return [];
+    }
+    return (data || []).map((b: any) => ({
+      ...b,
+      imageHorizontal: b.image_horizontal,
+      imageVertical: b.image_vertical,
+    }));
+  } catch (e) {
+    console.warn("fetchHeroBanners exception:", e);
+    return [];
+  }
+}
+
+export async function fetchProductContent(productSlug: string) {
+  if (!supabaseEnabled() || !productSlug) return [];
+  try {
+    const { data, error } = await supabase
+      .from("product_content")
+      .select("*")
+      .eq("product_slug", productSlug)
+      .eq("is_active", true)
+      .order("created_at", { ascending: false });
+    if (error) {
+      console.warn("fetchProductContent error:", error.message);
+      return [];
+    }
+    return data || [];
+  } catch (e) {
+    console.warn("fetchProductContent exception:", e);
+    return [];
+  }
+}
+
+export async function fetchArticleById(id: string) {
+  if (!supabaseEnabled() || !id) return null;
+  try {
+    const { data, error } = await supabase
+      .from("product_content")
+      .select("*")
+      .eq("id", id)
+      .single();
+    if (error) {
+      console.warn("fetchArticleById error:", error.message);
+      return null;
+    }
+    return data;
+  } catch (e) {
+    console.warn("fetchArticleById exception:", e);
+    return null;
+  }
+}
+
+export async function fetchProductOffers(brand: string, slug: string) {
+  if (!supabaseEnabled()) return [];
+  try {
+    const { data, error } = await supabase
+      .from("offers")
+      .select("*")
+      .eq("is_active", true)
+      .or(`product_slug.eq.${slug},and(product_slug.is.null,brand.ilike.%${brand}%)`)
+      .order("created_at", { ascending: false });
+    
+    if (error) {
+      console.warn("fetchProductOffers error:", error.message);
+      return [];
+    }
+    return data || [];
+  } catch (e) {
+    console.warn("fetchProductOffers exception:", e);
+    return [];
+  }
+}
+
 // ── Database Row Types ───────────────────────────────────────────────────────
+
 
 export type EvListingRow = {
   id: string;

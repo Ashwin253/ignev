@@ -8,6 +8,9 @@ import LeadsPanel from "./LeadsPanel";
 import AnalyticsPanel from "./AnalyticsPanel";
 import MapPanel from "./MapPanel";
 import FuelPricesPanel from "./FuelPricesPanel";
+import BannersPanel from "./BannersPanel";
+import ContentPanel from "./ContentPanel";
+import OffersPanel from "./OffersPanel";
 import { useVoiceDictation, MicButton } from "./VoiceInput";
 import { appendExtra, isCheckboxExtra, isExtraChecked, normalizeExtras, type SpecExtraItem } from "../lib/spec-extras";
 
@@ -373,7 +376,8 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
   const [saving, setSaving] = useState(false);
   const [rebuildingAI, setRebuildingAI] = useState(false);
   const [expandedListing, setExpandedListing] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<"listings" | "leads" | "prices" | "analytics" | "map">("listings");
+  const [pendingEnquiriesCount, setPendingEnquiriesCount] = useState(0);
+  const [activeSection, setActiveSection] = useState<"listings" | "leads" | "prices" | "analytics" | "map" | "banners" | "content" | "offers">("listings");
   const [selectedModelId, setSelectedModelId] = useState<string>("");
   const [selectedBrand, setSelectedBrand] = useState<string>("");
   const uniqueBrands = useMemo(() => {
@@ -784,6 +788,18 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
     if (user) {
       fetchListings();
       fetchDbFuelPrices();
+
+      const fetchPendingCount = async () => {
+        const { count } = await supabase
+          .from("leads")
+          .select("*", { count: "exact", head: true })
+          .is("assisted_by", null);
+        if (count !== null) setPendingEnquiriesCount(count);
+      };
+      
+      fetchPendingCount();
+      const interval = setInterval(fetchPendingCount, 30000);
+      return () => clearInterval(interval);
     }
   }, [user]);
 
@@ -1214,10 +1230,13 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-bold text-slate-800 outline-none cursor-pointer"
           >
             <option value="listings">EV Listings</option>
-            <option value="leads">Enquiries</option>
-            <option value="prices">⛽ Fuel Prices</option>
+            <option value="leads">Enquiries {pendingEnquiriesCount > 0 ? `(${pendingEnquiriesCount} new)` : ""}</option>
+            {/* <option value="prices">⛽ Fuel Prices</option> */}
             <option value="analytics">📊 Analytics</option>
             <option value="map">📍 Map</option>
+            <option value="banners">🖼️ Banners</option>
+            <option value="content">📄 Content</option>
+            <option value="offers">🏷️ Offers</option>
           </select>
         </div>
 
@@ -1227,13 +1246,19 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             EV Listings
           </button>
           <button onClick={() => setActiveSection("leads")}
-            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${activeSection === "leads" ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-950 border border-slate-300"}`}>
+            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 relative ${activeSection === "leads" ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-950 border border-slate-300"}`}>
             <MessageSquare size={14} /> Enquiries
+            {pendingEnquiriesCount > 0 && (
+              <span className="absolute top-0 right-0 -mt-1 -mr-1 flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
+              </span>
+            )}
           </button>
-          <button onClick={() => setActiveSection("prices")}
+          {/* <button onClick={() => setActiveSection("prices")}
             className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${activeSection === "prices" ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-950 border border-slate-300"}`}>
             ⛽ Fuel Prices
-          </button>
+          </button> */}
           <button onClick={() => setActiveSection("analytics")}
             className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${activeSection === "analytics" ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-950 border border-slate-300"}`}>
             📊 Analytics
@@ -1242,12 +1267,27 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${activeSection === "map" ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-950 border border-slate-300"}`}>
             📍 Map
           </button>
+          <button onClick={() => setActiveSection("banners")}
+            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${activeSection === "banners" ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-950 border border-slate-300"}`}>
+            🖼️ Banners
+          </button>
+          <button onClick={() => setActiveSection("content")}
+            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${activeSection === "content" ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-950 border border-slate-300"}`}>
+            📄 Content
+          </button>
+          <button onClick={() => setActiveSection("offers")}
+            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${activeSection === "offers" ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-950 border border-slate-300"}`}>
+            🏷️ Offers
+          </button>
         </div>
 
         {activeSection === "leads" && <LeadsPanel supabase={supabase} userId={user.id} />}
         {activeSection === "prices" && <FuelPricesPanel supabase={supabase} userEmail={user.email || ""} />}
         {activeSection === "analytics" && <AnalyticsPanel supabase={supabase} />}
         {activeSection === "map" && <MapPanel supabase={supabase} userEmail={user.email || ""} />}
+        {activeSection === "banners" && <BannersPanel supabase={supabase} />}
+        {activeSection === "content" && <ContentPanel supabase={supabase} />}
+        {activeSection === "offers" && <OffersPanel supabase={supabase} />}
 
         {activeSection === "listings" && (
         <>

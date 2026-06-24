@@ -10,6 +10,7 @@ import Link from "next/link";
 import {
   ArrowLeft, Gauge, Tag,
   BatteryCharging, Banknote, Fuel, ArrowDown, Zap, ChevronDown,
+  PlayCircle, FileText
 } from "lucide-react";
 import type { EvListing } from "../lib/wordpress";
 import { useProductSelection } from "./ProductSelectionProvider";
@@ -37,7 +38,7 @@ function rupees(v: number) {
   return new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(Math.round(v));
 }
 
-export default function ProductMainUI({ item, slug, dbFuelPrices = [] }: { item: EvListing; slug: string; dbFuelPrices?: any[] }) {
+export default function ProductMainUI({ item, slug, dbFuelPrices = [], content = [], offers = [] }: { item: EvListing; slug: string; dbFuelPrices?: any[]; content?: any[]; offers?: any[] }) {
   const { selectedIndex, showBaas, activeVariants, setSelectedIndex: onSelect, setShowBaas: onToggleBaas } = useProductSelection();
   const [activeTab, setActiveTab] = useState<TabKey>("battery");
 
@@ -287,6 +288,67 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [] }: { item:
           <EnergyTabContent item={item} evEfficiency={evEfficiency} dbFuelPrices={dbFuelPrices} />
         )}
       </div>
+
+      {/* ── Offers ── */}
+      {offers.length > 0 && (
+        <div className="mt-2 space-y-3">
+          <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2"><Tag size={16} className="text-emerald-500" /> Current Offers</h3>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {offers.map((o, i) => (
+              <div key={i} className="group relative overflow-hidden rounded-2xl border border-emerald-200 bg-emerald-50/50 p-4 shadow-sm transition-all hover:shadow-md hover:border-emerald-300">
+                <div className="flex gap-3">
+                  {o.image && (
+                    <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded-lg bg-white border border-emerald-100">
+                      <img src={o.image} alt="Offer" className="h-full w-full object-cover" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-slate-900 line-clamp-3 leading-snug">
+                      {o.text}
+                    </p>
+                    {o.cities && (
+                      <p className="mt-2 inline-flex rounded-md bg-white border border-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                        📍 {o.cities}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Content (Articles & Videos) ── */}
+      {content.length > 0 && (
+        <div className="mt-2 space-y-3">
+          <h3 className="text-sm font-bold text-slate-800">Related Content</h3>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {content.map((c, i) => (
+              <a key={i} href={`/article/${c.id}`} target="_blank" rel="noopener noreferrer"
+                 className="group flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-xs hover:border-[#34ebb1]/60 hover:shadow-md transition-all">
+                 <div className="relative h-14 w-20 shrink-0 overflow-hidden rounded-lg bg-slate-100">
+                   {c.thumbnail ? (
+                     <img src={c.thumbnail} alt={c.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                   ) : (
+                     <div className="flex h-full w-full items-center justify-center bg-slate-100 text-slate-400">
+                       <FileText size={20} />
+                     </div>
+                   )}
+                 </div>
+                 <div className="flex-1 min-w-0">
+                   <p className="text-[10px] font-bold uppercase tracking-wider text-[#10855f] mb-0.5">
+                     Article
+                   </p>
+                   <p className="text-xs font-bold text-slate-900 line-clamp-2 leading-tight group-hover:text-sky-600 transition-colors">
+                     {c.title}
+                   </p>
+                 </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ── CTAs ── */}
       </div>

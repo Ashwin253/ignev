@@ -4,7 +4,7 @@ import {
   formatLaunchDate, isLaunched,
   type EvListing,
 } from "./lib/wordpress";
-import { fetchEvListingsFromSupabase } from "./lib/supabase";
+import { fetchEvListingsFromSupabase, fetchHeroBanners } from "./lib/supabase";
 import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import Hero from "./components/Hero";
@@ -61,6 +61,9 @@ async function HomeContent() {
   try {
     const sbListings = await fetchEvListingsFromSupabase(20);
     if (sbListings.length) listings = sbListings;
+
+    const sbBanners = await fetchHeroBanners();
+    if (sbBanners.length) banners = sbBanners;
   } catch { /* Supabase not configured or failed */ }
 
   // Fall back to WP if Supabase returned nothing
@@ -75,7 +78,7 @@ async function HomeContent() {
     // Still fetch banners/updates from WP (Supabase doesn't have them yet)
     try {
       const wpData = await fetchHomepageData();
-      banners = wpData.banners;
+      if (!banners.length) banners = wpData.banners;
       updates = wpData.updates;
     } catch { /* use empty */ }
   }

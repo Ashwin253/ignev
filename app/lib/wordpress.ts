@@ -903,6 +903,9 @@ export type HeroBanner = {
   details: string;           // ACF details field — shown in info popover
   imageHorizontal: string;
   imageVertical: string;
+  image_horizontal?: string; // Supabase
+  image_vertical?: string;   // Supabase
+  video_url?: string;        // Supabase
   accent: string;
 };
 

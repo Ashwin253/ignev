@@ -31,7 +31,7 @@ const tabs: Array<{ key: TabKey; label: string; icon: typeof CarFront }> = [
   { key: "autos",       label: "Autos",         icon: Truck     },
 ];
 
-const heroSlides = [
+const heroSlides: Partial<HeroBanner>[] = [
   { cta: "Explore catalog",   href: "/catalog", details: "", imageHorizontal: "/herobanner/banner-1-horizontal.webp", imageVertical: "/herobanner/banner-1-vertical.webp" },
   { cta: "View two-wheelers", href: "/catalog", details: "", imageHorizontal: "/herobanner/banner-2-horizontal.jpg",  imageVertical: "/herobanner/banner-2-vertical.jpg"  },
   { cta: "Enquire now",       href: "/catalog", details: "", imageHorizontal: "/herobanner/banner-3-horizontal.jpg",  imageVertical: "/herobanner/banner-3-vertical.jpg"  },

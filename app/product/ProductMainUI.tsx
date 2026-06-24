@@ -131,7 +131,7 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
 
       {/* ── Price display ── */}
       <div className="flex flex-col gap-2 mb-4">
-        <div className={`flex items-center justify-between rounded-2xl px-4 py-3 border transition-all duration-300 ${
+        <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 rounded-2xl px-4 py-3 border transition-all duration-300 ${
           showBaas
             ? "bg-[#34ebb1]/15 border-[#34ebb1]/40 shadow-xs"
             : "bg-slate-50 border-slate-200"
@@ -149,9 +149,9 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
           </div>
           <button
             onClick={() => triggerEnquiryModal(`Offers: ${item.brand} ${item.title}`)}
-            className="shrink-0 inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-[#34ebb1] to-[#14a375] hover:brightness-110 text-slate-950 text-[15px] font-black uppercase tracking-wider px-4 py-2 shadow-[0_0_15px_rgba(52,235,177,0.2)] transition-all hover:shadow-[0_0_25px_rgba(52,235,177,0.4)] hover:scale-105 active:scale-95"
+            className="shrink-0 inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-[#34ebb1] to-[#14a375] hover:brightness-110 text-slate-950 text-xs sm:text-[15px] font-black uppercase tracking-wider px-3 py-1.5 sm:px-4 sm:py-2 shadow-[0_0_15px_rgba(52,235,177,0.2)] transition-all hover:shadow-[0_0_25px_rgba(52,235,177,0.4)] hover:scale-105 active:scale-95"
           >
-            <DotLottieReact src="/Giftpremiumanimation.lottie" loop autoplay className="h-10 w-10" />
+            <DotLottieReact src="/Giftpremiumanimation.lottie" loop autoplay className="h-6 w-6 sm:h-10 sm:w-10" />
             Latest Offers
           </button>
         </div>

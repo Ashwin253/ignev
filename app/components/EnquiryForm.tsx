@@ -100,7 +100,7 @@ export default function EnquiryForm({
             <User size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             <input
               id="enq-name" type="text" name="name" required
-              placeholder="Rahul Sharma"
+              placeholder="Enter your full name"
               className={inputClass}
             />
           </div>
@@ -113,7 +113,7 @@ export default function EnquiryForm({
             <Phone size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             <input
               id="enq-phone" type="tel" name="phone" required
-              placeholder="+91 98765 43210"
+              placeholder="Enter your phone number"
               className={inputClass}
             />
           </div>
@@ -126,7 +126,7 @@ export default function EnquiryForm({
             <MapPin size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             <input
               id="enq-pincode" type="text" name="pincode" required
-              placeholder="6-digit PIN" pattern="[0-9]{6}"
+              placeholder="Enter 6-digit PIN" pattern="[0-9]{6}"
               className={inputClass}
             />
           </div>

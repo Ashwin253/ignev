@@ -164,6 +164,8 @@ export type EvListing = {
   photo: string;
   // evlist ACF fields
   brand: string;
+  body_type?: string;
+  usage_type?: string | null;
   types: string[];
   price_bracket?: string;
   prices: string[];
@@ -900,12 +902,13 @@ export type HeroBanner = {
   id: string;
   cta: string;
   href: string;
-  details: string;           // ACF details field — shown in info popover
+  details: string;
   imageHorizontal: string;
   imageVertical: string;
-  image_horizontal?: string; // Supabase
-  image_vertical?: string;   // Supabase
-  video_url?: string;        // Supabase
+  image_horizontal?: string;
+  image_vertical?: string;
+  video_url?: string;
+  label?: string;
   accent: string;
 };
 

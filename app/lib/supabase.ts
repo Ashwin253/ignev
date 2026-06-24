@@ -23,7 +23,7 @@ export async function fetchHeroBanners() {
       .from("hero_banners")
       .select("*")
       .eq("is_active", true)
-      .order("order_index", { ascending: true });
+      .order("created_at", { ascending: false });
     if (error) {
       console.warn("fetchHeroBanners error:", error.message);
       return [];
@@ -108,6 +108,7 @@ export type EvListingRow = {
   title: string;
   brand: string;
   body_type: string;
+  usage_type?: string | null;
   commercial: boolean;
   launchdate: string | null;
   photo: string;
@@ -346,6 +347,7 @@ function mapToEvListing(row: EvListingRow, variants: EvVariantRow[], features?: 
     databaseId: 0,
     title: row.title,
     slug: row.slug,
+    usage_type: row.usage_type,
     date: row.created_at,
     photo: row.photo || (() => {
       const parsed = typeof row.featured_photos === "string" ? (() => { try { return JSON.parse(row.featured_photos); } catch { return []; } })() : row.featured_photos;

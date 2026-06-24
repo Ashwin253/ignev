@@ -30,6 +30,7 @@ export default async function CatalogPage() {
         topSpeed: l.topSpeed,
         drivingRange: l.batteryVariants[0]?.range || "",
         commercial: l.commercial,
+        usageType: (l as any).usage_type || "",
         launchdate: l.launchdate,
         prices: l.prices,
         baas: l.baas,

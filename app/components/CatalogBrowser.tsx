@@ -34,6 +34,7 @@ export type CatalogItem = {
   launchdate?: string | null;
   prices?: string[];
   baas?: boolean;
+  usageType?: string;
 };
 
 
@@ -76,6 +77,7 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
   const launchedOnly = searchParams.get("avail") === "true";
   const comingSoonOnly = searchParams.get("upcoming") === "true";
   const baasOnly = searchParams.get("baas") === "true";
+  const usage = searchParams.get("usage") ?? "all";
 
   const [filtersOpen, setFiltersOpen] = useState(false); // mobile collapse
   const [shared, setShared] = useState(false);
@@ -149,9 +151,10 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
       if (launchedOnly && !isLaunched(item.launchdate)) return false;
       if (comingSoonOnly && isLaunched(item.launchdate)) return false;
       if (baasOnly && !item.baas) return false;
+      if (usage !== "all" && item.usageType !== usage) return false;
       return true;
     });
-  }, [brand, category, commercialOnly, allItems, launchedOnly, comingSoonOnly, price, query, baasOnly]);
+  }, [brand, category, commercialOnly, allItems, launchedOnly, comingSoonOnly, price, query, baasOnly, usage]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -180,11 +183,11 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
   }, [visibleCount, filteredItems.length, hasFetchedAll, loadingMore, loadingSkeleton]);
 
   // Reset visible count when filters change
-  const filterKey = `${query}-${category}-${brand}-${price}-${commercialOnly}-${launchedOnly}-${comingSoonOnly}-${baasOnly}`;
+  const filterKey = `${query}-${category}-${brand}-${price}-${commercialOnly}-${launchedOnly}-${comingSoonOnly}-${baasOnly}-${usage}`;
   useEffect(() => { setVisibleCount(3); }, [filterKey]);
 
-  const hasActiveFilters = category !== "all" || brand !== "all" || price !== "all" || commercialOnly || launchedOnly || comingSoonOnly || baasOnly || !!query;
-  const activeFilterCount = [category !== "all", brand !== "all", price !== "all", commercialOnly, launchedOnly, comingSoonOnly, baasOnly, !!query].filter(Boolean).length;
+  const hasActiveFilters = category !== "all" || brand !== "all" || price !== "all" || usage !== "all" || commercialOnly || launchedOnly || comingSoonOnly || baasOnly || !!query;
+  const activeFilterCount = [category !== "all", brand !== "all", price !== "all", usage !== "all", commercialOnly, launchedOnly, comingSoonOnly, baasOnly, !!query].filter(Boolean).length;
 
   const clearAll = () => {
     router.push(pathname, { scroll: false });
@@ -246,7 +249,7 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
           </div>
 
           {/* Row 2: Search + dropdowns */}
-          <div className="p-4 grid gap-3 sm:grid-cols-[1fr_auto_auto] md:grid-cols-[2fr_1fr_1fr]">
+          <div className="p-4 grid gap-3 sm:grid-cols-[1fr_auto_auto_auto] md:grid-cols-[2fr_1fr_1fr_1fr]">
             {/* Search */}
             <label className="flex items-center gap-2.5 rounded-2xl border border-slate-200 bg-slate-50/50 px-4 py-3 focus-within:border-[#34ebb1] transition-all">
               <Search size={16} className="text-slate-400 shrink-0" />
@@ -291,6 +294,21 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
                 <option value="5-15">₹5L – ₹15L</option>
                 <option value="15-30">₹15L – ₹30L</option>
                 <option value="30+">₹30L+</option>
+              </select>
+              <ChevronDown size={14} className="text-slate-400 shrink-0 absolute right-3 pointer-events-none" />
+            </label>
+
+            {/* Usage */}
+            <label className="relative flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50/50 px-4 py-3 cursor-pointer focus-within:border-[#34ebb1] transition-all">
+              <span className="text-xs font-semibold text-slate-400 shrink-0 hidden sm:block">Usage</span>
+              <select
+                value={usage}
+                onChange={(e) => updateFilters({ usage: e.target.value })}
+                className="w-full bg-transparent text-sm outline-none text-slate-755 cursor-pointer appearance-none pr-5"
+              >
+                <option value="all">All usage</option>
+                <option value="Passenger">Passenger</option>
+                <option value="Goods">Goods</option>
               </select>
               <ChevronDown size={14} className="text-slate-400 shrink-0 absolute right-3 pointer-events-none" />
             </label>
@@ -383,7 +401,7 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
         </div>
       ) : (
         <>
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredItems.slice(0, visibleCount).map((item, index) => {
             const launched = isLaunched(item.launchdate);
             const launchLabel = formatLaunchDate(item.launchdate);
@@ -495,7 +513,7 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
         {(visibleCount < filteredItems.length || !hasFetchedAll) && (
           <div ref={observerTarget} className="mt-4 pt-4">
             {loadingSkeleton && (
-              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 <ProductSkeleton />
                 <ProductSkeleton />
                 <ProductSkeleton />

@@ -45,7 +45,7 @@ const convertToLakh = (val: number): number => {
 };
 
 type ListingForm = {
-  slug: string; title: string; brand: string; body_type: string;
+  slug: string; title: string; brand: string; body_type: string; usage_type?: string | null;
   commercial: boolean; has_baas: boolean; launchdate: string | null; photo: string;
   gallery_images: any[]; colors: string[]; types: string[];
   pros: string[]; cons: string[];
@@ -118,7 +118,7 @@ export type VariantForm = {
 };
 
 const emptyListing: ListingForm = {
-  slug: "", title: "", brand: "", body_type: "", commercial: false, has_baas: false,
+  slug: "", title: "", brand: "", body_type: "", usage_type: null, commercial: false, has_baas: false,
   launchdate: null, photo: "", gallery_images: [], colors: [],
   types: [], pros: [], cons: [], price_bracket: "",
   parent_id: "",
@@ -421,6 +421,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
         return b === "TATA" ? "TATA MOTORS" : b;
       })(),
       body_type: form.body_type || "",
+      usage_type: form.usage_type || null,
       commercial: form.commercial ?? false,
       has_baas: form.has_baas ?? false,
       launchdate: form.launchdate || null,
@@ -583,8 +584,8 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
       _instruction: "Return a compact JSON where only the differing fields are updated per variant. All other specifications, features, and specs (like dimensions, brakes, warranties, etc.) are assumed to be inherited from the first variant (index 0). Do not repeat common fields in subsequent variants.",
       _hints: {
         types_options: ["2 Wheeler", "3 Wheeler", "4 Wheeler"],
-        price_bracket_options: ["under-2L", "under-5L", "5-10", "5-15", "10-25", "15-30", "30+", "50+"],
-        body_type_options: ["Scooter", "Sedan", "SUV", "Hatchback", "Compact SUV", "MUV", "Bike", "Tempo", "Other"]
+        price_bracket_options: ["under-2L", "5-10", "5-15", "10-25", "15-30", "30+", "50+"],
+        body_type_options: ["Scooter", "Sedan", "SUV", "Hatchback", "Compact SUV", "MUV", "Bike", "Tempo", "Autos", "Other"], usage_type_options: ["Goods", "Passenger"]
       },
       form: templateForm,
       variants: templateVariants.length > 0 ? templateVariants : [emptyVariant],
@@ -612,10 +613,14 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
     let firstVariantParsed: any = null;
     const updatedVariants = Array.isArray(parsedData.variants) 
       ? parsedData.variants.map((v: any, idx: number) => {
+          const existingMatch = variants.find(ev => ev.variant_name === v.variant_name) || variants[idx];
+          const preservedId = existingMatch?.id;
+
           if (idx === 0) {
             firstVariantParsed = {
               ...emptyVariant,
               ...v,
+              id: preservedId,
               features: v.features ? { ...defaultFeatures, ...v.features } : { ...defaultFeatures },
             };
             return firstVariantParsed;
@@ -625,6 +630,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
               ...emptyVariant,
               ...firstVariantParsed,
               ...v,
+              id: preservedId,
               features: {
                 ...baseFeatures,
                 ...(v.features || {}),
@@ -762,9 +768,13 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
   const handleApplyPasteVariant = (parsedData: any) => {
     if (!parsedData) return;
 
+    const existingVariant = variants[activeVariantIndex] || {};
+
     const newVariant = {
       ...emptyVariant,
+      ...existingVariant,
       ...parsedData,
+      id: existingVariant.id,
       features: parsedData.features ? { ...defaultFeatures, ...parsedData.features } : { ...defaultFeatures },
     };
 
@@ -917,6 +927,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
       title: l.title,
       brand: l.brand,
       body_type: l.body_type || "",
+      usage_type: (l as any).usage_type || null,
       commercial: l.commercial,
       has_baas: l.has_baas || false,
       launchdate: l.launchdate,
@@ -1210,15 +1221,9 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             <p className="text-xs sm:text-sm text-slate-500 truncate max-w-[150px] sm:max-w-none">{user.email}</p>
           </div>
           <div className="flex gap-1.5 sm:gap-2 shrink-0">
-            {editing ? (
-              <button onClick={() => { setEditing(null); }} className="inline-flex items-center gap-1 sm:gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
-                View Listings
-              </button>
-            ) : (
-              <button onClick={handleLogout} className="inline-flex items-center gap-1 sm:gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
-                <LogOut size={14} className="sm:w-4 sm:h-4" /> Logout
-              </button>
-            )}
+            <button onClick={() => { setActiveSection("listings"); setEditing(null); }} className="inline-flex items-center gap-1 sm:gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
+              View All Listings
+            </button>
           </div>
         </div>
 
@@ -1287,7 +1292,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
         {activeSection === "map" && <MapPanel supabase={supabase} userEmail={user.email || ""} />}
         {activeSection === "banners" && <BannersPanel supabase={supabase} />}
         {activeSection === "content" && <ContentPanel supabase={supabase} />}
-        {activeSection === "offers" && <OffersPanel supabase={supabase} />}
+        {activeSection === "offers" && <OffersPanel supabase={supabase} uniqueBrands={uniqueBrands} />}
 
         {activeSection === "listings" && (
         <>
@@ -1357,7 +1362,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                 ) : (
                   <div className="flex items-end">
                     <button onClick={startNew} className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-xl bg-sky-600 px-4 py-3 text-sm font-bold text-white hover:bg-sky-700 transition-colors">
-                      <Plus size={16} /> Add Model
+                      <Plus size={16} /> Add Brand
                     </button>
                   </div>
                 )}
@@ -1693,8 +1698,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   <option value="2-3">₹2L – ₹3L</option>
                   <option value="under-3L">Under ₹3 Lakh</option>
                   <option value="3-5">₹3L – ₹5L</option>
-                  <option value="3L+">₹3L+</option>
-                  <option value="under-5L">Under ₹5 Lakh</option>
+
                   <option value="5-7">₹5L – ₹7L</option>
                   <option value="7-10">₹7L – ₹10L</option>
                   <option value="5-10">₹5L – ₹10L</option>
@@ -1706,9 +1710,15 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                 </select>
               </label>
               <label className="block">
-                <span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-800">Body Type</span>
+                <span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-800">Vehicle Type</span>
                 <select value={form.body_type} onChange={(e) => setForm({ ...form, body_type: e.target.value })} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm font-semibold text-slate-900 outline-none cursor-pointer">
-                  <option value="">Select</option><option value="Scooter">Scooter</option><option value="Sedan">Sedan</option><option value="SUV">SUV</option><option value="Hatchback">Hatchback</option><option value="Compact SUV">Compact SUV</option><option value="MUV">MUV</option><option value="Bike">Bike</option><option value="Tempo">Tempo</option><option value="Other">Other</option>
+                  <option value="">Select</option><option value="Scooter">Scooter</option><option value="Sedan">Sedan</option><option value="SUV">SUV</option><option value="Hatchback">Hatchback</option><option value="Compact SUV">Compact SUV</option><option value="MUV">MUV</option><option value="Bike">Bike</option><option value="Tempo">Tempo</option><option value="Autos">Autos</option><option value="Other">Other</option>
+                </select>
+              </label>
+              <label className="block">
+                <span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-800">Usage Type</span>
+                <select value={form.usage_type || ""} onChange={(e) => setForm({ ...form, usage_type: e.target.value || null })} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm font-semibold text-slate-900 outline-none cursor-pointer">
+                  <option value="">None</option><option value="Goods">Goods</option><option value="Passenger">Passenger</option>
                 </select>
               </label>
               <label className="block">

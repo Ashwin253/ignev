@@ -12,7 +12,7 @@ export type HeroBanner = {
   image_vertical: string;
   video_url: string;
   is_active: boolean;
-  order_index: number;
+  label?: string;
 };
 
 const emptyBanner: HeroBanner = {
@@ -23,7 +23,7 @@ const emptyBanner: HeroBanner = {
   image_vertical: "",
   video_url: "",
   is_active: true,
-  order_index: 0,
+  label: "",
 };
 
 export default function BannersPanel({ supabase }: { supabase: any }) {
@@ -32,6 +32,24 @@ export default function BannersPanel({ supabase }: { supabase: any }) {
   const [editing, setEditing] = useState<string | null>(null);
   const [form, setForm] = useState<HeroBanner>(emptyBanner);
   const [saving, setSaving] = useState(false);
+  const [uploadingField, setUploadingField] = useState<string | null>(null);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: "image_horizontal" | "image_vertical" | "video_url") => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingField(field);
+    const path = `banners/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.\-]/g, "")}`;
+    const { data, error } = await supabase.storage.from("evphotos").upload(path, file, { upsert: true });
+
+    if (error) {
+      alert("Upload failed: " + error.message);
+    } else if (data) {
+      const publicUrl = supabase.storage.from("evphotos").getPublicUrl(data.path).data.publicUrl;
+      setForm({ ...form, [field]: publicUrl });
+    }
+    setUploadingField(null);
+  };
 
   useEffect(() => {
     fetchBanners();
@@ -39,7 +57,7 @@ export default function BannersPanel({ supabase }: { supabase: any }) {
 
   const fetchBanners = async () => {
     setLoading(true);
-    const { data, error } = await supabase.from("hero_banners").select("*").order("order_index", { ascending: true });
+    const { data, error } = await supabase.from("hero_banners").select("*").order("created_at", { ascending: false });
     if (error) console.warn("Fetch banners error:", error.message);
     setBanners((data ?? []) as any);
     setLoading(false);
@@ -47,7 +65,7 @@ export default function BannersPanel({ supabase }: { supabase: any }) {
 
   const startNew = () => {
     setEditing("new");
-    setForm({ ...emptyBanner, order_index: banners.length });
+    setForm({ ...emptyBanner });
   };
 
   const startEdit = (b: HeroBanner & { id: string }) => {
@@ -96,11 +114,47 @@ export default function BannersPanel({ supabase }: { supabase: any }) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <label className="block"><span className="text-xs font-bold text-slate-600">Call to Action (CTA)</span><input value={form.cta} onChange={(e) => setForm({ ...form, cta: e.target.value })} placeholder="e.g. Explore catalog" className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
             <label className="block"><span className="text-xs font-bold text-slate-600">Link URL (href)</span><input value={form.href} onChange={(e) => setForm({ ...form, href: e.target.value })} placeholder="e.g. /catalog" className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
-            <label className="block sm:col-span-2"><span className="text-xs font-bold text-slate-600">Video URL (.mp4 or similar)</span><input value={form.video_url || ""} onChange={(e) => setForm({ ...form, video_url: e.target.value })} placeholder="e.g. https://.../video.mp4 (Takes priority over images)" className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none bg-sky-50" /></label>
-            <label className="block"><span className="text-xs font-bold text-slate-600">Image URL (Horizontal / Desktop)</span><input value={form.image_horizontal} onChange={(e) => setForm({ ...form, image_horizontal: e.target.value })} placeholder="e.g. /herobanner/banner-1-horizontal.webp" className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
-            <label className="block"><span className="text-xs font-bold text-slate-600">Image URL (Vertical / Mobile)</span><input value={form.image_vertical} onChange={(e) => setForm({ ...form, image_vertical: e.target.value })} placeholder="e.g. /herobanner/banner-1-vertical.webp" className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
+            <label className="block sm:col-span-2">
+              <span className="text-xs font-bold text-slate-600">Badge Label (Optional)</span>
+              <input list="banner-labels" value={form.label || ""} onChange={(e) => setForm({ ...form, label: e.target.value })} placeholder="e.g. New Release, Coming Soon" className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" />
+              <datalist id="banner-labels">
+                <option value="New Release" />
+                <option value="Recently Announced" />
+                <option value="Coming Soon" />
+                <option value="New Offer" />
+              </datalist>
+            </label>
+            <label className="block sm:col-span-2">
+              <span className="text-xs font-bold text-slate-600">Video URL (.mp4 or similar)</span>
+              <div className="flex gap-2">
+                <input value={form.video_url || ""} onChange={(e) => setForm({ ...form, video_url: e.target.value })} placeholder="e.g. https://.../video.mp4 (Takes priority over images)" className="mt-1 flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none bg-sky-50" />
+                <label className="mt-1 flex items-center justify-center rounded-lg bg-slate-100 px-3 py-2 text-xs font-bold text-slate-600 cursor-pointer hover:bg-slate-200 border border-slate-200 shrink-0">
+                  {uploadingField === "video_url" ? <Loader2 size={14} className="animate-spin" /> : "Upload"}
+                  <input type="file" accept="video/*" className="hidden" onChange={(e) => handleUpload(e, "video_url")} />
+                </label>
+              </div>
+            </label>
+            <label className="block">
+              <span className="text-xs font-bold text-slate-600">Image (Horizontal / Desktop)</span>
+              <div className="flex gap-2">
+                <input value={form.image_horizontal} onChange={(e) => setForm({ ...form, image_horizontal: e.target.value })} placeholder="e.g. /herobanner/banner-1.webp" className="mt-1 flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" />
+                <label className="mt-1 flex items-center justify-center rounded-lg bg-slate-100 px-3 py-2 text-xs font-bold text-slate-600 cursor-pointer hover:bg-slate-200 border border-slate-200 shrink-0">
+                  {uploadingField === "image_horizontal" ? <Loader2 size={14} className="animate-spin" /> : "Upload"}
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUpload(e, "image_horizontal")} />
+                </label>
+              </div>
+            </label>
+            <label className="block">
+              <span className="text-xs font-bold text-slate-600">Image (Vertical / Mobile)</span>
+              <div className="flex gap-2">
+                <input value={form.image_vertical} onChange={(e) => setForm({ ...form, image_vertical: e.target.value })} placeholder="e.g. /herobanner/banner-1-mob.webp" className="mt-1 flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" />
+                <label className="mt-1 flex items-center justify-center rounded-lg bg-slate-100 px-3 py-2 text-xs font-bold text-slate-600 cursor-pointer hover:bg-slate-200 border border-slate-200 shrink-0">
+                  {uploadingField === "image_vertical" ? <Loader2 size={14} className="animate-spin" /> : "Upload"}
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUpload(e, "image_vertical")} />
+                </label>
+              </div>
+            </label>
             <label className="block sm:col-span-2"><span className="text-xs font-bold text-slate-600">Details (Optional Text)</span><input value={form.details || ""} onChange={(e) => setForm({ ...form, details: e.target.value })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
-            <label className="block"><span className="text-xs font-bold text-slate-600">Order Index</span><input type="number" value={form.order_index} onChange={(e) => setForm({ ...form, order_index: parseInt(e.target.value) || 0 })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
           </div>
           <div className="flex items-center gap-3 mt-4">
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} /> Active</label>

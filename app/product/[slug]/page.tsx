@@ -190,7 +190,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </div>
 
             {/* Interactive Area (Battery Selection, Tabs, Ownership) */}
-            <ProductMainUI item={item} slug={slug} dbFuelPrices={dbFuelPrices} content={productContent} />
+            <ProductMainUI item={item} slug={slug} dbFuelPrices={dbFuelPrices} content={productContent} offers={offers} />
           </div>
         </div>
         {/* ── Detailed Specs + Pros/Cons ── */}

@@ -50,12 +50,11 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
     const variantGallery = gallery.filter(p => p.url && p.variantId === selectedVariantId);
     const defaultGallery = gallery.filter(p => p.url && !p.variantId);
 
-    const finalFeatured = variantFeatured.length > 0 ? variantFeatured : defaultFeatured;
-    const finalGallery = variantGallery.length > 0 ? variantGallery : defaultGallery;
-
     const urls = [
-      ...finalFeatured.map(p => p.url),
-      ...finalGallery.map(p => p.url)
+      ...variantFeatured.map(p => p.url),
+      ...defaultFeatured.map(p => p.url),
+      ...variantGallery.map(p => p.url),
+      ...defaultGallery.map(p => p.url)
     ];
 
     const uniqueUrls = Array.from(new Set(urls)).filter(Boolean);
@@ -100,7 +99,7 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
       const selectedVariantId = activeVariant?.id;
       const variantGallery = item.gallery_raw.filter(p => p.url && p.variantId === selectedVariantId);
       const defaultGallery = item.gallery_raw.filter(p => p.url && !p.variantId);
-      const finalGallery = variantGallery.length > 0 ? variantGallery : defaultGallery;
+      const finalGallery = [...variantGallery, ...defaultGallery];
       
       const match = finalGallery.find(p => p.type === "color" && p.colorCode === clickedColor);
       if (match) {
@@ -186,7 +185,7 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
           {resolvedPhotos.length > 1 && (
             <button
               onClick={() => { setShowThumbs(!showThumbs); setShowColors(false); }}
-              className={`flex items-center gap-1.5 rounded-full px-3 py-2 text-[10px] font-bold shadow-md transition-all ${
+              className={`flex md:hidden items-center gap-1.5 rounded-full px-3 py-2 text-[10px] font-bold shadow-md transition-all ${
                 showThumbs
                   ? "bg-slate-900 text-white"
                   : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200"

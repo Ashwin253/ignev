@@ -103,6 +103,32 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
         </label>
       )}
 
+      {/* ── Active Offers ── */}
+      {offers && offers.length > 0 && (
+        <div className="flex flex-col gap-2 mb-2">
+          {offers.map((offer, i) => (
+            <div key={i} className="flex items-start gap-3 rounded-2xl border border-[#34ebb1]/40 bg-[#34ebb1]/10 px-4 py-3 shadow-xs">
+              <Tag size={18} className="text-[#10855f] shrink-0 mt-0.5" />
+              <div className="flex flex-col flex-1">
+                <span className="text-sm font-bold text-slate-900">{offer.text}</span>
+                {offer.valid_until && (
+                  <span className="text-[10px] font-bold text-rose-600 mt-1">Valid till: {new Date(offer.valid_until).toLocaleDateString()}</span>
+                )}
+                {offer.cities && (
+                  <span className="text-[10px] font-bold text-slate-500 mt-0.5">Applicable in: {offer.cities}</span>
+                )}
+              </div>
+              <button
+                onClick={() => triggerEnquiryModal(`Offers: ${item.brand} ${item.title}`)}
+                className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-[#10855f] hover:text-[#0b6446] underline decoration-[#10855f]/40 underline-offset-4 transition-colors"
+              >
+                Know more
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* ── Price display ── */}
       <div className="flex flex-col gap-2 mb-4">
         <div className={`flex items-center justify-between rounded-2xl px-4 py-3 border transition-all duration-300 ${

@@ -282,8 +282,8 @@ export default function Hero({
                     />
                   ) : (
                     <>
-                      <Image src={slide.image_horizontal || slide.imageHorizontal} alt={slide.cta} fill sizes="(max-width: 1280px) 100vw, 1280px" className="hidden object-cover md:block" priority />
-                      <Image src={slide.image_vertical || slide.imageVertical || slide.image_horizontal || slide.imageHorizontal} alt={slide.cta} fill sizes="(max-width: 768px) 100vw, 768px" className="object-cover md:hidden" priority />
+                      <Image src={(slide.image_horizontal || slide.imageHorizontal) as string} alt={slide.cta || "Banner"} fill sizes="(max-width: 1280px) 100vw, 1280px" className="hidden object-cover md:block" priority />
+                      <Image src={(slide.image_vertical || slide.imageVertical || slide.image_horizontal || slide.imageHorizontal) as string} alt={slide.cta || "Banner"} fill sizes="(max-width: 768px) 100vw, 768px" className="object-cover md:hidden" priority />
                     </>
                   )}
                 </div>
@@ -293,7 +293,12 @@ export default function Hero({
 
                 {/* CTA button */}
                 <div className="relative z-10 flex min-h-96 items-end md:min-h-136">
-                  <div className="p-6 sm:p-8 md:p-10">
+                  <div className="p-6 sm:p-8 md:p-10 flex flex-col items-start">
+                    {slide.label && (
+                      <span className="mb-3 inline-flex items-center rounded-full bg-black/40 backdrop-blur-md px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest text-white ring-1 ring-white/20">
+                        {slide.label}
+                      </span>
+                    )}
                     <a
                       href={slide.href}
                       className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-900 shadow-lg transition hover:scale-[1.01] hover:bg-slate-50"

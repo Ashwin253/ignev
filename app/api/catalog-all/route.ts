@@ -16,6 +16,7 @@ export async function GET() {
       slug: l.slug,
       topSpeed: l.topSpeed,
       commercial: l.commercial,
+      usageType: (l as any).usage_type || "",
       launchdate: l.launchdate,
       prices: l.prices,
       baas: l.baas,

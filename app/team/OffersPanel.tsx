@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Pencil, X, Save, Loader2, Tag } from "lucide-react";
+import { Plus, Trash2, Pencil, X, Save, Loader2, Tag, CalendarDays } from "lucide-react";
 
 export type Offer = {
   id?: string;
@@ -11,6 +11,7 @@ export type Offer = {
   cities: string;
   product_slug: string;
   is_active: boolean;
+  valid_until?: string;
 };
 
 const emptyOffer: Offer = {
@@ -20,15 +21,34 @@ const emptyOffer: Offer = {
   cities: "",
   product_slug: "",
   is_active: true,
+  valid_until: "",
 };
 
-export default function OffersPanel({ supabase }: { supabase: any }) {
+export default function OffersPanel({ supabase, uniqueBrands = [] }: { supabase: any; uniqueBrands?: string[] }) {
   const [offers, setOffers] = useState<(Offer & { id: string })[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<string | null>(null);
   const [form, setForm] = useState<Offer>(emptyOffer);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    const path = `offers/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.\-]/g, "")}`;
+    const { data, error } = await supabase.storage.from("evphotos").upload(path, file, { upsert: true });
+
+    if (error) {
+      alert("Upload failed: " + error.message);
+    } else if (data) {
+      const publicUrl = supabase.storage.from("evphotos").getPublicUrl(data.path).data.publicUrl;
+      setForm({ ...form, image: publicUrl });
+    }
+    setUploadingImage(false);
+  };
 
   useEffect(() => {
     fetchOffers();
@@ -60,6 +80,7 @@ export default function OffersPanel({ supabase }: { supabase: any }) {
       image: form.image.trim() || null,
       cities: form.cities.trim() || null,
       product_slug: form.product_slug.trim() || null,
+      valid_until: form.valid_until || null,
       is_active: form.is_active,
     };
 
@@ -103,11 +124,27 @@ export default function OffersPanel({ supabase }: { supabase: any }) {
             <button onClick={() => setEditing(null)} className="text-slate-400 hover:text-slate-600"><X size={16} /></button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <label className="block"><span className="text-xs font-bold text-slate-600">Brand (e.g., Tata, MG)</span><input value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} placeholder="Leave empty if not brand-specific" className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
-            <label className="block"><span className="text-xs font-bold text-slate-600">Product Slug (e.g., tata-nexon-ev)</span><input value={form.product_slug} onChange={(e) => setForm({ ...form, product_slug: e.target.value })} placeholder="Leave empty to apply to all cars in the brand" className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
-            <label className="block sm:col-span-2"><span className="text-xs font-bold text-slate-600">Offer Text / Description *</span><input value={form.text} onChange={(e) => setForm({ ...form, text: e.target.value })} placeholder="e.g. ₹50,000 Cash Discount + Free Charger" className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
-            <label className="block sm:col-span-2"><span className="text-xs font-bold text-slate-600">Image / Banner URL (Optional)</span><input value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} placeholder="https://..." className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
-            <label className="block sm:col-span-2"><span className="text-xs font-bold text-slate-600">Applicable Cities (Optional, comma separated)</span><input value={form.cities} onChange={(e) => setForm({ ...form, cities: e.target.value })} placeholder="e.g. Mumbai, Delhi" className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
+            <label className="block">
+              <span className="text-xs font-bold text-slate-600">Brand (e.g., Tata, MG)</span>
+              <select value={form.brand || ""} onChange={(e) => setForm({ ...form, brand: e.target.value })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none bg-white cursor-pointer">
+                <option value="">None (Applies to all brands)</option>
+                {uniqueBrands.map(b => <option key={b} value={b}>{b}</option>)}
+              </select>
+            </label>
+            <label className="block"><span className="text-xs font-bold text-slate-600">Product Slug (e.g., tata-nexon-ev)</span><input value={form.product_slug || ""} onChange={(e) => setForm({ ...form, product_slug: e.target.value })} placeholder="Leave empty to apply to all cars in the brand" className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
+            <label className="block sm:col-span-2"><span className="text-xs font-bold text-slate-600">Offer Text / Description *</span><input value={form.text || ""} onChange={(e) => setForm({ ...form, text: e.target.value })} placeholder="e.g. ₹50,000 Cash Discount + Free Charger" className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
+            <label className="block sm:col-span-2">
+              <span className="text-xs font-bold text-slate-600">Image / Banner (Optional)</span>
+              <div className="flex gap-2">
+                <input value={form.image || ""} onChange={(e) => setForm({ ...form, image: e.target.value })} placeholder="e.g. /offers/offer-1.webp" className="mt-1 flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" />
+                <label className="mt-1 flex items-center justify-center rounded-lg bg-slate-100 px-3 py-2 text-xs font-bold text-slate-600 cursor-pointer hover:bg-slate-200 border border-slate-200 shrink-0">
+                  {uploadingImage ? <Loader2 size={14} className="animate-spin" /> : "Upload"}
+                  <input type="file" accept="image/*" className="hidden" onChange={handleUpload} />
+                </label>
+              </div>
+            </label>
+            <label className="block"><span className="text-xs font-bold text-slate-600">Valid Until (Optional)</span><input type="date" value={form.valid_until || ""} onChange={(e) => setForm({ ...form, valid_until: e.target.value })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none bg-white" /></label>
+            <label className="block"><span className="text-xs font-bold text-slate-600">Applicable Cities (Optional, comma separated)</span><input value={form.cities || ""} onChange={(e) => setForm({ ...form, cities: e.target.value })} placeholder="e.g. Mumbai, Delhi" className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
           </div>
           <div className="flex items-center gap-3 mt-4">
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} /> Active</label>
@@ -132,6 +169,7 @@ export default function OffersPanel({ supabase }: { supabase: any }) {
                     {o.brand && <span className="inline-flex rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">Brand: {o.brand}</span>}
                     {o.product_slug && <span className="inline-flex rounded-md bg-sky-100 px-2 py-0.5 text-[10px] font-bold text-sky-700">Model: {o.product_slug}</span>}
                     {o.cities && <span className="inline-flex rounded-md bg-orange-100 px-2 py-0.5 text-[10px] font-bold text-orange-700">Cities: {o.cities}</span>}
+                    {o.valid_until && <span className="inline-flex items-center gap-1 rounded-md bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-700"><CalendarDays size={10} /> Valid till: {new Date(o.valid_until).toLocaleDateString()}</span>}
                   </div>
                 </div>
               </div>

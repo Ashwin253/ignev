@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { ChevronLeft, ChevronRight, Palette, LayoutGrid } from "lucide-react";
+import { createPortal } from "react-dom";
+import { ChevronLeft, ChevronRight, Palette, LayoutGrid, Maximize } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useProductSelection } from "../product/ProductSelectionProvider";
 import type { EvListing } from "../lib/wordpress";
@@ -34,6 +35,12 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
   const [direction, setDirection] = useState(0);
   const [showColors, setShowColors] = useState(false);
   const [showThumbs, setShowThumbs] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Compute resolved list of photos based on selected variant
   const resolvedPhotos = useMemo(() => {
@@ -123,6 +130,55 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
     <div className="flex flex-col gap-4 w-full max-w-full overflow-hidden">
       {/* Main image */}
       <div className="relative aspect-4/3 overflow-hidden rounded-[1.75rem] bg-transparent select-none">
+        
+        {mounted && isFullscreen && createPortal(
+          <div className="fixed inset-0 z-[99999] bg-black/95 flex items-center justify-center p-4 backdrop-blur-sm">
+            <button onClick={() => setIsFullscreen(false)} className="absolute top-4 right-4 z-[99999] rounded-full bg-white/20 p-2 text-white hover:bg-white/40 backdrop-blur-md">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+
+            <AnimatePresence initial={false} custom={direction} mode="wait">
+              <motion.img
+                key={`fullscreen-${current}`}
+                src={resolvedPhotos[current]}
+                alt={`${name} photo ${current + 1}`}
+                custom={direction}
+                variants={variants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+                className="absolute inset-0 w-full h-full object-contain p-10"
+                loading="eager"
+                fetchPriority="high"
+              />
+            </AnimatePresence>
+
+            {resolvedPhotos.length > 1 && (
+              <>
+                <button onClick={prev} aria-label="Previous photo"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full p-3 shadow-md bg-white/20 text-white hover:bg-white/40 transition-colors z-[99999]">
+                  <ChevronLeft size={24} className="text-white" />
+                </button>
+                <button onClick={next} aria-label="Next photo"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full p-3 shadow-md bg-white/20 text-white hover:bg-white/40 transition-colors z-[99999]">
+                  <ChevronRight size={24} className="text-white" />
+                </button>
+
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-[99999]">
+                  {resolvedPhotos.map((_, i) => (
+                    <button key={i}
+                      onClick={() => { setDirection(i > current ? 1 : -1); setCurrent(i); }}
+                      className={`h-2 rounded-full transition-all duration-300 ${i === current ? "w-6 bg-white shadow-lg" : "w-2 bg-white/40 hover:bg-white/70"}`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </div>,
+          document.body
+        )}
+
         <AnimatePresence initial={false} custom={direction} mode="wait">
           <motion.img
             key={current}
@@ -144,16 +200,16 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
         {resolvedPhotos.length > 1 && (
           <>
             <button onClick={prev} aria-label="Previous photo"
-              className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-white/80 backdrop-blur-sm p-2 shadow-md hover:bg-white transition-colors">
+              className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-white/80 backdrop-blur-sm p-2 shadow-md hover:bg-white transition-colors text-slate-700">
               <ChevronLeft size={20} className="text-slate-700" />
             </button>
             <button onClick={next} aria-label="Next photo"
-              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-white/80 backdrop-blur-sm p-2 shadow-md hover:bg-white transition-colors">
+              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-white/80 backdrop-blur-sm p-2 shadow-md hover:bg-white transition-colors text-slate-700">
               <ChevronRight size={20} className="text-slate-700" />
             </button>
 
             {/* Dot indicators */}
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
               {resolvedPhotos.map((_, i) => (
                 <button key={i}
                   onClick={() => { setDirection(i > current ? 1 : -1); setCurrent(i); }}
@@ -164,8 +220,18 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
           </>
         )}
 
-        {/* ── Floating action buttons (bottom-right) ── */}
-        <div className="absolute bottom-12 right-3 flex flex-col gap-2 z-10">
+        {/* ── Enlarge icon (bottom-right Mobile) ── */}
+        <button onClick={() => setIsFullscreen(true)} className="md:hidden absolute bottom-3 right-3 rounded-full bg-white/80 backdrop-blur-sm p-2 shadow-md hover:bg-white transition-colors z-10">
+          <Maximize size={16} className="text-slate-700" />
+        </button>
+
+        {/* ── Floating action buttons (bottom-right Desktop) ── */}
+        <div className="hidden md:flex absolute bottom-3 right-3 flex-col items-end gap-2 z-10">
+          {/* Enlarge button */}
+          <button onClick={() => setIsFullscreen(true)} className="rounded-full bg-white/80 backdrop-blur-sm p-2 shadow-md hover:bg-white transition-colors">
+            <Maximize size={16} className="text-slate-700" />
+          </button>
+
           {/* Colors button */}
           {resolvedColors.length > 0 && (
             <button
@@ -181,11 +247,11 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
             </button>
           )}
 
-          {/* Photos button */}
+          {/* Photos button (Usually hidden on md, but keeping logic consistent) */}
           {resolvedPhotos.length > 1 && (
             <button
               onClick={() => { setShowThumbs(!showThumbs); setShowColors(false); }}
-              className={`flex md:hidden items-center gap-1.5 rounded-full px-3 py-2 text-[10px] font-bold shadow-md transition-all ${
+              className={`hidden items-center gap-1.5 rounded-full px-3 py-2 text-[10px] font-bold shadow-md transition-all ${
                 showThumbs
                   ? "bg-slate-900 text-white"
                   : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200"
@@ -197,26 +263,19 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
           )}
         </div>
 
-        {/* ── Colors popup ── */}
+        {/* ── Desktop Popups (Inside image container) ── */}
         <AnimatePresence>
           {showColors && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              className="absolute bottom-24 right-3 z-10 flex gap-2 rounded-2xl bg-white/95 backdrop-blur-md border border-slate-200 p-2.5 shadow-xl"
+              className="hidden md:flex absolute bottom-24 right-3 z-10 gap-2 rounded-2xl bg-white/95 backdrop-blur-md border border-slate-200 p-2.5 shadow-xl"
             >
               {resolvedColors.map((hex, i) => {
-                // Handle dualtone hexes (e.g. "ffffff/000000" or "ffffff,000000")
                 const splitColors = hex.includes("/") ? hex.split("/") : hex.includes(",") ? hex.split(",") : [hex];
                 const formattedColors = splitColors.map(c => c.trim().startsWith("#") ? c.trim() : `#${c.trim()}`);
-                
-                let backgroundStyle = "";
-                if (formattedColors.length > 1) {
-                   backgroundStyle = `linear-gradient(135deg, ${formattedColors[0]} 50%, ${formattedColors[1]} 50%)`;
-                } else {
-                  backgroundStyle = formattedColors[0];
-                }
+                let backgroundStyle = formattedColors.length > 1 ? `linear-gradient(135deg, ${formattedColors[0]} 50%, ${formattedColors[1]} 50%)` : formattedColors[0];
 
                 return (
                   <button
@@ -233,20 +292,104 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
           )}
         </AnimatePresence>
 
-        {/* ── Thumbnails popup ── */}
         <AnimatePresence>
           {showThumbs && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              className="absolute bottom-24 right-3 z-10 flex gap-1.5 rounded-2xl bg-white/95 backdrop-blur-md border border-slate-200 p-2 shadow-xl max-w-[75%] overflow-x-auto"
+              className="hidden md:flex absolute bottom-24 right-3 z-10 gap-1.5 rounded-2xl bg-white/95 backdrop-blur-md border border-slate-200 p-2 shadow-xl max-w-[75%] overflow-x-auto"
             >
               {resolvedPhotos.map((photo, i) => (
                 <button
                   key={i}
                   onClick={() => { setDirection(i > current ? 1 : -1); setCurrent(i); setShowThumbs(false); }}
                   className={`shrink-0 h-12 w-16 overflow-hidden rounded-lg border-2 transition-all ${
+                    i === current ? "border-[#34ebb1] shadow-sm" : "border-transparent opacity-75 hover:opacity-100"
+                  }`}
+                >
+                  <img src={photo} alt={`${name} ${i + 1}`} className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* ── Mobile action buttons below photo ── */}
+      <div className="flex md:hidden flex-col gap-2 relative z-10 px-1">
+        <div className="flex items-center gap-3">
+          {resolvedColors.length > 0 && (
+            <button
+              onClick={() => { setShowColors(!showColors); setShowThumbs(false); }}
+              className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold shadow-sm transition-all ${
+                showColors
+                  ? "bg-slate-900 text-white"
+                  : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200"
+              }`}
+            >
+              <Palette size={14} />
+              Colors
+            </button>
+          )}
+
+          {resolvedPhotos.length > 1 && (
+            <button
+              onClick={() => { setShowThumbs(!showThumbs); setShowColors(false); }}
+              className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold shadow-sm transition-all ${
+                showThumbs
+                  ? "bg-slate-900 text-white"
+                  : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200"
+              }`}
+            >
+              <LayoutGrid size={14} />
+              Photos
+            </button>
+          )}
+        </div>
+
+        {/* Mobile Popups (rendered inline below the buttons) */}
+        <AnimatePresence>
+          {showColors && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="flex flex-wrap gap-2 rounded-2xl bg-white border border-slate-200 p-3 shadow-sm overflow-hidden"
+            >
+              {resolvedColors.map((hex, i) => {
+                const splitColors = hex.includes("/") ? hex.split("/") : hex.includes(",") ? hex.split(",") : [hex];
+                const formattedColors = splitColors.map(c => c.trim().startsWith("#") ? c.trim() : `#${c.trim()}`);
+                let backgroundStyle = formattedColors.length > 1 ? `linear-gradient(135deg, ${formattedColors[0]} 50%, ${formattedColors[1]} 50%)` : formattedColors[0];
+
+                return (
+                  <button
+                    key={i}
+                    onClick={() => handleColorClick(i)}
+                    className={`h-8 w-8 rounded-full border-2 transition-all hover:scale-110 ${
+                      i === current ? "border-slate-900 shadow-md ring-2 ring-slate-100" : "border-slate-200 shadow-sm"
+                    }`}
+                    style={{ background: backgroundStyle }}
+                  />
+                );
+              })}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {showThumbs && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="flex gap-2 rounded-2xl bg-white border border-slate-200 p-3 shadow-sm overflow-x-auto"
+            >
+              {resolvedPhotos.map((photo, i) => (
+                <button
+                  key={i}
+                  onClick={() => { setDirection(i > current ? 1 : -1); setCurrent(i); setShowThumbs(false); }}
+                  className={`shrink-0 h-14 w-20 overflow-hidden rounded-xl border-2 transition-all ${
                     i === current ? "border-[#34ebb1] shadow-sm" : "border-transparent opacity-75 hover:opacity-100"
                   }`}
                 >

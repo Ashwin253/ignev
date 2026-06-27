@@ -20,7 +20,7 @@ export default function FreshReleases({ listings }: { listings: EvListing[] }) {
               <Sparkles size={20} className="text-slate-900" />
             </div>
             <div>
-              <h2 className="text-2xl font-black text-slate-900">Fresh Releases</h2>
+              <h2 className="text-2xl font-black text-slate-900">New Releases</h2>
               <p className="text-xs text-slate-500">Launched in the last 2 months</p>
             </div>
           </div>

@@ -28,6 +28,8 @@ create table if not exists public.evlistings (
   cons text[] default '{}',
   has_baas boolean default false,
   price_bracket text default '',
+  usage_type text default null,
+  editors_emails text[] default '{}',
   discontinued boolean default false,
   discontinued_date text default null,
   video_links jsonb default '[]',
@@ -95,6 +97,8 @@ create table if not exists public.ev_variants (
   extra_dimensions jsonb default '[]',
   discontinued boolean default false,
   discontinued_date text default null,
+  usage_type text default null,
+  continuing_variant_id text default null,
   created_at timestamptz default now(),
   updated_at timestamptz default now(),
   constraint ev_variants_slug_year_unique unique (slug, model_year)

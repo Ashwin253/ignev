@@ -86,7 +86,7 @@ async function HomeContent() {
   const content = await getSiteContent();
   const featured = listings.slice(0, 4);
 
-  // Fresh releases: vehicles launched in the last 2 months
+  // New Releases: vehicles launched in the last 2 months
   const twoMonthsAgo = new Date();
   twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
   const freshReleases = listings.filter((l) => {

@@ -16,6 +16,7 @@ export default function MapPanel({ supabase, userEmail }: { supabase: any; userE
   const [saving, setSaving] = useState(false);
   const [mapsLink, setMapsLink] = useState("");
   const [extracting, setExtracting] = useState(false);
+  const [bulkJson, setBulkJson] = useState("");
 
   useEffect(() => { fetchStations(); }, []);
 
@@ -104,6 +105,83 @@ export default function MapPanel({ supabase, userEmail }: { supabase: any; userE
     } catch (e) { alert(`Import failed: ${e}`); }
   };
 
+  const handleBulkImport = async () => {
+    let parsed: any;
+    try {
+      parsed = JSON.parse(bulkJson.trim());
+    } catch (e: any) {
+      alert("Invalid JSON format: " + e.message);
+      return;
+    }
+
+    if (!Array.isArray(parsed)) {
+      alert("JSON must be an array of station objects.");
+      return;
+    }
+
+    if (parsed.length === 0) {
+      alert("JSON array is empty.");
+      return;
+    }
+
+    // Validate and format each item
+    const payload: any[] = [];
+    for (let i = 0; i < parsed.length; i++) {
+      const item = parsed[i];
+      if (!item.name || typeof item.name !== "string") {
+        alert(`Item at index ${i} is missing a valid 'name' field.`);
+        return;
+      }
+      if (item.lat === undefined || isNaN(Number(item.lat))) {
+        alert(`Item at index ${i} ('${item.name}') is missing a valid 'lat' coordinate.`);
+        return;
+      }
+      if (item.lng === undefined || isNaN(Number(item.lng))) {
+        alert(`Item at index ${i} ('${item.name}') is missing a valid 'lng' coordinate.`);
+        return;
+      }
+
+      // Convert connector_types if it's string
+      let connectors: string[] = [];
+      if (Array.isArray(item.connector_types)) {
+        connectors = item.connector_types;
+      } else if (typeof item.connector_types === "string") {
+        connectors = item.connector_types.split(",").map((s: string) => s.trim()).filter(Boolean);
+      }
+
+      payload.push({
+        name: item.name,
+        lat: Number(item.lat),
+        lng: Number(item.lng),
+        type: item.type || "charging",
+        network: item.network || "",
+        city: item.city || "",
+        address: item.address || "",
+        connector_types: connectors,
+        power_kw: item.power_kw !== undefined ? (item.power_kw ? Number(item.power_kw) : null) : null,
+        is_active: item.is_active !== undefined ? Boolean(item.is_active) : true,
+        added_by_email: userEmail
+      });
+    }
+
+    setSaving(true);
+    try {
+      const { error, data: inserted } = await supabase.from("ev_stations").insert(payload).select();
+      if (error) {
+        alert(`Bulk Import failed: ${error.message}`);
+      } else {
+        alert(`Successfully imported ${inserted?.length || payload.length} stations!`);
+        setBulkJson("");
+        setEditing(null);
+        fetchStations();
+      }
+    } catch (e: any) {
+      alert("Bulk Import failed: " + e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const filtered = stations.filter((s) =>
     s.name.toLowerCase().includes(search.toLowerCase()) ||
     (s.network || "").toLowerCase().includes(search.toLowerCase())
@@ -118,6 +196,9 @@ export default function MapPanel({ supabase, userEmail }: { supabase: any; userE
           <button onClick={startNew} className="inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-3 py-2 text-xs font-bold text-white hover:bg-sky-700">
             <Plus size={12} /> Add Station
           </button>
+          <button onClick={() => { setEditing("bulk"); setBulkJson(""); }} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50">
+            Bulk Import (JSON)
+          </button>
           {stations.length === 0 && (
             <button onClick={importFromJson} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50">
               Import from JSON
@@ -127,7 +208,7 @@ export default function MapPanel({ supabase, userEmail }: { supabase: any; userE
       </div>
 
       {/* Edit form */}
-      {editing && (
+      {editing && editing !== "bulk" && (
         <div className="rounded-2xl border border-sky-200 bg-sky-50 p-5">
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm font-bold text-sky-700">{editing === "new" ? "New Station" : "Edit Station"}</p>
@@ -161,6 +242,60 @@ export default function MapPanel({ supabase, userEmail }: { supabase: any; userE
             <button onClick={handleSave} disabled={saving} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50">
               {saving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />} Save
             </button>
+          </div>
+        </div>
+      )}
+
+      {editing === "bulk" && (
+        <div className="rounded-2xl border border-sky-200 bg-sky-50 p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-sm font-bold text-sky-700">Bulk Import Stations (JSON)</p>
+              <p className="text-xs text-slate-500 mt-1">Paste a JSON array of station objects generated by Gemini or any source.</p>
+            </div>
+            <button onClick={() => setEditing(null)} className="text-slate-400 hover:text-slate-600"><X size={16} /></button>
+          </div>
+          <div className="space-y-3">
+            <textarea
+              placeholder={`[\n  {\n    "name": "Tata Power Charging Station",\n    "lat": 28.6139,\n    "lng": 77.2090,\n    "network": "Tata Power",\n    "city": "New Delhi",\n    "address": "Connaught Place"\n  }\n]`}
+              value={bulkJson}
+              onChange={(e) => setBulkJson(e.target.value)}
+              className="w-full h-48 rounded-lg border border-slate-200 p-3 text-xs font-mono outline-none bg-white focus:border-sky-400"
+            />
+            
+            <div className="flex items-center justify-between mt-4">
+              <div className="flex flex-col items-start gap-1">
+                <span className="text-[10px] text-slate-500 font-medium">
+                  Required fields: <code>name</code>, <code>lat</code>, <code>lng</code>
+                </span>
+                <button
+                  onClick={() => {
+                    const template = `[\n  {\n    "name": "Tata Power Charging Station",\n    "lat": 28.6139,\n    "lng": 77.2090,\n    "network": "Tata Power",\n    "city": "New Delhi",\n    "address": "Connaught Place",\n    "type": "charging",\n    "connector_types": ["CCS2 60kW", "Type2 22kW"],\n    "power_kw": 60,\n    "is_active": true\n  }\n]`;
+                    navigator.clipboard.writeText(template);
+                    alert("Template JSON copied to clipboard!");
+                  }}
+                  type="button"
+                  className="text-[10px] text-sky-600 hover:text-sky-800 font-bold underline transition-colors focus:outline-none"
+                >
+                  Copy Template JSON
+                </button>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setEditing(null)}
+                  className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleBulkImport}
+                  disabled={saving || !bulkJson.trim()}
+                  className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+                >
+                  {saving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />} Import Stations
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

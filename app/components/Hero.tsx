@@ -8,7 +8,7 @@ import {
   ArrowRight, CarFront, Bike, Truck, Sparkles, Send,
   ChevronLeft, ChevronRight, Star, BatteryCharging,
   MapPin, CalendarDays, BadgeCheck, CheckCircle2, Gauge, Info,
-  ChevronDown, ArrowUpRight, GitCompare,
+  ChevronDown, ArrowUpRight, GitCompare, X,
 } from "lucide-react";
 import { triggerEnquiryModal } from "./EnquiryModal";
 import { useCompare } from "../context/CompareContext";
@@ -25,7 +25,7 @@ type TabKey = "featured" | "fresh" | "buy" | "cars" | "twoWheelers" | "autos";
 
 const tabs: Array<{ key: TabKey; label: string; icon: typeof CarFront }> = [
   { key: "featured",    label: "Newly Added",   icon: Star      },
-  { key: "fresh",       label: "Fresh Release", icon: Sparkles  },
+  { key: "fresh",       label: "New Release", icon: Sparkles  },
   { key: "cars",        label: "Cars",          icon: CarFront  },
   { key: "twoWheelers", label: "2 Wheelers",    icon: Bike      },
   { key: "autos",       label: "Autos",         icon: Truck     },
@@ -239,9 +239,10 @@ export default function Hero({
   }, [activeTab]);
 
   useEffect(() => {
+    if (showInfo) return;
     const t = window.setInterval(() => setActiveSlide((c) => (c + 1) % slides.length), 6000);
     return () => window.clearInterval(t);
-  }, [slides.length]);
+  }, [slides.length, showInfo]);
 
   const prevSlide = () => setActiveSlide((c) => (c - 1 + slides.length) % slides.length);
   const nextSlide = () => setActiveSlide((c) => (c + 1) % slides.length);
@@ -313,9 +314,10 @@ export default function Hero({
                   <button
                     onClick={() => setShowInfo((v) => !v)}
                     aria-label="Banner info"
-                    className="flex h-8 w-8 items-center justify-center rounded-full bg-black/30 backdrop-blur-sm border border-white/20 text-white hover:bg-black/50 transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-black/30 backdrop-blur-sm border border-white/20 text-white hover:bg-black/50 transition-colors shadow-sm"
                   >
-                    <Info size={15} />
+                    <span>Know More</span> 
+                    <Info size={13} />
                   </button>
 
                   <AnimatePresence>
@@ -325,8 +327,15 @@ export default function Hero({
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.92, y: -4 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute right-0 top-10 w-64 rounded-2xl bg-white shadow-2xl border border-slate-200 p-4 text-left"
+                        className="absolute right-0 top-10 w-64 rounded-2xl bg-white shadow-2xl border border-slate-200 p-4 text-left pr-8 relative"
                       >
+                        <button
+                          onClick={() => setShowInfo(false)}
+                          className="absolute top-3.5 right-3.5 text-slate-400 hover:text-slate-600 transition-colors p-1"
+                          aria-label="Close details"
+                        >
+                          <X size={14} />
+                        </button>
                         {/* <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
                           Banner {activeSlide + 1} of {slides.length}
                           {banners.length > 0 && <span className="ml-1.5 text-sky-500">· WordPress</span>}
@@ -348,7 +357,7 @@ export default function Hero({
                         )}
 
                         {/* Slide dots inside popover */}
-                        {slides.length > 1 && (
+                        {/* {slides.length > 1 && (
                           <div className="flex gap-1.5 mt-3 pt-3 border-t border-slate-100">
                             {slides.map((_, i) => (
                               <button
@@ -358,7 +367,7 @@ export default function Hero({
                               />
                             ))}
                           </div>
-                        )}
+                        )} */}
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -386,7 +395,7 @@ export default function Hero({
           </div>
 
           {/* ── Tab bar + Card rail — unified panel ── */}
-          <div className="relative -mt-16 z-20 md:-mt-20">
+          <div className="relative mt-10 z-20">
             <div className="mx-4 sm:mx-6 md:mx-8 bg-transparent border-none shadow-none overflow-visible">
 
               {/* Tab bar */}

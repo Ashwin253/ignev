@@ -54,7 +54,7 @@ function ProductOwnershipInner({ item }: { item: EvListing }) {
           onClick={() => setActiveTab("emi")}
           className={`flex-1 flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition-all ${
             activeTab === "emi"
-              ? "bg-[#34ebb1] text-slate-950 font-black shadow-md"
+              ? "bg-[#a5e6d1] text-slate-950 font-black shadow-md"
               : "text-slate-500 hover:text-slate-900 hover:bg-white"
           }`}
         >
@@ -65,7 +65,7 @@ function ProductOwnershipInner({ item }: { item: EvListing }) {
           onClick={() => setActiveTab("cost")}
           className={`flex-1 flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition-all ${
             activeTab === "cost"
-              ? "bg-[#34ebb1] text-slate-950 font-black shadow-md"
+              ? "bg-[#a5e6d1] text-slate-950 font-black shadow-md"
               : "text-slate-500 hover:text-slate-900 hover:bg-white"
           }`}
         >

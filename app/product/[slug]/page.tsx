@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
+  ArrowLeft,
   ArrowRight,
   BadgeCheck, CalendarDays, Zap,
 } from "lucide-react";
@@ -137,8 +138,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   return (
     <section className="min-h-screen bg-[#f8f5f0] text-slate-900 py-28 overflow-x-hidden relative">
       {/* Decorative Ambient Glowing Blurs */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#34ebb1]/15 rounded-full blur-[130px] pointer-events-none"></div>
-      <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-[#34ebb1]/10 rounded-full blur-[130px] pointer-events-none"></div>
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#a5e6d1]/15 rounded-full blur-[130px] pointer-events-none"></div>
+      <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-[#a5e6d1]/10 rounded-full blur-[130px] pointer-events-none"></div>
 
       {/* JSON-LD Schema for AI Crawlers / SEO */}
       <script
@@ -147,14 +148,19 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 overflow-hidden relative z-10">
 
-        {/* Breadcrumb */}
-        <nav className="mb-8 flex items-center gap-2 text-sm text-slate-500">
-          <Link href="/" className="hover:text-[#10855f] transition-colors">Home</Link>
-          <span>/</span>
-          <Link href="/catalog" className="hover:text-[#10855f] transition-colors">Catalog</Link>
-          <span>/</span>
-          <span className="font-semibold text-slate-900 line-clamp-1">{item.brand} {item.title}</span>
-        </nav>
+        {/* Breadcrumb row */}
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <nav className="flex items-center gap-2 text-sm text-slate-500">
+            <Link href="/" className="hover:text-[#10855f] transition-colors">Home</Link>
+            <span>/</span>
+            <Link href="/catalog" className="hover:text-[#10855f] transition-colors">Catalog</Link>
+            <span>/</span>
+            <span className="font-semibold text-slate-900 line-clamp-1">{item.brand} {item.title}</span>
+          </nav>
+          <Link href="/catalog" className="shrink-0 inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-4 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:bg-zinc-900 dark:border-zinc-700 transition">
+            <ArrowLeft size={14} /> Back to Catalog
+          </Link>
+        </div>
 
         <ProductSelectionProvider item={item}>
         <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
@@ -174,7 +180,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 <h1 className="text-3xl font-black tracking-tight text-slate-950 md:text-4xl">{item.title}</h1>
                 <div className="flex flex-col gap-1 ml-auto shrink-0">
                   {item.types[0] && (
-                    <span className="inline-flex items-center gap-1 rounded-full border border-[#34ebb1]/40 bg-[#34ebb1]/20 px-2 py-0.5 text-[10px] font-semibold text-[#10855f]">
+                    <span className="inline-flex items-center gap-1 rounded-full border border-[#a5e6d1]/40 bg-[#a5e6d1]/20 px-2 py-0.5 text-[10px] font-semibold text-[#10855f]">
                       <Zap size={10} className="text-[#10855f]" />{item.types[0]}
                     </span>
                   )}
@@ -202,7 +208,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         {/* Related */}
         <Suspense fallback={
           <div className="mt-32">
-            <h2 className="mb-8 text-2xl font-black text-white">More like this</h2>
+            <h2 className="mb-8 text-2xl font-black text-black">More like this</h2>
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               <ProductSkeleton />
               <ProductSkeleton />
@@ -242,7 +248,7 @@ async function RelatedListings({ slug, currentItem }: { slug: string; currentIte
     return (
       <SmoothCollapseEmptyState>
         <div className="mt-32">
-          <h2 className="mb-8 text-2xl font-black text-white">More like this</h2>
+          <h2 className="mb-8 text-2xl font-black text-black">More like this</h2>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             <ProductSkeleton />
             <ProductSkeleton />
@@ -255,11 +261,11 @@ async function RelatedListings({ slug, currentItem }: { slug: string; currentIte
 
   return (
     <div className="mt-32">
-      <h2 className="mb-8 text-2xl font-black text-white">More like this</h2>
+      <h2 className="mb-8 text-2xl font-black text-black">More like this</h2>
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {related.map((rel) => (
           <Link key={rel.id} href={`/product/${rel.slug}`}
-            className="group flex flex-col h-full overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-md hover:border-[#34ebb1]/60 hover:shadow-xl transition-all duration-350 hover:-translate-y-1">
+            className="group flex flex-col h-full overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-md hover:border-[#a5e6d1]/60 hover:shadow-xl transition-all duration-350 hover:-translate-y-1">
             <div className="relative aspect-4/3 overflow-hidden bg-slate-100 shrink-0">
               {rel.photo && (
                 <Image src={rel.photo} alt={rel.title} fill sizes="33vw"
@@ -276,7 +282,7 @@ async function RelatedListings({ slug, currentItem }: { slug: string; currentIte
                 </p>
               </div>
               <div className="mt-auto pt-5">
-                <span className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-50 border border-slate-250 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-all duration-300 group-hover:bg-[#34ebb1] group-hover:border-[#34ebb1] group-hover:text-slate-950 group-hover:font-extrabold shadow-inner group-hover:shadow-[0_0_15px_rgba(52,235,177,0.3)]">
+                <span className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-50 border border-slate-250 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-all duration-300 group-hover:bg-[#a5e6d1] group-hover:border-[#a5e6d1] group-hover:text-slate-950 group-hover:font-extrabold shadow-inner group-hover:shadow-[0_0_15px_rgba(165,230,209,0.3)]">
                   View Details <ArrowRight size={16} />
                 </span>
               </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { Plus, Pencil, Trash2, LogOut, Save, X, Loader2, ChevronDown, ChevronUp, MessageSquare, Mic, MicOff, Sparkles, Copy, Clipboard, Eye } from "lucide-react";
+import { Plus, Pencil, Trash2, LogOut, Save, X, Loader2, ChevronDown, ChevronUp, MessageSquare, Mic, MicOff, Sparkles, Copy, Clipboard, Eye, Zap } from "lucide-react";
 import type { EvListingRow, EvVariantRow } from "../lib/supabase";
 import LeadsPanel from "./LeadsPanel";
 import AnalyticsPanel from "./AnalyticsPanel";
@@ -591,7 +591,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
       _hints: {
         types_options: ["2 Wheeler", "3 Wheeler", "4 Wheeler"],
         price_bracket_options: ["under-2L", "5-10", "5-15", "10-25", "15-30", "30+", "50+"],
-        body_type_options: ["Scooter", "Sedan", "SUV", "Hatchback", "Compact SUV", "MUV", "Bike", "Tempo", "Autos", "Other"], usage_type_options: ["Goods", "Passenger"]
+        body_type_options: ["Scooter", "Sedan", "SUV", "Hatchback", "Compact SUV", "MUV", "Bike", "Tempo", "Autos", "Other"], usage_type_options: ["Both", "Goods", "Passenger"]
       },
       form: templateForm,
       variants: templateVariants.length > 0 ? templateVariants : [emptyVariant],
@@ -682,6 +682,8 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
       version_name: version_name || "",
       model_year: model_year || 2026,
       price: rest.price || 0,
+      usage_type: rest.usage_type || null,
+      continuing_variant_id: rest.continuing_variant_id || null,
       top_speed: rest.top_speed || "",
       battery_capacity_kwh: rest.battery_capacity_kwh || "",
       driving_range_km: rest.driving_range_km || "",
@@ -1726,7 +1728,10 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
               <label className="block">
                 <span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-800">Usage Type</span>
                 <select value={form.usage_type || ""} onChange={(e) => setForm({ ...form, usage_type: e.target.value || null })} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm font-semibold text-slate-900 outline-none cursor-pointer">
-                  <option value="">None</option><option value="Goods">Goods</option><option value="Passenger">Passenger</option>
+                  <option value="">None</option>
+                  <option value="Both">Both</option>
+                  <option value="Goods">Goods</option>
+                  <option value="Passenger">Passenger</option>
                 </select>
               </label>
               <label className="block">
@@ -2383,6 +2388,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                           className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-900 outline-none cursor-pointer h-[34px] leading-tight"
                         >
                           <option value="">None / Unspecified</option>
+                          <option value="Both">Both</option>
                           <option value="Goods">Goods</option>
                           <option value="Passenger">Passenger</option>
                         </select>
@@ -2418,6 +2424,154 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                         Discontinued Variant
                       </label>
                     </div>
+                  </div>
+
+                  {/* BAAS standalone block */}
+                  <div className="mb-4 p-5 rounded-2xl border border-emerald-200 bg-emerald-50/20 flex flex-col gap-4">
+                    <label className="flex items-center gap-2.5 text-sm font-extrabold uppercase tracking-wider text-slate-800 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={!!v.has_baas}
+                        onChange={(e) => {
+                          const arr = [...variants];
+                          arr[i] = { ...arr[i], has_baas: e.target.checked };
+                          setVariants(arr);
+                        }}
+                        className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 h-5 w-5"
+                      />
+                      Enable Battery-as-a-Service (BaaS) for this variant
+                    </label>
+
+                    {v.has_baas && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">
+                        {/* 1. Upfront Price */}
+                        <div className="rounded-xl bg-white border border-slate-200 p-3 shadow-xs">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Upfront Price (Ex-Battery)</span>
+                          <input
+                            type="text"
+                            value={v.baas_upfront_price ?? ""}
+                            onChange={(e) => {
+                              const arr = [...variants];
+                              arr[i] = { ...arr[i], baas_upfront_price: e.target.value || null };
+                              setVariants(arr);
+                            }}
+                            placeholder="e.g. 10.5 (Lakh)"
+                            className="w-full bg-transparent text-sm font-black text-slate-900 leading-tight outline-none"
+                          />
+                        </div>
+
+                        {/* 2. Capacity */}
+                        <div className="rounded-xl bg-white border border-slate-200 p-3 shadow-xs">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Battery Capacity (kWh)</span>
+                          <input
+                            type="text"
+                            value={v.battery_capacity_kwh ?? ""}
+                            onChange={(e) => {
+                              const arr = [...variants];
+                              arr[i] = { ...arr[i], battery_capacity_kwh: e.target.value || null };
+                              setVariants(arr);
+                            }}
+                            placeholder="e.g. 40"
+                            className="w-full bg-transparent text-sm font-black text-slate-900 leading-tight outline-none"
+                          />
+                        </div>
+
+                        {/* 3. Range */}
+                        <div className="rounded-xl bg-white border border-slate-200 p-3 shadow-xs">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Driving Range (km)</span>
+                          <input
+                            type="text"
+                            value={v.driving_range_km ?? ""}
+                            onChange={(e) => {
+                              const arr = [...variants];
+                              arr[i] = { ...arr[i], driving_range_km: e.target.value || null };
+                              setVariants(arr);
+                            }}
+                            placeholder="e.g. 315"
+                            className="w-full bg-transparent text-sm font-black text-slate-900 leading-tight outline-none"
+                          />
+                        </div>
+
+                        {/* 4. Charge */}
+                        <div className="rounded-xl bg-white border border-slate-200 p-3 shadow-xs">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">DC Charging Time (mins)</span>
+                          <input
+                            type="text"
+                            value={v.charging_time_mins ?? ""}
+                            onChange={(e) => {
+                              const arr = [...variants];
+                              arr[i] = { ...arr[i], charging_time_mins: e.target.value || null };
+                              setVariants(arr);
+                            }}
+                            placeholder="e.g. 60"
+                            className="w-full bg-transparent text-sm font-black text-slate-900 leading-tight outline-none"
+                          />
+                        </div>
+
+                        {/* 5. Rental Rate */}
+                        <div className="rounded-xl bg-white border border-slate-200 p-3 shadow-xs">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Rental Rate (₹/km)</span>
+                          <input
+                            type="text"
+                            value={v.baas_price_per_km ?? ""}
+                            onChange={(e) => {
+                              const arr = [...variants];
+                              arr[i] = { ...arr[i], baas_price_per_km: e.target.value || null };
+                              setVariants(arr);
+                            }}
+                            placeholder="e.g. 2.5"
+                            className="w-full bg-transparent text-sm font-black text-slate-900 leading-tight outline-none"
+                          />
+                        </div>
+
+                        {/* 6. Min. Commitment */}
+                        <div className="rounded-xl bg-slate-50 border border-slate-200 p-3 shadow-xs opacity-75">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Min. Commitment (Preview)</span>
+                          <p className="text-sm font-black text-slate-700 leading-tight">1,500 km/mo</p>
+                        </div>
+
+                        {/* 7. Min. Monthly Bill */}
+                        <div className="rounded-xl bg-slate-50 border border-slate-200 p-3 shadow-xs opacity-75">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Min. Monthly Bill (Preview)</span>
+                          <p className="text-sm font-black text-slate-700 leading-tight">
+                            ₹{(() => {
+                              const rate = parseFloat(v.baas_price_per_km || "0");
+                              const rounded = Math.round(rate * 1500);
+                              return isNaN(rounded) ? "—" : new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(rounded);
+                            })()}/mo
+                          </p>
+                        </div>
+
+                        {/* 8. Battery Ownership */}
+                        <div className="rounded-xl bg-white border border-slate-200 p-3 shadow-xs flex flex-col justify-between">
+                          <div>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Battery Ownership</span>
+                            <p className="text-xs font-black text-slate-800 leading-tight">
+                              Leased ({v.baas_model_name || "OEM"} Leasing Partner)
+                            </p>
+                          </div>
+                          <input
+                            type="text"
+                            value={v.baas_model_name ?? ""}
+                            onChange={(e) => {
+                              const arr = [...variants];
+                              arr[i] = { ...arr[i], baas_model_name: e.target.value };
+                              setVariants(arr);
+                            }}
+                            placeholder="Partner Name (e.g. OEM)"
+                            className="w-full bg-transparent text-xs font-medium outline-none text-slate-500 mt-2 border-t border-slate-100 pt-1"
+                          />
+                        </div>
+
+                        {/* 9. Battery Warranty */}
+                        <div className="rounded-xl bg-slate-50 border border-slate-200 p-3 shadow-xs opacity-75">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Battery Warranty (Preview)</span>
+                          <p className="text-xs font-black text-slate-700 leading-tight">
+                            Lifetime Warranty <span className="text-[9px] font-bold text-emerald-600 block mt-0.5">(Free Replacement &lt;70% Health)</span>
+                          </p>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Conditional inputs */}
                     {(v.has_exclusive_color || v.discontinued) && (
@@ -2755,20 +2909,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                       </div>
                     ))}
                   </div>
-                  <label className="flex items-center gap-2 mt-3 text-xs text-slate-600">
-                    <input type="checkbox" checked={v.has_baas} onChange={(e) => updateVariantChargingField(i, "has_baas", e.target.checked)} />
-                    This variant has BAAS option
-                  </label>
-                  {v.has_baas && (
-                    <div className="mt-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
-                      <p className="text-[8px] font-bold uppercase text-emerald-600 mb-2">BAAS Details</p>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        <MiniInput label="BAAS Model Name" value={v.baas_model_name} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], baas_model_name: val }; setVariants(arr); }} />
-                        <MiniInput label="₹/km Rate" value={v.baas_price_per_km ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], baas_price_per_km: val }; setVariants(arr); }} />
-                        <MiniInput label="Upfront Price (₹)" value={v.baas_upfront_price ?? ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], baas_upfront_price: val }; setVariants(arr); }} />
-                      </div>
-                    </div>
-                  )}
+
                   </>
                   )}
 

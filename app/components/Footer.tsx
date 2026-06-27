@@ -17,10 +17,10 @@ import Image from 'next/image';
 const Footer = () => {
   const [activeOffice, setActiveOffice] = useState(null);
   const socialItems = [
-    { name: "Facebook", icon: <FaFacebook size={18} />, link: "https://www.facebook.com/Safbin-Caritas-484062971768008" },
-    { name: "Twitter", icon: <FaTwitter size={18} />, link: "https://twitter.com/safbin_caritas?s=03" },
-    { name: "Instagram", icon: <FaInstagram size={18} />, link: "https://www.instagram.com/caritas.safbin/?igshid=1gnpb9hdkno06" },
-    { name: "YouTube", icon: <FaYoutube size={18} />, link: "https://www.youtube.com/channel/UCBoxi8L6RHh5dIwbdw1eD5A" },
+    { name: "Facebook", icon: <FaFacebook size={18} />, link: "https://www.facebook.com" },
+    { name: "Twitter", icon: <FaTwitter size={18} />, link: "https://twitter.com" },
+    { name: "Instagram", icon: <FaInstagram size={18} />, link: "https://www.instagram.com" },
+    { name: "YouTube", icon: <FaYoutube size={18} />, link: "https://www.youtube.com" },
   ];
 
   return (
@@ -89,8 +89,16 @@ className="object-cover "
               <a href="mailto:evplseadmin@gmail.com" className="hover:text-amber-400 transition">evplseadmin@gmail.com</a>
             </div> */}
             <div className="flex items-center space-x-4 text-black">
-              <FaEnvelope className="text-black" />
+              <FaGlobe className="text-black" />
               <Link  href="/about" className="hover:text-amber-400 transition">About Us</Link>
+            </div>
+            <div className="flex items-center space-x-4 text-black">
+              <FaGlobe className="text-black" />
+              <Link  href="/privacy" className="hover:text-amber-400 transition">Privacy Policy</Link>
+            </div>
+            <div className="flex items-center space-x-4 text-black">
+              <FaGlobe className="text-black" />
+              <Link  href="/terms" className="hover:text-amber-400 transition">Terms of Services</Link>
             </div>
              {/* <ul className="space-y-3">
               <li>

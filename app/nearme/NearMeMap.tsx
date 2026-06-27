@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
-import { Zap, Wrench, MapPin, Navigation, Share2, Loader2, PhoneCall } from "lucide-react";
+import { Zap, Wrench, MapPin, Navigation, Share2, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import Map, { Marker, Source, Layer, MapRef } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
 import digipin from "digipinjs-lib";
@@ -84,6 +84,7 @@ export default function NearMeMap() {
   const [isLocating, setIsLocating] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [activeTab, setActiveTab] = useState<"charging" | "spare">("charging");
+  const [isMinimized, setIsMinimized] = useState(false);
 
   const radiusKm = 5; // 5 km radius
 
@@ -196,6 +197,7 @@ export default function NearMeMap() {
               onClick={(e) => {
                 e.originalEvent.stopPropagation();
                 setSelectedId(selectedId === loc.id ? null : loc.id);
+                setIsMinimized(false);
                 panTo(loc.lat, loc.lng);
               }}
             >
@@ -214,43 +216,22 @@ export default function NearMeMap() {
       </div>
 
       {/* Bottom Panel */}
-      <div className="z-10 w-full md:w-[600px] md:mx-auto md:absolute md:bottom-6 md:left-1/2 md:-translate-x-1/2 bg-white/95 backdrop-blur-md rounded-t-3xl md:rounded-3xl shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] md:shadow-2xl flex flex-col h-[45vh] md:h-auto md:max-h-[80vh] border-t md:border border-slate-200">
+      <div className={`z-10 w-full md:w-[600px] md:mx-auto md:absolute md:bottom-6 md:left-1/2 md:-translate-x-1/2 bg-white/95 backdrop-blur-md rounded-t-3xl md:rounded-3xl shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] md:shadow-2xl flex flex-col transition-all duration-300 ease-in-out border-t md:border border-slate-200 ${
+        isMinimized 
+          ? "h-[80px] md:h-[80px] overflow-hidden" 
+          : "h-[45vh] md:h-auto md:max-h-[80vh]"
+      }`}>
         
         {/* Header and Tabs */}
-        <div className="p-4 border-b border-slate-200/60 bg-white/50 shrink-0 rounded-t-3xl">
-          <div className="flex items-center justify-between mb-3">
+        <div className={`p-4 bg-white/50 shrink-0 rounded-t-3xl transition-all duration-300 ${
+          isMinimized 
+            ? "opacity-0 pointer-events-none h-0 p-0 border-none overflow-hidden" 
+            : "border-b border-slate-200/60"
+        }`}>
+          <div className="mb-3">
             <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
               <MapPin className="text-emerald-500" /> Near Me
             </h2>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => {
-                  if (!centerPoint) {
-                    setErrorMsg("Please locate yourself first!");
-                    return;
-                  }
-                  const text = `I need assistance here! My DIGIPIN is: ${digipin.encode(centerPoint[0], centerPoint[1])}\n\nCoordinates: ${centerPoint[0].toFixed(5)}, ${centerPoint[1].toFixed(5)}\n\nVerify on IndiaPost portal: https://dac.indiapost.gov.in/mydigipin/home`;
-                  if (navigator.share) {
-                    navigator.share({ title: 'My DIGIPIN Location', text }).catch(()=>{});
-                  } else {
-                    navigator.clipboard.writeText(text);
-                    alert("Copied location to share!");
-                  }
-                }}
-                className="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 transition-colors shadow-sm active:scale-95"
-                title="Share my exact location"
-              >
-                <Share2 size={14} /> Share DIGIPIN
-              </button>
-              <button 
-                onClick={handleGetLocation}
-                disabled={isLocating}
-                className="bg-slate-200 hover:bg-slate-300 text-slate-700 p-1.5 rounded-full transition-colors flex items-center justify-center shadow-sm active:scale-95"
-                title="Use My Location"
-              >
-                {isLocating ? <Loader2 size={16} className="animate-spin" /> : <Navigation size={16} />}
-              </button>
-            </div>
           </div>
           
           {errorMsg && (
@@ -275,7 +256,9 @@ export default function NearMeMap() {
         </div>
 
         {/* Results */}
-        <div className="relative flex-1 overflow-y-auto overscroll-contain p-4 pb-24 md:pb-24">
+        <div className={`relative flex-1 overflow-y-auto overscroll-contain p-4 pb-24 md:pb-24 transition-all duration-300 ${
+          isMinimized ? "opacity-0 pointer-events-none h-0 p-0 overflow-hidden" : ""
+        }`}>
           <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-3 px-1">
             {displayedLocations.length} {activeTab === "charging" ? "Charger" : "Repair"} station{displayedLocations.length !== 1 ? "s" : ""} within 5km
           </p>
@@ -325,16 +308,44 @@ export default function NearMeMap() {
         </div>
 
         {/* Bottom Actions */}
-        <div className="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-white via-white to-transparent md:rounded-b-3xl flex gap-3">
+        <div className="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-white via-white to-transparent md:rounded-b-3xl flex items-center gap-3">
           <button className="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl shadow-[0_4px_14px_0_rgba(15,23,42,0.39)] transition-all active:scale-95 flex items-center justify-center gap-2">
             Pick Me UP
           </button>
-          <a 
-            href="tel:+919876543210" 
-            className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl shadow-[0_4px_14px_0_rgba(16,185,129,0.39)] transition-all active:scale-95 flex items-center justify-center gap-2"
+          <button
+            onClick={() => {
+              if (!centerPoint) {
+                setErrorMsg("Please locate yourself first!");
+                return;
+              }
+              const text = `I need assistance here! My DIGIPIN is: ${digipin.encode(centerPoint[0], centerPoint[1])}\n\nCoordinates: ${centerPoint[0].toFixed(5)}, ${centerPoint[1].toFixed(5)}\n\nVerify on IndiaPost portal: https://dac.indiapost.gov.in/mydigipin/home`;
+              if (navigator.share) {
+                navigator.share({ title: 'My DIGIPIN Location', text }).catch(()=>{});
+              } else {
+                navigator.clipboard.writeText(text);
+                alert("Copied location to share!");
+              }
+            }}
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-[0_4px_14px_0_rgba(37,99,235,0.39)] transition-all active:scale-95 flex items-center justify-center gap-2"
+            title="Share my exact location"
           >
-            <PhoneCall size={20} /> Call Us
-          </a>
+            <Share2 size={16} /> Share DIGIPIN
+          </button>
+          <button 
+            onClick={handleGetLocation}
+            disabled={isLocating}
+            className="bg-slate-200 hover:bg-slate-300 text-slate-700 p-3.5 rounded-xl transition-colors flex items-center justify-center shadow-sm active:scale-95 shrink-0"
+            title="Use My Location"
+          >
+            {isLocating ? <Loader2 size={18} className="animate-spin" /> : <Navigation size={18} />}
+          </button>
+          <button
+            onClick={() => setIsMinimized(!isMinimized)}
+            className="bg-slate-200 hover:bg-slate-300 text-slate-700 p-3.5 rounded-xl transition-colors flex items-center justify-center shadow-sm active:scale-95 shrink-0"
+            title={isMinimized ? "Maximize Panel" : "Minimize Panel"}
+          >
+            {isMinimized ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+          </button>
         </div>
 
       </div>

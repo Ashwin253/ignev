@@ -232,6 +232,8 @@ export type BatteryVariant = {
   exclusive_colors?: string[];
   discontinued?: boolean;
   discontinued_date?: string | null;
+  usage_type?: string | null;
+  continuing_variant_id?: string | null;
 };
 
 export type EnergyCompareEntry = {
@@ -452,6 +454,8 @@ function mapBatteryVariant(raw: BatteryVariant | Record<string, unknown>): Batte
     price_baas: firstText(record.price_baas, record.priceBaas, record.baas_price, record.baasPrice),
     baseprice: firstText(record.baseprice, record.basePrice, record.base_price),
     battery_subs: firstText(record.battery_subs, record.batterySubs, record.battery_subscription, record.batterySubscription),
+    usage_type: firstText(record.usage_type, record.usageType),
+    continuing_variant_id: firstText(record.continuing_variant_id, record.continuingVariantId),
   };
 }
 

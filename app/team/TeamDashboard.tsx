@@ -71,6 +71,8 @@ export type VariantForm = {
   variant_name: string;
   version_name?: string | null;
   launch_date?: string | null;
+  usage_type?: string | null;
+  continuing_variant_id?: string | null;
   slug: string; model_year: number; price: number;
   top_speed: string | null; battery_capacity_kwh: string | null;
   driving_range_km: string | null; charging_time_mins: string | null;
@@ -132,6 +134,7 @@ const emptyListing: ListingForm = {
 
 const emptyVariant: VariantForm = {
   variant_name: "", version_name: "", launch_date: "", slug: "", model_year: 2026, price: 0,
+  usage_type: null, continuing_variant_id: null,
   top_speed: null, battery_capacity_kwh: null, driving_range_km: null,
   charging_time_mins: null, max_power_bhp: null, max_torque_nm: null,
   has_baas: false, baas_price_per_km: null, baas_upfront_price: null,
@@ -532,6 +535,9 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
         extra_charging: rest.extra_charging || [],
         extra_dimensions: rest.extra_dimensions || [],
         extra_sections: rest.extra_sections || [],
+
+        usage_type: rest.usage_type || null,
+        continuing_variant_id: rest.continuing_variant_id || null,
 
         ...rest,
         features: rest.features ? {
@@ -1086,6 +1092,8 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
           variant_name: v.variant_name,
           version_name: v.version_name || null,
           launch_date: v.launch_date || null,
+          usage_type: v.usage_type || null,
+          continuing_variant_id: v.continuing_variant_id || null,
           slug: v.slug || getVariantSlug(sanitizedSlug, v),
           model_year: v.model_year,
           price: v.price,
@@ -2363,68 +2371,130 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                     <MiniInput label="Price (Lakh)" value={String(v.price || "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], price: cleanPriceLakh(val) }; setVariants(arr); }} />
                   </div>
                   
-                  {/* Exclusive Colors Toggle & Input */}
-                  <div className="mb-4 p-3 rounded-lg border-2 border-dashed border-sky-300 bg-sky-50/50 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                    <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        checked={!!v.has_exclusive_color}
-                        onChange={(e) => {
-                          const arr = [...variants];
-                          arr[i] = { ...arr[i], has_exclusive_color: e.target.checked };
-                          setVariants(arr);
-                        }}
-                        className="rounded border-slate-300 text-sky-600 focus:ring-sky-500 h-4 w-4"
-                      />
-                      Has Exclusive Color
-                    </label>
+                  {/* Row with Usage Type, Exclusive Color, and Discontinued */}
+                  <div className="mb-4 p-4 rounded-xl border border-slate-300 bg-slate-50 flex flex-col gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                      {/* Usage Type Select */}
+                      <label className="block">
+                        <span className="text-xs font-extrabold uppercase tracking-wider text-slate-800">Usage Type</span>
+                        <select
+                          value={v.usage_type || ""}
+                          onChange={(e) => updateVariantField(i, { usage_type: e.target.value || null })}
+                          className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-900 outline-none cursor-pointer h-[34px] leading-tight"
+                        >
+                          <option value="">None / Unspecified</option>
+                          <option value="Goods">Goods</option>
+                          <option value="Passenger">Passenger</option>
+                        </select>
+                      </label>
 
-                    {v.has_exclusive_color && (
-                      <div className="flex-1 w-full">
-                        <MiniInput
-                          label="Exclusive Colors (comma/slash separated hex codes, e.g. ffffff, 000000, 333/fff)"
-                          value={Array.isArray(v.exclusive_colors) ? v.exclusive_colors.join(", ") : ""}
-                          onChange={(val) => {
-                            const arr = [...variants];
-                            arr[i] = {
-                              ...arr[i],
-                              exclusive_colors: val.split(",").map((c) => c.trim()).filter(Boolean),
-                            };
-                            setVariants(arr);
-                          }}
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Discontinued Variant Option */}
-                  <div className="mb-4 p-3 rounded-lg border-2 border-dashed border-rose-300 bg-rose-50/50 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                    <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        checked={!!v.discontinued}
-                        onChange={(e) => {
-                          const arr = [...variants];
-                          arr[i] = { ...arr[i], discontinued: e.target.checked };
-                          setVariants(arr);
-                        }}
-                        className="rounded border-slate-300 text-rose-600 focus:ring-rose-500 h-4 w-4"
-                      />
-                      Discontinued Variant
-                    </label>
-                    {v.discontinued && (
-                      <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
-                        <span>Discontinued Date:</span>
+                      {/* Exclusive Color Toggle */}
+                      <label className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-slate-800 cursor-pointer select-none h-full md:mt-5">
                         <input
-                          type="date"
-                          value={v.discontinued_date ?? ""}
+                          type="checkbox"
+                          checked={!!v.has_exclusive_color}
                           onChange={(e) => {
                             const arr = [...variants];
-                            arr[i] = { ...arr[i], discontinued_date: e.target.value || null };
+                            arr[i] = { ...arr[i], has_exclusive_color: e.target.checked };
                             setVariants(arr);
                           }}
-                          className="rounded border border-slate-300 px-2 py-1 bg-white font-normal outline-none"
+                          className="rounded border-slate-300 text-sky-600 focus:ring-sky-500 h-4 w-4"
                         />
+                        Has Exclusive Color
+                      </label>
+
+                      {/* Discontinued Toggle */}
+                      <label className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-slate-800 cursor-pointer select-none h-full md:mt-5">
+                        <input
+                          type="checkbox"
+                          checked={!!v.discontinued}
+                          onChange={(e) => {
+                            const arr = [...variants];
+                            arr[i] = { ...arr[i], discontinued: e.target.checked };
+                            setVariants(arr);
+                          }}
+                          className="rounded border-slate-300 text-rose-600 focus:ring-rose-500 h-4 w-4"
+                        />
+                        Discontinued Variant
+                      </label>
+                    </div>
+
+                    {/* Conditional inputs */}
+                    {(v.has_exclusive_color || v.discontinued) && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-slate-200">
+                        {v.has_exclusive_color ? (
+                          <div className="w-full">
+                            <MiniInput
+                              label="Exclusive Colors (comma/slash separated hex codes)"
+                              value={Array.isArray(v.exclusive_colors) ? v.exclusive_colors.join(", ") : ""}
+                              onChange={(val) => {
+                                const arr = [...variants];
+                                arr[i] = {
+                                  ...arr[i],
+                                  exclusive_colors: val.split(",").map((c) => c.trim()).filter(Boolean),
+                                };
+                                setVariants(arr);
+                              }}
+                            />
+                          </div>
+                        ) : <div />}
+
+                        {v.discontinued && (
+                          <div className="flex flex-col gap-3">
+                            <label className="block">
+                              <span className="text-xs font-bold uppercase tracking-wider text-slate-700">Discontinued Date</span>
+                              <input
+                                type="date"
+                                value={v.discontinued_date ?? ""}
+                                onChange={(e) => {
+                                  const arr = [...variants];
+                                  arr[i] = { ...arr[i], discontinued_date: e.target.value || null };
+                                  setVariants(arr);
+                                }}
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-1.5 text-xs outline-none h-[34px] text-slate-900 bg-white"
+                              />
+                            </label>
+
+                            <label className="block">
+                              <span className="text-xs font-bold uppercase tracking-wider text-slate-700">Continuing Model/Slug/URL</span>
+                              <select
+                                value={v.continuing_variant_id || ""}
+                                onChange={(e) => {
+                                  const arr = [...variants];
+                                  arr[i] = { ...arr[i], continuing_variant_id: e.target.value || null };
+                                  setVariants(arr);
+                                }}
+                                className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-900 outline-none cursor-pointer h-[34px] leading-tight"
+                              >
+                                <option value="">Select Continuing Variant...</option>
+                                {variants.filter((itemV, idx) => idx !== i && itemV.variant_name).map((itemV, idx) => (
+                                  <option key={itemV.id || idx} value={itemV.id || itemV.slug || itemV.variant_name}>
+                                    {itemV.variant_name} ({itemV.model_year})
+                                  </option>
+                                ))}
+                                <option value="__custom__">-- Custom Slug or URL --</option>
+                              </select>
+                            </label>
+                            {/* If custom is selected or if they entered something not in the options list, let them edit custom text */}
+                            {(v.continuing_variant_id && 
+                              (v.continuing_variant_id === "__custom__" ||
+                              !variants.some(itemV => itemV.id === v.continuing_variant_id || itemV.slug === v.continuing_variant_id || itemV.variant_name === v.continuing_variant_id))
+                            ) && (
+                              <div className="mt-1">
+                                <MiniInput
+                                  label="Custom Slug or Redirect URL"
+                                  value={v.continuing_variant_id === "__custom__" ? "" : v.continuing_variant_id}
+                                  placeholder="e.g. nexon-ev-2026 or https://..."
+                                  onChange={(val) => {
+                                    const arr = [...variants];
+                                    arr[i] = { ...arr[i], continuing_variant_id: val || null };
+                                    setVariants(arr);
+                                  }}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

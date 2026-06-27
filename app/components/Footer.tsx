@@ -1,56 +1,98 @@
-"use client";
+'use client';
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { FaFacebook, FaTwitter, FaInstagram, FaEnvelope, FaGlobe, FaYoutube, FaPhone } from 'react-icons/fa';
+// import { BD, IN, NP, PK, LK, AT } from 'country-flag-icons/react/3x2';
+import Image from 'next/image';
 
-import Link from "next/link";
-import { Globe, Share2, MessageSquare, Hash, Mail, Phone, MapPin } from "lucide-react";
-import { usePathname } from "next/navigation";
+// const regionalOffices = [
+//   { country: 'Bangladesh', Flag: BD, address: 'Caritas Bangladesh, 2, Outer Circular Road, Shantibagh, Dhaka-1217 , Bangladesh', phone: '+880-2-48315406-9', email: 'cbgeneral@caritasbd.org', website: 'https://www.caritasbd.org' },
+//   { country: 'India', Flag: IN, address: 'Caritas India, CBCI Centre, 1 Ashok Place, New Delhi – 110001, India', phone: '+91 11 23363390', email: 'info@caritasindia.org', website: 'https://caritasindia.org' },
+//   { country: 'Nepal', Flag: NP, address: 'Caritas Nepal, Dhobighat, GPO Box: 9571, Lalitpur, Nepal', phone: '+977-1-5438172', email: 'support@caritas.org.np', website: 'https://www.caritasnepal.org' },
+//   { country: 'Pakistan', Flag: PK, address: 'Caritas Pakistan, 23/3 Race Course Road, Lahore – 54000,Pakistan', phone: '+92-42-36315584-5', email: 'caritas@caritas.org.pk', website: 'https://caritas.org.pk' },
+//   { country: 'Sri Lanka', Flag: LK, address: 'Caritas Sri Lanka - SEDEC, 133, Kynsey Road, Colombo 08, Sri Lanka', phone: '+94 112 691 885', email: 'sedec@caritaslk.org', website: 'https://www.caritaslk.org' },
+//   { country: 'Austria', Flag: AT, address: 'Storchengasse 1/E1 05,\n1160 Wien, Austria', phone: '', email: 'office@caritas-austria.at', website: 'https://www.caritas-austria.at/' },
+// ];
 
-export default function Footer() {
-  const pathname = usePathname();
-  
-  if (pathname?.startsWith("/nearme")) {
-    return null;
-  }
+const Footer = () => {
+  const [activeOffice, setActiveOffice] = useState(null);
+  const socialItems = [
+    { name: "Facebook", icon: <FaFacebook size={18} />, link: "https://www.facebook.com/Safbin-Caritas-484062971768008" },
+    { name: "Twitter", icon: <FaTwitter size={18} />, link: "https://twitter.com/safbin_caritas?s=03" },
+    { name: "Instagram", icon: <FaInstagram size={18} />, link: "https://www.instagram.com/caritas.safbin/?igshid=1gnpb9hdkno06" },
+    { name: "YouTube", icon: <FaYoutube size={18} />, link: "https://www.youtube.com/channel/UCBoxi8L6RHh5dIwbdw1eD5A" },
+  ];
 
   return (
-    <footer className="bg-[#050505] pt-20 pb-10 border-t border-white/5">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
-          {/* Brand */}
-          <div className="space-y-6">
-            <Link href="/" className="flex items-center font-bold text-3xl tracking-tight">
-              <span className="text-primary">EV</span>
-              <span className="text-secondary">Plse</span>
-            </Link>
-            <p className="text-gray-400">
+    <footer className="relative text-black overflow-hidden">
+   <div className="absolute inset-0 -z-0 flex items-center justify-center">
+  <Image
+    src="/footernew.png"
+    alt="Footer Background"
+    fill
+className="object-cover "
+    quality={100}
+    priority
+  />
+</div>
+
+
+      <div className="relative z-10 w-5/6 mx-auto py-16 px-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3  gap-12">
+          {/* Column 1 - Regional Offices (Tabbed) */}
+          <div className="space-y-4 text-black">
+            {/* <h3 className="text-4xl font-bold mb-2 border-b-2 pb-1 inline-block">EVPlse</h3> */}
+             <img src="/evplselogo.png" alt="IgnEV Logo" className="h-16 w-auto" />
+            <p className="text-gray-600">
               India's premier marketplace for electric and hybrid vehicles. Making sustainable mobility accessible to everyone.
             </p>
-            <div className="flex space-x-4">
-              <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-primary hover:text-white transition-all"><Globe size={18} /></a>
-              <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-primary hover:text-white transition-all"><Share2 size={18} /></a>
-              {/* <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-primary hover:text-white transition-all"><MessageSquare size={18} /></a>
-              <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:bg-primary hover:text-white transition-all"><Hash size={18} /></a> */}
-            {/* <a href="/team" className="w-10 h-10 rounded-md bg-white/5 flex items-center justify-center text-gray-400 hover:bg-primary hover:text-white transition-all"><MessageSquare size={10} />Team</a> */}
+            {/* <div className="flex flex-wrap gap-2">
+              {regionalOffices.map((office, i) => {
+                const Flag = office.Flag;
+                return (
+                  <button
+                    key={office.country}
+                    onMouseEnter={() => setActiveOffice(i)}
+                    onMouseLeave={() => setActiveOffice(null)}
+                    title={office.country}
+                    className={`w-10 h-7 mx-1 rounded-md overflow-hidden transition-all duration-200 ${
+                      activeOffice === null
+                        ? 'opacity-100 hover:scale-110'
+                        : activeOffice === i
+                          ? 'scale-120 opacity-100 shadow-md'
+                          : 'opacity-100'
+                    }`}
+                  >
+                    <Flag className="w-full h-full object-cover" />
+                  </button>
+                );
+              })}
+            </div> */}
+            {/* {activeOffice !== null ? (
+            <div className="text-sm bg-white/70 backdrop-blur-md rounded-r-lg p-3">
+              <p className="font-medium text-gray-900 mb-2 whitespace-pre-line">{regionalOffices[activeOffice].address}</p>
             </div>
+            ) : (
+              <div className="p-3"><p className="invisible">placeholder</p><p className="invisible">placeholder</p></div>
+            )} */}
           </div>
 
-          {/* Quick Links */}
-          {/* <div>
-            <h3 className="text-lg font-bold text-white mb-6">Quick Links</h3>
-            <ul className="space-y-3">
-              {['Buy', 'Rent', 'Sell', 'Insurance', 'Service'].map((link) => (
-                <li key={link}>
-                  <Link href={`#${link.toLowerCase()}`} className="text-gray-400 hover:text-secondary transition-colors">
-                    {link}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div> */}
-
-          {/* Support */}
-          <div>
-            <h3 className="text-lg font-bold text-white mb-6">Company</h3>
-            <ul className="space-y-3">
+          {/* Column 2 */}
+          <div className="space-y-3">
+            <h3 className="text-2xl font-bold mb-4 border-b-2 pb-2 inline-block">Contact Us</h3>
+            <div className="flex items-center space-x-4 text-black">
+              <FaEnvelope className="text-black" />
+              <a href="mailto:evplseadmin@gmail.com" className="hover:text-amber-400 transition">evplseadmin@gmail.com</a>
+            </div>
+            {/* <div className="flex items-center space-x-4 text-black">
+              <FaEnvelope className="text-black" />
+              <a href="mailto:evplseadmin@gmail.com" className="hover:text-amber-400 transition">evplseadmin@gmail.com</a>
+            </div> */}
+            <div className="flex items-center space-x-4 text-black">
+              <FaEnvelope className="text-black" />
+              <Link  href="/about" className="hover:text-amber-400 transition">About Us</Link>
+            </div>
+             {/* <ul className="space-y-3">
               <li>
                 <Link href="/about" className="text-gray-400 hover:text-secondary transition-colors">
                   About Us
@@ -66,34 +108,55 @@ export default function Footer() {
                   Terms of Service
                 </Link>
               </li>
-            </ul>
+            </ul> */}
+         
+            {/* <div className="flex items-center space-x-4 text-black">
+              <FaGlobe className="text-black" />
+              <a href="https://www.caritas-austria.at/international-projects/safbin-strengthening-small-farmers/" target="_blank" rel="noopener noreferrer" className="hover:text-amber-400 transition">
+                Donate Now (Europe)
+              </a>
+            </div>
+            <div className="flex items-center space-x-4 text-black">
+              <FaGlobe className="text-black" />
+              <Link href="/privacypolicy" className="hover:text-amber-400 transition">Privacy Policy</Link>
+            </div> */}
           </div>
 
-          {/* Contact */}
-          {/* <div>
-            <h3 className="text-lg font-bold text-white mb-6">Contact Info</h3>
-            <ul className="space-y-4">
-              <li className="flex items-start">
-                <MapPin size={20} className="text-primary mr-3 mt-1 shrink-0" />
-                <span className="text-gray-400">123 EV Park, Tech Hub Road, Bangalore, Karnataka 560001</span>
-              </li>
-              <li className="flex items-center">
-                <Phone size={20} className="text-primary mr-3 shrink-0" />
-                <span className="text-gray-400">+91 1800-EV-SMART</span>
-              </li>
-              <li className="flex items-center">
-                <Mail size={20} className="text-primary mr-3 shrink-0" />
-                <span className="text-gray-400">evplseadmin@gmail.com</span>
-              </li>
-            </ul>
-          </div> */}
+          {/* Column 3 */}
+          <div className="space-y-6">
+            <h3 className="text-2xl font-bold mb-4 border-b-2 pb-2 inline-block">Follow Us</h3>
+
+            <div className="grid grid-cols-2 gap-3">
+              {socialItems.map((item, i) => (
+                <a
+                  key={i}
+                  href={item.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 border-black border px-3 py-2 rounded-lg backdrop-blur shadow-sm hover:bg-zinc-800/60 hover:text-white transition"
+                >
+                  {item.icon}
+                  <span className="text-xs font-medium">{item.name}</span>
+                </a>
+              ))}
+            </div>
+          </div>
         </div>
 
-        <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-500">
-          <p>&copy; {new Date().getFullYear()} EVPULSE Future Mobility. All rights reserved.</p>
-          <p className="mt-4 md:mt-0">Designed for the future.</p>
-        </div>
+        <footer className="flex flex-col text-md md:flex-row justify-center items-center pt-1 mt-1">
+          <div className="mb-4 md:mb-0 text-sm h-30 text-black">
+            {/* <Link 
+              href="https://www.greenpronatura.com/" 
+              className="text-black hover:text-amber-600 transition"
+            >
+              Developed and Maintained by Greenpro Natura
+            </Link> */}
+           {/* <div></div> */}
+           </div>
+        </footer>
       </div>
     </footer>
   );
-}
+};
+
+export default Footer;

@@ -2,8 +2,8 @@
 @plugin "@tailwindcss/typography";
 
 @theme {
-  --color-primary: #007BFF;
-  --color-secondary: #A3FF12;
+  --color-primary: #95CCDD;
+  --color-secondary: #A5CF83;
   --color-dark: #0f1115;
   --color-light: #f8fafc;
   --color-glass: rgba(255, 255, 255, 0.05);
@@ -13,7 +13,7 @@
 }
 
 :root {
-  --background: #ffffff;
+  --background: #c0e4e2;
   --foreground: #0f172a;
 }
 

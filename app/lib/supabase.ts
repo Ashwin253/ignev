@@ -185,6 +185,8 @@ export type EvVariantRow = {
   motor_warranty?: string | null;
   discontinued?: boolean;
   discontinued_date?: string | null;
+  usage_type?: string | null;
+  continuing_variant_id?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -271,6 +273,8 @@ function mapToEvListing(row: EvListingRow, variants: EvVariantRow[], features?: 
       exclusive_colors,
       discontinued: v.discontinued ?? false,
       discontinued_date: v.discontinued_date,
+      usage_type: v.usage_type,
+      continuing_variant_id: v.continuing_variant_id,
     };
   });
 
@@ -297,6 +301,8 @@ function mapToEvListing(row: EvListingRow, variants: EvVariantRow[], features?: 
         exclusive_colors,
         discontinued: v.discontinued ?? false,
         discontinued_date: v.discontinued_date,
+        usage_type: v.usage_type,
+        continuing_variant_id: v.continuing_variant_id,
       };
     });
 

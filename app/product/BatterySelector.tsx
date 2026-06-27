@@ -13,6 +13,8 @@ interface BatteryVariant {
   price_baas?: string; // ₹/km rate for BAAS
   baseprice?: string; // BAAS upfront base price
   battery_subs?: string; // Battery subscription price fallback
+  usage_type?: string | null;
+  continuing_variant_id?: string | null;
 }
 
 interface BatterySelectorProps {

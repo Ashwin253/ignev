@@ -55,7 +55,7 @@ function FeaturedCard({ listing, index }: { listing: EvListing; index: number })
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, delay: index * 0.07 }}
-      className="group w-[82vw] max-w-sm shrink-0 snap-start md:w-auto md:max-w-none md:shrink md:snap-none overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_12px_32px_rgba(15,23,42,0.06)] flex flex-col"
+      className="group w-[82vw] max-w-sm shrink-0 snap-start md:w-auto md:max-w-none md:shrink md:snap-none overflow-hidden rounded-[1.75rem] border border-slate-200  shadow-[0_12px_32px_rgba(15,23,42,0.06)] flex flex-col"
     >
       <Link href={`/product/${listing.slug}`} className="flex flex-col flex-1">
         <div className="relative aspect-4/3 overflow-hidden bg-slate-100">
@@ -146,7 +146,7 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, delay: index * 0.05 }}
-      className="group flex h-full w-[82vw] max-w-sm shrink-0 snap-start overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_12px_32px_rgba(15,23,42,0.06)] md:w-auto md:max-w-none md:shrink md:snap-none flex-col"
+      className="group flex h-full w-[82vw] max-w-sm shrink-0 snap-start overflow-hidden rounded-[1.75rem] border border-slate-200 shadow-[0_12px_32px_rgba(15,23,42,0.06)] md:w-auto md:max-w-none md:shrink md:snap-none flex-col"
     >
       <Link href={`/product/${product.slug ?? toSlug(product.brand, product.name)}`} className="flex flex-col flex-1">
         <div className="relative aspect-4/3 overflow-hidden bg-slate-100">
@@ -225,7 +225,7 @@ export default function Hero({
 
   const catalogProducts = useMemo(() => {
     if (activeTab === "cars")        return products.electric_cars;
-    if (activeTab === "twoWheelers") return products.electric_two_wheelers;
+    if (activeTab === "twoWheelers") return products.electric_two_wheelers.slice(0, 4);
     if (activeTab === "autos")       return products.electric_autos;
     return [
       ...products.electric_cars.slice(0, 2),
@@ -256,10 +256,10 @@ export default function Hero({
       </div>
 
       <div className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="glass-panel overflow-hidden rounded-4xl border border-slate-200/80 bg-white/70 shadow-[0_18px_80px_rgba(15,23,42,0.08)] backdrop-blur-2xl">
+        <div className="overflow-visible bg-transparent border-none shadow-none">
 
           {/* ── Banner ── */}
-          <div className="sticky top-0 z-10 overflow-hidden bg-slate-900">
+          <div className="sticky top-0 z-10 overflow-hidden bg-slate-900 rounded-4xl border border-slate-250/80 shadow-[0_18px_80px_rgba(15,23,42,0.08)]">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeSlide}
@@ -387,13 +387,13 @@ export default function Hero({
 
           {/* ── Tab bar + Card rail — unified panel ── */}
           <div className="relative -mt-16 z-20 md:-mt-20">
-            <div className="mx-4 sm:mx-6 md:mx-8 rounded-3xl border border-slate-200/80 bg-white/90 backdrop-blur-xl shadow-[0_14px_40px_rgba(15,23,42,0.10)] overflow-hidden">
+            <div className="mx-4 sm:mx-6 md:mx-8 bg-transparent border-none shadow-none overflow-visible">
 
               {/* Tab bar */}
-              <div className="px-4 pt-4 pb-3 sm:px-5 md:px-6 border-b border-slate-100">
+              <div className="px-4 py-3 border border-slate-250/70 bg-white rounded-3xl shadow-sm mb-4">
                 {/* Mobile: native select dropdown */}
                 <div className="md:hidden">
-                  <label className="relative flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 cursor-pointer">
+                  <label className="relative flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 cursor-pointer">
                     <activeTabMeta.icon size={17} className="text-sky-600 shrink-0" />
                     <span className="flex-1 text-sm font-semibold text-slate-800">{activeTabMeta.label}</span>
                     <ChevronDown size={16} className="text-slate-400 shrink-0" />
@@ -458,7 +458,7 @@ export default function Hero({
               </AnimatePresence>
 
               {/* View all */}
-              <div className="flex justify-end px-4 pb-4 sm:px-5 md:px-6 border-t border-slate-100 pt-3">
+              <div className="flex justify-end px-4 pb-4 sm:px-5 md:px-6 pt-3">
                 <Link href="/catalog" className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors">
                   View all listings <ArrowRight size={15} />
                 </Link>

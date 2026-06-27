@@ -74,10 +74,10 @@ export default function Header() {
   const headerBg = isLightPage
     ? isScrolled
       ? "bg-white/95 backdrop-blur-md border-slate-200 shadow-sm"
-      : "bg-white/80 backdrop-blur-sm border-slate-100"
+      : "bg-white/95 backdrop-blur-sm border-slate-100"
     : isScrolled
-      ? "bg-slate-900/90 backdrop-blur-md border-white/10 shadow-lg"
-      : "bg-transparent border-transparent";
+      ? " backdrop-blur-md border-white/10 shadow-lg"
+      : "bg-white/80 border-transparent";
 
   const linkBase = "text-sm text-black lg:text-base font-medium px-3 py-2 rounded-md transition-colors";
 
@@ -85,13 +85,13 @@ export default function Header() {
   const linkColor = isLightPage
     ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
     : isScrolled
-      ? "text-white/90 hover:text-white hover:bg-white/10"
+      ? "text-black hover:text-white hover:bg-white/10"
       : "text-slate-700 hover:text-slate-900 hover:bg-black/5";
 
   const activeLinkColor = isLightPage
     ? "text-sky-600 bg-sky-50"
     : isScrolled
-      ? "text-white bg-white/15"
+      ? "text-black bg-black/15"
       : "text-sky-700 bg-sky-50/80";
 
   const mobileLinkColor = isLightPage

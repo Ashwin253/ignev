@@ -41,6 +41,43 @@ function rupees(v: number) {
 export default function ProductMainUI({ item, slug, dbFuelPrices = [], content = [], offers = [] }: { item: EvListing; slug: string; dbFuelPrices?: any[]; content?: any[]; offers?: any[] }) {
   const { selectedIndex, showBaas, activeVariants, setSelectedIndex: onSelect, setShowBaas: onToggleBaas } = useProductSelection();
   const [activeTab, setActiveTab] = useState<TabKey>("battery");
+  const [usageFilter, setUsageFilter] = useState<string>("All");
+
+  // Synchronize filter with selected variant if selected externally
+  useEffect(() => {
+    if (activeVariants && activeVariants[selectedIndex]) {
+      const activeVar = activeVariants[selectedIndex];
+      const activeUsage = activeVar.usage_type || item.usage_type || "Passenger";
+      if (usageFilter !== "All" && activeUsage.toLowerCase() !== usageFilter.toLowerCase()) {
+        setUsageFilter("All");
+      }
+    }
+  }, [selectedIndex, activeVariants, item.usage_type, usageFilter]);
+
+  const filteredVariants = useMemo(() => {
+    const list = activeVariants.filter(v => {
+      if (usageFilter === "All") return true;
+      const vUsage = v.usage_type || item.usage_type || "Passenger";
+      return vUsage.toLowerCase() === usageFilter.toLowerCase();
+    });
+    return list.length > 0 ? list : activeVariants;
+  }, [activeVariants, usageFilter, item.usage_type]);
+
+  const handleUsageFilterChange = (nextFilter: string) => {
+    setUsageFilter(nextFilter);
+    const matches = activeVariants.filter(v => {
+      if (nextFilter === "All") return true;
+      const vUsage = v.usage_type || item.usage_type || "Passenger";
+      return vUsage.toLowerCase() === nextFilter.toLowerCase();
+    });
+    if (matches.length > 0) {
+      const currentVar = activeVariants[selectedIndex];
+      if (!matches.includes(currentVar)) {
+        const originalIdx = activeVariants.indexOf(matches[0]);
+        onSelect(originalIdx);
+      }
+    }
+  };
 
   const cleanPrice = (val: string | undefined | null) => {
     if (!val) return "";
@@ -81,26 +118,49 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
     <div className="flex flex-col gap-5 text-slate-900">
       <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-[0_10px_30px_rgba(52,235,177,0.08)] sm:p-5">
       {activeVariants.length > 0 && (
-        <label className="mb-3 flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 shadow-xs">
-          <BatteryCharging size={15} className="text-[#10855f]" />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Model</span>
-          {activeVariants.length > 1 ? (
+        <div className="mb-3 grid grid-cols-2 gap-2">
+          {/* Model Select */}
+          <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 shadow-xs cursor-pointer">
+            <BatteryCharging size={15} className="text-[#10855f]" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 shrink-0">Model</span>
+            {filteredVariants.length > 1 ? (
+              <select
+                value={selectedIndex}
+                onChange={(e) => onSelect(Number(e.target.value))}
+                className="min-w-0 flex-1 bg-transparent text-sm font-bold text-slate-800 outline-none appearance-none cursor-pointer"
+              >
+                {filteredVariants.map((variant) => {
+                  const originalIndex = activeVariants.indexOf(variant);
+                  return (
+                    <option key={`${showBaas ? "baas" : "standard"}-${originalIndex}`} value={originalIndex} className="bg-white text-slate-900">
+                      {variant.modelName || `${variant.capacity} kWh`}
+                    </option>
+                  );
+                })}
+              </select>
+            ) : (
+              <span className="min-w-0 flex-1 text-sm font-bold text-slate-800 truncate">
+                {activeVariants[selectedIndex]?.modelName || `${activeVariants[selectedIndex]?.capacity} kWh`}
+              </span>
+            )}
+            {filteredVariants.length > 1 && <ChevronDown size={14} className="text-slate-400 shrink-0" />}
+          </label>
+
+          {/* Usage Type Select */}
+          <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 shadow-xs cursor-pointer">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 shrink-0">Usage</span>
             <select
-              value={selectedIndex}
-              onChange={(e) => onSelect(Number(e.target.value))}
+              value={usageFilter}
+              onChange={(e) => handleUsageFilterChange(e.target.value)}
               className="min-w-0 flex-1 bg-transparent text-sm font-bold text-slate-800 outline-none appearance-none cursor-pointer"
             >
-              {activeVariants.map((variant, index) => (
-                <option key={`${showBaas ? "baas" : "standard"}-${index}`} value={index} className="bg-white text-slate-900">
-                  {variant.modelName || `${variant.capacity} kWh`}
-                </option>
-              ))}
+              <option value="All" className="bg-white text-slate-900">All</option>
+              <option value="Passenger" className="bg-white text-slate-900">Passenger</option>
+              <option value="Goods" className="bg-white text-slate-900">Goods</option>
             </select>
-          ) : (
-            <span className="min-w-0 flex-1 text-sm font-bold text-slate-800">{selectedVariantName || item.title}</span>
-          )}
-          {activeVariants.length > 1 && <ChevronDown size={14} className="text-slate-400 shrink-0" />}
-        </label>
+            <ChevronDown size={14} className="text-slate-400 shrink-0" />
+          </label>
+        </div>
       )}
 
       {/* ── Active Offers ── */}

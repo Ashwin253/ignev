@@ -4,6 +4,8 @@ import { ArrowLeft, GitCompare } from "lucide-react";
 import { fetchEvListingBySlugFromSupabase, fetchEvListingsFromSupabase } from "../lib/supabase";
 import CompareMainUI from "./CompareMainUI";
 import AddVehicleToCompare from "./AddVehicleToCompare";
+import LogoLoader from "../components/LogoLoader";
+
 
 export const metadata = {
   title: "Compare Vehicles | EVPULSE",
@@ -73,7 +75,7 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
           </div>
         </div>
 
-        <Suspense fallback={<div className="py-24 text-center">Loading comparison...</div>}>
+        <Suspense fallback={<LogoLoader fullscreen={false} message="Loading comparison..." />}>
           <CompareContent slugs={slugs} />
         </Suspense>
 

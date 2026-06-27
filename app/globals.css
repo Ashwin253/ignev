@@ -67,3 +67,17 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+@keyframes loader-slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+.animate-loader-slide {
+  animation: loader-slide 1.5s infinite ease-in-out;
+}
+

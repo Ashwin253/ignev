@@ -3,6 +3,8 @@
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Wrench, Zap, Car } from "lucide-react";
+import LogoLoader from "../components/LogoLoader";
+
 
 function NearMeLiteContent() {
   const searchParams = useSearchParams();
@@ -63,7 +65,7 @@ function NearMeLiteContent() {
 
 export default function NearMeLitePage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-50">Loading...</div>}>
+    <Suspense fallback={<LogoLoader fullscreen={true} message="Locating stations..." />}>
       <NearMeLiteContent />
     </Suspense>
   );

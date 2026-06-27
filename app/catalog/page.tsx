@@ -4,6 +4,8 @@ import { ArrowLeft } from "lucide-react";
 import CatalogBrowser from "../components/CatalogBrowser";
 import { fetchEvListingsFromSupabase } from "../lib/supabase";
 import { formatPricing } from "../lib/wordpress";
+import LogoLoader from "../components/LogoLoader";
+
 
 // ISR — revalidate every 5 minutes
 export const revalidate = 300;
@@ -65,7 +67,7 @@ export default async function CatalogPage() {
           </div> */}
         </div>
 
-        <Suspense fallback={<div className="h-96 flex items-center justify-center text-slate-400 font-medium">Loading catalog...</div>}>
+        <Suspense fallback={<LogoLoader fullscreen={false} message="Loading catalog..." />}>
           <CatalogBrowser items={items} />
         </Suspense>
       </div>

@@ -5,6 +5,8 @@ import LoanCalculator from "../components/LoanCalculator";
 import CostEstimator from "../components/CostEstimator";
 import AddVehicleToCompare from "../compare/AddVehicleToCompare";
 import { ArrowLeft, CarFront } from "lucide-react";
+import LogoLoader from "../components/LogoLoader";
+
 
 async function OwnContent({ slug }: { slug: string | undefined }) {
   const [listing, allListings] = await Promise.all([
@@ -89,7 +91,7 @@ export default async function OwnPage({ searchParams }: { searchParams: Promise<
           </p>
         </div>
 
-        <Suspense fallback={<div className="py-24 text-center text-white">Loading planner...</div>}>
+        <Suspense fallback={<LogoLoader fullscreen={false} message="Loading planner..." />}>
           <OwnContent slug={slug} />
         </Suspense>
 

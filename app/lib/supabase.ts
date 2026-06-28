@@ -6,7 +6,9 @@ import type { EvListing, BatteryVariant, BatterySpec, ChargingSpec } from "./wor
 const supabaseUrl = process.env.NEXT_SUPABASE_URL ?? "";
 const supabaseAnonKey = process.env.NEXT_SUPABASE_PUBLISHABLE_KEY ?? "";
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = (supabaseUrl && supabaseAnonKey)
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null as any;
 
 export function supabaseEnabled(): boolean {
   return !!(supabaseUrl && supabaseAnonKey);
@@ -158,6 +160,7 @@ export type EvVariantRow = {
   charging_time_ac_hours: string | null;
   charging_time_dc_mins: string | null;
   max_dc_charging_rate_kw: string | null;
+  baas_monthly_rental: number | null;
   length_mm?: number | null;
   width_mm?: number | null;
   height_mm?: number | null;
@@ -275,6 +278,7 @@ function mapToEvListing(row: EvListingRow, variants: EvVariantRow[], features?: 
       discontinued_date: v.discontinued_date,
       usage_type: v.usage_type,
       continuing_variant_id: v.continuing_variant_id,
+      baas_monthly_rental: v.baas_monthly_rental ? String(v.baas_monthly_rental) : "",
     };
   });
 
@@ -303,6 +307,7 @@ function mapToEvListing(row: EvListingRow, variants: EvVariantRow[], features?: 
         discontinued_date: v.discontinued_date,
         usage_type: v.usage_type,
         continuing_variant_id: v.continuing_variant_id,
+        baas_monthly_rental: v.baas_monthly_rental ? String(v.baas_monthly_rental) : "",
       };
     });
 

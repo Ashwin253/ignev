@@ -81,6 +81,7 @@ export type VariantForm = {
   baas_upfront_price: string | null; baas_model_name: string;
   charging_time_ac_hours: string | null; charging_time_dc_mins: string | null;
   max_dc_charging_rate_kw: string | null;
+  baas_monthly_rental?: number | null;
   acceleration?: string | null; battery_type?: string | null; battery_portability?: string | null;
   charger_type?: string | null; charger_output?: string | null; charger_cost_included?: string | null;
   kerb_weight_kg?: string | null; seat_length_mm?: string | null; seat_height_mm?: string | null;
@@ -117,6 +118,7 @@ export type VariantForm = {
   showFeatures?: boolean;
   has_exclusive_color?: boolean;
   exclusive_colors?: string[];
+  is_detailed_variant?: boolean;
 };
 
 const emptyListing: ListingForm = {
@@ -140,10 +142,12 @@ const emptyVariant: VariantForm = {
   has_baas: false, baas_price_per_km: null, baas_upfront_price: null,
   baas_model_name: "", charging_time_ac_hours: null,
   charging_time_dc_mins: null, max_dc_charging_rate_kw: null,
+  baas_monthly_rental: null,
   has_exclusive_color: false,
   exclusive_colors: [],
   discontinued: false,
   discontinued_date: null,
+  is_detailed_variant: false,
 };
 
 const defaultFeatures = {
@@ -357,6 +361,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
   const [editing, setEditing] = useState<string | null>(null);
   const [form, setForm] = useState<ListingForm>(emptyListing);
   const [variants, setVariants] = useState<(VariantForm & { id?: string })[]>([]);
+  const [copyDetailedVariant, setCopyDetailedVariant] = useState(false);
 
   const updateVariantField = (idx: number, updatedFields: Partial<VariantForm>) => {
     setVariants((prev) => {
@@ -482,6 +487,8 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
         version_name: version_name || "",
         model_year: model_year || 2026,
         price: rest.price || 0,
+        is_detailed_variant: v.is_detailed_variant ?? false,
+        baas_monthly_rental: v.baas_monthly_rental ?? null,
         top_speed: rest.top_speed || "",
         battery_capacity_kwh: rest.battery_capacity_kwh || "",
         driving_range_km: rest.driving_range_km || "",
@@ -570,10 +577,12 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
       };
     });
 
-    const templateVariants = cleanedVariants.map((v, idx) => {
-      if (idx === 0) return v;
-      return diffVariants(cleanedVariants[0], v);
-    });
+    const templateVariants = copyDetailedVariant
+      ? cleanedVariants
+      : cleanedVariants.map((v, idx) => {
+          if (idx === 0) return v;
+          return diffVariants(cleanedVariants[0], v);
+        });
 
     const templateEnergyComps = energyComps.map((e) => {
       const { id, listing_id, created_at, updated_at, brand, ...rest } = e as any;
@@ -587,7 +596,9 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
     });
 
     const exportData = {
-      _instruction: "Return a compact JSON where only the differing fields are updated per variant. All other specifications, features, and specs (like dimensions, brakes, warranties, etc.) are assumed to be inherited from the first variant (index 0). Do not repeat common fields in subsequent variants.",
+      _instruction: copyDetailedVariant
+        ? "Return a detailed JSON where each variant lists its specifications, features, and specs in full. Do not omit common fields."
+        : "Return a compact JSON where only the differing fields are updated per variant. All other specifications, features, and specs (like dimensions, brakes, warranties, etc.) are assumed to be inherited from the first variant (index 0). Do not repeat common fields in subsequent variants.",
       _hints: {
         types_options: ["2 Wheeler", "3 Wheeler", "4 Wheeler"],
         price_bracket_options: ["under-2L", "5-10", "5-15", "10-25", "15-30", "30+", "50+"],
@@ -682,6 +693,8 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
       version_name: version_name || "",
       model_year: model_year || 2026,
       price: rest.price || 0,
+      is_detailed_variant: current.is_detailed_variant ?? false,
+      baas_monthly_rental: current.baas_monthly_rental ?? null,
       usage_type: rest.usage_type || null,
       continuing_variant_id: rest.continuing_variant_id || null,
       top_speed: rest.top_speed || "",
@@ -972,10 +985,16 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
       const custom_fields = (v as any).custom_fields || [];
       const hasExclusiveColorCf = custom_fields.find((cf: any) => cf.label === "_has_exclusive_color");
       const exclusiveColorsCf = custom_fields.find((cf: any) => cf.label === "_exclusive_colors");
+      const isDetailedVariantCf = custom_fields.find((cf: any) => cf.label === "_is_detailed_variant");
       
       const has_exclusive_color = hasExclusiveColorCf?.value === "true";
       const exclusive_colors = exclusiveColorsCf?.value ? exclusiveColorsCf.value.split(",") : [];
-      const visibleCustomFields = custom_fields.filter((cf: any) => cf.label !== "_has_exclusive_color" && cf.label !== "_exclusive_colors");
+      const is_detailed_variant = isDetailedVariantCf?.value === "true";
+      const visibleCustomFields = custom_fields.filter((cf: any) => 
+        cf.label !== "_has_exclusive_color" && 
+        cf.label !== "_exclusive_colors" && 
+        cf.label !== "_is_detailed_variant"
+      );
 
       return {
         ...v,
@@ -983,6 +1002,8 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
         features: featuresMap.get(v.id) || undefined,
         has_exclusive_color,
         exclusive_colors,
+        is_detailed_variant,
+        baas_monthly_rental: (v as any).baas_monthly_rental ?? null,
         custom_fields: visibleCustomFields
       };
     }) as any;
@@ -1082,11 +1103,16 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
         const features = (v as any).features;
         const variantId = (v as any).id;
         const rawCustomFields = (v as any).custom_fields || [];
-        const filteredCustomFields = rawCustomFields.filter((cf: any) => cf.label !== "_has_exclusive_color" && cf.label !== "_exclusive_colors");
+        const filteredCustomFields = rawCustomFields.filter((cf: any) => 
+          cf.label !== "_has_exclusive_color" && 
+          cf.label !== "_exclusive_colors" && 
+          cf.label !== "_is_detailed_variant"
+        );
         const finalCustomFields = [
           ...filteredCustomFields,
           { label: "_has_exclusive_color", value: (v as any).has_exclusive_color ? "true" : "false" },
-          { label: "_exclusive_colors", value: Array.isArray((v as any).exclusive_colors) ? (v as any).exclusive_colors.join(",") : "" }
+          { label: "_exclusive_colors", value: Array.isArray((v as any).exclusive_colors) ? (v as any).exclusive_colors.join(",") : "" },
+          { label: "_is_detailed_variant", value: (v as any).is_detailed_variant ? "true" : "false" }
         ];
 
         const varPayload: any = {
@@ -1112,6 +1138,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
           charging_time_ac_hours: v.charging_time_ac_hours,
           charging_time_dc_mins: v.charging_time_dc_mins,
           max_dc_charging_rate_kw: v.max_dc_charging_rate_kw,
+          baas_monthly_rental: v.baas_monthly_rental || null,
           length_mm: (v as any).length_mm || null,
           width_mm: (v as any).width_mm || null,
           height_mm: (v as any).height_mm || null,
@@ -1461,24 +1488,35 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
               <div className="flex flex-wrap items-center gap-4">
                 <h2 className="text-lg font-bold text-slate-900">{editing === "new" ? "New Listing" : "Edit Listing"}</h2>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={handleCopyFormat}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-xs cursor-pointer"
-                  >
-                    Copy Format
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setPastedJson("");
-                      setIsPasteModalOpen(true);
-                    }}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-xs cursor-pointer"
-                  >
-                    Paste Format
-                  </button>
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleCopyFormat}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-xs cursor-pointer"
+                    >
+                      Copy Format
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPastedJson("");
+                        setIsPasteModalOpen(true);
+                      }}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-xs cursor-pointer"
+                    >
+                      Paste Format
+                    </button>
+                  </div>
+                  <label className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={copyDetailedVariant}
+                      onChange={(e) => setCopyDetailedVariant(e.target.checked)}
+                      className="rounded border-slate-300 text-sky-600 focus:ring-sky-500 h-3.5 w-3.5"
+                    />
+                    Detailed variant
+                  </label>
                 </div>
               </div>
               <button onClick={() => setEditing(null)} className="text-slate-400 hover:text-slate-600 cursor-pointer"><X size={20} /></button>
@@ -2525,21 +2563,47 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                         </div>
 
                         {/* 6. Min. Commitment */}
-                        <div className="rounded-xl bg-slate-50 border border-slate-200 p-3 shadow-xs opacity-75">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Min. Commitment (Preview)</span>
-                          <p className="text-sm font-black text-slate-700 leading-tight">1,500 km/mo</p>
+                        <div className="rounded-xl bg-white border border-slate-200 p-3 shadow-xs">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Min. Commitment (km/mo)</span>
+                          <input
+                            type="text"
+                            value={(() => {
+                              const rental = parseFloat(String(v.baas_monthly_rental || ""));
+                              const rate = parseFloat(String(v.baas_price_per_km || ""));
+                              if (rental > 0 && rate > 0) return String(Math.round(rental / rate));
+                              return v.baas_monthly_rental !== null ? "" : "1500";
+                            })()}
+                            onChange={(e) => {
+                              const km = parseFloat(e.target.value);
+                              const rate = parseFloat(String(v.baas_price_per_km || "0"));
+                              const arr = [...variants];
+                              if (!isNaN(km) && rate > 0) {
+                                arr[i] = { ...arr[i], baas_monthly_rental: Math.round(km * rate) };
+                              } else {
+                                arr[i] = { ...arr[i], baas_monthly_rental: null };
+                              }
+                              setVariants(arr);
+                            }}
+                            placeholder="e.g. 1500"
+                            className="w-full bg-transparent text-sm font-black text-slate-900 leading-tight outline-none"
+                          />
                         </div>
 
-                        {/* 7. Min. Monthly Bill */}
-                        <div className="rounded-xl bg-slate-50 border border-slate-200 p-3 shadow-xs opacity-75">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Min. Monthly Bill (Preview)</span>
-                          <p className="text-sm font-black text-slate-700 leading-tight">
-                            ₹{(() => {
-                              const rate = parseFloat(v.baas_price_per_km || "0");
-                              const rounded = Math.round(rate * 1500);
-                              return isNaN(rounded) ? "—" : new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(rounded);
-                            })()}/mo
-                          </p>
+                        {/* 7. Min. Monthly Bill (₹/mo) */}
+                        <div className="rounded-xl bg-white border border-slate-200 p-3 shadow-xs">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Min. Monthly Bill (₹/mo)</span>
+                          <input
+                            type="text"
+                            value={v.baas_monthly_rental ?? ""}
+                            onChange={(e) => {
+                              const val = parseFloat(e.target.value);
+                              const arr = [...variants];
+                              arr[i] = { ...arr[i], baas_monthly_rental: isNaN(val) ? null : val };
+                              setVariants(arr);
+                            }}
+                            placeholder="e.g. 5250"
+                            className="w-full bg-transparent text-sm font-black text-slate-900 leading-tight outline-none"
+                          />
                         </div>
 
                         {/* 8. Battery Ownership */}

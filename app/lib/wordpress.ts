@@ -234,6 +234,7 @@ export type BatteryVariant = {
   discontinued_date?: string | null;
   usage_type?: string | null;
   continuing_variant_id?: string | null;
+  baas_monthly_rental?: string;
 };
 
 export type EnergyCompareEntry = {

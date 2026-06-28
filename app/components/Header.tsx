@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, Home, LayoutGrid, Newspaper, MapPin, IndianRupee, ShoppingBag, Download, Wrench, CarFront, Percent, MessageSquare } from "lucide-react";
+import { Menu, X, Home, LayoutGrid, Newspaper, MapPin, IndianRupee, ShoppingBag, Download, Wrench, CarFront, Percent, MessageSquare, Volume2, VolumeX, Smartphone, SlidersHorizontal } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useFeedback } from "../context/FeedbackContext";
+import { playClickSound, playHaptic } from "../lib/feedback";
 
 const navLinks = [
   { name: "Home", href: "/", icon: Home },
@@ -24,6 +26,8 @@ const lightBgRoutes = ["/catalog", "/product", "/updates", "/map", "/own", "/ser
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [prefOpen, setPrefOpen] = useState(false);
+  const { soundEnabled, setSoundEnabled, hapticsEnabled, setHapticsEnabled } = useFeedback();
   const pathname = usePathname();
 
   // Apply homepage styling globally
@@ -116,7 +120,7 @@ export default function Header() {
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link href="/" className="z-50 hover:opacity-80  transition-opacity">
-            <img src="/evplselogo.png" alt="IgnEV Logo" className="h-16 w-auto" />
+            <img src="/evplsenoname.png" alt="IgnEV Logo" className="h-16 w-auto" />
           </Link>
 
           {/* Desktop Nav */}
@@ -178,6 +182,88 @@ export default function Header() {
                 }`}            >
               Get Assist
             </Link>
+
+            {/* Preferences Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setPrefOpen(!prefOpen)}
+                className={`p-2.5 rounded-full transition-all shadow-sm active:scale-95 border cursor-pointer ${
+                  prefOpen
+                    ? "bg-[#34ebb1] border-[#34ebb1] text-slate-950"
+                    : !isLightPage && !isScrolled
+                      ? "bg-slate-900/10 hover:bg-slate-900/15 text-slate-800 border-slate-300/60"
+                      : "bg-white/10 hover:bg-white/20 text-white border-white/10"
+                }`}
+                aria-label="Preferences"
+              >
+                <SlidersHorizontal size={18} />
+              </button>
+
+              <AnimatePresence>
+                {prefOpen && (
+                  <>
+                    {/* Invisible overlay backdrop for closing the dropdown when clicking outside */}
+                    <div 
+                      className="fixed inset-0 z-40 bg-transparent" 
+                      onClick={() => setPrefOpen(false)}
+                    />
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                      className="absolute right-0 mt-3 w-64 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-2xl z-50 text-white"
+                    >
+                      <h4 className="text-xs font-bold text-slate-400 mb-3 uppercase tracking-wider">Interface Settings</h4>
+                      
+                      <div className="space-y-4">
+                        {/* Sound Toggle */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            {soundEnabled ? <Volume2 size={18} className="text-[#34ebb1]" /> : <VolumeX size={18} className="text-slate-500" />}
+                            <span className="text-sm font-medium">Sound Effects</span>
+                          </div>
+                          <button
+                            onClick={() => {
+                              const newVal = !soundEnabled;
+                              setSoundEnabled(newVal);
+                              if (newVal) {
+                                // play a preview click
+                                setTimeout(() => playClickSound(), 50);
+                              }
+                            }}
+                            className={`w-11 h-6 rounded-full transition-colors relative flex items-center px-1 cursor-pointer ${soundEnabled ? 'bg-[#34ebb1]' : 'bg-slate-800'}`}
+                          >
+                            <span className={`w-4 h-4 rounded-full bg-white transition-transform ${soundEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+                          </button>
+                        </div>
+
+                        {/* Haptics Toggle */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Smartphone size={18} className={hapticsEnabled ? "text-[#34ebb1]" : "text-slate-500"} />
+                            <span className="text-sm font-medium">Vibration/Haptics</span>
+                          </div>
+                          <button
+                            onClick={() => {
+                              const newVal = !hapticsEnabled;
+                              setHapticsEnabled(newVal);
+                              if (newVal) {
+                                // play a preview vibration
+                                setTimeout(() => playHaptic('click'), 50);
+                              }
+                            }}
+                            className={`w-11 h-6 rounded-full transition-colors relative flex items-center px-1 cursor-pointer ${hapticsEnabled ? 'bg-[#34ebb1]' : 'bg-slate-800'}`}
+                          >
+                            <span className={`w-4 h-4 rounded-full bg-white transition-transform ${hapticsEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
+
             <button
               className={`md:hidden p-2 rounded-md transition-colors ${mobileToggleColor}`}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}

@@ -1,0 +1,34 @@
+[
+  {
+    "id": 1,
+    "fact": "The first electric vehicle was built in the 1800s. Scottish inventor Robert Anderson developed the first crude electric carriage between 1832 and 1839."
+  },
+  {
+    "id": 2,
+    "fact": "EV motors are incredibly simple compared to internal combustion engines. They can have fewer moving parts, which results in significantly lower maintenance needs."
+  },
+  {
+    "id": 3,
+    "fact": "Many electric cars can go from 0 to 60 mph in under 5 seconds, allowing for instant torque and rapid acceleration."
+  },
+  {
+    "id": 4,
+    "fact": "EVs use regenerative braking. When you lift your foot off the accelerator, the motor acts as a generator, converting kinetic energy into electricity to recharge the battery."
+  },
+  {
+    "id": 5,
+    "fact": "Because electric cars are exceptionally quiet, many countries legally require them to emit artificial noises at low speeds to alert pedestrians of their approach."
+  },
+  {
+    "id": 6,
+    "fact": "Early EVs had very short ranges. A locomotive built in 1842 could only travel 1.5 miles on a single charge, whereas modern EVs can easily exceed 400 miles."
+  },
+  {
+    "id": 7,
+    "fact": "China and Norway are global leaders in EV adoption, with the former producing the majority of the world's electric vehicles and batteries."
+  },
+  {
+    "id": 8,
+    "fact": "EV batteries can often find a second life. Instead of being discarded, they are frequently repurposed for large-scale, stationary grid storage before being fully recycled."
+  }
+]

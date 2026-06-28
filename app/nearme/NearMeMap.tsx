@@ -5,6 +5,7 @@ import { Zap, Wrench, MapPin, Navigation, Share2, Loader2, ChevronDown, ChevronU
 import Map, { Marker, Source, Layer, MapRef } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
 import digipin from "digipinjs-lib";
+import { supabase, supabaseEnabled } from "../lib/supabase";
 
 // ── Location data ─────────────────────────────────────────────────────────────
 import statiqStationsData from "../../statiq_stations.json";
@@ -16,16 +17,17 @@ const statiqLocations = statiqStationsData.map((s: { lat: number; lng: number; n
   lng: s.lng,
   name: s.name,
   address: "Statiq EV Station",
+  network: "Statiq",
 }));
 
 const allLocations = [
-  { id: "1", type: "charging", lat: 28.638807, lng: 77.085715, name: "EV Fast Charger",       address: "West Delhi" },
-  { id: "3", type: "charging", lat: 28.600843, lng: 77.087613, name: "Supercharger IndianOil", address: "North Delhi" },
-  { id: "4", type: "spare",    lat: 28.627204, lng: 77.071554, name: "EV Repair and Spare",    address: "West Delhi" },
+  { id: "1", type: "charging", lat: 28.638807, lng: 77.085715, name: "EV Fast Charger",       address: "West Delhi", network: "Honda" },
+  { id: "3", type: "charging", lat: 28.600843, lng: 77.087613, name: "Supercharger IndianOil", address: "North Delhi", network: "Statiq" },
+  { id: "4", type: "spare",    lat: 28.627204, lng: 77.071554, name: "EV Repair and Spare",    address: "West Delhi", network: "VinFast" },
   ...statiqLocations,
 ];
 
-type Location = typeof allLocations[0];
+type Location = typeof allLocations[0] & { network?: string };
 
 // ── Distance calculations ─────────────────────────────────────────────────────
 
@@ -85,19 +87,83 @@ export default function NearMeMap() {
   const [errorMsg, setErrorMsg] = useState("");
   const [activeTab, setActiveTab] = useState<"charging" | "spare">("charging");
   const [isMinimized, setIsMinimized] = useState(false);
+  const [dbLocations, setDbLocations] = useState<Location[]>([]);
+  const [selectedNetwork, setSelectedNetwork] = useState<string>("all");
+
+  useEffect(() => {
+    async function loadStations() {
+      if (!supabaseEnabled()) return;
+      try {
+        const { data, error } = await supabase.from("ev_stations").select("*");
+        if (error) {
+          console.warn("Error fetching stations:", error.message);
+          return;
+        }
+        if (data) {
+          const formatted = data.map((s: any) => ({
+            id: String(s.id),
+            type: s.type || "charging",
+            lat: Number(s.lat),
+            lng: Number(s.lng),
+            name: s.name,
+            address: s.address || `${s.city || 'EV'} Station`,
+            network: s.network || "",
+          }));
+          setDbLocations(formatted);
+        }
+      } catch (e) {
+        console.warn("Could not fetch stations from DB", e);
+      }
+    }
+    loadStations();
+  }, []);
+
+  useEffect(() => {
+    setSelectedNetwork("all");
+  }, [activeTab]);
+
+  const locations = useMemo(() => {
+    if (supabaseEnabled() && dbLocations.length > 0) {
+      return dbLocations;
+    }
+    return allLocations;
+  }, [dbLocations]);
+
+  const networks = useMemo(() => {
+    const netSet = new Set<string>();
+    const seen = new Set<string>();
+    locations.forEach(loc => {
+      if (loc.network) {
+        const net = loc.network.trim();
+        const lower = net.toLowerCase();
+        
+        let displayNet = net;
+        if (lower === "vinfast") displayNet = "VinFast";
+        else if (lower === "statiq") displayNet = "Statiq";
+        else if (lower === "honda") displayNet = "Honda";
+
+        if (!seen.has(displayNet.toLowerCase())) {
+          seen.add(displayNet.toLowerCase());
+          netSet.add(displayNet);
+        }
+      }
+    });
+    return ["all", ...Array.from(netSet).sort()];
+  }, [locations]);
 
   const radiusKm = 5; // 5 km radius
 
   const activeCenter: [number, number] = useMemo(() => centerPoint || [defaultCenter.lat, defaultCenter.lng], [centerPoint]);
 
-  // Filter locations by radius and active tab
+  // Filter locations by radius, active tab, and network filter
   const displayedLocations = useMemo(() => {
-    return allLocations.filter((l) => {
+    return locations.filter((l) => {
       if (l.type !== activeTab) return false;
+      if (selectedNetwork !== "all" && l.network?.toLowerCase() !== selectedNetwork.toLowerCase()) return false;
       const dist = getDistanceFromLatLonInKm(activeCenter[0], activeCenter[1], l.lat, l.lng);
       return dist <= radiusKm;
     });
-  }, [activeCenter, activeTab]);
+  }, [activeCenter, activeTab, locations, selectedNetwork]);
 
   const panTo = useCallback((lat: number, lng: number) => {
     mapRef.current?.flyTo({ center: [lng, lat], zoom: 14, duration: 1000 });
@@ -259,9 +325,25 @@ export default function NearMeMap() {
         <div className={`relative flex-1 overflow-y-auto overscroll-contain p-4 pb-24 md:pb-24 transition-all duration-300 ${
           isMinimized ? "opacity-0 pointer-events-none h-0 p-0 overflow-hidden" : ""
         }`}>
-          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-3 px-1">
-            {displayedLocations.length} {activeTab === "charging" ? "Charger" : "Repair"} station{displayedLocations.length !== 1 ? "s" : ""} within 5km
-          </p>
+          <div className="flex items-center justify-between mb-3 px-1">
+            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              {displayedLocations.length} {activeTab === "charging" ? "Charger" : "Repair"} station{displayedLocations.length !== 1 ? "s" : ""} within 5km
+            </p>
+            {/* Tiny Dropdown Filter */}
+            <div className="relative flex items-center shrink-0">
+              <select
+                value={selectedNetwork}
+                onChange={(e) => setSelectedNetwork(e.target.value)}
+                className="bg-slate-100 hover:bg-slate-200/85 text-[10px] font-bold uppercase tracking-wider text-slate-600 rounded-lg px-2.5 py-1.5 outline-none border border-slate-200 cursor-pointer appearance-none pr-6 text-right"
+              >
+                <option value="all">All Networks</option>
+                {networks.filter(n => n !== "all").map((net) => (
+                  <option key={net} value={net}>{net}</option>
+                ))}
+              </select>
+              <ChevronDown size={10} className="text-slate-400 absolute right-2 pointer-events-none" />
+            </div>
+          </div>
           
           {displayedLocations.length === 0 ? (
             <div className="text-center py-6">

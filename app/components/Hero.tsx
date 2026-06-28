@@ -150,7 +150,11 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
     >
       <Link href={`/product/${product.slug ?? toSlug(product.brand, product.name)}`} className="flex flex-col flex-1">
         <div className="relative aspect-4/3 overflow-hidden bg-slate-100">
-          <Image src={product.photo} alt={product.name} fill sizes="(max-width: 768px) 82vw, 20vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
+          {product.photo ? (
+            <Image src={product.photo} alt={product.name} fill sizes="(max-width: 768px) 82vw, 20vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
+          ) : (
+            <div className="absolute inset-0 bg-gradient-to-br from-sky-50 to-slate-100" />
+          )}
           <div className="absolute inset-0 bg-linear-to-t from-slate-900/30 via-transparent to-transparent" />
 
           {/* Compare Toggle */}

@@ -15,6 +15,7 @@ interface BatteryVariant {
   battery_subs?: string; // Battery subscription price fallback
   usage_type?: string | null;
   continuing_variant_id?: string | null;
+  baas_monthly_rental?: string;
 }
 
 interface BatterySelectorProps {
@@ -321,7 +322,15 @@ export default function BatterySelector({
                     <span className="text-[9px] font-bold uppercase tracking-wider">Min. Commitment</span>
                   </div>
                   <p className="text-lg font-black text-slate-900 leading-tight tabular-nums">
-                    1,500<span className="text-[10px] font-bold text-slate-505 ml-0.5">km/mo</span>
+                    {(() => {
+                      const monthlyRental = parseFloat(active.baas_monthly_rental || "0");
+                      const rate = parseFloat(active.price_baas || "0");
+                      if (monthlyRental > 0 && rate > 0) {
+                        const km = Math.round(monthlyRental / rate);
+                        return new Intl.NumberFormat("en-IN").format(km);
+                      }
+                      return "1,500";
+                    })()}<span className="text-[10px] font-bold text-slate-505 ml-0.5">km/mo</span>
                   </p>
                 </div>
 
@@ -333,6 +342,10 @@ export default function BatterySelector({
                   </div>
                   <p className="text-lg font-black text-slate-900 leading-tight tabular-nums">
                     ₹{(() => {
+                      if (active.baas_monthly_rental) {
+                        const val = parseFloat(active.baas_monthly_rental);
+                        if (val > 0) return rupees(val);
+                      }
                       const rate = parseFloat(active.price_baas || "0");
                       return rate > 0 ? rupees(rate * 1500) : "—";
                     })()}<span className="text-[10px] font-bold text-slate-505 ml-0.5">/mo</span>

@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap, Wrench, Navigation, MapPin, Search, Filter,
   Share2, X, Loader2, SlidersHorizontal, ChevronDown,
   IndianRupee, Fuel,
 } from "lucide-react";
+import { supabase, supabaseEnabled } from "../lib/supabase";
 
 // ── Location data ─────────────────────────────────────────────────────────────
 import statiqStationsData from "../../public/statiq_stations.json";
@@ -18,16 +19,17 @@ const statiqLocations = statiqStationsData.map((s, idx) => ({
   lng: s.lng,
   name: s.name,
   address: "Statiq EV Station",
+  network: "Statiq",
 }));
 
 const allLocations = [
-  { id: "1", type: "charging", lat: 28.638807, lng: 77.085715, name: "EV Fast Charger",       address: "West Delhi" },
-  { id: "3", type: "charging", lat: 28.600843, lng: 77.087613, name: "Supercharger IndianOil", address: "North Delhi" },
-  { id: "4", type: "spare",    lat: 28.627204, lng: 77.071554, name: "EV Repair and Spare",    address: "West Delhi" },
+  { id: "1", type: "charging", lat: 28.638807, lng: 77.085715, name: "EV Fast Charger",       address: "West Delhi", network: "Honda" },
+  { id: "3", type: "charging", lat: 28.600843, lng: 77.087613, name: "Supercharger IndianOil", address: "North Delhi", network: "Statiq" },
+  { id: "4", type: "spare",    lat: 28.627204, lng: 77.071554, name: "EV Repair and Spare",    address: "West Delhi", network: "VinFast" },
   ...statiqLocations,
 ];
 
-type Location = typeof allLocations[0];
+type Location = typeof allLocations[0] & { network?: string };
 
 // ── Leaflet hook ──────────────────────────────────────────────────────────────
 
@@ -171,10 +173,10 @@ async function geocodeLocation(query: string): Promise<[number, number] | null> 
   }
 }
 
-function findLocalLocationMatches(query: string) {
+function findLocalLocationMatches(query: string, locations: Location[]) {
   const normalized = query.toLowerCase().trim();
   if (!normalized) return [];
-  return allLocations
+  return locations
     .filter((loc) =>
       loc.name.toLowerCase().includes(normalized) ||
       loc.address.toLowerCase().includes(normalized)
@@ -190,8 +192,8 @@ type MapSearchSuggestion = {
   lng: number;
 };
 
-function getMapSearchSuggestions(query: string) {
-  return findLocalLocationMatches(query).map((loc) => ({
+function getMapSearchSuggestions(query: string, locations: Location[]) {
+  return findLocalLocationMatches(query, locations).map((loc) => ({
     id: loc.id,
     name: loc.name,
     address: loc.address,
@@ -355,6 +357,8 @@ function SidebarContent({
   onRouteHere, onRouteAndCost, onShare,
   onPickMyLocation,
   onClose,
+  selectedNetwork, setSelectedNetwork,
+  networks,
 }: {
   activeTab: "route" | "filters" | "cost";
   setActiveTab: (t: "route" | "filters" | "cost") => void;
@@ -375,15 +379,18 @@ function SidebarContent({
   onShare: (loc: Location) => void;
   onPickMyLocation: () => void;
   onClose?: () => void;
+  selectedNetwork: string;
+  setSelectedNetwork: (v: string) => void;
+  networks: string[];
 }) {
   const [routeSubTab, setRouteSubTab] = useState<"points" | "cost">("points");
 
   const placeTypeFilter = (
-    <>
+    <div className="space-y-3">
       <div className="flex gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200">
         {(["all", "charging", "spare"] as const).map((t) => (
           <button key={t} onClick={() => { setFilterType(t); setSelectedId(null); }}
-            className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
+            className={`flex-grow py-2 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
               filterType === t
                 ? "bg-white text-blue-600 shadow-sm border border-slate-200/60"
                 : "text-slate-500 hover:text-slate-800 hover:bg-slate-200/50"
@@ -394,7 +401,23 @@ function SidebarContent({
           </button>
         ))}
       </div>
-    </>
+
+      <div className="relative flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2">
+        <Filter size={13} className="text-slate-400 shrink-0 pointer-events-none" />
+        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide shrink-0 pointer-events-none">Network</span>
+        <select
+          value={selectedNetwork}
+          onChange={(e) => { setSelectedNetwork(e.target.value); setSelectedId(null); }}
+          className="flex-grow bg-transparent text-xs font-semibold outline-none cursor-pointer appearance-none text-slate-700 pr-6"
+        >
+          <option value="all">All Networks</option>
+          {networks.filter(n => n !== "all").map((net) => (
+            <option key={net} value={net}>{net}</option>
+          ))}
+        </select>
+        <ChevronDown size={12} className="text-slate-400 absolute right-3 pointer-events-none" />
+      </div>
+    </div>
   );
 
   const locationList = (
@@ -608,13 +631,73 @@ export default function FullMap() {
   const [mapSearchError, setMapSearchError]  = useState("");
   const [sheetOpen, setSheetOpen]           = useState(false); // mobile bottom sheet
   const [userLocation, setUserLocation]     = useState<[number, number] | null>(null);
+  const [dbLocations, setDbLocations]       = useState<Location[]>([]);
+  const [selectedNetwork, setSelectedNetwork] = useState<string>("all");
+
+  useEffect(() => {
+    async function loadStations() {
+      if (!supabaseEnabled()) return;
+      try {
+        const { data, error } = await supabase.from("ev_stations").select("*");
+        if (error) {
+          console.warn("Error fetching stations:", error.message);
+          return;
+        }
+        if (data) {
+          const formatted = data.map((s: any) => ({
+            id: String(s.id),
+            type: s.type || "charging",
+            lat: Number(s.lat),
+            lng: Number(s.lng),
+            name: s.name,
+            address: s.address || `${s.city || 'EV'} Station`,
+            network: s.network || "",
+          }));
+          setDbLocations(formatted);
+        }
+      } catch (e) {
+        console.warn("Could not fetch stations from DB", e);
+      }
+    }
+    loadStations();
+  }, []);
+
+  const locations = useMemo(() => {
+    if (supabaseEnabled() && dbLocations.length > 0) {
+      return dbLocations;
+    }
+    return allLocations;
+  }, [dbLocations]);
+
+  const networks = useMemo(() => {
+    const netSet = new Set<string>();
+    const seen = new Set<string>();
+    locations.forEach(loc => {
+      if (loc.network) {
+        const net = loc.network.trim();
+        const lower = net.toLowerCase();
+        
+        let displayNet = net;
+        if (lower === "vinfast") displayNet = "VinFast";
+        else if (lower === "statiq") displayNet = "Statiq";
+        else if (lower === "honda") displayNet = "Honda";
+
+        if (!seen.has(displayNet.toLowerCase())) {
+          seen.add(displayNet.toLowerCase());
+          netSet.add(displayNet);
+        }
+      }
+    });
+    return ["all", ...Array.from(netSet).sort()];
+  }, [locations]);
 
   const mapSearchSuggestions = mapSearchQuery.trim()
-    ? getMapSearchSuggestions(mapSearchQuery)
+    ? getMapSearchSuggestions(mapSearchQuery, locations)
     : [];
 
-  const displayedLocations = allLocations.filter((l) => {
+  const displayedLocations = locations.filter((l) => {
     if (filterType !== "all" && l.type !== filterType) return false;
+    if (selectedNetwork !== "all" && l.network?.toLowerCase() !== selectedNetwork.toLowerCase()) return false;
     if (routeActive && routeCoords) {
       return isLocationNearRoute(l.lat, l.lng, routeCoords, 1); // 1km radius
     }
@@ -678,9 +761,9 @@ export default function FullMap() {
   // Pan to selected
   useEffect(() => {
     if (!selectedId) return;
-    const loc = allLocations.find((l) => l.id === selectedId);
+    const loc = locations.find((l) => l.id === selectedId);
     if (loc) panTo(loc.lat, loc.lng);
-  }, [selectedId, panTo]);
+  }, [selectedId, panTo, locations]);
 
   const handleFindRoute = async () => {
     if (!originInput.trim() || !destInput.trim()) return;
@@ -747,7 +830,7 @@ export default function FullMap() {
   const handleMapSearch = async () => {
     const query = mapSearchQuery.trim();
     if (!query) return;
-    const localMatch = findLocalLocationMatches(query)[0];
+    const localMatch = findLocalLocationMatches(query, locations)[0];
     if (localMatch) {
       panTo(localMatch.lat, localMatch.lng);
       setMapSearchError("");
@@ -811,6 +894,8 @@ export default function FullMap() {
     onRouteAndCost: handleRouteAndCost,
     onShare: handleShare,
     onPickMyLocation: handlePickMyLocation,
+    selectedNetwork, setSelectedNetwork,
+    networks,
   };
 
   return (

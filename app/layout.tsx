@@ -28,6 +28,7 @@ import ClarityScript from "./components/ClarityScript";
 import PageTracker from "./components/PageTracker";
 import FloatingMobileNav from "./components/FloatingMobileNav";
 import { CompareProvider } from "./context/CompareContext";
+import { FeedbackProvider } from "./context/FeedbackContext";
 import CompareWidget from "./components/CompareWidget";
 import { Analytics } from "@vercel/analytics/next"
 export default function RootLayout({
@@ -48,19 +49,21 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-[#0f1115] text-white">
         <ClarityScript />
         <PageTracker />
-        <CompareProvider>
-          <Header />
-          <Analytics />
-          <main className="flex-grow">
-            {children}
-          </main>
-          <Footer />
-          <CompareWidget />
-          <AssistPopup />
-          <EnquiryModal />
-          <AddToHomescreen />
-          <FloatingMobileNav />
-        </CompareProvider>
+        <FeedbackProvider>
+          <CompareProvider>
+            <Header />
+            <Analytics />
+            <main className="flex-grow">
+              {children}
+            </main>
+            <Footer />
+            <CompareWidget />
+            <AssistPopup />
+            <EnquiryModal />
+            <AddToHomescreen />
+            <FloatingMobileNav />
+          </CompareProvider>
+        </FeedbackProvider>
       </body>
     </html>
   );

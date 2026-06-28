@@ -18,6 +18,10 @@ export default function MapPanel({ supabase, userEmail }: { supabase: any; userE
   const [extracting, setExtracting] = useState(false);
   const [bulkJson, setBulkJson] = useState("");
 
+  const PREDEFINED_NETWORKS = ["Statiq", "Honda", "VinFast"];
+  const isCustomNetwork = form.network !== "" && !PREDEFINED_NETWORKS.includes(form.network);
+  const selectNetworkValue = isCustomNetwork ? "other" : form.network;
+
   useEffect(() => { fetchStations(); }, []);
 
   const fetchStations = async () => {
@@ -232,7 +236,36 @@ export default function MapPanel({ supabase, userEmail }: { supabase: any; userE
                 <option value="spare">Repair / Spare</option>
               </select>
             </label>
-            <label className="block"><span className="text-xs font-bold text-slate-600">Network</span><input value={form.network} onChange={(e) => setForm({ ...form, network: e.target.value })} placeholder="Statiq, Tata Power, etc" className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
+            <label className="block">
+              <span className="text-xs font-bold text-slate-600">Network</span>
+              <select
+                value={selectNetworkValue}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === "other") {
+                    setForm({ ...form, network: "Custom" });
+                  } else {
+                    setForm({ ...form, network: val });
+                  }
+                }}
+                className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none bg-white cursor-pointer"
+              >
+                <option value="">Unknown / None</option>
+                <option value="Statiq">Statiq</option>
+                <option value="Honda">Honda</option>
+                <option value="VinFast">VinFast</option>
+                <option value="other">Other (Specify...)</option>
+              </select>
+              {selectNetworkValue === "other" && (
+                <input
+                  value={form.network}
+                  onChange={(e) => setForm({ ...form, network: e.target.value })}
+                  placeholder="Enter custom network name"
+                  className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none"
+                  autoFocus
+                />
+              )}
+            </label>
             <label className="block"><span className="text-xs font-bold text-slate-600">Latitude</span><input type="number" step="any" value={form.lat || ""} onChange={(e) => setForm({ ...form, lat: Number(e.target.value) })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
             <label className="block"><span className="text-xs font-bold text-slate-600">Longitude</span><input type="number" step="any" value={form.lng || ""} onChange={(e) => setForm({ ...form, lng: Number(e.target.value) })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
             <label className="block sm:col-span-2 lg:col-span-3"><span className="text-xs font-bold text-slate-600">Connectors & Power (comma-sep)</span><input value={form.connector_types.join(", ")} onChange={(e) => setForm({ ...form, connector_types: e.target.value.split(",").map(s => s.trim()).filter(Boolean) })} placeholder="CCS2 60kW, Type2 22kW" className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>

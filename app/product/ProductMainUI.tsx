@@ -7,6 +7,7 @@ import EnquiryTrigger from "./EnquiryTrigger";
 import { triggerEnquiryModal } from "../components/EnquiryModal";
 import CompareButton from "./CompareButton";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowLeft, Gauge, Tag,
   BatteryCharging, Fuel, Zap, ChevronDown, Share2,
@@ -176,6 +177,52 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
                   <div className="rounded-xl bg-zinc-50 p-3 dark:bg-zinc-800/70"><p className="text-[11px] text-zinc-500">Tenure</p><p className="font-semibold">3y</p></div>
                 </div>
               </div>
+
+              {/* Brand Offers */}
+              {offers && offers.length > 0 && (
+                <div className="rounded-2xl border border-emerald-250 bg-emerald-50/20 p-5 dark:bg-emerald-950/10 dark:border-emerald-900/40 space-y-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Tag size={16} className="text-emerald-600 dark:text-emerald-400" />
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">Available Offers</h4>
+                  </div>
+                  <div className="divide-y divide-emerald-100 dark:divide-emerald-900/30">
+                    {offers.map((offer, idx) => (
+                      <div key={offer.id || idx} className="py-3 first:pt-0 last:pb-0 flex flex-col gap-2.5">
+                        <div className="flex items-start gap-2.5">
+                          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-bold text-white mt-0.5">
+                            %
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 leading-snug">{offer.text}</p>
+                            <div className="flex flex-wrap gap-2 mt-1.5 text-[10px] text-zinc-500 dark:text-zinc-400">
+                              {offer.cities && (
+                                <span className="inline-flex rounded-md bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 font-medium">
+                                  Cities: {offer.cities}
+                                </span>
+                              )}
+                              {offer.valid_until && (
+                                <span className="inline-flex rounded-md bg-rose-50 dark:bg-rose-950/20 px-2 py-0.5 font-medium text-rose-700 dark:text-rose-400">
+                                  Valid till: {new Date(offer.valid_until).toLocaleDateString()}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        {offer.image && (
+                          <div className="relative w-full h-24 mt-1 rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800">
+                            <Image 
+                              src={offer.image} 
+                              alt="Offer Banner" 
+                              fill 
+                              className="object-cover"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

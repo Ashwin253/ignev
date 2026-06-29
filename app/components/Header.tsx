@@ -80,8 +80,8 @@ export default function Header() {
       ? "bg-white/95 backdrop-blur-md border-slate-200 shadow-sm"
       : "bg-white/95 backdrop-blur-sm border-slate-100"
     : isScrolled
-      ? " backdrop-blur-md border-white/10 shadow-lg"
-      : "bg-white/80 border-transparent";
+      ? "bg-white/95 backdrop-blur-md border-slate-200 shadow-sm"
+      : "bg-transparent border-transparent";
 
   const linkBase = "text-sm text-black lg:text-base font-medium px-3 py-2 rounded-md transition-colors";
 
@@ -89,27 +89,23 @@ export default function Header() {
   const linkColor = isLightPage
     ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
     : isScrolled
-      ? "text-black hover:text-white hover:bg-white/10"
+      ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
       : "text-slate-700 hover:text-slate-900 hover:bg-black/5";
 
   const activeLinkColor = isLightPage
     ? "text-sky-600 bg-sky-50"
     : isScrolled
-      ? "text-black bg-black/15"
+      ? "text-sky-600 bg-sky-50"
       : "text-sky-700 bg-sky-50/80";
 
-  const mobileLinkColor = isLightPage
-    ? "text-slate-700 hover:text-slate-900"
-    : "text-white/90 hover:text-white";
+  const mobileLinkColor = "text-slate-700 hover:text-slate-900";
 
-  const mobileBg = isLightPage
-    ? "bg-white border-slate-200"
-    : "bg-slate-900/95 backdrop-blur-lg border-white/10";
+  const mobileBg = "bg-white border-slate-200";
 
   const mobileToggleColor = isLightPage
     ? "text-slate-600 hover:text-slate-900"
     : isScrolled
-      ? "text-white hover:text-white/80"
+      ? "text-slate-600 hover:text-slate-900"
       : "text-slate-700 hover:text-slate-900";
 
   return (
@@ -119,8 +115,9 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <Link href="/" className="z-50 hover:opacity-80  transition-opacity">
-            <img src="/evplsenoname.png" alt="IgnEV Logo" className="h-16 w-auto" />
+          <Link href="/" className="z-50 hover:opacity-80 bg-transparent  transition-opacity">
+            <img src="/evplsenewlogonobg.jpg" alt="IgnEV Logo Desktop" className="hidden md:block bg-transparent h-16 w-auto" />
+            <img src="/evplsenoname.jpg" alt="IgnEV Logo Mobile" className="block md:hidden h-16 w-auto" />
           </Link>
 
           {/* Desktop Nav */}
@@ -192,7 +189,7 @@ export default function Header() {
                     ? "bg-[#34ebb1] border-[#34ebb1] text-slate-950"
                     : !isLightPage && !isScrolled
                       ? "bg-slate-900/10 hover:bg-slate-900/15 text-slate-800 border-slate-300/60"
-                      : "bg-white/10 hover:bg-white/20 text-white border-white/10"
+                      : "bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-200"
                 }`}
                 aria-label="Preferences"
               >

@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { 
-  Download, Trash2, Upload, Search, Loader2, RefreshCw, X, CheckCircle, Sparkles
+  Download, Trash2, Upload, Search, Loader2, RefreshCw, X, CheckCircle, Sparkles, Crop, FlipHorizontal
 } from "lucide-react";
+import CropModal from "./CropModal";
 
 interface EvListingRow {
   id: string;
@@ -63,6 +64,10 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
   const [bulkProcessing, setBulkProcessing] = useState(false);
   const [bulkLog, setBulkLog] = useState<LogEntry[]>([]);
   const [showBulkModal, setShowBulkModal] = useState(false);
+
+  // Crop & Flip Horizontal states
+  const [flippingId, setFlippingId] = useState<string | null>(null);
+  const [cropImage, setCropImage] = useState<ImageItem | null>(null);
 
   useEffect(() => {
     fetchListings();
@@ -518,6 +523,107 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
     setBgRemoveProgress("");
   };
 
+  const handleFlipHorizontal = async (item: ImageItem) => {
+    if (!confirm("Are you sure you want to flip this image horizontally? The flipped image will immediately replace the original in the database.")) return;
+
+    setFlippingId(item.id);
+    try {
+      // Decode and load image first (resolves CORS and formatting issues)
+      const decodedBlob = await convertToImageBlob(item.url);
+      const img = new Image();
+      
+      const loadedImg = await new Promise<HTMLImageElement>((resolve, reject) => {
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error("Failed to load source image for flipping"));
+        img.src = URL.createObjectURL(decodedBlob);
+      });
+
+      const canvas = document.createElement("canvas");
+      canvas.width = loadedImg.naturalWidth || loadedImg.width;
+      canvas.height = loadedImg.naturalHeight || loadedImg.height;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        throw new Error("Could not get 2D canvas context");
+      }
+
+      // Flip horizontally
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(loadedImg, 0, 0);
+
+      // Export to blob
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((b) => {
+          if (b) resolve(b);
+          else reject(new Error("Canvas conversion to blob failed"));
+        }, "image/png");
+      });
+
+      const sig = getFileSignature(item);
+      const filename = `${sig}-flipped.png`;
+      const path = `vehicles/${Date.now()}-${sig}.png`;
+      
+      const { data, error } = await supabase.storage.from("evphotos").upload(path, new File([blob], filename, { type: "image/png" }), { upsert: true });
+
+      if (error) {
+        alert("Upload failed: " + error.message);
+        setFlippingId(null);
+        return;
+      }
+
+      const publicUrl = supabase.storage.from("evphotos").getPublicUrl(data.path).data.publicUrl;
+
+      // Find original listing row
+      const listing = listings.find((l) => l.id === item.listingId);
+      if (!listing) return;
+
+      let updatePayload: Partial<EvListingRow> = {};
+
+      if (item.type === "main") {
+        updatePayload.photo = publicUrl;
+      } else if (item.type === "featured") {
+        const rawPhotos = Array.isArray(listing.featured_photos)
+          ? [...listing.featured_photos]
+          : JSON.parse(typeof listing.featured_photos === "string" ? listing.featured_photos : "[]");
+
+        if (typeof rawPhotos[item.index] === "string") {
+          rawPhotos[item.index] = publicUrl;
+        } else {
+          rawPhotos[item.index] = { ...rawPhotos[item.index], url: publicUrl };
+        }
+        updatePayload.featured_photos = rawPhotos;
+      } else if (item.type === "gallery") {
+        const rawGallery = Array.isArray(listing.gallery_images)
+          ? [...listing.gallery_images]
+          : JSON.parse(typeof listing.gallery_images === "string" ? listing.gallery_images : "[]");
+
+        if (typeof rawGallery[item.index] === "string") {
+          rawGallery[item.index] = publicUrl;
+        } else {
+          rawGallery[item.index] = { ...rawGallery[item.index], url: publicUrl };
+        }
+        updatePayload.gallery_images = rawGallery;
+      }
+
+      const { error: updateError } = await supabase
+        .from("evlistings")
+        .update(updatePayload)
+        .eq("id", item.listingId);
+
+      if (updateError) {
+        alert("Failed to update database: " + updateError.message);
+      } else {
+        // Auto rebuild search summary
+        fetch("/api/build-summary").catch((err) => console.error("Error rebuilding summary:", err));
+        await fetchListings();
+      }
+    } catch (err: any) {
+      alert("Flipping failed: " + err.message);
+    }
+    setFlippingId(null);
+  };
+
   const handleReplace = async (e: React.ChangeEvent<HTMLInputElement>, item: ImageItem) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -811,6 +917,32 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
                     <div className="absolute top-3 left-3 px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider bg-slate-900/80 text-white backdrop-blur-md">
                       {img.type === "main" ? "Main Photo" : img.type === "featured" ? "Variant Photo" : "Gallery Image"}
                     </div>
+
+                    {/* Floating Overlay Actions (Download & Delete) */}
+                    <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10 opacity-90 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-250">
+                      {/* Download */}
+                      <button
+                        onClick={() => handleDownload(img.url, filename)}
+                        className="p-1.5 rounded-lg bg-slate-900/85 hover:bg-sky-600 text-white backdrop-blur-md transition-colors cursor-pointer shadow-sm flex items-center justify-center"
+                        title="Download Image"
+                      >
+                        <Download size={13} />
+                      </button>
+
+                      {/* Delete */}
+                      <button
+                        onClick={() => handleDelete(img)}
+                        disabled={deletingId !== null || bgRemovingId !== null || uploadingId !== null}
+                        className="p-1.5 rounded-lg bg-slate-900/85 hover:bg-rose-600 text-white backdrop-blur-md transition-colors cursor-pointer shadow-sm flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Delete Image"
+                      >
+                        {deletingId === img.id ? (
+                          <Loader2 size={13} className="animate-spin text-white" />
+                        ) : (
+                          <Trash2 size={13} />
+                        )}
+                      </button>
+                    </div>
                   </div>
 
                   {/* Info block */}
@@ -872,27 +1004,28 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
                         )}
                       </button>
 
-                      {/* Download */}
+                      {/* Crop */}
                       <button
-                        onClick={() => handleDownload(img.url, filename)}
-                        className="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-100 hover:bg-sky-50 hover:text-sky-700 text-slate-650 text-[10px] font-extrabold transition-colors border border-slate-200 cursor-pointer text-center"
+                        onClick={() => setCropImage(img)}
+                        disabled={cropImage !== null || bgRemovingId !== null || uploadingId !== null || deletingId !== null || flippingId !== null}
+                        className="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-100 hover:bg-amber-50 hover:text-amber-700 text-slate-650 text-[10px] font-extrabold transition-colors border border-slate-200 cursor-pointer text-center"
                       >
-                        <Download size={14} className="mb-1 text-sky-600" />
-                        Download
+                        <Crop size={14} className="mb-1 text-amber-600" />
+                        Crop
                       </button>
 
-                      {/* Delete */}
+                      {/* Flip Horizontal */}
                       <button
-                        onClick={() => handleDelete(img)}
-                        disabled={deletingId !== null || bgRemovingId !== null || uploadingId !== null}
-                        className="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-700 text-slate-650 text-[10px] font-extrabold transition-colors border border-slate-200 cursor-pointer text-center"
+                        onClick={() => handleFlipHorizontal(img)}
+                        disabled={flippingId !== null || bgRemovingId !== null || uploadingId !== null || deletingId !== null}
+                        className="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-650 text-[10px] font-extrabold transition-colors border border-slate-200 cursor-pointer text-center"
                       >
-                        {deletingId === img.id ? (
-                          <Loader2 size={14} className="animate-spin text-rose-600" />
+                        {flippingId === img.id ? (
+                          <Loader2 size={14} className="animate-spin text-indigo-600" />
                         ) : (
                           <>
-                            <Trash2 size={14} className="mb-1 text-rose-600" />
-                            Delete
+                            <FlipHorizontal size={14} className="mb-1 text-indigo-600" />
+                            Flip Horiz.
                           </>
                         )}
                       </button>
@@ -977,6 +1110,17 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Crop Modal */}
+      {cropImage && (
+        <CropModal
+          image={cropImage}
+          supabase={supabase}
+          listings={listings}
+          fetchListings={fetchListings}
+          onClose={() => setCropImage(null)}
+        />
       )}
     </div>
   );

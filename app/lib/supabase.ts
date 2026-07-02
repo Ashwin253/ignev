@@ -123,8 +123,8 @@ export type EvListingRow = {
   price_bracket?: string;
   discontinued?: boolean;
   discontinued_date?: string | null;
-  video_links?: Array<{ url: string; title?: string; variantId?: string | null }>;
-  featured_photos?: Array<{ url: string; variantId?: string | null }>;
+  video_links?: Array<{ url: string; title?: string; variantId?: string | null; variantName?: string | null }>;
+  featured_photos?: Array<{ url: string; variantId?: string | null; variantName?: string | null }>;
   city_pricing?: Array<{
     id?: string;
     location_name: string;

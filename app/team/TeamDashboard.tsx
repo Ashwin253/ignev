@@ -55,8 +55,8 @@ type ListingForm = {
   editors_emails?: string[];
   discontinued: boolean;
   discontinued_date: string | null;
-  video_links: Array<{ url: string; title?: string; variantId?: string | null }>;
-  featured_photos: Array<{ url: string; variantId?: string | null }>;
+  video_links: Array<{ url: string; title?: string; variantId?: string | null; variantName?: string | null }>;
+  featured_photos: Array<{ url: string; variantId?: string | null; variantName?: string | null }>;
   city_pricing: Array<{
     id?: string;
     location_name: string;
@@ -1198,6 +1198,62 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
           }
         }
       }
+      // Resolve variantNames to final variant UUIDs for featured_photos, gallery_images, and video_links post-save
+      const { data: savedVars } = await supabase.from("ev_variants").select("id, variant_name").eq("listing_id", listingId);
+      if (savedVars) {
+        const nameToIdMap = new Map<string, string>();
+        for (const sv of savedVars) {
+          if (sv.variant_name) {
+            nameToIdMap.set(sv.variant_name.toLowerCase().trim(), sv.id);
+          }
+        }
+
+        const updatedFeatured = form.featured_photos.map(p => {
+          const nameKey = p.variantName?.toLowerCase().trim();
+          const resolvedId = p.variantId || (nameKey ? nameToIdMap.get(nameKey) : null);
+          return {
+            ...p,
+            variantId: resolvedId || null,
+            variantName: p.variantName || (resolvedId ? savedVars.find((sv: any) => sv.id === resolvedId)?.variant_name : null) || null
+          };
+        });
+
+        const updatedGallery = form.gallery_images.map(p => {
+          if (typeof p === "object" && p !== null) {
+            const nameKey = p.variantName?.toLowerCase().trim();
+            const resolvedId = p.variantId || (nameKey ? nameToIdMap.get(nameKey) : null);
+            return {
+              ...p,
+              variantId: resolvedId || null,
+              variantName: p.variantName || (resolvedId ? savedVars.find((sv: any) => sv.id === resolvedId)?.variant_name : null) || null
+            };
+          }
+          return p;
+        });
+
+        const updatedVideos = form.video_links.map(p => {
+          const nameKey = p.variantName?.toLowerCase().trim();
+          const resolvedId = p.variantId || (nameKey ? nameToIdMap.get(nameKey) : null);
+          return {
+            ...p,
+            variantId: resolvedId || null,
+            variantName: p.variantName || (resolvedId ? savedVars.find((sv: any) => sv.id === resolvedId)?.variant_name : null) || null
+          };
+        });
+
+        await supabase.from("evlistings").update({
+          featured_photos: updatedFeatured,
+          gallery_images: updatedGallery,
+          video_links: updatedVideos
+        }).eq("id", listingId);
+
+        setForm(prev => ({
+          ...prev,
+          featured_photos: updatedFeatured,
+          gallery_images: updatedGallery,
+          video_links: updatedVideos
+        }));
+      }
     }
 
     // Save energy comparisons (only if not moving/merged to parent)
@@ -2015,17 +2071,23 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                           <div className="flex items-center gap-2">
                             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Variant:</span>
                             <select
-                              value={item.variantId || ""}
+                              value={item.variantId || item.variantName || ""}
                               onChange={(e) => {
+                                const selectedVal = e.target.value;
+                                const selectedVar = variants.find(v => v.id === selectedVal || v.variant_name === selectedVal);
                                 const arr = [...form.featured_photos];
-                                arr[idx] = { ...arr[idx], variantId: e.target.value || null };
+                                arr[idx] = { 
+                                  ...arr[idx], 
+                                  variantId: selectedVar?.id || null, 
+                                  variantName: selectedVar?.variant_name || null 
+                                };
                                 setForm({ ...form, featured_photos: arr });
                               }}
                               className="rounded border border-slate-200 px-2 py-1 text-xs outline-none bg-slate-50 cursor-pointer"
                             >
                               <option value="">Model (Default)</option>
                               {variants.filter(v => v.variant_name).map((v, vidx) => (
-                                <option key={v.id || vidx} value={v.id}>{v.variant_name} {v.model_year ? `(${v.model_year})` : ""}</option>
+                                <option key={v.id || vidx} value={v.id || v.variant_name}>{v.variant_name} {v.model_year ? `(${v.model_year})` : ""}</option>
                               ))}
                             </select>
                           </div>
@@ -2067,6 +2129,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                       const imgType = isObj ? (item as any).type || "" : "";
                       const colorCode = isObj ? (item as any).colorCode || "" : "";
                       const variantId = isObj ? (item as any).variantId || "" : "";
+                      const variantName = isObj ? (item as any).variantName || "" : "";
 
                       return (
                         <div key={idx} className="flex flex-col gap-2 rounded-lg border border-slate-200 bg-white p-3">
@@ -2086,7 +2149,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                                   if (data) {
                                     const { data: u } = supabase.storage.from("evphotos").getPublicUrl(data.path);
                                     const arr = [...form.gallery_images];
-                                    arr[idx] = { url: u.publicUrl, type: imgType, colorCode, variantId };
+                                    arr[idx] = { url: u.publicUrl, type: imgType, colorCode, variantId, variantName };
                                     setForm({ ...form, gallery_images: arr });
                                   }
                                 }}
@@ -2098,7 +2161,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                                 value={url}
                                 onChange={(e) => {
                                   const arr = [...form.gallery_images];
-                                  arr[idx] = { url: e.target.value, type: imgType, colorCode, variantId };
+                                  arr[idx] = { url: e.target.value, type: imgType, colorCode, variantId, variantName };
                                   setForm({ ...form, gallery_images: arr });
                                 }}
                                 className="flex-1 min-w-0 rounded border border-slate-200 px-2.5 py-1 text-xs outline-none"
@@ -2120,7 +2183,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                                 value={imgType}
                                 onChange={(e) => {
                                   const arr = [...form.gallery_images];
-                                  arr[idx] = { url, type: e.target.value, colorCode, variantId };
+                                  arr[idx] = { url, type: e.target.value, colorCode, variantId, variantName };
                                   setForm({ ...form, gallery_images: arr });
                                 }}
                                 className="rounded border border-slate-200 px-2 py-1 text-xs outline-none bg-slate-50"
@@ -2139,7 +2202,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                                   value={colorCode}
                                   onChange={(e) => {
                                     const arr = [...form.gallery_images];
-                                    arr[idx] = { url, type: imgType, colorCode: e.target.value, variantId };
+                                    arr[idx] = { url, type: imgType, colorCode: e.target.value, variantId, variantName };
                                     setForm({ ...form, gallery_images: arr });
                                   }}
                                   className="rounded border border-slate-200 px-2 py-1 text-xs outline-none bg-slate-50"
@@ -2156,17 +2219,25 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                             <div className="flex items-center gap-1.5">
                               <span className="text-[10px] font-bold text-slate-500 uppercase">Variant:</span>
                               <select
-                                value={variantId}
+                                value={variantId || variantName || ""}
                                 onChange={(e) => {
+                                  const selectedVal = e.target.value;
+                                  const selectedVar = variants.find(v => v.id === selectedVal || v.variant_name === selectedVal);
                                   const arr = [...form.gallery_images];
-                                  arr[idx] = { url, type: imgType, colorCode, variantId: e.target.value || null };
+                                  arr[idx] = { 
+                                    url, 
+                                    type: imgType, 
+                                    colorCode, 
+                                    variantId: selectedVar?.id || null, 
+                                    variantName: selectedVar?.variant_name || null 
+                                  };
                                   setForm({ ...form, gallery_images: arr });
                                 }}
                                 className="rounded border border-slate-200 px-2 py-1 text-xs outline-none bg-slate-50"
                               >
                                 <option value="">Model (Default)</option>
                                 {variants.filter(v => v.variant_name).map((v, vidx) => (
-                                  <option key={v.id || vidx} value={v.id}>{v.variant_name} {v.model_year ? `(${v.model_year})` : ""}</option>
+                                  <option key={v.id || vidx} value={v.id || v.variant_name}>{v.variant_name} {v.model_year ? `(${v.model_year})` : ""}</option>
                                 ))}
                               </select>
                             </div>
@@ -2210,7 +2281,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                     <p className="text-xs font-bold uppercase tracking-wider text-slate-600">Video Links</p>
                     <button
                       type="button"
-                      onClick={() => setForm({ ...form, video_links: [...form.video_links, { url: "", title: "", variantId: null }] })}
+                      onClick={() => setForm({ ...form, video_links: [...form.video_links, { url: "", title: "", variantId: null, variantName: null }] })}
                       className="text-xs font-bold text-sky-600 hover:text-sky-700 cursor-pointer"
                     >
                       + Add Video
@@ -2255,17 +2326,23 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                         <div className="flex items-center gap-2 text-xs pt-1 border-t border-slate-100">
                           <span className="text-[10px] font-bold text-slate-500 uppercase">Variant</span>
                           <select
-                            value={item.variantId || ""}
+                            value={item.variantId || item.variantName || ""}
                             onChange={(e) => {
+                              const selectedVal = e.target.value;
+                              const selectedVar = variants.find(v => v.id === selectedVal || v.variant_name === selectedVal);
                               const arr = [...form.video_links];
-                              arr[idx] = { ...arr[idx], variantId: e.target.value || null };
+                              arr[idx] = { 
+                                ...arr[idx], 
+                                variantId: selectedVar?.id || null, 
+                                variantName: selectedVar?.variant_name || null 
+                              };
                               setForm({ ...form, video_links: arr });
                             }}
                             className="rounded border border-slate-200 px-2 py-1 text-xs outline-none bg-slate-50 cursor-pointer"
                           >
                             <option value="">Model (Default)</option>
                             {variants.filter(v => v.variant_name).map((v, vidx) => (
-                              <option key={v.id || vidx} value={v.id}>{v.variant_name} {v.model_year ? `(${v.model_year})` : ""}</option>
+                              <option key={v.id || vidx} value={v.id || v.variant_name}>{v.variant_name} {v.model_year ? `(${v.model_year})` : ""}</option>
                             ))}
                           </select>
                         </div>

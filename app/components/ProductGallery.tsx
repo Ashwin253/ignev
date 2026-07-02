@@ -47,25 +47,47 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
     if (!item) return photos;
 
     const selectedVariantId = activeVariant?.id;
+    const selectedVariantName = activeVariant?.modelName;
 
     const featured = item.featured_photos || [];
     const gallery = item.gallery_raw || [];
 
-    const variantFeatured = featured.filter(p => p.url && p.variantId === selectedVariantId);
-    const defaultFeatured = featured.filter(p => p.url && !p.variantId);
+    const variantFeatured = featured.filter(p => 
+      p.url && 
+      ((selectedVariantId && p.variantId === selectedVariantId) || 
+       (!p.variantId && selectedVariantName && p.variantName === selectedVariantName))
+    );
+    const defaultFeatured = featured.filter(p => p.url && !p.variantId && !p.variantName);
 
-    const variantGallery = gallery.filter(p => p.url && p.variantId === selectedVariantId);
-    const defaultGallery = gallery.filter(p => p.url && !p.variantId);
+    const variantGallery = gallery.filter(p => 
+      p.url && 
+      ((selectedVariantId && p.variantId === selectedVariantId) || 
+       (!p.variantId && selectedVariantName && p.variantName === selectedVariantName))
+    );
+    const defaultGallery = gallery.filter(p => p.url && !p.variantId && !p.variantName);
 
-    const urls = [
-      item.photo,
-      ...variantFeatured.map(p => p.url),
-      ...defaultFeatured.map(p => p.url),
-      ...variantGallery.map(p => p.url),
-      ...defaultGallery.map(p => p.url)
-    ];
+    const mainPhotoIsForOtherVariant = featured.some(p => 
+      p.url === item.photo && (
+        (p.variantId && p.variantId !== selectedVariantId) ||
+        (p.variantName && p.variantName !== selectedVariantName)
+      )
+    ) || gallery.some(p => 
+      p.url === item.photo && (
+        (p.variantId && p.variantId !== selectedVariantId) ||
+        (p.variantName && p.variantName !== selectedVariantName)
+      )
+    );
 
-    const uniqueUrls = Array.from(new Set(urls)).filter(Boolean);
+    const urls: string[] = [];
+    if (!mainPhotoIsForOtherVariant && item.photo) {
+      urls.push(item.photo);
+    }
+    variantFeatured.forEach(p => p.url && urls.push(p.url));
+    defaultFeatured.forEach(p => p.url && urls.push(p.url));
+    variantGallery.forEach(p => p.url && urls.push(p.url));
+    defaultGallery.forEach(p => p.url && urls.push(p.url));
+
+    const uniqueUrls = Array.from(new Set(urls));
 
     if (uniqueUrls.length > 0) return uniqueUrls;
 
@@ -73,7 +95,7 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
       item.photo,
       ...(item.galleryImages.length > 0 ? item.galleryImages : [])
     ])).filter(Boolean);
-  }, [item, activeVariant?.id, photos]);
+  }, [item, activeVariant?.id, activeVariant?.modelName, photos]);
 
   // Reset image view index when variant changes
   useEffect(() => {
@@ -108,8 +130,13 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
 
     if (item && item.gallery_raw) {
       const selectedVariantId = activeVariant?.id;
-      const variantGallery = item.gallery_raw.filter(p => p.url && p.variantId === selectedVariantId);
-      const defaultGallery = item.gallery_raw.filter(p => p.url && !p.variantId);
+      const selectedVariantName = activeVariant?.modelName;
+      const variantGallery = item.gallery_raw.filter(p => 
+        p.url && 
+        ((selectedVariantId && p.variantId === selectedVariantId) || 
+         (!p.variantId && selectedVariantName && p.variantName === selectedVariantName))
+      );
+      const defaultGallery = item.gallery_raw.filter(p => p.url && !p.variantId && !p.variantName);
       const finalGallery = [...variantGallery, ...defaultGallery];
       
       const match = finalGallery.find(p => p.type === "color" && p.colorCode === clickedColor);

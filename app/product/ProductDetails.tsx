@@ -58,8 +58,14 @@ export default function ProductDetails({ item }: { item: EvListing }) {
 
   const relevantVideos = useMemo(() => {
     const rawVideos = item.video_links || [];
-    return rawVideos.filter(v => v.url && (v.variantId === activeVariantId ||!v.variantId));
-  }, [item.video_links, activeVariantId]);
+    return rawVideos.filter(v => 
+      v.url && (
+        (activeVariantId && v.variantId === activeVariantId) || 
+        (!v.variantId && selectedVariant && (v as any).variantName === selectedVariant) ||
+        (!v.variantId && !(v as any).variantName)
+      )
+    );
+  }, [item.video_links, activeVariantId, selectedVariant]);
 
   if (!listingHasSpecifications(item)) return null;
 

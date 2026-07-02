@@ -3,17 +3,19 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight, CarFront, Bike, Truck, Sparkles, Send,
   ChevronLeft, ChevronRight, Star, BatteryCharging,
   MapPin, CalendarDays, BadgeCheck, CheckCircle2, Gauge, Info,
-  ChevronDown, ArrowUpRight, GitCompare, X,
+  ChevronDown, ArrowUpRight, GitCompare, X, Search,
 } from "lucide-react";
 import { triggerEnquiryModal } from "./EnquiryModal";
 import { useCompare } from "../context/CompareContext";
 import type { EvListing, HeroBanner } from "../lib/wordpress";
 import { formatLaunchDate, isLaunched, formatPricing } from "../lib/wordpress";
+import { catalogFilterUrl } from "../lib/catalog-filters";
 
 type Product = {
   name: string; brand: string; type: string; pricing: string; photo: string; slug?: string;
@@ -213,12 +215,16 @@ export default function Hero({
   freshReleases?: EvListing[];
   banners?: HeroBanner[];
 }) {
+  const router = useRouter();
+
+  // Search widget state
+  const [selectedType, setSelectedType] = useState<"2 Wheeler" | "3 Wheeler" | "commercial">("2 Wheeler");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedBrand, setSelectedBrand] = useState<string>("all");
+
   const [activeTab, setActiveTab] = useState<TabKey>(featured.length ? "featured" : "buy");
-  const [activeSlide, setActiveSlide] = useState(0);
-  const [showInfo, setShowInfo] = useState(false);
   const railRef = useRef<HTMLDivElement | null>(null);
 
-  const slides = banners.length > 0 ? banners : heroSlides;
   const visibleTabs = useMemo(() => {
     let t = tabs;
     if (!featured.length) t = t.filter((tab) => tab.key !== "featured");
@@ -242,15 +248,40 @@ export default function Hero({
     railRef.current?.scrollTo({ left: 0, behavior: "auto" });
   }, [activeTab]);
 
-  useEffect(() => {
-    if (showInfo) return;
-    const t = window.setInterval(() => setActiveSlide((c) => (c + 1) % slides.length), 6000);
-    return () => window.clearInterval(t);
-  }, [slides.length, showInfo]);
+  const BRAND_MAP: Record<string, string> = {
+    "Ather": "ATHER",
+    "Euler": "EULER MOTORS",
+    "TVS": "TVS",
+    "Bajaj": "BAJAJ",
+    "Ola": "OLA",
+    "Vida": "VIDA",
+    "Revolt": "REVOLT",
+    "Mahindra": "MAHINDRA LAST MILE MOBILITY",
+    "Montra": "MONTRA",
+    "Tata": "TATA MOTORS",
+  };
 
-  const prevSlide = () => setActiveSlide((c) => (c - 1 + slides.length) % slides.length);
-  const nextSlide = () => setActiveSlide((c) => (c + 1) % slides.length);
-  const slide = slides[activeSlide];
+  const POPULAR_BRANDS = ["Ather", "Euler", "TVS", "Bajaj", "Ola", "Vida", "Revolt", "Mahindra", "Montra", "Tata"];
+
+  const handleSearch = () => {
+    const mappedBrand = selectedBrand !== "all" ? (BRAND_MAP[selectedBrand] || selectedBrand) : null;
+    const url = catalogFilterUrl({
+      type: selectedType === "commercial" ? null : selectedType,
+      comm: selectedType === "commercial" ? true : undefined,
+      brand: mappedBrand,
+      q: searchQuery || null,
+    });
+    router.push(url);
+  };
+
+  const handleBrandSearch = (brandName: string) => {
+    setSelectedBrand(brandName);
+    const mappedBrand = brandName !== "all" ? (BRAND_MAP[brandName] || brandName) : null;
+    const url = catalogFilterUrl({
+      brand: mappedBrand,
+    });
+    router.push(url);
+  };
 
   return (
     <section id="home" className="relative overflow-hidden bg-[#f8f5f0] pt-28 pb-16 text-slate-900">
@@ -263,139 +294,134 @@ export default function Hero({
       <div className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="overflow-visible bg-transparent border-none shadow-none">
 
-          {/* ── Banner ── */}
-          <div className="sticky top-0 z-10 overflow-hidden bg-slate-900 rounded-4xl border border-slate-250/80 shadow-[0_18px_80px_rgba(15,23,42,0.08)]">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeSlide}
-                initial={{ opacity: 0, scale: 1.02 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.99 }}
-                transition={{ duration: 0.45 }}
-                className="relative min-h-96 overflow-hidden md:min-h-136"
-              >
-                {/* Media */}
-                <div className="absolute inset-0">
-                  {slide.video_url ? (
-                    <video
-                      src={slide.video_url}
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
-                      className="absolute inset-0 h-full w-full object-cover"
-                    />
-                  ) : (
-                    <>
-                      <Image src={(slide.image_horizontal || slide.imageHorizontal) as string} alt={slide.cta || "Banner"} fill sizes="(max-width: 1280px) 100vw, 1280px" className="hidden object-cover md:block" priority />
-                      <Image src={(slide.image_vertical || slide.imageVertical || slide.image_horizontal || slide.imageHorizontal) as string} alt={slide.cta || "Banner"} fill sizes="(max-width: 768px) 100vw, 768px" className="object-cover md:hidden" priority />
-                    </>
-                  )}
-                </div>
+          {/* ── Hero Image (Full Width & Height, Not Fixed) ── */}
+          <div className="relative w-full min-h-[640px] md:h-[80vh] overflow-hidden rounded-4xl border border-slate-200 shadow-[0_18px_80px_rgba(15,23,42,0.08)] bg-slate-900 mb-6 flex items-center justify-center">
+            <Image
+              src="/customhero.jpg"
+              alt="Electric Vehicle Hero"
+              fill
+              sizes="100vw"
+              className="object-cover"
+              priority
+            />
+            {/* Elegant overlay gradients */}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/40 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-950/50 via-transparent to-transparent" />
 
-                {/* Bottom gradient only — no colour overlay */}
-                <div className="absolute inset-x-0 bottom-0 h-48 bg-linear-to-t from-black/60 to-transparent" />
+            {/* Content overlay */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-4 md:p-12 text-center z-10">
+              <span className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-[#34ebb1]/20 backdrop-blur-md px-3.5 py-1.5 text-xs font-extrabold uppercase tracking-widest text-[#34ebb1] border border-[#34ebb1]/30 w-fit">
+                <Sparkles size={12} className="text-[#34ebb1]" /> The Future is Electric
+              </span>
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tight leading-tight">
+                Drive Electric. <span className="text-[#34ebb1]">Buy Smart.</span>
+              </h1>
+              <p className="mt-3 text-xs sm:text-sm md:text-base text-slate-350 font-medium max-w-xl">
+                Explore India&apos;s leading marketplace for 2-wheelers, 3-wheelers, and commercial Electric Vehicles.
+              </p>
 
-                {/* CTA button */}
-                <div className="relative z-10 flex min-h-96 items-end md:min-h-136">
-                  <div className="p-6 sm:p-8 md:p-10 flex flex-col items-start">
-                    {slide.label && (
-                      <span className="mb-3 inline-flex items-center rounded-full bg-black/40 backdrop-blur-md px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest text-white ring-1 ring-white/20">
-                        {slide.label}
-                      </span>
-                    )}
-                    <a
-                      href={slide.href}
-                      className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-900 shadow-lg transition hover:scale-[1.01] hover:bg-slate-50"
-                    >
-                      {slide.cta} <ArrowRight size={16} />
-                    </a>
-                  </div>
-                </div>
-
-                {/* ── Info badge (floating, top-right) ── */}
-                <div className="absolute top-4 right-16 z-20">
-                  <button
-                    onClick={() => setShowInfo((v) => !v)}
-                    aria-label="Banner info"
-                    className="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-black/30 backdrop-blur-sm border border-white/20 text-white hover:bg-black/50 transition-colors shadow-sm"
-                  >
-                    <span>Know More</span> 
-                    <Info size={13} />
-                  </button>
-
-                  <AnimatePresence>
-                    {showInfo && (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.92, y: -4 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.92, y: -4 }}
-                        transition={{ duration: 0.15 }}
-                        className="absolute right-0 top-10 w-64 rounded-2xl bg-white shadow-2xl border border-slate-200 p-4 text-left pr-8 relative"
+              {/* Housing.com style Search Box */}
+              <div className="mt-8 w-full max-w-2xl bg-white/60 backdrop-blur-2xl rounded-3xl p-5 md:p-6 shadow-[0_24px_60px_-15px_rgba(0,0,0,0.35)] shadow-slate-950/20 text-slate-900 border border-white/60">
+                {/* Upper Tabs */}
+                <div className="flex gap-2 border-b border-slate-900/10 pb-3 mb-4 justify-start">
+                  {(["2 Wheeler", "3 Wheeler", "commercial"] as const).map((tab) => {
+                    const isActive = selectedType === tab;
+                    return (
+                      <button
+                        key={tab}
+                        onClick={() => {
+                          setSelectedType(tab);
+                          setSelectedBrand("all"); // Reset brand when changing type
+                        }}
+                        className={`relative px-4 py-2 text-xs md:text-sm font-extrabold transition-all rounded-xl cursor-pointer ${
+                          isActive
+                            ? "text-slate-950 font-black"
+                            : "text-slate-500 hover:text-slate-800"
+                        }`}
                       >
-                        <button
-                          onClick={() => setShowInfo(false)}
-                          className="absolute top-3.5 right-3.5 text-slate-400 hover:text-slate-600 transition-colors p-1"
-                          aria-label="Close details"
-                        >
-                          <X size={14} />
-                        </button>
-                        {/* <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
-                          Banner {activeSlide + 1} of {slides.length}
-                          {banners.length > 0 && <span className="ml-1.5 text-sky-500">· WordPress</span>}
-                        </p> */}
-
-                        {/* <p className="text-sm font-semibold text-slate-900 mb-1">{slide.cta}</p> */}
-
-                        {slide.href && slide.href !== "/catalog" && (
-                          <a href={slide.href} className="text-xs text-sky-600 hover:underline break-all block mb-2">
-                            {slide.href}
-                          </a>
+                        {isActive && (
+                          <motion.div
+                            layoutId="activeHeroTab"
+                            className="absolute inset-0 bg-[#34ebb1] rounded-xl -z-10 shadow-md shadow-[#34ebb1]/25"
+                            transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                          />
                         )}
-
-                        {/* details field — shown when WP ACF group is renamed */}
-                        {slide.details && (
-                          <p className="text-xs text-slate-600 leading-5 mt-2 pt-2 border-t border-slate-100">
-                            {slide.details}
-                          </p>
-                        )}
-
-                        {/* Slide dots inside popover */}
-                        {/* {slides.length > 1 && (
-                          <div className="flex gap-1.5 mt-3 pt-3 border-t border-slate-100">
-                            {slides.map((_, i) => (
-                              <button
-                                key={i}
-                                onClick={() => { setActiveSlide(i); setShowInfo(false); }}
-                                className={`h-1.5 rounded-full transition-all duration-300 ${i === activeSlide ? "w-6 bg-sky-500" : "w-1.5 bg-slate-300 hover:bg-slate-400"}`}
-                              />
-                            ))}
-                          </div>
-                        )} */}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                        {tab === "2 Wheeler" && "2-Wheeler"}
+                        {tab === "3 Wheeler" && "3-Wheeler"}
+                        {tab === "commercial" && "Commercial"}
+                      </button>
+                    );
+                  })}
                 </div>
 
-                {/* Prev / Next */}
-                <button onClick={prevSlide} aria-label="Previous" className="absolute left-4 top-1/2 z-20 -translate-y-1/2 rounded-full border border-white/20 bg-black/25 p-3 text-white backdrop-blur-md transition hover:bg-black/40">
-                  <ChevronLeft size={18} />
-                </button>
-                <button onClick={nextSlide} aria-label="Next" className="absolute right-4 top-1/2 z-20 -translate-y-1/2 rounded-full border border-white/20 bg-black/25 p-3 text-white backdrop-blur-md transition hover:bg-black/40">
-                  <ChevronRight size={18} />
-                </button>
-
-                {/* Slide dots */}
-                {slides.length > 1 && (
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-                    {slides.map((_, i) => (
-                      <button key={i} onClick={() => setActiveSlide(i)} aria-label={`Slide ${i + 1}`}
-                        className={`h-1.5 rounded-full transition-all duration-300 ${i === activeSlide ? "w-6 bg-white" : "w-1.5 bg-white/40 hover:bg-white/70"}`} />
-                    ))}
+                {/* Main Search Row */}
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="flex-1 flex items-center gap-3 rounded-2xl border border-white/50 bg-white/80 px-4 py-3 focus-within:border-emerald-500 focus-within:bg-white focus-within:ring-2 focus-within:ring-emerald-500/15 transition-all shadow-inner">
+                    <Search size={18} className="text-slate-400 shrink-0" />
+                    <input
+                      type="text"
+                      placeholder={
+                        selectedType === "2 Wheeler"
+                          ? "Search scooters, motorcycles (e.g. Rizta, S1, Activa)..."
+                          : selectedType === "3 Wheeler"
+                          ? "Search passenger or cargo autos (e.g. Treo, Stream)..."
+                          : "Search commercial loaders, cargo autos..."
+                      }
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="flex-1 bg-transparent text-sm md:text-base outline-none text-slate-800 placeholder:text-slate-400"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleSearch();
+                      }}
+                    />
+                    {searchQuery && (
+                      <button onClick={() => setSearchQuery("")} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+                        <X size={16} />
+                      </button>
+                    )}
                   </div>
-                )}
-              </motion.div>
-            </AnimatePresence>
+                  <button
+                    onClick={handleSearch}
+                    className="bg-[#10855f] hover:bg-[#0b6447] text-white font-bold px-8 py-3.5 rounded-2xl text-sm md:text-base flex items-center justify-center gap-2 shadow-lg transition-all active:scale-[0.98] cursor-pointer"
+                  >
+                    Search <ArrowRight size={16} />
+                  </button>
+                </div>
+
+                {/* Bottom Tab (Brands) */}
+                <div className="mt-4 pt-3 border-t border-slate-900/10 flex flex-col sm:flex-row sm:items-center gap-3 text-left">
+                  <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-400 shrink-0">Popular Brands:</span>
+                  <div className="flex flex-wrap gap-2 overflow-x-auto pb-1 max-w-full no-scrollbar">
+                    <button
+                      onClick={() => handleBrandSearch("all")}
+                      className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all border cursor-pointer ${
+                        selectedBrand === "all"
+                          ? "bg-[#10855f] border-[#10855f] text-white shadow-sm"
+                          : "bg-white/80 border-white/50 text-slate-600 hover:text-slate-850 hover:bg-white hover:border-slate-350"
+                      }`}
+                    >
+                      All Brands
+                    </button>
+                    {POPULAR_BRANDS.map((brandName) => {
+                      const isActive = selectedBrand === brandName;
+                      return (
+                        <button
+                          key={brandName}
+                          onClick={() => handleBrandSearch(isActive ? "all" : brandName)}
+                          className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all border cursor-pointer ${
+                            isActive
+                              ? "bg-slate-900 border-slate-900 text-[#34ebb1] shadow-sm"
+                              : "bg-white/80 border-white/50 text-slate-700 hover:text-slate-900 hover:bg-white hover:border-slate-350"
+                          }`}
+                        >
+                          {brandName}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* ── Tab bar + Card rail — unified panel ── */}

@@ -13,6 +13,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { triggerEnquiryModal } from "./EnquiryModal";
 import { formatLaunchDate, isLaunched } from "../lib/wordpress";
 import { useCompare } from "../context/CompareContext";
+import {
+  CATALOG_CATEGORIES,
+  normalizeCatalogCategory,
+  matchesCatalogCategory,
+  type CatalogCategoryValue,
+} from "../lib/catalog-filters";
 
 function toSlug(brand: string, name: string) {
   return `${brand}-${name}`
@@ -68,7 +74,7 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
 
   // Read initial state from URL or defaults
   const query = searchParams.get("q") ?? "";
-  const category = searchParams.get("type") ?? "all";
+  const category = normalizeCatalogCategory(searchParams.get("type"));
   const brand = searchParams.get("brand") ?? "all";
   const price = searchParams.get("price") ?? "all";
   const commercialOnly = searchParams.get("comm") === "true";
@@ -125,10 +131,7 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
     router.push(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
-  const categoryOptions = useMemo(() => {
-    const types = [...new Set(items.map((i) => i.type).filter(Boolean))].sort();
-    return [{ value: "all", label: "All" }, ...types.map((t) => ({ value: t, label: t }))];
-  }, [items]);
+  const categoryOptions = useMemo(() => [...CATALOG_CATEGORIES], []);
 
   const brandOptions = useMemo(() => {
     const brands = [...new Set(items.map((i) => i.brand).filter(Boolean))].sort();
@@ -141,7 +144,9 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
       if (q && !item.name.toLowerCase().includes(q) &&
         !item.brand.toLowerCase().includes(q) &&
         !item.type.toLowerCase().includes(q)) return false;
-      if (category !== "all" && item.type !== category) return false;
+
+      if (!matchesCatalogCategory(item.type, category as CatalogCategoryValue)) return false;
+
       if (brand !== "all" && item.brand !== brand) return false;
       if (!matchesPrice(item, price)) return false;
       if (commercialOnly && !item.commercial) return false;
@@ -180,7 +185,10 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
   }, [visibleCount, filteredItems.length, hasFetchedAll, loadingMore, loadingSkeleton]);
 
   const filterKey = `${query}-${category}-${brand}-${price}-${commercialOnly}-${launchedOnly}-${comingSoonOnly}-${baasOnly}-${usage}`;
-  useEffect(() => { setVisibleCount(4); }, [filterKey]);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setVisibleCount(4);
+  }, [filterKey]);
 
   const hasActiveFilters = category !== "all" || brand !== "all" || price !== "all" || usage !== "all" || commercialOnly || launchedOnly || comingSoonOnly || baasOnly || !!query;
   const activeFilterCount = [category !== "all", brand !== "all", price !== "all", usage !== "all", commercialOnly, launchedOnly, comingSoonOnly, baasOnly, !!query].filter(Boolean).length;

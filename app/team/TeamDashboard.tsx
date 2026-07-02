@@ -11,6 +11,7 @@ import FuelPricesPanel from "./FuelPricesPanel";
 import BannersPanel from "./BannersPanel";
 import ContentPanel from "./ContentPanel";
 import OffersPanel from "./OffersPanel";
+import MediaPanel from "./MediaPanel";
 import { useVoiceDictation, MicButton } from "./VoiceInput";
 import { appendExtra, isCheckboxExtra, isExtraChecked, normalizeExtras, type SpecExtraItem } from "../lib/spec-extras";
 
@@ -385,7 +386,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
   const [rebuildingAI, setRebuildingAI] = useState(false);
   const [expandedListing, setExpandedListing] = useState<string | null>(null);
   const [pendingEnquiriesCount, setPendingEnquiriesCount] = useState(0);
-  const [activeSection, setActiveSection] = useState<"listings" | "leads" | "prices" | "analytics" | "map" | "banners" | "content" | "offers">("listings");
+  const [activeSection, setActiveSection] = useState<"listings" | "leads" | "prices" | "analytics" | "map" | "banners" | "content" | "offers" | "media">("listings");
   const [selectedModelId, setSelectedModelId] = useState<string>("");
   const [selectedBrand, setSelectedBrand] = useState<string>("");
   const uniqueBrands = useMemo(() => {
@@ -1261,6 +1262,9 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             <button onClick={() => { setActiveSection("listings"); setEditing(null); }} className="inline-flex items-center gap-1 sm:gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
               View All Listings
             </button>
+            <button onClick={() => { setActiveSection("media"); }} className="inline-flex items-center gap-1 sm:gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
+              View All Media
+            </button>
           </div>
         </div>
 
@@ -1330,6 +1334,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
         {activeSection === "banners" && <BannersPanel supabase={supabase} />}
         {activeSection === "content" && <ContentPanel supabase={supabase} />}
         {activeSection === "offers" && <OffersPanel supabase={supabase} uniqueBrands={uniqueBrands} />}
+        {activeSection === "media" && <MediaPanel supabase={supabase} />}
 
         {activeSection === "listings" && (
         <>

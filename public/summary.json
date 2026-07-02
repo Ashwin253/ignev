@@ -1,6 +1,214 @@
 {
   "items": [
     {
+      "brand": "EULER MOTORS",
+      "title": "Euler Storm EV LR200",
+      "slug": "euler-storm-ev-lr200",
+      "type": "4 Wheeler",
+      "priceRange": {
+        "min": 900000,
+        "max": 1300000
+      },
+      "pricingText": "₹9–13L",
+      "maxRangeKm": 200,
+      "maxCapacityKwh": 30,
+      "topSpeedKmh": 70,
+      "launched": true,
+      "baasAvailable": false,
+      "summaryText": "EULER MOTORS Euler Storm EV LR200 is an electric 4 Wheeler. Pricing is around ₹9–13L. It offers a maximum range of up to 200 km on a single charge. Features a battery capacity of up to 30 kWh. Has a top speed of 70 km/h. It was launched on  .",
+      "pros": [
+        "First in segment to feature ADAS (Advanced Driver Assistance Systems)",
+        "High payload capacity up to 1.5 tonnes (1500 kg)",
+        "ArcReactor 200 liquid-cooled battery handles thermal strain exceptionally well"
+      ],
+      "cons": []
+    },
+    {
+      "brand": "EULER MOTORS",
+      "title": "Euler Turbo EV 1000",
+      "slug": "euler-turbo-ev-1000",
+      "type": "4 Wheeler",
+      "priceRange": {
+        "min": 599999,
+        "max": 819999
+      },
+      "pricingText": "₹6–8.2L",
+      "maxRangeKm": 180,
+      "maxCapacityKwh": 19.2,
+      "topSpeedKmh": 70,
+      "launched": true,
+      "baasAvailable": false,
+      "summaryText": "EULER MOTORS Euler Turbo EV 1000 is an electric 4 Wheeler. Pricing is around ₹6–8.2L. It offers a maximum range of up to 180 km on a single charge. Features a battery capacity of up to 19.2 kWh. Has a top speed of 70 km/h. It was launched on  .",
+      "pros": [
+        "Solid 1-tonne payload capacity on a 4-wheel platform",
+        "Fast charging variant recovers 50 km of range in 15 minutes via CCS2",
+        "Stronger 2.5 mm thick ladder frame chassis for robust durability"
+      ],
+      "cons": []
+    },
+    {
+      "brand": "EULER MOTORS",
+      "title": "Euler HiLoad EV",
+      "slug": "euler-motors-euler-hiload-ev",
+      "type": "3 Wheeler",
+      "priceRange": {
+        "min": 432000,
+        "max": 432000
+      },
+      "pricingText": "₹4.32L",
+      "maxRangeKm": 198,
+      "maxCapacityKwh": 13.44,
+      "topSpeedKmh": 55,
+      "launched": true,
+      "baasAvailable": false,
+      "summaryText": "EULER MOTORS Euler HiLoad EV is an electric 3 Wheeler. Pricing is around ₹4.32L. It offers a maximum range of up to 198 km on a single charge. Features a battery capacity of up to 13.44 kWh. Has a top speed of 55 km/h. It was launched on  .",
+      "pros": [
+        "Highest payload capacity in its class",
+        "Excellent ground clearance for Indian roads",
+        "Liquid-cooled battery tech helps manage heat"
+      ],
+      "cons": [
+        "Top speed limited to 45-55 km/h",
+        "Cabin lacks air conditioning options"
+      ]
+    },
+    {
+      "brand": "JOY E-BIKE",
+      "title": "Joy e-bike Beast",
+      "slug": "joy-e-bike-beast",
+      "type": "2 Wheeler",
+      "priceRange": {
+        "min": 233000,
+        "max": 242000
+      },
+      "pricingText": "₹2.33–2.42L",
+      "maxRangeKm": 110,
+      "maxCapacityKwh": 5.18,
+      "topSpeedKmh": 90,
+      "launched": true,
+      "baasAvailable": false,
+      "summaryText": "JOY E-BIKE Joy e-bike Beast is an electric 2 Wheeler. Pricing is around ₹2.33–2.42L. It offers a maximum range of up to 110 km on a single charge. Features a battery capacity of up to 5.18 kWh. Has a top speed of 90 km/h. It was launched on  .",
+      "pros": [
+        "Aggressive naked streetfighter styling identical to Kawasaki Z250",
+        "Massive 230 Nm wheel torque offering quick initial low-end acceleration",
+        "Stable urban stopping power with high-end dual front disc brakes"
+      ],
+      "cons": []
+    },
+    {
+      "brand": "JOY E-BIKE",
+      "title": "Joy e-bike",
+      "slug": "joy-e-bike-joy-e-bike",
+      "type": "2 Wheeler",
+      "priceRange": {
+        "min": 61877,
+        "max": 107619
+      },
+      "pricingText": "₹0.62–1.08L",
+      "maxRangeKm": 130,
+      "maxCapacityKwh": 60,
+      "topSpeedKmh": 25,
+      "launched": true,
+      "baasAvailable": false,
+      "summaryText": "JOY E-BIKE Joy e-bike is an electric 2 Wheeler. Pricing is around ₹0.62–1.08L. It offers a maximum range of up to 130 km on a single charge. Features a battery capacity of up to 60 kWh. Has a top speed of 25 km/h. It was launched on  .",
+      "pros": [
+        "Solid build quality",
+        "Smooth power delivery",
+        "Capable handling"
+      ],
+      "cons": []
+    },
+    {
+      "brand": "MAHINDRA LAST MILE MOBILITY",
+      "title": "Mahindra Auto",
+      "slug": "mahindra-last-mile-mobility-mahindra-auto",
+      "type": "3 Wheeler",
+      "priceRange": {
+        "min": 3.23,
+        "max": 384299
+      },
+      "pricingText": "₹3.23–3.9L",
+      "maxRangeKm": 200,
+      "maxCapacityKwh": 11.77,
+      "topSpeedKmh": 55,
+      "launched": true,
+      "baasAvailable": false,
+      "summaryText": "MAHINDRA LAST MILE MOBILITY Mahindra Auto is an electric 3 Wheeler. Pricing is around ₹3.23–3.9L. It offers a maximum range of up to 200 km on a single charge. Features a battery capacity of up to 11.77 kWh. Has a top speed of 55 km/h. It was launched on  .",
+      "pros": [
+        "Significant fuel savings up to ₹4.4 Lakh over 5 years compared to CNG",
+        "Low daily charging cost of ₹60 to ₹80 per full charge",
+        "Long 5-year or 1,20,000 km warranty for peace of mind",
+        "Robust build with strong metal body structure and IP67-rated motor",
+        "Helpful driving aids like Hill Hold Assist and regenerative braking"
+      ],
+      "cons": []
+    },
+    {
+      "brand": "EULER MOTORS",
+      "title": "Euler NEO HiRANGE",
+      "slug": "euler-neo-hirange",
+      "type": "3 Wheeler",
+      "priceRange": {
+        "min": 309999,
+        "max": 407999
+      },
+      "pricingText": "₹3.1–4.08L",
+      "maxRangeKm": 205,
+      "maxCapacityKwh": 13.44,
+      "topSpeedKmh": 60,
+      "launched": true,
+      "baasAvailable": false,
+      "summaryText": "EULER MOTORS Euler NEO HiRANGE is an electric 3 Wheeler. Pricing is around ₹3.1–4.08L. It offers a maximum range of up to 205 km on a single charge. Features a battery capacity of up to 13.44 kWh. Has a top speed of 60 km/h. It was launched on  .",
+      "pros": [
+        "Excellent real-world driving range of over 200 km per charge",
+        "Equipped with Hill Assist for smooth performance on inclined flyovers",
+        "Generous 5-year vehicle warranty alongside a 1-year free service plan"
+      ],
+      "cons": []
+    },
+    {
+      "brand": "OMEGA SEIKI MOBILITY",
+      "title": "Omega Seiki Mobility Stream City Series",
+      "slug": "osm-stream-city-series",
+      "type": "3 Wheeler",
+      "priceRange": {
+        "min": 185000,
+        "max": 355000
+      },
+      "pricingText": "₹1.85–3.55L",
+      "maxRangeKm": 300,
+      "maxCapacityKwh": 15,
+      "topSpeedKmh": 48,
+      "launched": true,
+      "baasAvailable": false,
+      "summaryText": "OMEGA SEIKI MOBILITY Omega Seiki Mobility Stream City Series is an electric 3 Wheeler. Pricing is around ₹1.85–3.55L. It offers a maximum range of up to 300 km on a single charge. Features a battery capacity of up to 15 kWh. Has a top speed of 48 km/h. It was launched on  .",
+      "pros": [
+        "Ultra-fast charging capability on the Qik variant (0-100% in 15 minutes)",
+        "Eco-friendly zero tailpipe emissions with significantly reduced noise pollution",
+        "Robust payload capacity up to 533 kg for structural passenger stability"
+      ],
+      "cons": []
+    },
+    {
+      "brand": "OMEGA SEIKI MOBILITY",
+      "title": "Stream",
+      "slug": "omega-seiki-mobility-stream",
+      "type": "3 Wheeler",
+      "priceRange": {
+        "min": 3.4,
+        "max": 3.72
+      },
+      "pricingText": "₹3.4–3.72L",
+      "maxRangeKm": 160,
+      "maxCapacityKwh": 10.8,
+      "topSpeedKmh": 45,
+      "launched": true,
+      "baasAvailable": false,
+      "summaryText": "OMEGA SEIKI MOBILITY Stream is an electric 3 Wheeler. Pricing is around ₹3.4–3.72L. It offers a maximum range of up to 160 km on a single charge. Features a battery capacity of up to 10.8 kWh. Has a top speed of 45 km/h. It was launched on  .",
+      "pros": [],
+      "cons": []
+    },
+    {
       "brand": "SUZUKI",
       "title": "E-access",
       "slug": "suzuki-e-access",
@@ -30,32 +238,6 @@
       ]
     },
     {
-      "brand": "OMEGA SEIKI MOBILITY",
-      "title": "Omega Seiki Mobility 3 Wheelers",
-      "slug": "omega-seiki-mobility-3-wheelers",
-      "type": "3 Wheeler",
-      "priceRange": {
-        "min": 292000,
-        "max": 535000
-      },
-      "pricingText": "₹2.92–5.35L",
-      "maxRangeKm": 126,
-      "maxCapacityKwh": 10.8,
-      "topSpeedKmh": 50,
-      "launched": true,
-      "baasAvailable": false,
-      "summaryText": "OMEGA SEIKI MOBILITY Omega Seiki Mobility 3 Wheelers is an electric 3 Wheeler. Pricing is around ₹2.92–5.35L. It offers a maximum range of up to 126 km on a single charge. Features a battery capacity of up to 10.8 kWh. Has a top speed of 50 km/h. It was launched on  .",
-      "pros": [
-        "Zero tailpipe emissions lower operational costs",
-        "Robust payload capacity ideal for urban cargo",
-        "Multiple specialized box options like refrigerated or garbage tipper"
-      ],
-      "cons": [
-        "Charging infrastructure still developing in tier-2 and tier-3 cities",
-        "Lower top speeds compared to conventional ICE auto rickshaws"
-      ]
-    },
-    {
       "brand": "MONTRA",
       "title": "Super cargo",
       "slug": "montra-super-cargo",
@@ -79,68 +261,6 @@
       "cons": [
         "No advanced safety features",
         "No passenger use flexibility"
-      ]
-    },
-    {
-      "brand": "JOY E-BIKE",
-      "title": "wolf +",
-      "slug": "joy-e-bike-wolf-",
-      "type": "2 Wheeler",
-      "priceRange": {
-        "min": null,
-        "max": null
-      },
-      "pricingText": "",
-      "maxRangeKm": null,
-      "maxCapacityKwh": null,
-      "topSpeedKmh": null,
-      "launched": true,
-      "baasAvailable": false,
-      "summaryText": "JOY E-BIKE wolf + is an electric 2 Wheeler. Pricing is around TBD. It was launched on  .",
-      "pros": [
-        "Reverse mode for easier parking",
-        "Bluetooth and GPS connectivity",
-        "Keyless start and anti-theft features",
-        "Front & rear disc brakes with CBS",
-        "Low running and maintenance costs"
-      ],
-      "cons": [
-        "No fast DC charging support",
-        "Limited highway capability due to 55 km/h top speed",
-        "Smaller service network than major EV brands",
-        "Boot space is average",
-        "Resale value is still developing compared to established brands"
-      ]
-    },
-    {
-      "brand": "JOY E-BIKE",
-      "title": "Gen Next Nanu Plus",
-      "slug": "joy-e-bike-gen-next-nanu-plus",
-      "type": "2 Wheeler",
-      "priceRange": {
-        "min": 82000,
-        "max": 82000
-      },
-      "pricingText": "₹0.82L",
-      "maxRangeKm": 100,
-      "maxCapacityKwh": 2.18,
-      "topSpeedKmh": 55,
-      "launched": true,
-      "baasAvailable": false,
-      "summaryText": "JOY E-BIKE Gen Next Nanu Plus is an electric 2 Wheeler. Pricing is around ₹0.82L. It offers a maximum range of up to 100 km on a single charge. Features a battery capacity of up to 2.18 kWh. Has a top speed of 55 km/h. It was launched on  .",
-      "pros": [
-        "Lightweight and easy to maneuver in city traffic",
-        "Keyless start and anti-theft features",
-        "Low running and maintenance costs",
-        "Tubeless tyres for better puncture protection",
-        "Regenerative braking support"
-      ],
-      "cons": [
-        "Not ideal for highway riding",
-        "No ABS or traction control",
-        "Under-seat storage is limited compared to some competitors",
-        "Service network is smaller than major EV brands",
-        "Performance drops slightly at low battery levels"
       ]
     },
     {
@@ -317,31 +437,6 @@
       "pros": [
         "Riding Modes",
         "Punchy Performance"
-      ],
-      "cons": []
-    },
-    {
-      "brand": "JOY E-BIKE",
-      "title": "Mihos",
-      "slug": "mihos",
-      "type": "2 Wheeler",
-      "priceRange": {
-        "min": 1.18,
-        "max": 1.18
-      },
-      "pricingText": "₹1.18L",
-      "maxRangeKm": 130,
-      "maxCapacityKwh": 2.96,
-      "topSpeedKmh": 70,
-      "launched": true,
-      "baasAvailable": false,
-      "summaryText": "JOY E-BIKE Mihos is an electric 2 Wheeler. Pricing is around ₹1.18L. It offers a maximum range of up to 130 km on a single charge. Features a battery capacity of up to 2.96 kWh. Has a top speed of 70 km/h. It was launched on  .",
-      "pros": [
-        "Long Range",
-        "Strong & Impact-Resistant Body",
-        "Comfortable Riding Position",
-        "Good Handling",
-        "Rich Feature List"
       ],
       "cons": []
     },
@@ -1219,5 +1314,5 @@
       ]
     }
   ],
-  "updatedAt": "2026-06-28T07:22:39.679Z"
+  "updatedAt": "2026-07-02T15:14:07.553Z"
 }

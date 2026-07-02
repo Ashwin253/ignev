@@ -146,18 +146,6 @@ export default function Header() {
 
           {/* CTA & Mobile Toggle */}
           <div className="flex items-center gap-3 z-50">
-            {/* <button
-              onClick={() => window.dispatchEvent(new CustomEvent("install-request"))}
-              className={`hidden md:block font-semibold px-5 py-2.5 rounded-full text-sm transition-all shadow-sm hover:shadow-md active:scale-95 ${!isLightPage && !isScrolled
-                ? "bg-slate-900/10 hover:bg-slate-900/15 text-slate-800 border border-slate-300/60"
-                : "bg-white hover:bg-slate-100 text-slate-900 border border-slate-200"
-                }`}
-            >
-              <span className="inline-flex items-center gap-2">
-                <Download size={16} />
-                Install now
-              </span>
-            </button> */}
             <Link
               href="/nearme"
               className={`hidden md:flex items-center gap-2 font-semibold px-5 py-2.5 rounded-full text-sm transition-all shadow-sm hover:shadow-md active:scale-95 ${!isLightPage && !isScrolled
@@ -167,18 +155,7 @@ export default function Header() {
             >
               <MapPin size={16} /> Near Me
             </Link>
-            <Link
-              href="/assist"
-              onClick={(e) => {
-                e.preventDefault();
-                window.dispatchEvent(new CustomEvent("open-assist"));
-              }}
-              className={`hidden md:block font-semibold px-5 py-2.5 rounded-full text-sm transition-all shadow-sm hover:shadow-md active:scale-95 ${!isLightPage && !isScrolled
-                ? "bg-slate-900/10 hover:bg-slate-900/15 text-slate-800 border border-slate-300/60"
-                : "bg-sky-600 hover:bg-sky-700 text-white"
-                }`}            >
-              Get Assist
-            </Link>
+
 
             {/* Preferences Dropdown */}
             <div className="relative">
@@ -332,17 +309,7 @@ export default function Header() {
                 >
                   <MapPin size={18} /> Near Me
                 </Link>
-                <Link
-                  href="/assist"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setMobileMenuOpen(false);
-                    window.dispatchEvent(new CustomEvent("open-assist"));
-                  }}
-                  className="w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold px-6 py-3 rounded-full transition-all shadow-sm block text-center"
-                >
-                  Get Assist
-                </Link>
+
               </div>
             </div>
           </motion.div>

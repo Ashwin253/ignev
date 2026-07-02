@@ -116,7 +116,7 @@ export default function Header() {
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link href="/" className="z-50 hover:opacity-80 bg-transparent  transition-opacity">
-            <img src="/evplsenewlogonobg.jpg" alt="IgnEV Logo Desktop" className="hidden md:block bg-transparent h-16 w-auto" />
+            <img src="/evplsenewlogo.png" alt="IgnEV Logo Desktop" className="hidden md:block bg-transparent h-16 w-auto" />
             <img src="/evplsenoname.jpg" alt="IgnEV Logo Mobile" className="block md:hidden h-16 w-auto" />
           </Link>
 

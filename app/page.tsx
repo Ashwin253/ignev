@@ -10,6 +10,7 @@ import dynamic from "next/dynamic";
 import Hero from "./components/Hero";
 import FreshReleases from "./components/FreshReleases";
 import type { ComingSoonItem } from "./components/ComingSoonCars";
+import TidioChat from "./components/TidioChat";
 
 const ComingSoonCars = dynamic(() => import("./components/ComingSoonCars"), {
   loading: () => <div className="h-64" />,
@@ -117,6 +118,7 @@ async function HomeContent() {
       <ElectricCore3D />
       <LatestUpdates updates={updates} />
       {/* <WhyEVPULSE /> */}
+      <TidioChat />
     </>
   );
 }

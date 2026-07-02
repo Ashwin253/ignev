@@ -266,10 +266,10 @@ async function RelatedListings({ slug, currentItem }: { slug: string; currentIte
         {related.map((rel) => (
           <Link key={rel.id} href={`/product/${rel.slug}`}
             className="group flex flex-col h-full overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-md hover:border-[#a5e6d1]/60 hover:shadow-xl transition-all duration-350 hover:-translate-y-1">
-            <div className="relative aspect-4/3 overflow-hidden bg-slate-100 shrink-0">
+            <div className="relative aspect-4/3 overflow-hidden bg-transparent shrink-0">
               {rel.photo && (
                 <Image src={rel.photo} alt={rel.title} fill sizes="33vw"
-                  className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                  className="object-contain group-hover:scale-105 transition-transform duration-500" />
               )}
             </div>
             <div className="p-5 flex flex-col grow">

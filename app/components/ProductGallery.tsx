@@ -58,6 +58,7 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
     const defaultGallery = gallery.filter(p => p.url && !p.variantId);
 
     const urls = [
+      item.photo,
       ...variantFeatured.map(p => p.url),
       ...defaultFeatured.map(p => p.url),
       ...variantGallery.map(p => p.url),
@@ -68,7 +69,10 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
 
     if (uniqueUrls.length > 0) return uniqueUrls;
 
-    return item.galleryImages.length > 0 ? item.galleryImages : (item.photo ? [item.photo] : []);
+    return Array.from(new Set([
+      item.photo,
+      ...(item.galleryImages.length > 0 ? item.galleryImages : [])
+    ])).filter(Boolean);
   }, [item, activeVariant?.id, photos]);
 
   // Reset image view index when variant changes
@@ -304,7 +308,7 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
                 <button
                   key={i}
                   onClick={() => { setDirection(i > current ? 1 : -1); setCurrent(i); setShowThumbs(false); }}
-                  className={`shrink-0 h-12 w-16 overflow-hidden rounded-lg border-2 transition-all ${
+                  className={`shrink-0 h-12 w-16 overflow-hidden rounded-lg border-2 bg-transparent transition-all ${
                     i === current ? "border-[#34ebb1] shadow-sm" : "border-transparent opacity-75 hover:opacity-100"
                   }`}
                 >
@@ -389,7 +393,7 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
                 <button
                   key={i}
                   onClick={() => { setDirection(i > current ? 1 : -1); setCurrent(i); setShowThumbs(false); }}
-                  className={`shrink-0 h-14 w-20 overflow-hidden rounded-xl border-2 transition-all ${
+                  className={`shrink-0 h-14 w-20 overflow-hidden rounded-xl border-2 bg-transparent transition-all ${
                     i === current ? "border-[#34ebb1] shadow-sm" : "border-transparent opacity-75 hover:opacity-100"
                   }`}
                 >
@@ -408,7 +412,7 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
             <button
               key={i}
               onClick={() => { setDirection(i > current ? 1 : -1); setCurrent(i); }}
-              className={`shrink-0 h-20 w-28 overflow-hidden rounded-xl border-2 transition-all duration-200 ${
+              className={`shrink-0 h-20 w-28 overflow-hidden rounded-xl border-2 bg-transparent transition-all duration-200 ${
                 i === current ? "border-[#34ebb1] shadow-md" : "border-transparent opacity-60 hover:opacity-100"
               }`}
             >

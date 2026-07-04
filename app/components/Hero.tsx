@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -67,7 +67,7 @@ function CardBase({ children, index }: { children: React.ReactNode; index: numbe
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.04 }}
-      className="group relative flex h-full flex-col overflow-hidden rounded-md ring-1 ring-zinc-200/60 shadow-sm hover:shadow-md transition-all w-full"
+      className="group relative flex flex-col overflow-hidden rounded-md ring-1 ring-zinc-200/60 shadow-sm hover:shadow-md transition-all w-full sm:w-[300px] md:w-auto shrink-0 snap-center h-auto sm:h-full"
       style={{ backgroundImage: "url('/listingbackground.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}
     >
       {/* light mint overlay */}
@@ -91,27 +91,26 @@ function FeaturedCard({ listing, index }: { listing: EvListing; index: number })
 
   return (
     <CardBase index={index}>
-      {/* Action buttons OUTSIDE Link — reliable on mobile */}
-      <button
-        onClick={() => { inCompare ? removeFromCompare(listing.slug) : addToCompare(listing.slug); }}
-        className={`absolute bottom-3 left-3 z-20 grid h-8 w-8 place-items-center rounded-full backdrop-blur-xl transition ${inCompare ? "bg-zinc-900 text-white" : "bg-white/80 text-zinc-700 hover:bg-white"}`}
-        aria-label="Compare"
-      >
-        <GitCompare size={14} />
-      </button>
-
-      {videoUrl && (
-        <button
-          type="button"
-          onClick={() => setIsPlaying(!isPlaying)}
-          className="absolute bottom-3 right-3 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-zinc-900/80 text-white backdrop-blur-md hover:bg-zinc-800 transition"
-        >
-          {isPlaying ? <ImageIcon size={14} /> : <Play size={14} className="ml-0.5 fill-current" />}
-        </button>
-      )}
-
       <Link href={href} className="relative z-10 flex flex-1 flex-col">
         <div className="relative aspect-[4/3] overflow-hidden">
+          {/* Action buttons inside the image container */}
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); inCompare ? removeFromCompare(listing.slug) : addToCompare(listing.slug); }}
+            className={`absolute bottom-3 left-3 z-20 grid h-8 w-8 place-items-center rounded-full backdrop-blur-xl transition ${inCompare ? "bg-zinc-900 text-white" : "bg-white/80 text-zinc-700 hover:bg-white"}`}
+            aria-label="Compare"
+          >
+            <GitCompare size={14} />
+          </button>
+
+          {videoUrl && (
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsPlaying(!isPlaying); }}
+              className="absolute bottom-3 right-3 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-zinc-900/80 text-white backdrop-blur-md hover:bg-zinc-800 transition"
+            >
+              {isPlaying ? <ImageIcon size={14} /> : <Play size={14} className="ml-0.5 fill-current" />}
+            </button>
+          )}
           {listing.photo && (
             <Image
               src={listing.photo}
@@ -161,8 +160,10 @@ function FeaturedCard({ listing, index }: { listing: EvListing; index: number })
       </Link>
 
       {/* Bottom actions bar — OUTSIDE Link for reliable mobile clicks */}
-      <div className="flex gap-2 px-5 pb-5 pt-1">
-        <span className="flex flex-1 items-center justify-center gap-1 rounded-xl bg-zinc-100 py-2.5 text-xs font-medium text-zinc-700 group-hover:bg-zinc-200 transition">Details <ArrowUpRight size={12} /></span>
+      <div className="relative z-10 flex gap-2 px-5 pb-5 pt-1">
+        <Link href={href} className="flex flex-1 items-center justify-center gap-1 rounded-xl bg-zinc-100 py-2.5 text-xs font-medium text-zinc-700 hover:bg-zinc-200 transition">
+          Details <ArrowUpRight size={12} />
+        </Link>
         <button
           onClick={() => triggerEnquiryModal(`${listing.brand} ${listing.title}`)}
           className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-zinc-900 py-2.5 text-xs font-medium text-white hover:bg-zinc-800 active:scale-[0.98] transition"
@@ -188,27 +189,26 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
 
   return (
     <CardBase index={index}>
-      {/* Action buttons OUTSIDE Link — reliable on mobile */}
-      <button
-        onClick={() => { inCompare ? removeFromCompare(slug) : addToCompare(slug); }}
-        className={`absolute bottom-3 left-3 z-20 grid h-8 w-8 place-items-center rounded-full backdrop-blur-xl transition ${inCompare ? "bg-zinc-900 text-white" : "bg-white/80 text-zinc-700 hover:bg-white"}`}
-        aria-label="Compare"
-      >
-        <GitCompare size={14} />
-      </button>
-
-      {videoUrl && (
-        <button
-          type="button"
-          onClick={() => setIsPlaying(!isPlaying)}
-          className="absolute bottom-3 right-3 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-zinc-900/80 text-white backdrop-blur-md hover:bg-zinc-800 transition"
-        >
-          {isPlaying ? <ImageIcon size={14} /> : <Play size={14} className="ml-0.5 fill-current" />}
-        </button>
-      )}
-
       <Link href={href} className="relative z-10 flex flex-1 flex-col">
         <div className="relative aspect-[4/3] overflow-hidden">
+          {/* Action buttons inside the image container */}
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); inCompare ? removeFromCompare(slug) : addToCompare(slug); }}
+            className={`absolute bottom-3 left-3 z-20 grid h-8 w-8 place-items-center rounded-full backdrop-blur-xl transition ${inCompare ? "bg-zinc-900 text-white" : "bg-white/80 text-zinc-700 hover:bg-white"}`}
+            aria-label="Compare"
+          >
+            <GitCompare size={14} />
+          </button>
+
+          {videoUrl && (
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsPlaying(!isPlaying); }}
+              className="absolute bottom-3 right-3 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-zinc-900/80 text-white backdrop-blur-md hover:bg-zinc-800 transition"
+            >
+              {isPlaying ? <ImageIcon size={14} /> : <Play size={14} className="ml-0.5 fill-current" />}
+            </button>
+          )}
           {product.photo && (
             <Image
               src={product.photo}
@@ -254,8 +254,10 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
       </Link>
 
       {/* Bottom actions bar — OUTSIDE Link for reliable mobile clicks */}
-      <div className="flex gap-2 px-5 pb-5 pt-1">
-        <span className="flex-1 rounded-xl bg-zinc-100 py-2.5 text-center text-xs font-medium text-zinc-700 group-hover:bg-zinc-200 transition">Details</span>
+      <div className="relative z-10 flex gap-2 px-5 pb-5 pt-1">
+        <Link href={href} className="flex-1 rounded-xl bg-zinc-100 py-2.5 text-center text-xs font-medium text-zinc-700 hover:bg-zinc-200 transition">
+          Details
+        </Link>
         <button
           onClick={() => triggerEnquiryModal(`${product.brand} ${product.name}`)}
           className="flex-1 rounded-xl bg-zinc-900 py-2.5 text-center text-xs font-medium text-white hover:bg-zinc-800 active:scale-[0.98] transition"
@@ -285,6 +287,23 @@ export default function Hero({
   const [selectedBrand, setSelectedBrand] = useState("all");
   const [activeTab, setActiveTab] = useState<TabKey>(featured.length ? "featured" : "cars");
 
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const handleScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const index = Math.round(el.scrollLeft / (el.scrollWidth / currentItems.length));
+    setActiveIndex(index);
+  };
+
+  useEffect(() => {
+    setActiveIndex(0);
+    if (scrollRef.current) {
+      scrollRef.current.scrollLeft = 0;
+    }
+  }, [activeTab]);
+
   const POPULAR_BRANDS = ["Ather", "TVS", "Bajaj", "Euler"];
   const visibleTabs = useMemo(() => tabs.filter(t => (t.key !== "featured" || featured.length) && (t.key !== "fresh" || freshReleases.length)), [featured.length, freshReleases.length]);
 
@@ -304,6 +323,12 @@ export default function Hero({
     if (activeTab === "autos") return products.electric_autos.slice(0, 4);
     return [...products.electric_cars.slice(0, 2), ...products.electric_two_wheelers.slice(0, 2)];
   }, [activeTab, products]);
+
+  const currentItems = useMemo(() => {
+    if (activeTab === "featured") return featured;
+    if (activeTab === "fresh") return freshReleases;
+    return catalogProducts;
+  }, [activeTab, featured, freshReleases, catalogProducts]);
 
   const BRAND_MAP: Record<string, string> = { Ather: "ATHER", Euler: "EULER MOTORS", TVS: "TVS", Bajaj: "BAJAJ", Ola: "OLA", Vida: "VIDA", Revolt: "REVOLT", Mahindra: "MAHINDRA LAST MILE MOBILITY", Montra: "MONTRA", Tata: "TATA MOTORS" };
 
@@ -399,11 +424,13 @@ export default function Hero({
             {/* Grid - now works on mobile too (no more horizontal scroll issues) */}
             <AnimatePresence mode="wait">
               <motion.div
+                ref={scrollRef}
+                onScroll={handleScroll}
                 key={activeTab}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
-                className="mt-5 grid grid-cols-2 gap-4 pb-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+                className="mt-5 flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory [-webkit-overflow-scrolling:touch] md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:overflow-visible md:snap-none"
               >
                 {activeTab === "featured" ? featured.map((l, i) => <FeaturedCard key={l.id} listing={l} index={i} />)
                   : activeTab === "fresh" ? freshReleases.map((l, i) => <FeaturedCard key={l.id} listing={l} index={i} />)
@@ -411,6 +438,32 @@ export default function Hero({
                 }
               </motion.div>
             </AnimatePresence>
+
+            {/* Mobile Carousel Indicators */}
+            {currentItems.length > 1 && (
+              <div className="flex md:hidden justify-center gap-1.5 mt-2">
+                {currentItems.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      const el = scrollRef.current;
+                      if (el) {
+                        el.scrollTo({
+                          left: i * (el.scrollWidth / currentItems.length),
+                          behavior: "smooth"
+                        });
+                      }
+                    }}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                      i === activeIndex
+                        ? "w-5 bg-emerald-600 shadow-[0_0_8px_rgba(16,133,95,0.4)]"
+                        : "w-1.5 bg-zinc-300 hover:bg-zinc-400"
+                    }`}
+                    aria-label={`Go to slide ${i + 1}`}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

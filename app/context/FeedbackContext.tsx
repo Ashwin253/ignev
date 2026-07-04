@@ -68,18 +68,98 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
   };
 
   const triggerFeedback = (type: 'click' | 'tab') => {
-    // Audio and haptics feedback disabled globally across all devices
+    try {
+      if (soundEnabled) {
+        if (type === 'click') playClickSound();
+        else playTabSound();
+      }
+      if (hapticsEnabled) {
+        playHaptic(type);
+      }
+    } catch (e) {
+      console.warn('Feedback trigger failed:', e);
+    }
   };
 
-  // 1. Auto-trigger feedback on route change
+  // 1. Auto-trigger feedback on route change (e.g., tab changes via page navigation)
   useEffect(() => {
-    // Route feedback disabled globally
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    triggerFeedback('tab');
   }, [pathname]);
 
-  // 2. Global event listener
+  // 2. Global event listener to automatically intercept clicks on buttons, links, and tabs
   useEffect(() => {
-    // Global click listener disabled globally
-  }, []);
+    const handleGlobalClick = (e: MouseEvent) => {
+      try {
+        let target = e.target as HTMLElement | null;
+        let shouldFeedback = false;
+        let feedbackType: 'click' | 'tab' = 'click';
+
+        // Traverse up the DOM to find interactive components
+        while (target && target !== document.body) {
+          const tagName = target.tagName;
+          const role = target.getAttribute('role');
+          const hasFeedbackAttr = target.hasAttribute('data-feedback');
+          const feedbackValue = target.getAttribute('data-feedback');
+
+          // Check if element is interactive
+          if (
+            tagName === 'BUTTON' ||
+            tagName === 'A' ||
+            role === 'button' ||
+            role === 'tab' ||
+            hasFeedbackAttr
+          ) {
+            // Skip if disabled
+            if (
+              target.hasAttribute('disabled') ||
+              target.getAttribute('aria-disabled') === 'true' ||
+              target.classList.contains('pointer-events-none')
+            ) {
+              break;
+            }
+
+            shouldFeedback = true;
+
+            // If the element has specific tab traits, play a tab sound instead of a standard click
+            if (
+              role === 'tab' ||
+              feedbackValue === 'tab' ||
+              target.classList.contains('tab-item') ||
+              // Check for common tab button styling or text
+              (tagName === 'BUTTON' && typeof target.className === 'string' && target.className.includes('tab'))
+            ) {
+              feedbackType = 'tab';
+            }
+            break;
+          }
+
+          target = target.parentElement;
+        }
+
+        if (shouldFeedback) {
+          // Trigger both audio and haptic vibration if enabled
+          if (soundEnabled) {
+            if (feedbackType === 'click') playClickSound();
+            else playTabSound();
+          }
+          if (hapticsEnabled) {
+            playHaptic(feedbackType);
+          }
+        }
+      } catch (err) {
+        console.warn('Error in global feedback click handler:', err);
+      }
+    };
+
+    document.addEventListener('click', handleGlobalClick, { capture: true });
+    return () => {
+      document.removeEventListener('click', handleGlobalClick, { capture: true });
+    };
+  }, [soundEnabled, hapticsEnabled]);
 
   return (
     <FeedbackContext.Provider

@@ -103,7 +103,7 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
 
   return (
     <div className="flex flex-col gap-6 text-zinc-900 dark:text-zinc-100">
-      <div className="rounded-[28px] border border-zinc-200/60 bg-white/70 backdrop-blur-xl shadow-[0_8px_40px_-12px_rgba(0,0,0,0.15)] dark:bg-zinc-900/60 dark:border-zinc-800 p-5 sm:p-6">
+      <div className="rounded-[28px] border-2 border-black bg-white/70 backdrop-blur-xl shadow-[4px_4px_0px_rgba(0,0,0,1)] dark:bg-zinc-900/60 dark:border-zinc-800 p-5 sm:p-6">
 
         {/* selectors */}
         <div className={`mb-4 grid ${hasUsageType ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"} gap-3`}>

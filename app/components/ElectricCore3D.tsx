@@ -167,7 +167,6 @@ export default function ElectricCore3D() {
                       fill
                       sizes="50vw"
                       className="object-cover"
-                      priority={tab.id === 1}
                     />
                   </motion.div>
                 ))}
@@ -269,7 +268,6 @@ export default function ElectricCore3D() {
                       fill
                       sizes="90vw"
                       className="object-cover"
-                      priority={tab.id === 1}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900/25 via-transparent to-transparent" />
                     <div className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/85 px-3 py-1 text-[11px] font-semibold text-slate-700 backdrop-blur">

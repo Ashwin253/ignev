@@ -118,7 +118,7 @@ async function HomeContent() {
       <ElectricCore3D />
       <LatestUpdates updates={updates} />
       {/* <WhyEVPULSE /> */}
-      <TidioChat />
+      {/* <TidioChat /> */}
     </>
   );
 }

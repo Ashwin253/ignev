@@ -5,9 +5,14 @@ let audioCtx: AudioContext | null = null;
 function getAudioContext(): AudioContext | null {
   if (typeof window === 'undefined') return null;
   if (!audioCtx) {
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-    if (AudioContextClass) {
-      audioCtx = new AudioContextClass();
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioContextClass) {
+        audioCtx = new AudioContextClass();
+      }
+    } catch (e) {
+      console.warn('AudioContext creation failed or blocked:', e);
+      return null;
     }
   }
   return audioCtx;
@@ -18,10 +23,10 @@ function getAudioContext(): AudioContext | null {
  * This guarantees zero latency, works instantly on interaction, and requires no assets.
  */
 export function playClickSound() {
-  const ctx = getAudioContext();
-  if (!ctx) return;
-
   try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
     if (ctx.state === 'suspended') {
       ctx.resume().catch(() => {});
     }
@@ -56,10 +61,10 @@ export function playClickSound() {
  * Synthesizes a warmer, ascending tab-switch sound using Web Audio API.
  */
 export function playTabSound() {
-  const ctx = getAudioContext();
-  if (!ctx) return;
-
   try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
     if (ctx.state === 'suspended') {
       ctx.resume().catch(() => {});
     }

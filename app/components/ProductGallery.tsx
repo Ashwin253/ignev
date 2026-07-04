@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { ChevronLeft, ChevronRight, Palette, LayoutGrid, Maximize } from "lucide-react";
+import { ChevronLeft, ChevronRight, Palette, LayoutGrid, Maximize, Play, ImageIcon, ExternalLink } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useProductSelection } from "../product/ProductSelectionProvider";
 import type { EvListing } from "../lib/wordpress";
@@ -12,6 +12,27 @@ interface ProductGalleryProps {
   name: string;
   colors?: string[];
   item?: EvListing;
+}
+
+function getEmbedUrl(url: string) {
+  try {
+    if (url.includes("youtube.com") || url.includes("youtu.be")) {
+      let videoId = "";
+      if (url.includes("youtu.be")) {
+        videoId = url.split("youtu.be/")[1]?.split("?")[0];
+      } else {
+        videoId = new URL(url).searchParams.get("v") || "";
+      }
+      return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&mute=1` : null;
+    }
+    if (url.includes("vimeo.com")) {
+      const videoId = url.split("vimeo.com/")[1]?.split("?")[0];
+      return videoId ? `https://player.vimeo.com/video/${videoId}?autoplay=1&muted=1` : null;
+    }
+  } catch (e) {
+    return null;
+  }
+  return null;
 }
 
 export default function ProductGallery({ photos, name, colors = [], item }: ProductGalleryProps) {
@@ -88,13 +109,17 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
     defaultGallery.forEach(p => p.url && urls.push(p.url));
 
     const uniqueUrls = Array.from(new Set(urls));
-
-    if (uniqueUrls.length > 0) return uniqueUrls;
-
-    return Array.from(new Set([
+    let finalUrls = uniqueUrls.length > 0 ? uniqueUrls : Array.from(new Set([
       item.photo,
       ...(item.galleryImages.length > 0 ? item.galleryImages : [])
     ])).filter(Boolean);
+
+    const vUrl = item?.video_links?.[0]?.url;
+    if (vUrl) {
+      finalUrls.push("video::" + vUrl);
+    }
+
+    return finalUrls;
   }, [item, activeVariant?.id, activeVariant?.modelName, photos]);
 
   // Reset image view index when variant changes
@@ -157,32 +182,86 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
     setShowColors(false);
   };
 
+  const backgrounds = [
+    "/listingbackgroundsecond.jpg",
+    "/listingbackgroundthird.jpg",
+    "/listingbackgroundforth.jpg",
+    "/listingbackgroundfifth.jpg"
+  ];
+  const currentBg = backgrounds[current % backgrounds.length];
+
+  const currentMedia = resolvedPhotos[current] || "";
+  const isVideo = currentMedia.startsWith("video::");
+  const actualVideoUrl = isVideo ? currentMedia.replace("video::", "") : "";
+  const isYoutubeOrVimeo = isVideo && (actualVideoUrl.includes("youtube.com") || actualVideoUrl.includes("youtu.be") || actualVideoUrl.includes("vimeo.com"));
+  const isDirectVideo = isVideo && !isYoutubeOrVimeo;
+
   return (
     <div className="flex flex-col gap-4 w-full max-w-full overflow-hidden">
       {/* Main image */}
-      <div className="relative aspect-4/3 overflow-hidden rounded-[1.75rem] bg-transparent select-none">
+      <div 
+        className="relative aspect-4/3 overflow-hidden rounded-[1.75rem] bg-transparent select-none ring-1 ring-zinc-200/60 shadow-[4px_4px_0px_rgba(0,0,0,1)] border-2 border-black"
+        style={{ backgroundImage: `url('${currentBg}')`, backgroundSize: "cover", backgroundPosition: "center" }}
+      >
+        <div className="absolute inset-0 bg-[#f0fdf9]/85 backdrop-blur-[1px]" />
         
         {mounted && isFullscreen && createPortal(
           <div className="fixed inset-0 z-[99999] bg-black/95 flex items-center justify-center p-4 backdrop-blur-sm">
-            <button onClick={() => setIsFullscreen(false)} className="absolute top-4 right-4 z-[99999] rounded-full bg-white/20 p-2 text-white hover:bg-white/40 backdrop-blur-md">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-            </button>
+            <div className="absolute top-4 right-4 z-[99999] flex items-center gap-3">
+              {isVideo && actualVideoUrl && (
+                <a 
+                  href={actualVideoUrl} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="rounded-full bg-white/20 px-4 py-2 text-xs font-semibold text-white hover:bg-white/40 backdrop-blur-md flex items-center gap-1.5 transition-colors"
+                >
+                  <ExternalLink size={14} /> Play at source
+                </a>
+              )}
+              <button onClick={() => setIsFullscreen(false)} className="rounded-full bg-white/20 p-2 text-white hover:bg-white/40 backdrop-blur-md transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </button>
+            </div>
 
             <AnimatePresence initial={false} custom={direction} mode="wait">
-              <motion.img
-                key={`fullscreen-${current}`}
-                src={resolvedPhotos[current]}
-                alt={`${name} photo ${current + 1}`}
-                custom={direction}
-                variants={variants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={{ duration: 0.3, ease: "easeInOut" }}
-                className="absolute inset-0 w-full h-full object-contain p-10"
-                loading="eager"
-                fetchPriority="high"
-              />
+              {!isVideo ? (
+                <motion.img
+                  key={`fullscreen-${current}`}
+                  src={currentMedia}
+                  alt={`${name} photo ${current + 1}`}
+                  custom={direction}
+                  variants={variants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  className="absolute inset-0 w-full h-full object-contain p-10"
+                  loading="eager"
+                  fetchPriority="high"
+                />
+              ) : (
+                <motion.div
+                  key={`fullscreen-${current}`}
+                  custom={direction}
+                  variants={variants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  className="absolute inset-0 w-full h-full bg-black flex items-center justify-center p-10"
+                >
+                  {isDirectVideo && (
+                    <video src={actualVideoUrl} autoPlay muted loop playsInline className="h-full w-full object-contain pointer-events-none" />
+                  )}
+                  {isYoutubeOrVimeo && (
+                    getEmbedUrl(actualVideoUrl) ? (
+                      <iframe src={getEmbedUrl(actualVideoUrl)!} className="h-full w-full border-0 pointer-events-none" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" tabIndex={-1} />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-xs text-white">Invalid Video URL</div>
+                    )
+                  )}
+                </motion.div>
+              )}
             </AnimatePresence>
 
             {resolvedPhotos.length > 1 && (
@@ -211,20 +290,44 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
         )}
 
         <AnimatePresence initial={false} custom={direction} mode="wait">
-          <motion.img
-            key={current}
-            src={resolvedPhotos[current]}
-            alt={`${name} photo ${current + 1}`}
-            custom={direction}
-            variants={variants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="absolute inset-0 w-full h-full object-contain"
-            loading={current === 0 ? "eager" : "lazy"}
-            fetchPriority={current === 0 ? "high" : "auto"}
-          />
+          {!isVideo ? (
+            <motion.img
+              key={current}
+              src={currentMedia}
+              alt={`${name} photo ${current + 1}`}
+              custom={direction}
+              variants={variants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="absolute inset-0 w-full h-full object-contain"
+              loading={current === 0 ? "eager" : "lazy"}
+              fetchPriority={current === 0 ? "high" : "auto"}
+            />
+          ) : (
+            <motion.div
+              key={current}
+              custom={direction}
+              variants={variants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="absolute inset-0 w-full h-full bg-black z-10"
+            >
+              {isDirectVideo && (
+                <video src={actualVideoUrl} autoPlay muted loop playsInline className="h-full w-full object-contain pointer-events-none" />
+              )}
+              {isYoutubeOrVimeo && (
+                getEmbedUrl(actualVideoUrl) ? (
+                  <iframe src={getEmbedUrl(actualVideoUrl)!} className="h-full w-full border-0 pointer-events-none" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" tabIndex={-1} />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-xs text-white">Invalid Video URL</div>
+                )
+              )}
+            </motion.div>
+          )}
         </AnimatePresence>
 
         {/* Prev / Next arrows */}
@@ -339,7 +442,13 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
                     i === current ? "border-[#34ebb1] shadow-sm" : "border-transparent opacity-75 hover:opacity-100"
                   }`}
                 >
-                  <img src={photo} alt={`${name} ${i + 1}`} className="w-full h-full object-cover" />
+                  {photo.startsWith("video::") ? (
+                    <div className="w-full h-full bg-slate-900 flex items-center justify-center">
+                      <Play size={20} className="text-white opacity-80" />
+                    </div>
+                  ) : (
+                    <img src={photo} alt={`${name} ${i + 1}`} className="w-full h-full object-cover" />
+                  )}
                 </button>
               ))}
             </motion.div>
@@ -424,7 +533,13 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
                     i === current ? "border-[#34ebb1] shadow-sm" : "border-transparent opacity-75 hover:opacity-100"
                   }`}
                 >
-                  <img src={photo} alt={`${name} ${i + 1}`} className="w-full h-full object-cover" />
+                  {photo.startsWith("video::") ? (
+                    <div className="w-full h-full bg-slate-900 flex items-center justify-center">
+                      <Play size={24} className="text-white opacity-80" />
+                    </div>
+                  ) : (
+                    <img src={photo} alt={`${name} ${i + 1}`} className="w-full h-full object-cover" />
+                  )}
                 </button>
               ))}
             </motion.div>
@@ -443,7 +558,13 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
                 i === current ? "border-[#34ebb1] shadow-md" : "border-transparent opacity-60 hover:opacity-100"
               }`}
             >
-              <img src={photo} alt={`${name} thumbnail ${i + 1}`} className="w-full h-full object-cover" />
+              {photo.startsWith("video::") ? (
+                <div className="w-full h-full bg-slate-900 flex items-center justify-center">
+                  <Play size={28} className="text-white opacity-80" />
+                </div>
+              ) : (
+                <img src={photo} alt={`${name} thumbnail ${i + 1}`} className="w-full h-full object-cover" />
+              )}
             </button>
           ))}
         </div>

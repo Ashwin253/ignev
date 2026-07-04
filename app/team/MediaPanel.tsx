@@ -68,6 +68,7 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
   // Crop & Flip Horizontal states
   const [flippingId, setFlippingId] = useState<string | null>(null);
   const [cropImage, setCropImage] = useState<ImageItem | null>(null);
+  const [visibleMediaCount, setVisibleMediaCount] = useState(10);
 
   useEffect(() => {
     fetchListings();
@@ -786,7 +787,7 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
               type="text"
               placeholder="Search by listing name or brand..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => { setSearchQuery(e.target.value); setVisibleMediaCount(10); }}
               className="flex-1 bg-transparent text-sm outline-none text-slate-800 placeholder:text-slate-400"
             />
           </div>
@@ -797,7 +798,7 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
           <span className="text-xs font-bold text-slate-400 uppercase shrink-0">Brand</span>
           <select
             value={selectedBrand}
-            onChange={(e) => setSelectedBrand(e.target.value)}
+            onChange={(e) => { setSelectedBrand(e.target.value); setVisibleMediaCount(10); }}
             className="flex-1 bg-transparent text-sm outline-none text-slate-700 cursor-pointer appearance-none"
           >
             <option value="all">All Brands</option>
@@ -812,7 +813,7 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
           <span className="text-xs font-bold text-slate-400 uppercase shrink-0">Type</span>
           <select
             value={selectedType}
-            onChange={(e) => setSelectedType(e.target.value)}
+            onChange={(e) => { setSelectedType(e.target.value); setVisibleMediaCount(10); }}
             className="flex-1 bg-transparent text-sm outline-none text-slate-700 cursor-pointer appearance-none"
           >
             <option value="all">All Image Types</option>
@@ -883,7 +884,7 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
           </div>
 
           <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredImages.map((img) => {
+            {filteredImages.slice(0, visibleMediaCount).map((img) => {
               const sig = getFileSignature(img);
               const ext = getFileExtension(img.url);
               const filename = `${sig}.${ext}`;
@@ -1035,6 +1036,17 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
               );
             })}
           </div>
+          
+          {filteredImages.length > visibleMediaCount && (
+            <div className="mt-8 flex justify-center">
+              <button
+                onClick={() => setVisibleMediaCount(prev => prev + 10)}
+                className="rounded-xl border border-slate-200 bg-white px-8 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-sky-600 transition-colors shadow-sm cursor-pointer"
+              >
+                Load More
+              </button>
+            </div>
+          )}
         </>
       )}
 

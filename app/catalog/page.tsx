@@ -26,7 +26,7 @@ export default async function CatalogPage() {
         name: l.title,
         brand: l.brand,
         type: l.types[0] ?? "",
-        pricing: (l as any).price_bracket || formatPricing(l.prices),
+        pricing: formatPricing(l.prices),
         photo: l.photo,
         slug: l.slug,
         topSpeed: l.topSpeed,
@@ -36,6 +36,7 @@ export default async function CatalogPage() {
         launchdate: l.launchdate,
         prices: l.prices,
         baas: l.baas,
+        video_links: l.video_links,
       }));
     }
   } catch { /* Supabase failed or not configured */ }

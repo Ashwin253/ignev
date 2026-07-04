@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { fetchEvListingsFromSupabase } from "../../lib/supabase";
+import { formatPricing } from "../../lib/wordpress";
 
 export const revalidate = 300;
 
@@ -11,7 +12,7 @@ export async function GET() {
       name: l.title,
       brand: l.brand,
       type: l.types[0] ?? "",
-      pricing: l.prices.length ? l.prices[0] : "",
+      pricing: formatPricing(l.prices),
       photo: l.photo,
       slug: l.slug,
       topSpeed: l.topSpeed,
@@ -20,6 +21,7 @@ export async function GET() {
       launchdate: l.launchdate,
       prices: l.prices,
       baas: l.baas,
+      video_links: l.video_links,
     }));
 
     return NextResponse.json({ items });

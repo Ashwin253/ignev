@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { Plus, Pencil, Trash2, LogOut, Save, X, Loader2, ChevronDown, ChevronUp, MessageSquare, Mic, MicOff, Sparkles, Copy, Clipboard, Eye, Zap } from "lucide-react";
+import { Plus, Pencil, Trash2, LogOut, Save, X, Loader2, ChevronDown, ChevronUp, MessageSquare, Mic, MicOff, Sparkles, Copy, Clipboard, Eye, Zap, Crop, FlipHorizontal } from "lucide-react";
 import type { EvListingRow, EvVariantRow } from "../lib/supabase";
+import CropModal from "./CropModal";
 import LeadsPanel from "./LeadsPanel";
 import AnalyticsPanel from "./AnalyticsPanel";
 import MapPanel from "./MapPanel";
@@ -386,9 +387,11 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
   const [rebuildingAI, setRebuildingAI] = useState(false);
   const [expandedListing, setExpandedListing] = useState<string | null>(null);
   const [pendingEnquiriesCount, setPendingEnquiriesCount] = useState(0);
-  const [activeSection, setActiveSection] = useState<"listings" | "leads" | "prices" | "analytics" | "map" | "banners" | "content" | "offers" | "media">("listings");
+  const [activeSection, setActiveSection] = useState<"listings" | "all_listings" | "leads" | "prices" | "analytics" | "map" | "banners" | "content" | "offers" | "media">("listings");
   const [selectedModelId, setSelectedModelId] = useState<string>("");
   const [selectedBrand, setSelectedBrand] = useState<string>("");
+  const [tableBrandFilter, setTableBrandFilter] = useState<string>("");
+  const [visibleAllListingsCount, setVisibleAllListingsCount] = useState(10);
   const uniqueBrands = useMemo(() => {
     return [...new Set(listings.map((l) => l.brand).filter(Boolean))].sort();
   }, [listings]);
@@ -420,6 +423,18 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
 
   const [isPasteModalOpen, setIsPasteModalOpen] = useState(false);
   const [pastedJson, setPastedJson] = useState("");
+
+  // Image toolkit states for TeamDashboard
+  const [bgRemovingId, setBgRemovingId] = useState<string | null>(null);
+  const [bgRemoveProgress, setBgRemoveProgress] = useState<string>("");
+  const [flippingId, setFlippingId] = useState<string | null>(null);
+  const [cropImageInfo, setCropImageInfo] = useState<{
+    url: string;
+    listingTitle: string;
+    listingBrand: string;
+    type: "main" | "featured" | "gallery";
+    index: number;
+  } | null>(null);
 
   const handleCopyFormat = () => {
     const templateForm = {
@@ -814,6 +829,149 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
     setPastedVariantJson("");
     alert("Variant details successfully applied!");
   };
+
+  // --- Image Toolkit Functions ---
+  const convertToImageBlob = (url: string): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          reject(new Error("Could not get 2D context"));
+          return;
+        }
+        ctx.drawImage(img, 0, 0);
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error("Canvas conversion to Blob failed"));
+        }, "image/png");
+      };
+      img.onerror = () => reject(new Error("Failed to load source image for decoding"));
+      img.src = url;
+    });
+  };
+
+  const updateFormImageUrl = (type: "main" | "featured" | "gallery", index: number, newUrl: string) => {
+    if (type === "main") {
+      setForm((prev) => ({ ...prev, photo: newUrl }));
+    } else if (type === "featured") {
+      setForm((prev) => {
+        const arr = [...prev.featured_photos];
+        arr[index] = { ...arr[index], url: newUrl };
+        return { ...prev, featured_photos: arr };
+      });
+    } else if (type === "gallery") {
+      setForm((prev) => {
+        const arr = [...prev.gallery_images];
+        arr[index] = { ...arr[index], url: newUrl };
+        return { ...prev, gallery_images: arr };
+      });
+    }
+  };
+
+  const handleRemoveBg = async (url: string, type: "main" | "featured" | "gallery", index: number) => {
+    if (!url) return;
+    const itemKey = `${type}-${index}`;
+    setBgRemovingId(itemKey);
+    setBgRemoveProgress("Decoding...");
+
+    try {
+      const decodedBlob = await convertToImageBlob(url);
+      setBgRemoveProgress("Loading AI...");
+      const imgly = await import("@imgly/background-removal");
+      const removeBackground = imgly.removeBackground as any;
+
+      const filename = `rmbg-${Date.now()}.png`;
+
+      const config = {
+        model: "small" as const,
+        progress: (key: string, current: number, total: number) => {
+          const percent = Math.round((current / total) * 100);
+          if (key.includes("fetch")) {
+            setBgRemoveProgress(`AI model... ${percent}%`);
+          } else {
+            setBgRemoveProgress(`Removing... ${percent}%`);
+          }
+        }
+      };
+
+      const blob = await removeBackground(decodedBlob, config);
+      setBgRemoveProgress("Uploading...");
+
+      const file = new File([blob], filename, { type: "image/png" });
+      const path = `evlistings/${form.slug || Date.now()}/${filename}`;
+      const { data, error } = await supabase.storage.from("evphotos").upload(path, file, { upsert: true });
+
+      if (error) {
+        alert("Upload failed: " + error.message);
+        setBgRemovingId(null);
+        return;
+      }
+
+      const publicUrl = supabase.storage.from("evphotos").getPublicUrl(data.path).data.publicUrl;
+      updateFormImageUrl(type, index, publicUrl);
+    } catch (err: any) {
+      alert("Background removal failed: " + err.message);
+    }
+    setBgRemovingId(null);
+    setBgRemoveProgress("");
+  };
+
+  const handleFlipHorizontal = async (url: string, type: "main" | "featured" | "gallery", index: number) => {
+    if (!url) return;
+    const itemKey = `${type}-${index}`;
+    setFlippingId(itemKey);
+    try {
+      const decodedBlob = await convertToImageBlob(url);
+      const img = new Image();
+      
+      const loadedImg = await new Promise<HTMLImageElement>((resolve, reject) => {
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error("Failed to load source image for flipping"));
+        img.src = URL.createObjectURL(decodedBlob);
+      });
+
+      const canvas = document.createElement("canvas");
+      canvas.width = loadedImg.naturalWidth || loadedImg.width;
+      canvas.height = loadedImg.naturalHeight || loadedImg.height;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Could not get 2D canvas context");
+
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(loadedImg, 0, 0);
+
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((b) => {
+          if (b) resolve(b);
+          else reject(new Error("Canvas conversion to blob failed"));
+        }, "image/png");
+      });
+
+      const filename = `flip-${Date.now()}.png`;
+      const path = `evlistings/${form.slug || Date.now()}/${filename}`;
+      
+      const { data, error } = await supabase.storage.from("evphotos").upload(path, new File([blob], filename, { type: "image/png" }), { upsert: true });
+
+      if (error) {
+        alert("Upload failed: " + error.message);
+        setFlippingId(null);
+        return;
+      }
+
+      const publicUrl = supabase.storage.from("evphotos").getPublicUrl(data.path).data.publicUrl;
+      updateFormImageUrl(type, index, publicUrl);
+    } catch (err: any) {
+      alert("Flipping failed: " + err.message);
+    }
+    setFlippingId(null);
+  };
+  // --- End Image Toolkit Functions ---
 
   useEffect(() => { supabase.auth.getUser().then(({ data }: any) => { if (data.user) setUser(data.user); }); }, []);
   useEffect(() => {
@@ -1315,7 +1473,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             <p className="text-xs sm:text-sm text-slate-500 truncate max-w-[150px] sm:max-w-none">{user.email}</p>
           </div>
           <div className="flex gap-1.5 sm:gap-2 shrink-0">
-            <button onClick={() => { setActiveSection("listings"); setEditing(null); }} className="inline-flex items-center gap-1 sm:gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
+            <button onClick={() => { setActiveSection("all_listings"); setEditing(null); setSelectedBrand(""); setSelectedModelId(""); setTableBrandFilter(""); }} className="inline-flex items-center gap-1 sm:gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
               View All Listings
             </button>
             <button onClick={() => { setActiveSection("media"); }} className="inline-flex items-center gap-1 sm:gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
@@ -1328,7 +1486,15 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
         <div className="block sm:hidden mb-6">
           <select
             value={activeSection}
-            onChange={(e) => setActiveSection(e.target.value as any)}
+            onChange={(e) => {
+              const val = e.target.value as any;
+              setActiveSection(val);
+              if (val === "listings") {
+                setSelectedBrand("");
+                setSelectedModelId("");
+                setEditing(null);
+              }
+            }}
             className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-bold text-slate-800 outline-none cursor-pointer"
           >
             <option value="listings">EV Listings</option>
@@ -1343,7 +1509,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
         </div>
 
         <div className="hidden sm:flex gap-2 mb-6 overflow-x-auto">
-          <button onClick={() => setActiveSection("listings")}
+          <button onClick={() => { setActiveSection("listings"); setSelectedBrand(""); setSelectedModelId(""); setEditing(null); }}
             className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${activeSection === "listings" ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-950 border border-slate-300"}`}>
             EV Listings
           </button>
@@ -1391,6 +1557,62 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
         {activeSection === "content" && <ContentPanel supabase={supabase} />}
         {activeSection === "offers" && <OffersPanel supabase={supabase} uniqueBrands={uniqueBrands} />}
         {activeSection === "media" && <MediaPanel supabase={supabase} />}
+        {activeSection === "all_listings" && (
+          <div className="mb-6 rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+              <h3 className="font-bold text-slate-800">{tableBrandFilter ? `${tableBrandFilter} Models` : `All EV Listings`} ({listings.filter((l) => tableBrandFilter ? l.brand === tableBrandFilter : true).length})</h3>
+              <select
+                value={tableBrandFilter}
+                onChange={(e) => { setTableBrandFilter(e.target.value); setVisibleAllListingsCount(10); }}
+                className="rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-sm font-bold text-slate-800 outline-none cursor-pointer"
+              >
+                <option value="">All Brands</option>
+                {uniqueBrands.map((ub) => (
+                  <option key={ub} value={ub}>{ub}</option>
+                ))}
+              </select>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm whitespace-nowrap">
+                <thead className="bg-slate-50 text-slate-500 font-bold text-xs uppercase tracking-wider">
+                  <tr>
+                    <th className="px-6 py-3">Brand</th>
+                    <th className="px-6 py-3">Model</th>
+                    <th className="px-6 py-3">Variants</th>
+                    <th className="px-6 py-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {listings.filter((l) => tableBrandFilter ? l.brand === tableBrandFilter : true).slice(0, visibleAllListingsCount).map((l) => (
+                    <tr key={l.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-6 py-3 font-bold text-slate-900">{l.brand}</td>
+                      <td className="px-6 py-3 font-bold text-sky-700">{l.title} {(l as any).discontinued ? <span className="ml-2 text-[10px] bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded border border-rose-200 uppercase tracking-wider font-bold">Discontinued</span> : null}</td>
+                      <td className="px-6 py-3 text-slate-500">{l.variants?.length || 0} variants</td>
+                      <td className="px-6 py-3 text-right">
+                        <button 
+                          onClick={() => { setActiveSection("listings"); setSelectedBrand(l.brand); setSelectedModelId(l.id); }}
+                          className="inline-flex items-center gap-1 text-xs font-bold text-sky-600 hover:text-sky-700 bg-sky-50 hover:bg-sky-100 px-2.5 py-1.5 rounded transition-colors cursor-pointer"
+                        >
+                          Manage
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {listings.filter((l) => tableBrandFilter ? l.brand === tableBrandFilter : true).length > visibleAllListingsCount && (
+              <div className="p-4 border-t border-slate-100 flex justify-center bg-slate-50">
+                <button 
+                  onClick={() => setVisibleAllListingsCount(prev => prev + 10)}
+                  className="rounded-xl border border-slate-200 bg-white px-6 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-sky-600 transition-colors shadow-sm cursor-pointer"
+                >
+                  Load More
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         {activeSection === "listings" && (
         <>
@@ -1414,9 +1636,24 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
           </div>
         )} */}
         {/* Brand & Model Management Panel */}
-        {!editing && listings.length > 0 && (() => {
+        {!editing && (() => {
+          if (listings.length === 0) {
+            return (
+              <div className="mb-6 rounded-2xl border border-sky-200 bg-sky-50 p-8 flex flex-col items-center justify-center">
+                <div className="w-16 h-16 bg-sky-100 text-sky-500 rounded-full flex items-center justify-center mb-4">
+                  <Plus size={32} />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 mb-2">No EV Listings Found</h3>
+                <p className="text-slate-500 mb-6 text-sm text-center max-w-md">Get started by adding your very first brand and EV model to the platform.</p>
+                <button onClick={startNew} className="inline-flex items-center justify-center gap-2 rounded-xl bg-sky-600 px-6 py-3 text-sm font-bold text-white hover:bg-sky-700 transition-colors shadow-sm cursor-pointer">
+                  <Plus size={18} /> Add First Brand & Model
+                </button>
+              </div>
+            );
+          }
           const selectedModel = listings.find((l) => l.id === selectedModelId);
           return (
+            <>
             <div className="mb-6 rounded-2xl border border-sky-200 bg-sky-50 p-5">
               <div className="grid gap-4 sm:grid-cols-2 mb-4">
                 <div>
@@ -1540,9 +1777,10 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                 </div>
               )}
             </div>
+            </>
           );
         })()}
-
+        
         {/* Edit Form */}
         {editing && (
           <div className="mb-8 rounded-2xl border-2 border-slate-300 bg-slate-50 p-6 shadow-sm text-sm">
@@ -2017,93 +2255,234 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
 
             {listingFormTab === "media" && (
               <div className="space-y-4">
-                {/* Featured Photos Section */}
+                {/* Featured (Photos & Videos) Section */}
                 <div className="rounded-xl border-2 border-slate-300 bg-slate-200 p-4">
                   <div className="flex items-center justify-between mb-3">
-                    <p className="text-xs font-bold uppercase tracking-wider text-slate-600">Featured Photos</p>
-                    <button
-                      type="button"
-                      onClick={() => setForm({ ...form, featured_photos: [...form.featured_photos, { url: "", variantId: null }] })}
-                      className="text-xs font-bold text-sky-600 hover:text-sky-700 cursor-pointer"
-                    >
-                      + Add Photo
-                    </button>
+                    <p className="text-xs font-bold uppercase tracking-wider text-slate-600">Featured (Photos &amp; Videos)</p>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setForm({ ...form, featured_photos: [...form.featured_photos, { url: "", variantId: null }] })}
+                        className="text-xs font-bold text-sky-600 hover:text-sky-700 cursor-pointer"
+                      >
+                        + Add Photo
+                      </button>
+                      <span className="text-slate-300 text-xs">|</span>
+                      <button
+                        type="button"
+                        onClick={() => setForm({ ...form, video_links: [...form.video_links, { url: "", title: "", variantId: null, variantName: null }] })}
+                        className="text-xs font-bold text-sky-600 hover:text-sky-700 cursor-pointer"
+                      >
+                        + Add Video
+                      </button>
+                    </div>
                   </div>
                   
-                  <div className="space-y-3">
-                    {form.featured_photos.map((item, idx) => (
-                      <div key={idx} className="flex flex-col sm:flex-row gap-3 rounded-lg border border-slate-200 bg-white p-3 items-start sm:items-center">
-                        {item.url && (
-                          <img src={item.url} alt="preview" className="h-12 w-16 rounded-md object-cover border shrink-0 bg-slate-50" />
-                        )}
-                        <div className="flex-1 min-w-0 w-full space-y-2">
-                          <div className="flex flex-col sm:flex-row gap-2 w-full min-w-0">
-                            <input
-                              type="file"
-                              accept="image/*"
-                              onChange={async (e) => {
-                                const file = e.target.files?.[0];
-                                if (!file) return;
-                                const path = `evlistings/${form.slug || Date.now()}/featured-${Date.now()}-${file.name}`;
-                                const { data } = await supabase.storage.from("evphotos").upload(path, file, { upsert: true });
-                                if (data) {
-                                  const { data: u } = supabase.storage.from("evphotos").getPublicUrl(data.path);
-                                  const arr = [...form.featured_photos];
-                                  arr[idx] = { ...arr[idx], url: u.publicUrl };
-                                  setForm({ ...form, featured_photos: arr });
-                                }
-                              }}
-                              className="w-full sm:w-auto text-xs cursor-pointer file:mr-2 file:rounded-md file:border-0 file:bg-sky-50 file:px-2 file:py-1 file:text-[10px] file:font-bold file:text-sky-600 min-w-0"
-                            />
-                            <input
-                              type="text"
-                              placeholder="Or paste image URL"
-                              value={item.url}
-                              onChange={(e) => {
-                                const arr = [...form.featured_photos];
-                                arr[idx] = { ...arr[idx], url: e.target.value };
-                                setForm({ ...form, featured_photos: arr });
-                              }}
-                              className="w-full sm:flex-1 min-w-0 rounded border border-slate-200 px-2.5 py-1 text-xs outline-none"
-                            />
-                          </div>
-                          
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Variant:</span>
-                            <select
-                              value={item.variantId || item.variantName || ""}
-                              onChange={(e) => {
-                                const selectedVal = e.target.value;
-                                const selectedVar = variants.find(v => v.id === selectedVal || v.variant_name === selectedVal);
-                                const arr = [...form.featured_photos];
-                                arr[idx] = { 
-                                  ...arr[idx], 
-                                  variantId: selectedVar?.id || null, 
-                                  variantName: selectedVar?.variant_name || null 
-                                };
-                                setForm({ ...form, featured_photos: arr });
-                              }}
-                              className="rounded border border-slate-200 px-2 py-1 text-xs outline-none bg-slate-50 cursor-pointer"
-                            >
-                              <option value="">Model (Default)</option>
-                              {variants.filter(v => v.variant_name).map((v, vidx) => (
-                                <option key={v.id || vidx} value={v.id || v.variant_name}>{v.variant_name} {v.model_year ? `(${v.model_year})` : ""}</option>
-                              ))}
-                            </select>
-                          </div>
+                  <div className="space-y-4">
+                    {/* Photos Sub-list */}
+                    {form.featured_photos.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Photos</p>
+                        <div className="space-y-3">
+                          {form.featured_photos.map((item, idx) => (
+                            <div key={`photo-${idx}`} className="flex flex-col sm:flex-row gap-3 rounded-lg border border-slate-200 bg-white p-3 items-start sm:items-center">
+                              {item.url && (
+                                <img src={item.url} alt="preview" className="h-12 w-16 rounded-md object-cover border shrink-0 bg-slate-50" />
+                              )}
+                              <div className="flex-1 min-w-0 w-full space-y-2">
+                                <div className="flex flex-col sm:flex-row gap-2 w-full min-w-0">
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={async (e) => {
+                                      const file = e.target.files?.[0];
+                                      if (!file) return;
+                                      const path = `evlistings/${form.slug || Date.now()}/featured-${Date.now()}-${file.name}`;
+                                      const { data } = await supabase.storage.from("evphotos").upload(path, file, { upsert: true });
+                                      if (data) {
+                                        const { data: u } = supabase.storage.from("evphotos").getPublicUrl(data.path);
+                                        const arr = [...form.featured_photos];
+                                        arr[idx] = { ...arr[idx], url: u.publicUrl };
+                                        setForm({ ...form, featured_photos: arr });
+                                      }
+                                    }}
+                                    className="w-full sm:w-auto text-xs cursor-pointer file:mr-2 file:rounded-md file:border-0 file:bg-sky-50 file:px-2 file:py-1 file:text-[10px] file:font-bold file:text-sky-600 min-w-0"
+                                  />
+                                  <input
+                                    type="text"
+                                    placeholder="Or paste image URL"
+                                    value={item.url}
+                                    onChange={(e) => {
+                                      const arr = [...form.featured_photos];
+                                      arr[idx] = { ...arr[idx], url: e.target.value };
+                                      setForm({ ...form, featured_photos: arr });
+                                    }}
+                                    className="w-full sm:flex-1 min-w-0 rounded border border-slate-200 px-2.5 py-1 text-xs outline-none"
+                                  />
+                                </div>
+                                
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Variant:</span>
+                                  <select
+                                    value={item.variantId || item.variantName || ""}
+                                    onChange={(e) => {
+                                      const selectedVal = e.target.value;
+                                      const selectedVar = variants.find(v => v.id === selectedVal || v.variant_name === selectedVal);
+                                      const arr = [...form.featured_photos];
+                                      arr[idx] = { 
+                                        ...arr[idx], 
+                                        variantId: selectedVar?.id || null, 
+                                        variantName: selectedVar?.variant_name || null 
+                                      };
+                                      setForm({ ...form, featured_photos: arr });
+                                    }}
+                                    className="rounded border border-slate-200 px-2 py-1 text-xs outline-none bg-slate-50 cursor-pointer"
+                                  >
+                                    <option value="">Model (Default)</option>
+                                    {variants.filter(v => v.variant_name).map((v, vidx) => (
+                                      <option key={v.id || vidx} value={v.id || v.variant_name}>{v.variant_name} {v.model_year ? `(${v.model_year})` : ""}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                                
+                                {/* Image Toolkit (4 Actions) */}
+                                {item.url && (
+                                  <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-100 overflow-x-auto pb-1">
+                                    {/* Remove BG */}
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveBg(item.url, "featured", idx)}
+                                      disabled={bgRemovingId !== null || flippingId !== null}
+                                      className="flex-1 flex items-center justify-center gap-1.5 p-2 rounded-lg bg-slate-100 hover:bg-violet-50 hover:text-violet-700 text-slate-650 text-[10px] font-bold transition-colors border border-slate-200 cursor-pointer whitespace-nowrap disabled:opacity-50"
+                                    >
+                                      {bgRemovingId === `featured-${idx}` ? (
+                                        <>
+                                          <Loader2 size={12} className="animate-spin text-violet-600" />
+                                          <span>{bgRemoveProgress}</span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Sparkles size={12} className="text-violet-600" />
+                                          Remove BG
+                                        </>
+                                      )}
+                                    </button>
+
+                                    {/* Crop */}
+                                    <button
+                                      type="button"
+                                      onClick={() => setCropImageInfo({ url: item.url, listingTitle: form.title, listingBrand: form.brand, type: "featured", index: idx })}
+                                      disabled={bgRemovingId !== null || flippingId !== null}
+                                      className="flex-1 flex items-center justify-center gap-1.5 p-2 rounded-lg bg-slate-100 hover:bg-amber-50 hover:text-amber-700 text-slate-650 text-[10px] font-bold transition-colors border border-slate-200 cursor-pointer whitespace-nowrap disabled:opacity-50"
+                                    >
+                                      <Crop size={12} className="text-amber-600" />
+                                      Crop
+                                    </button>
+
+                                    {/* Flip Horizontal */}
+                                    <button
+                                      type="button"
+                                      onClick={() => handleFlipHorizontal(item.url, "featured", idx)}
+                                      disabled={bgRemovingId !== null || flippingId !== null}
+                                      className="flex-1 flex items-center justify-center gap-1.5 p-2 rounded-lg bg-slate-100 hover:bg-sky-50 hover:text-sky-700 text-slate-650 text-[10px] font-bold transition-colors border border-slate-200 cursor-pointer whitespace-nowrap disabled:opacity-50"
+                                    >
+                                      {flippingId === `featured-${idx}` ? (
+                                        <Loader2 size={12} className="animate-spin text-sky-600" />
+                                      ) : (
+                                        <>
+                                          <FlipHorizontal size={12} className="text-sky-600" />
+                                          Flip
+                                        </>
+                                      )}
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setForm({ ...form, featured_photos: form.featured_photos.filter((_, i) => i !== idx) })}
+                                className="text-rose-400 hover:text-rose-600 text-sm font-bold shrink-0 self-start sm:self-center"
+                              >
+                                × Remove
+                              </button>
+                            </div>
+                          ))}
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => setForm({ ...form, featured_photos: form.featured_photos.filter((_, i) => i !== idx) })}
-                          className="text-rose-400 hover:text-rose-600 text-sm font-bold shrink-0 self-start sm:self-center"
-                        >
-                          × Remove
-                        </button>
                       </div>
-                    ))}
-                    {form.featured_photos.length === 0 && (
+                    )}
+
+                    {/* Videos Sub-list */}
+                    {form.video_links.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Videos</p>
+                        <div className="space-y-3">
+                          {form.video_links.map((item, idx) => (
+                            <div key={`video-${idx}`} className="flex flex-col gap-2 rounded-lg border border-slate-200 bg-white p-3">
+                              <div className="flex flex-col sm:flex-row gap-2 min-w-0">
+                                <input
+                                  type="text"
+                                  placeholder="Video Title / Label (e.g. Walkaround, Review)"
+                                  value={item.title || ""}
+                                  onChange={(e) => {
+                                    const arr = [...form.video_links];
+                                    arr[idx] = { ...arr[idx], title: e.target.value };
+                                    setForm({ ...form, video_links: arr });
+                                  }}
+                                  className="w-full sm:w-1/3 min-w-0 rounded border border-slate-200 px-2.5 py-1 text-xs outline-none"
+                                />
+                                <input
+                                  type="text"
+                                  placeholder="Paste Video URL (e.g. YouTube link)"
+                                  value={item.url}
+                                  onChange={(e) => {
+                                    const arr = [...form.video_links];
+                                    arr[idx] = { ...arr[idx], url: e.target.value };
+                                    setForm({ ...form, video_links: arr });
+                                  }}
+                                  className="flex-1 min-w-0 rounded border border-slate-200 px-2.5 py-1 text-xs outline-none"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => setForm({ ...form, video_links: form.video_links.filter((_, i) => i !== idx) })}
+                                  className="text-rose-400 hover:text-rose-600 text-sm font-bold shrink-0 self-end sm:self-center"
+                                >
+                                  × Remove
+                                </button>
+                              </div>
+                              
+                              <div className="flex items-center gap-2 text-xs pt-1 border-t border-slate-100">
+                                <span className="text-[10px] font-bold text-slate-500 uppercase">Variant</span>
+                                <select
+                                  value={item.variantId || item.variantName || ""}
+                                  onChange={(e) => {
+                                    const selectedVal = e.target.value;
+                                    const selectedVar = variants.find(v => v.id === selectedVal || v.variant_name === selectedVal);
+                                    const arr = [...form.video_links];
+                                    arr[idx] = { 
+                                      ...arr[idx], 
+                                      variantId: selectedVar?.id || null, 
+                                      variantName: selectedVar?.variant_name || null 
+                                    };
+                                    setForm({ ...form, video_links: arr });
+                                  }}
+                                  className="rounded border border-slate-200 px-2 py-1 text-xs outline-none bg-slate-50 cursor-pointer"
+                                >
+                                  <option value="">Model (Default)</option>
+                                  {variants.filter(v => v.variant_name).map((v, vidx) => (
+                                    <option key={v.id || vidx} value={v.id || v.variant_name}>{v.variant_name} {v.model_year ? `(${v.model_year})` : ""}</option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Empty state when neither photos nor videos exist */}
+                    {form.featured_photos.length === 0 && form.video_links.length === 0 && (
                       <div className="text-center py-4 text-xs text-slate-500 bg-white/50 rounded-lg border border-dashed border-slate-300">
-                        No featured photos added yet. Click "+ Add Photo" to add one.
+                        No featured media added yet. Use &quot;+ Add Photo&quot; or &quot;+ Add Video&quot; above.
                       </div>
                     )}
                   </div>
@@ -2242,6 +2621,59 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                               </select>
                             </div>
                           </div>
+                          
+                          {/* Image Toolkit (4 Actions) */}
+                          {url && (
+                            <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-100 overflow-x-auto pb-1">
+                              {/* Remove BG */}
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveBg(url, "gallery", idx)}
+                                disabled={bgRemovingId !== null || flippingId !== null}
+                                className="flex-1 flex items-center justify-center gap-1.5 p-2 rounded-lg bg-slate-100 hover:bg-violet-50 hover:text-violet-700 text-slate-650 text-[10px] font-bold transition-colors border border-slate-200 cursor-pointer whitespace-nowrap disabled:opacity-50"
+                              >
+                                {bgRemovingId === `gallery-${idx}` ? (
+                                  <>
+                                    <Loader2 size={12} className="animate-spin text-violet-600" />
+                                    <span>{bgRemoveProgress}</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Sparkles size={12} className="text-violet-600" />
+                                    Remove BG
+                                  </>
+                                )}
+                              </button>
+
+                              {/* Crop */}
+                              <button
+                                type="button"
+                                onClick={() => setCropImageInfo({ url, listingTitle: form.title, listingBrand: form.brand, type: "gallery", index: idx })}
+                                disabled={bgRemovingId !== null || flippingId !== null}
+                                className="flex-1 flex items-center justify-center gap-1.5 p-2 rounded-lg bg-slate-100 hover:bg-amber-50 hover:text-amber-700 text-slate-650 text-[10px] font-bold transition-colors border border-slate-200 cursor-pointer whitespace-nowrap disabled:opacity-50"
+                              >
+                                <Crop size={12} className="text-amber-600" />
+                                Crop
+                              </button>
+
+                              {/* Flip Horizontal */}
+                              <button
+                                type="button"
+                                onClick={() => handleFlipHorizontal(url, "gallery", idx)}
+                                disabled={bgRemovingId !== null || flippingId !== null}
+                                className="flex-1 flex items-center justify-center gap-1.5 p-2 rounded-lg bg-slate-100 hover:bg-sky-50 hover:text-sky-700 text-slate-650 text-[10px] font-bold transition-colors border border-slate-200 cursor-pointer whitespace-nowrap disabled:opacity-50"
+                              >
+                                {flippingId === `gallery-${idx}` ? (
+                                  <Loader2 size={12} className="animate-spin text-sky-600" />
+                                ) : (
+                                  <>
+                                    <FlipHorizontal size={12} className="text-sky-600" />
+                                    Flip
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                          )}
                         </div>
                       );
                     })}
@@ -2275,86 +2707,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   </div>
                 </div>
 
-                {/* Video Links Section */}
-                <div className="rounded-xl border-2 border-slate-300 bg-slate-200 p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <p className="text-xs font-bold uppercase tracking-wider text-slate-600">Video Links</p>
-                    <button
-                      type="button"
-                      onClick={() => setForm({ ...form, video_links: [...form.video_links, { url: "", title: "", variantId: null, variantName: null }] })}
-                      className="text-xs font-bold text-sky-600 hover:text-sky-700 cursor-pointer"
-                    >
-                      + Add Video
-                    </button>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    {form.video_links.map((item, idx) => (
-                      <div key={idx} className="flex flex-col gap-2 rounded-lg border border-slate-200 bg-white p-3">
-                        <div className="flex flex-col sm:flex-row gap-2 min-w-0">
-                          <input
-                            type="text"
-                            placeholder="Video Title / Label (e.g. Walkaround, Review)"
-                            value={item.title || ""}
-                            onChange={(e) => {
-                              const arr = [...form.video_links];
-                              arr[idx] = { ...arr[idx], title: e.target.value };
-                              setForm({ ...form, video_links: arr });
-                            }}
-                            className="w-full sm:w-1/3 min-w-0 rounded border border-slate-200 px-2.5 py-1 text-xs outline-none"
-                          />
-                          <input
-                            type="text"
-                            placeholder="Paste Video URL (e.g. YouTube link)"
-                            value={item.url}
-                            onChange={(e) => {
-                              const arr = [...form.video_links];
-                              arr[idx] = { ...arr[idx], url: e.target.value };
-                              setForm({ ...form, video_links: arr });
-                            }}
-                            className="flex-1 min-w-0 rounded border border-slate-200 px-2.5 py-1 text-xs outline-none"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setForm({ ...form, video_links: form.video_links.filter((_, i) => i !== idx) })}
-                            className="text-rose-400 hover:text-rose-600 text-sm font-bold shrink-0 self-end sm:self-center"
-                          >
-                            × Remove
-                          </button>
-                        </div>
-                        
-                        <div className="flex items-center gap-2 text-xs pt-1 border-t border-slate-100">
-                          <span className="text-[10px] font-bold text-slate-500 uppercase">Variant</span>
-                          <select
-                            value={item.variantId || item.variantName || ""}
-                            onChange={(e) => {
-                              const selectedVal = e.target.value;
-                              const selectedVar = variants.find(v => v.id === selectedVal || v.variant_name === selectedVal);
-                              const arr = [...form.video_links];
-                              arr[idx] = { 
-                                ...arr[idx], 
-                                variantId: selectedVar?.id || null, 
-                                variantName: selectedVar?.variant_name || null 
-                              };
-                              setForm({ ...form, video_links: arr });
-                            }}
-                            className="rounded border border-slate-200 px-2 py-1 text-xs outline-none bg-slate-50 cursor-pointer"
-                          >
-                            <option value="">Model (Default)</option>
-                            {variants.filter(v => v.variant_name).map((v, vidx) => (
-                              <option key={v.id || vidx} value={v.id || v.variant_name}>{v.variant_name} {v.model_year ? `(${v.model_year})` : ""}</option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                    ))}
-                    {form.video_links.length === 0 && (
-                      <div className="text-center py-4 text-xs text-slate-500 bg-white/50 rounded-lg border border-dashed border-slate-300">
-                        No video links added yet. Click "+ Add Video" to add one.
-                      </div>
-                    )}
-                  </div>
-                </div>
+
               </div>
             )}
 
@@ -4250,6 +4603,29 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             </div>
           </div>
         </div>
+      )}
+
+      {/* Crop Modal for Image Toolkit */}
+      {cropImageInfo && (
+        <CropModal
+          image={{
+            id: `crop-${cropImageInfo.type}-${cropImageInfo.index}`,
+            listingId: "temp",
+            listingTitle: cropImageInfo.listingTitle || "Draft Listing",
+            listingBrand: cropImageInfo.listingBrand || "Draft",
+            url: cropImageInfo.url,
+            type: cropImageInfo.type,
+            index: cropImageInfo.index,
+          }}
+          supabase={supabase}
+          listings={[]} 
+          fetchListings={async () => {}} 
+          onClose={() => setCropImageInfo(null)}
+          onSaveCallback={(newUrl) => {
+            updateFormImageUrl(cropImageInfo.type, cropImageInfo.index, newUrl);
+            setCropImageInfo(null);
+          }}
+        />
       )}
     </div>
   );

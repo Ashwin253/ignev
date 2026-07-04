@@ -6,7 +6,7 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import {
-  Zap, CalendarDays, BadgeCheck, Share2, Check, ArrowRight, X, Sparkles, SlidersHorizontal, ChevronDown, ChevronUp, Truck, ArrowUpRight, Send, GitCompare, Search, Gauge
+  Zap, CalendarDays, BadgeCheck, Share2, Check, ArrowRight, X, Sparkles, SlidersHorizontal, ChevronDown, ChevronUp, Truck, ArrowUpRight, Send, GitCompare, Search, Gauge, Play, ImageIcon, Battery
 } from "lucide-react";
 import { ProductSkeleton } from "./ProductSkeleton";
 import { motion, AnimatePresence } from "framer-motion";
@@ -41,7 +41,174 @@ export type CatalogItem = {
   prices?: string[];
   baas?: boolean;
   usageType?: string;
+  video_links?: Array<{ url: string; title?: string; variantId?: string | null; variantName?: string | null }>;
 };
+
+function getEmbedUrl(url: string) {
+  try {
+    if (url.includes("youtube.com") || url.includes("youtu.be")) {
+      let videoId = "";
+      if (url.includes("youtu.be")) {
+        videoId = url.split("youtu.be/")[1]?.split("?")[0];
+      } else {
+        videoId = new URL(url).searchParams.get("v") || "";
+      }
+      return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&mute=1` : null;
+    }
+    if (url.includes("vimeo.com")) {
+      const videoId = url.split("vimeo.com/")[1]?.split("?")[0];
+      return videoId ? `https://player.vimeo.com/video/${videoId}?autoplay=1&muted=1` : null;
+    }
+  } catch (e) {
+    return null;
+  }
+  return null;
+}
+
+function CatalogCard({ item, index, isInCompare, addToCompare, removeFromCompare }: { 
+  item: CatalogItem, index: number, isInCompare: (s:string)=>boolean, addToCompare: (s:string)=>void, removeFromCompare: (s:string)=>void 
+}) {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const launched = isLaunched(item.launchdate);
+  const launchLabel = formatLaunchDate(item.launchdate);
+  const slug = item.slug ?? toSlug(item.brand, item.name);
+
+  const videoUrl = item.video_links?.[0]?.url;
+  const isYoutubeOrVimeo = videoUrl && (
+    videoUrl.includes("youtube.com") ||
+    videoUrl.includes("youtu.be") ||
+    videoUrl.includes("vimeo.com")
+  );
+  const isDirectVideo = videoUrl && !isYoutubeOrVimeo;
+
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: index * 0.04 }}
+      className="group relative flex h-full flex-col overflow-hidden rounded-md ring-1 ring-zinc-200/60 shadow-sm hover:shadow-md transition-all"
+      style={{ backgroundImage: "url('/listingbackground.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}
+    >
+      <div className="absolute inset-0 bg-[#f0fdf9]/85 backdrop-blur-[1px]" />
+      <Link href={`/product/${slug}`} className="relative flex flex-1 flex-col">
+        <div
+          className="relative aspect-[4/3] overflow-hidden"
+          style={{ backgroundImage: "url('/listingbackground.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}
+        >
+          {item.photo ? (
+            <Image
+              src={item.photo}
+              alt={item.name}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
+              className={`object-cover transition-transform duration-700 group-hover:scale-105 ${isPlaying ? "opacity-0" : "opacity-100"}`}
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center bg-zinc-100">
+              <Zap size={48} className="text-zinc-300" />
+            </div>
+          )}
+
+          {isDirectVideo && isPlaying && (
+            <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); }} className="absolute inset-0 z-10 bg-black">
+              <video
+                src={videoUrl}
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="h-full w-full object-contain pointer-events-none"
+              />
+            </div>
+          )}
+
+          {isYoutubeOrVimeo && isPlaying && (
+            <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); }} className="absolute inset-0 z-10 bg-black">
+              {getEmbedUrl(videoUrl) ? (
+                <iframe
+                  src={getEmbedUrl(videoUrl)!}
+                  className="h-full w-full border-0 pointer-events-none"
+                  allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+                  tabIndex={-1}
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-xs text-white">Invalid Video URL</div>
+              )}
+            </div>
+          )}
+
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/5 to-transparent pointer-events-none" />
+
+          {/* Status Badge */}
+          <span className={`absolute right-3 top-3 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold backdrop-blur-md ${launched ? "bg-[#34ebb1]/90 text-zinc-900" : "bg-amber-400/90 text-zinc-900"}`}>
+            {launched ? <BadgeCheck size={12} /> : <CalendarDays size={12} />} {launchLabel}
+          </span>
+
+          {item.commercial && (
+            <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold backdrop-blur-md bg-orange-500/90 text-white">
+              <Truck size={12} /> Commercial
+            </span>
+          )}
+
+          {/* Compare Button */}
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              isInCompare(slug) ? removeFromCompare(slug) : addToCompare(slug);
+            }}
+            className={`absolute bottom-3 left-3 grid h-8 w-8 place-items-center rounded-full backdrop-blur-xl transition ${isInCompare(slug)
+                ? "bg-zinc-900 text-white"
+                : "bg-white/80 text-zinc-700 hover:bg-white"
+              }`}
+          >
+            <GitCompare size={14} />
+          </button>
+
+          {/* Play/Photo Toggle Button */}
+          {videoUrl && (
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsPlaying(!isPlaying); }}
+              className="absolute bottom-3 right-3 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-zinc-900/80 text-white backdrop-blur-md hover:bg-zinc-800 transition"
+            >
+              {isPlaying ? <ImageIcon size={14} /> : <Play size={14} className="ml-0.5 fill-current" />}
+            </button>
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="flex flex-1 flex-col gap-4 p-5">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">{item.brand}</p>
+            <h3 className="mt-0.5 line-clamp-1 text-[17px] font-bold tracking-tight text-zinc-900">{item.name}</h3>
+          </div>
+          
+          <div className="flex flex-wrap items-center justify-between gap-3 text-sm w-full">
+            <span className="font-bold text-zinc-900">
+              {item.pricing || "TBA"} 
+              {item.baas && <span className="ml-1 text-[10px] font-mono bg-sky-100 text-sky-700 px-1.5 py-0.5 rounded">BAAS</span>}
+            </span>
+            <div className="flex items-center gap-3">
+              {item.topSpeed != null && <span className="inline-flex items-center gap-1 text-xs font-bold text-zinc-500"><Gauge size={12} />{item.topSpeed} km/h</span>}
+              {item.drivingRange && <span className="inline-flex items-center gap-1 text-xs font-bold text-zinc-500"><Battery size={12} className="text-emerald-500"/>{item.drivingRange} km</span>}
+            </div>
+          </div>
+
+          <div className="mt-auto flex gap-2 pt-1">
+            <span className="flex flex-1 items-center justify-center gap-1 rounded-xl bg-zinc-100 py-2.5 text-xs font-bold text-zinc-700 group-hover:bg-zinc-200 transition">Details <ArrowUpRight size={12} /></span>
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); triggerEnquiryModal(`${item.brand} ${item.name}`); }}
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-zinc-900 py-2.5 text-xs font-bold text-white hover:bg-zinc-800 active:scale-[0.98] transition"
+            >
+              Enquire <Send size={12} />
+            </button>
+          </div>
+        </div>
+      </Link>
+    </motion.article>
+  );
+}
 
 // ── Price filter ──────────────────────────────────────────────────────────────
 
@@ -108,10 +275,44 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
     setLoadingMore(false);
   };
 
+  const getShareButtonText = () => {
+    if (shared) return "Link copied";
+    if (query) return `Share "${query}" search`;
+    
+    const parts: string[] = [];
+    if (brand !== "all") {
+      parts.push(brand.charAt(0).toUpperCase() + brand.slice(1));
+    }
+    
+    if (category !== "all") {
+      if (category === "2 Wheeler") parts.push("2 Wheelers");
+      else if (category === "3 Wheeler") parts.push("3 Wheelers");
+      else if (category === "Electric Car") parts.push("Cars");
+      else parts.push(`${category}s`);
+    } else if (brand !== "all") {
+      parts.push("Vehicles");
+    }
+
+    if (baasOnly) parts.push("(BaaS)");
+    if (parts.length > 0) return `Share ${parts.join(" ")}`;
+    
+    return "Share catalog";
+  };
+
   const handleShare = async () => {
     const url = window.location.href;
+    const desc = getShareButtonText().replace("Share ", "");
+    const shareTitle = desc === "catalog" ? "EVPLSE Catalog" : `EVPLSE Catalog - ${desc}`;
+    const shareText = desc === "catalog" 
+      ? "Check out the electric vehicle catalog on EVPULSE!"
+      : `Check out these electric vehicles on EVPULSE: ${desc}`;
+
     if (navigator.share) {
-      await navigator.share({ title: "EVPULSE Catalog", url }).catch(() => { });
+      await navigator.share({ 
+        title: shareTitle, 
+        text: shareText,
+        url 
+      }).catch(() => { });
     } else {
       await navigator.clipboard.writeText(url);
       setShared(true);
@@ -201,36 +402,36 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
     <div className="space-y-6">
 
       {/* ── Glass Filter Panel (2026) ── */}
-      <div className="rounded-3xl border border-white/60 bg-white/90 backdrop-blur-2xl shadow-xl shadow-slate-950/5 overflow-hidden relative z-10">
+      <div className="rounded-3xl border border-white/10 bg-zinc-950/95 backdrop-blur-2xl shadow-xl shadow-slate-950/5 overflow-hidden relative z-10 text-white">
         
         {/* Mobile Header */}
         <div
-          className="md:hidden flex items-center gap-3 px-5 py-4 cursor-pointer active:bg-white/60 transition-colors"
+          className="md:hidden flex items-center gap-3 px-5 py-4 cursor-pointer active:bg-zinc-800 transition-colors"
           onClick={() => setFiltersOpen((v) => !v)}
         >
-          <div className="w-8 h-8 rounded-2xl bg-white/80 flex items-center justify-center border border-white/70">
-            <SlidersHorizontal size={18} className="text-slate-500" />
+          <div className="w-8 h-8 rounded-2xl bg-zinc-800 flex items-center justify-center border border-white/10">
+            <SlidersHorizontal size={18} className="text-zinc-400" />
           </div>
           <div className="flex-1">
-            <div className="text-sm font-semibold text-slate-800 flex items-center gap-2">
+            <div className="text-sm font-bold text-white flex items-center gap-2">
               {category !== "all" ? category : "All Vehicles"}
               {activeFilterCount > 0 && (
-                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#34ebb1] text-[10px] font-bold text-white">
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#34ebb1] text-[10px] font-bold text-zinc-900">
                   {activeFilterCount}
                 </span>
               )}
             </div>
-            <div className="text-xs text-slate-500">{filteredItems.length} results</div>
+            <div className="text-xs font-bold text-zinc-400">{filteredItems.length} results</div>
           </div>
           
-          {filtersOpen ? <ChevronUp size={20} className="text-slate-400" /> : <ChevronDown size={20} className="text-slate-400" />}
+          {filtersOpen ? <ChevronUp size={20} className="text-zinc-400" /> : <ChevronDown size={20} className="text-zinc-400" />}
 
           {/* Share Button - Mobile */}
           <button
             onClick={(e) => { e.stopPropagation(); handleShare(); }}
-            className="ml-auto w-9 h-9 flex items-center justify-center rounded-2xl bg-white/70 hover:bg-white active:bg-white/90 transition-all border border-white/60"
+            className="ml-auto w-9 h-9 flex items-center justify-center rounded-2xl bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 transition-all border border-white/10"
           >
-            {shared ? <Check size={18} className="text-emerald-500" /> : <Share2 size={18} className="text-slate-500" />}
+            {shared ? <Check size={18} className="text-[#34ebb1]" /> : <Share2 size={18} className="text-zinc-400" />}
           </button>
         </div>
 
@@ -238,15 +439,15 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
         <div className={filtersOpen ? "block" : "hidden md:block"}>
 
           {/* Type Pills - Glass style */}
-          <div className="px-5 pt-5 pb-4 border-b border-white/70">
+          <div className="px-5 pt-5 pb-4 border-b border-white/10">
             <div className="flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1 snap-x snap-mandatory scrollbar-hide">
               {categoryOptions.map((opt) => (
                 <button
                   key={opt.value}
                   onClick={() => updateFilters({ type: opt.value })}
-                  className={`snap-start whitespace-nowrap px-5 py-2.5 rounded-2xl text-sm font-semibold transition-all border flex-shrink-0 ${category === opt.value
-                      ? "bg-[#34ebb1] text-slate-950 border-[#34ebb1] shadow-md shadow-[#34ebb1]/20"
-                      : "bg-white/80 border-white/70 hover:border-[#34ebb1]/30 hover:bg-white/90 text-slate-700"
+                  className={`snap-start whitespace-nowrap px-5 py-2.5 rounded-2xl text-sm font-bold transition-all border flex-shrink-0 ${category === opt.value
+                      ? "bg-[#34ebb1] text-zinc-950 border-[#34ebb1] shadow-md shadow-[#34ebb1]/20"
+                      : "bg-white/5 border-white/10 hover:border-white/30 hover:bg-white/10 text-white"
                     }`}
                 >
                   {opt.label}
@@ -259,16 +460,16 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
           <div className="p-5 grid gap-4 md:grid-cols-[2fr_1fr_1fr_1fr]">
             {/* Search */}
             <div className="relative">
-              <div className="flex items-center gap-3 rounded-3xl border border-white/70 bg-white/70 px-5 py-3.5 focus-within:border-[#34ebb1]/50 focus-within:bg-white/90 transition-all">
-                <Search size={18} className="text-slate-400" />
+              <div className="flex items-center gap-3 rounded-3xl border border-white/10 bg-white/5 px-5 py-3.5 focus-within:border-[#34ebb1]/50 focus-within:bg-white/10 transition-all">
+                <Search size={18} className="text-zinc-400" />
                 <input
                   value={query}
                   onChange={(e) => updateFilters({ q: e.target.value })}
                   placeholder="Search by model or brand..."
-                  className="flex-1 bg-transparent text-[15px] outline-none placeholder:text-slate-400 text-slate-800"
+                  className="flex-1 bg-transparent text-[15px] font-bold outline-none placeholder:text-zinc-500 text-white"
                 />
                 {query && (
-                  <button onClick={() => updateFilters({ q: null })} className="text-slate-400 hover:text-slate-600">
+                  <button onClick={() => updateFilters({ q: null })} className="text-zinc-400 hover:text-white">
                     <X size={18} />
                   </button>
                 )}
@@ -277,29 +478,29 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
 
             {/* Brand */}
             <div className="relative">
-              <div className="flex items-center gap-3 rounded-3xl border border-white/70 bg-white/70 px-5 py-3.5 focus-within:border-[#34ebb1]/50 focus-within:bg-white/90 transition-all">
-                <span className="text-xs font-semibold text-slate-500 shrink-0">Brand</span>
+              <div className="flex items-center gap-3 rounded-3xl border border-white/10 bg-white/5 px-5 py-3.5 focus-within:border-[#34ebb1]/50 focus-within:bg-white/10 transition-all">
+                <span className="text-xs font-bold text-zinc-400 shrink-0">Brand</span>
                 <select
                   value={brand}
                   onChange={(e) => updateFilters({ brand: e.target.value })}
-                  className="flex-1 bg-transparent text-[15px] outline-none text-slate-800 cursor-pointer appearance-none"
+                  className="flex-1 bg-transparent text-[15px] font-bold outline-none text-white cursor-pointer appearance-none [&>option]:text-black"
                 >
                   {brandOptions.map((b) => (
                     <option key={b} value={b}>{b === "all" ? "All brands" : b}</option>
                   ))}
                 </select>
-                <ChevronDown size={16} className="text-slate-400 pointer-events-none" />
+                <ChevronDown size={16} className="text-zinc-400 pointer-events-none" />
               </div>
             </div>
 
             {/* Price */}
             <div className="relative">
-              <div className="flex items-center gap-3 rounded-3xl border border-white/70 bg-white/70 px-5 py-3.5 focus-within:border-[#34ebb1]/50 focus-within:bg-white/90 transition-all">
-                <span className="text-xs font-semibold text-slate-500 shrink-0">Price</span>
+              <div className="flex items-center gap-3 rounded-3xl border border-white/10 bg-white/5 px-5 py-3.5 focus-within:border-[#34ebb1]/50 focus-within:bg-white/10 transition-all">
+                <span className="text-xs font-bold text-zinc-400 shrink-0">Price</span>
                 <select
                   value={price}
                   onChange={(e) => updateFilters({ price: e.target.value })}
-                  className="flex-1 bg-transparent text-[15px] outline-none text-slate-800 cursor-pointer appearance-none"
+                  className="flex-1 bg-transparent text-[15px] font-bold outline-none text-white cursor-pointer appearance-none [&>option]:text-black"
                 >
                   <option value="all">All prices</option>
                   <option value="0-5">Under ₹5L</option>
@@ -307,24 +508,24 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
                   <option value="15-30">₹15–30L</option>
                   <option value="30+">₹30L+</option>
                 </select>
-                <ChevronDown size={16} className="text-slate-400 pointer-events-none" />
+                <ChevronDown size={16} className="text-zinc-400 pointer-events-none" />
               </div>
             </div>
 
             {/* Usage */}
             <div className="relative">
-              <div className="flex items-center gap-3 rounded-3xl border border-white/70 bg-white/70 px-5 py-3.5 focus-within:border-[#34ebb1]/50 focus-within:bg-white/90 transition-all">
-                <span className="text-xs font-semibold text-slate-500 shrink-0">Usage</span>
+              <div className="flex items-center gap-3 rounded-3xl border border-white/10 bg-white/5 px-5 py-3.5 focus-within:border-[#34ebb1]/50 focus-within:bg-white/10 transition-all">
+                <span className="text-xs font-bold text-zinc-400 shrink-0">Usage</span>
                 <select
                   value={usage}
                   onChange={(e) => updateFilters({ usage: e.target.value })}
-                  className="flex-1 bg-transparent text-[15px] outline-none text-slate-800 cursor-pointer appearance-none"
+                  className="flex-1 bg-transparent text-[15px] font-bold outline-none text-white cursor-pointer appearance-none [&>option]:text-black"
                 >
                   <option value="all">All usage</option>
                   <option value="Passenger">Passenger</option>
                   <option value="Goods">Goods</option>
                 </select>
-                <ChevronDown size={16} className="text-slate-400 pointer-events-none" />
+                <ChevronDown size={16} className="text-zinc-400 pointer-events-none" />
               </div>
             </div>
           </div>
@@ -334,29 +535,19 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => updateFilters({ comm: !commercialOnly })}
-                className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-semibold transition-all ${commercialOnly
-                    ? "bg-[#34ebb1] border-[#34ebb1] text-slate-950 shadow-sm"
-                    : "bg-white/70 border-white/70 text-slate-600 hover:bg-white hover:border-white/90"
+                className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-bold transition-all ${commercialOnly
+                    ? "bg-[#34ebb1] border-[#34ebb1] text-zinc-950 shadow-sm"
+                    : "bg-white/5 border-white/10 text-zinc-300 hover:bg-white/10 hover:border-white/30 hover:text-white"
                   }`}
               >
                 <Truck size={16} /> Commercial
               </button>
 
-              {/* <button
-                onClick={() => updateFilters({ avail: !launchedOnly })}
-                className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-semibold transition-all ${launchedOnly
-                    ? "bg-[#34ebb1] border-[#34ebb1] text-slate-950 shadow-sm"
-                    : "bg-white/70 border-white/70 text-slate-600 hover:bg-white hover:border-white/90"
-                  }`}
-              >
-                <BadgeCheck size={16} /> Now
-              </button> */}
-
               <button
                 onClick={() => updateFilters({ upcoming: !comingSoonOnly })}
-                className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-semibold transition-all ${comingSoonOnly
-                    ? "bg-[#34ebb1] border-[#34ebb1] text-slate-950 shadow-sm"
-                    : "bg-white/70 border-white/70 text-slate-600 hover:bg-white hover:border-white/90"
+                className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-bold transition-all ${comingSoonOnly
+                    ? "bg-[#34ebb1] border-[#34ebb1] text-zinc-950 shadow-sm"
+                    : "bg-white/5 border-white/10 text-zinc-300 hover:bg-white/10 hover:border-white/30 hover:text-white"
                   }`}
               >
                 <CalendarDays size={16} />Coming Soon
@@ -364,9 +555,9 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
 
               <button
                 onClick={() => updateFilters({ baas: !baasOnly })}
-                className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-semibold transition-all ${baasOnly
-                    ? "bg-[#34ebb1] border-[#34ebb1] text-slate-950 shadow-sm"
-                    : "bg-white/70 border-white/70 text-slate-600 hover:bg-white hover:border-white/90"
+                className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-bold transition-all ${baasOnly
+                    ? "bg-[#34ebb1] border-[#34ebb1] text-zinc-950 shadow-sm"
+                    : "bg-white/5 border-white/10 text-zinc-300 hover:bg-white/10 hover:border-white/30 hover:text-white"
                   }`}
               >
                 <Zap size={16} /> BAAS
@@ -375,23 +566,23 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
               {hasActiveFilters && (
                 <button
                   onClick={clearAll}
-                  className="inline-flex items-center gap-2 rounded-2xl border border-white/60 px-4 py-2 text-sm font-semibold text-slate-500 hover:text-slate-700 hover:bg-white/80 transition-all"
+                  className="inline-flex items-center gap-2 rounded-2xl border border-red-500/30 px-4 py-2 text-sm font-bold text-red-400 hover:text-white hover:bg-red-500/20 hover:border-red-500/50 transition-all"
                 >
                   <X size={16} /> Clear
                 </button>
               )}
             </div>
 
-            <div className="hidden md:flex items-center gap-4 text-sm">
-              <div className="text-slate-500">
-                <span className="font-semibold text-slate-800">{filteredItems.length}</span> of {items.length}
+            <div className="hidden md:flex items-center gap-4 text-sm font-bold">
+              <div className="text-zinc-400">
+                <span className="text-white">{filteredItems.length}</span> of {items.length}
               </div>
               <button
                 onClick={handleShare}
-                className="flex items-center gap-2 rounded-2xl border border-white/70 bg-white/70 px-5 py-2.5 text-sm font-semibold hover:bg-white hover:border-white active:scale-[0.985] transition-all"
+                className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/10 px-5 py-2.5 text-sm font-bold hover:bg-white/20 hover:border-white/30 active:scale-[0.985] transition-all"
               >
-                {shared ? <Check className="text-emerald-500" size={17} /> : <Share2 size={17} />}
-                {shared ? "Link copied" : "Share catalog"}
+                {shared ? <Check className="text-[#34ebb1]" size={17} /> : <Share2 size={17} />}
+                {getShareButtonText()}
               </button>
             </div>
           </div>
@@ -412,121 +603,23 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
             <Zap size={42} className="text-slate-300" />
           </div>
           <p className="text-lg font-medium text-slate-600">No matches found</p>
-          <button onClick={clearAll} className="mt-4 text-[#34ebb1] hover:underline text-sm font-medium">
+          <button onClick={clearAll} className="mt-4 text-red-400 hover:text-red-300 hover:underline text-sm font-semibold">
             Clear filters
           </button>
         </div>
       ) : (
         <>
           <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredItems.slice(0, visibleCount).map((item, index) => {
-              const launched = isLaunched(item.launchdate);
-              const launchLabel = formatLaunchDate(item.launchdate);
-              const slug = item.slug ?? toSlug(item.brand, item.name);
-
-              return (
-                <Link
-                  key={slug}
-                  href={`/product/${slug}`}
-                  className="group bg-white rounded-3xl overflow-hidden border border-white/70 shadow-lg shadow-slate-950/5 hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 flex flex-col active:scale-[0.985]"
-                >
-                  {/* Image Container - Glass accent */}
-                  <div className="relative aspect-[4/3] bg-gradient-to-br from-slate-50 to-white overflow-hidden">
-                    {item.photo ? (
-                      <Image
-                        src={item.photo}
-                        alt={item.name}
-                        fill
-                        sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
-                        className="object-cover group-hover:scale-105 transition-transform duration-700"
-                      />
-                    ) : (
-                      <div className="absolute inset-0 flex items-center justify-center bg-slate-100">
-                        <Zap size={48} className="text-slate-200" />
-                      </div>
-                    )}
-
-                    {/* Status Badge */}
-                    <div className={`absolute top-4 right-4 px-3 py-1 rounded-2xl text-xs font-semibold flex items-center gap-1.5 backdrop-blur-xl ${launched 
-                      ? "bg-emerald-500/90 text-white" 
-                      : "bg-amber-400/90 text-slate-900"}`}>
-                      {launched ? <BadgeCheck size={13} /> : <CalendarDays size={13} />}
-                      {launchLabel}
-                    </div>
-
-                    {item.commercial && (
-                      <div className="absolute top-4 left-4 px-3 py-1 rounded-2xl bg-orange-500/90 text-white text-xs font-semibold flex items-center gap-1 backdrop-blur-xl">
-                        <Truck size={13} /> Commercial
-                      </div>
-                    )}
-
-                    {/* Compare Button - Glass orb */}
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        isInCompare(slug) ? removeFromCompare(slug) : addToCompare(slug);
-                      }}
-                      className={`absolute bottom-4 left-4 w-9 h-9 rounded-2xl flex items-center justify-center backdrop-blur-2xl border border-white/70 transition-all ${isInCompare(slug)
-                          ? "bg-[#34ebb1] text-white shadow-lg"
-                          : "bg-white/80 hover:bg-white text-slate-600"
-                        }`}
-                    >
-                      <GitCompare size={17} />
-                    </button>
-                  </div>
-
-                  {/* Content */}
-                  <div className="flex-1 p-5 flex flex-col">
-                    <div className="flex justify-between items-start gap-3">
-                      <div className="min-w-0">
-                        <div className="uppercase text-[10px] tracking-[0.125em] font-semibold text-[#34ebb1]">{item.brand}</div>
-                        <h3 className="font-semibold text-[17px] leading-tight text-slate-900 mt-1 line-clamp-2">{item.name}</h3>
-                      </div>
-                      {item.type && (
-                        <div className="px-3 py-1 text-xs font-medium bg-slate-100 rounded-2xl text-slate-600 shrink-0">
-                          {item.type}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="mt-auto pt-6 flex flex-wrap gap-x-4 gap-y-1 text-sm">
-                      {item.pricing && (
-                        <div className="font-semibold text-slate-900">
-                          {item.pricing}
-                          {item.baas && (
-                            <span className="ml-2 text-xs font-mono bg-sky-100 text-sky-700 px-2 py-px rounded">BAAS</span>
-                          )}
-                        </div>
-                      )}
-                      {item.drivingRange && (
-                        <div className="flex items-center gap-1.5 text-slate-600">
-                          <Zap size={15} className="text-emerald-600" /> {item.drivingRange} km
-                        </div>
-                      )}
-                      {item.topSpeed != null && (
-                        <div className="flex items-center gap-1.5 text-slate-600">
-                          <Gauge size={15} className="text-amber-600" /> {item.topSpeed} km/h
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Actions - Glass buttons */}
-                  <div className="px-5 pb-5 grid grid-cols-2 gap-3">
-                    <div className="flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 font-semibold py-3.5 rounded-2xl text-sm transition-all">
-                      Details <ArrowUpRight size={16} />
-                    </div>
-                    <button
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); triggerEnquiryModal(`${item.brand} ${item.name}`); }}
-                      className="bg-slate-900 hover:bg-[#34ebb1] active:bg-[#2ac99e] text-white font-semibold py-3.5 rounded-2xl text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.985]"
-                    >
-                      Enquire <Send size={16} />
-                    </button>
-                  </div>
-                </Link>
-              );
-            })}
+            {filteredItems.slice(0, visibleCount).map((item, index) => (
+              <CatalogCard
+                key={item.slug ?? toSlug(item.brand, item.name)}
+                item={item}
+                index={index}
+                isInCompare={isInCompare}
+                addToCompare={addToCompare}
+                removeFromCompare={removeFromCompare}
+              />
+            ))}
           </div>
 
           {/* Infinite Scroll Trigger */}

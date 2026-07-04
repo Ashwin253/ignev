@@ -10,7 +10,9 @@ export type Product = {
   photo: string;
   slug?: string;
   topSpeed?: number | null;
+  drivingRange?: string;
   commercial?: boolean;
+  video_links?: Array<{ url: string; title?: string; variantId?: string | null; variantName?: string | null }>;
 };
 
 export type ComingSoonItem = {
@@ -39,7 +41,7 @@ export type SiteContent = {
 
 const CAR_KEYWORDS    = ["car", "suv", "sedan", "hatchback", "crossover", "mpv"];
 const SCOOTER_KEYWORDS = ["scooter", "bike", "motorcycle", "two", "2 wheel", "moped"];
-const AUTO_KEYWORDS   = ["auto", "rickshaw", "three", "3 wheel", "cargo", "loader"];
+const AUTO_KEYWORDS   = ["auto", "rickshaw", "three", "3 wheel", "cargo", "loader", "tempo", "commercial"];
 
 function bucketType(type: string): "car" | "two_wheeler" | "auto" | null {
   const t = type.toLowerCase();
@@ -74,7 +76,9 @@ async function loadFromSupabase(): Promise<SiteContent> {
         photo:      l.photo,
         slug:       l.slug,
         topSpeed:   l.topSpeed,
+        drivingRange: l.batteryVariants?.[0]?.range || "",
         commercial: l.commercial,
+        video_links: l.video_links,
       };
 
       if (bucket === "car")         cars.push(product);

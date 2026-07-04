@@ -29,6 +29,7 @@ interface CropModalProps {
   listings: EvListingRow[];
   fetchListings: () => Promise<void>;
   onClose: () => void;
+  onSaveCallback?: (newUrl: string) => void;
 }
 
 export default function CropModal({
@@ -36,7 +37,8 @@ export default function CropModal({
   supabase,
   listings,
   fetchListings,
-  onClose
+  onClose,
+  onSaveCallback
 }: CropModalProps) {
   const [zoom, setZoom] = useState<number>(1.0);
   const [panX, setPanX] = useState<number>(0);
@@ -241,6 +243,14 @@ export default function CropModal({
       }
 
       const publicUrl = supabase.storage.from("evphotos").getPublicUrl(data.path).data.publicUrl;
+
+      // If onSaveCallback is provided, skip the DB update and let the parent handle it
+      if (onSaveCallback) {
+        onSaveCallback(publicUrl);
+        setSaving(false);
+        onClose();
+        return;
+      }
 
       // 7. Find and update the original listing row in Supabase
       const listing = listings.find((l) => l.id === image.listingId);

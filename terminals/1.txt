@@ -1,0 +1,16 @@
+---
+pid: 34084
+cwd: "D:\Web-Tutorial\evezy"
+command: "cd \"D:\\Web-Tutorial\\evezy\"; npx tsc --noEmit 2>&1 | Select-Object -First 30"
+started_at: 2026-07-03T04:03:58.946Z
+running_for_ms: 21285005 
+---
+node.exe : npm info using npm@10.3.0
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Users\Ashwi\AppData\Roaming\ ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm info using npm@10.3.0:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+npm info using node@v24.16.0
+npm info ok 

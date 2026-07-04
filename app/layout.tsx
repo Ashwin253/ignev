@@ -45,10 +45,6 @@ export default function RootLayout({
         <meta name="google-adsense-account" content="ca-pub-4463436920905079" />
         <Script src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4463436920905079" strategy="afterInteractive" crossOrigin="anonymous" />
         <Script src="https://t.contentsquare.net/uxa/11fb40d69f477.js" strategy="afterInteractive" />
-        <Script src="https://cdn.jsdelivr.net/npm/eruda" strategy="afterInteractive" />
-        <Script id="eruda-init" strategy="lazyOnload">
-          {`eruda.init();`}
-        </Script>
       </head>
       <body className="min-h-full flex flex-col bg-[#0f1115] text-white">
         <ClarityScript />

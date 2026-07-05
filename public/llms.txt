@@ -1,0 +1,698 @@
+# EVPULSE EV Catalog Database
+
+Welcome to EVPULSE, a clean electric vehicle directory cataloging cars, scooters, and autos with detailed pricing, real range, specifications, battery capacities, and reviews.
+
+## Getting Expert Assistance
+If a user needs custom recommendations, help choosing an EV, range guidance, or has further questions, redirect them to the dedicated assistance request page at: /assist
+
+## Catalog Index
+
+Below is a summary of all available EV models. AI crawlers can fetch the full structured JSON database at: /summary.json
+
+### MAHINDRA Mahindra Zor Grand
+- **Type**: 3 Wheeler
+- **Pricing**: ₹4.12–4.52L
+- **Range**: Up to 140 km
+- **Battery**: Up to 10.24 kWh
+- **Top Speed**: 50 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: MAHINDRA Mahindra Zor Grand is an electric 3 Wheeler. Pricing is around ₹4.12–4.52L. It offers a maximum range of up to 140 km on a single charge. Features a battery capacity of up to 10.24 kWh. Has a top speed of 50 km/h. It was launched on  .
+- **Pros**: Strong performance with 12 kW motor and 50 Nm peak torque., Low upkeep cost of just 12 paise per kilometer reduces overheads., Reliable waterproof and dustproof Lithium-ion battery system.
+- **Details Page**: /product/mahindra-mahindra-zor-grand
+
+### MAHINDRA LAST MILE MOBILITY Mahindra e-Alfa Cargo
+- **Type**: 3 Wheeler
+- **Pricing**: ₹1.44L
+- **Range**: Up to 95 km
+- **Battery**: Up to 6.72 kWh
+- **Top Speed**: 25 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: MAHINDRA LAST MILE MOBILITY Mahindra e-Alfa Cargo is an electric 3 Wheeler. Pricing is around ₹1.44L. It offers a maximum range of up to 95 km on a single charge. Features a battery capacity of up to 6.72 kWh. Has a top speed of 25 km/h. It was launched on  .
+- **Pros**: Zero tailpipe emissions supporting clean logistics initiatives., High economic savings with lower running and upkeep expenditures., Robust closed body design providing extra environmental safety.
+- **Details Page**: /product/mahindra-e-alfa-cargo
+
+### EULER MOTORS Euler Storm EV LR200
+- **Type**: 4 Wheeler
+- **Pricing**: ₹9–13L
+- **Range**: Up to 200 km
+- **Battery**: Up to 30 kWh
+- **Top Speed**: 70 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: EULER MOTORS Euler Storm EV LR200 is an electric 4 Wheeler. Pricing is around ₹9–13L. It offers a maximum range of up to 200 km on a single charge. Features a battery capacity of up to 30 kWh. Has a top speed of 70 km/h. It was launched on  .
+- **Pros**: First in segment to feature ADAS (Advanced Driver Assistance Systems), High payload capacity up to 1.5 tonnes (1500 kg), ArcReactor 200 liquid-cooled battery handles thermal strain exceptionally well
+- **Details Page**: /product/euler-storm-ev-lr200
+
+### EULER MOTORS Euler Turbo EV 1000
+- **Type**: 4 Wheeler
+- **Pricing**: ₹6–8.2L
+- **Range**: Up to 180 km
+- **Battery**: Up to 19.2 kWh
+- **Top Speed**: 70 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: EULER MOTORS Euler Turbo EV 1000 is an electric 4 Wheeler. Pricing is around ₹6–8.2L. It offers a maximum range of up to 180 km on a single charge. Features a battery capacity of up to 19.2 kWh. Has a top speed of 70 km/h. It was launched on  .
+- **Pros**: Solid 1-tonne payload capacity on a 4-wheel platform, Fast charging variant recovers 50 km of range in 15 minutes via CCS2, Stronger 2.5 mm thick ladder frame chassis for robust durability
+- **Details Page**: /product/euler-turbo-ev-1000
+
+### EULER MOTORS Euler HiLoad EV
+- **Type**: 3 Wheeler
+- **Pricing**: ₹4.32L
+- **Range**: Up to 198 km
+- **Battery**: Up to 13.44 kWh
+- **Top Speed**: 55 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: EULER MOTORS Euler HiLoad EV is an electric 3 Wheeler. Pricing is around ₹4.32L. It offers a maximum range of up to 198 km on a single charge. Features a battery capacity of up to 13.44 kWh. Has a top speed of 55 km/h. It was launched on  .
+- **Pros**: Highest payload capacity in its class, Excellent ground clearance for Indian roads, Liquid-cooled battery tech helps manage heat
+- **Cons**: Top speed limited to 45-55 km/h, Cabin lacks air conditioning options
+- **Details Page**: /product/euler-motors-euler-hiload-ev
+
+### JOY E-BIKE Joy e-bike Beast
+- **Type**: 2 Wheeler
+- **Pricing**: ₹2.33–2.42L
+- **Range**: Up to 110 km
+- **Battery**: Up to 5.18 kWh
+- **Top Speed**: 90 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: JOY E-BIKE Joy e-bike Beast is an electric 2 Wheeler. Pricing is around ₹2.33–2.42L. It offers a maximum range of up to 110 km on a single charge. Features a battery capacity of up to 5.18 kWh. Has a top speed of 90 km/h. It was launched on  .
+- **Pros**: Aggressive naked streetfighter styling identical to Kawasaki Z250, Massive 230 Nm wheel torque offering quick initial low-end acceleration, Stable urban stopping power with high-end dual front disc brakes
+- **Details Page**: /product/joy-e-bike-beast
+
+### JOY E-BIKE Joy e-bike
+- **Type**: 2 Wheeler
+- **Pricing**: ₹0.62–1.08L
+- **Range**: Up to 130 km
+- **Battery**: Up to 60 kWh
+- **Top Speed**: 25 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: JOY E-BIKE Joy e-bike is an electric 2 Wheeler. Pricing is around ₹0.62–1.08L. It offers a maximum range of up to 130 km on a single charge. Features a battery capacity of up to 60 kWh. Has a top speed of 25 km/h. It was launched on  .
+- **Pros**: Solid build quality, Smooth power delivery, Capable handling
+- **Details Page**: /product/joy-e-bike-joy-e-bike
+
+### MAHINDRA LAST MILE MOBILITY Mahindra Auto
+- **Type**: 3 Wheeler
+- **Pricing**: ₹3.23–3.9L
+- **Range**: Up to 200 km
+- **Battery**: Up to 11.77 kWh
+- **Top Speed**: 55 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: MAHINDRA LAST MILE MOBILITY Mahindra Auto is an electric 3 Wheeler. Pricing is around ₹3.23–3.9L. It offers a maximum range of up to 200 km on a single charge. Features a battery capacity of up to 11.77 kWh. Has a top speed of 55 km/h. It was launched on  .
+- **Pros**: Significant fuel savings up to ₹4.4 Lakh over 5 years compared to CNG, Low daily charging cost of ₹60 to ₹80 per full charge, Long 5-year or 1,20,000 km warranty for peace of mind
+- **Details Page**: /product/mahindra-last-mile-mobility-mahindra-auto
+
+### EULER MOTORS Euler NEO HiRANGE
+- **Type**: 3 Wheeler
+- **Pricing**: ₹3.1–4.08L
+- **Range**: Up to 205 km
+- **Battery**: Up to 13.44 kWh
+- **Top Speed**: 60 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: EULER MOTORS Euler NEO HiRANGE is an electric 3 Wheeler. Pricing is around ₹3.1–4.08L. It offers a maximum range of up to 205 km on a single charge. Features a battery capacity of up to 13.44 kWh. Has a top speed of 60 km/h. It was launched on  .
+- **Pros**: Excellent real-world driving range of over 200 km per charge, Equipped with Hill Assist for smooth performance on inclined flyovers, Generous 5-year vehicle warranty alongside a 1-year free service plan
+- **Details Page**: /product/euler-neo-hirange
+
+### OMEGA SEIKI MOBILITY Omega Seiki Mobility Stream City Series
+- **Type**: 3 Wheeler
+- **Pricing**: ₹1.85–3.55L
+- **Range**: Up to 300 km
+- **Battery**: Up to 15 kWh
+- **Top Speed**: 48 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: OMEGA SEIKI MOBILITY Omega Seiki Mobility Stream City Series is an electric 3 Wheeler. Pricing is around ₹1.85–3.55L. It offers a maximum range of up to 300 km on a single charge. Features a battery capacity of up to 15 kWh. Has a top speed of 48 km/h. It was launched on  .
+- **Pros**: Ultra-fast charging capability on the Qik variant (0-100% in 15 minutes), Eco-friendly zero tailpipe emissions with significantly reduced noise pollution, Robust payload capacity up to 533 kg for structural passenger stability
+- **Details Page**: /product/osm-stream-city-series
+
+### OMEGA SEIKI MOBILITY Stream
+- **Type**: 3 Wheeler
+- **Pricing**: ₹3.4–3.72L
+- **Range**: Up to 160 km
+- **Battery**: Up to 10.8 kWh
+- **Top Speed**: 45 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: OMEGA SEIKI MOBILITY Stream is an electric 3 Wheeler. Pricing is around ₹3.4–3.72L. It offers a maximum range of up to 160 km on a single charge. Features a battery capacity of up to 10.8 kWh. Has a top speed of 45 km/h. It was launched on  .
+- **Details Page**: /product/omega-seiki-mobility-stream
+
+### SUZUKI E-access
+- **Type**: 2 Wheeler
+- **Pricing**: ₹1.2L
+- **Range**: Up to 95 km
+- **Battery**: Up to 3.07 kWh
+- **Top Speed**: 71 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: SUZUKI E-access is an electric 2 Wheeler. Pricing is around ₹1.2L. It offers a maximum range of up to 95 km on a single charge. Features a battery capacity of up to 3.07 kWh. Has a top speed of 71 km/h. It was launched on  .
+- **Pros**: Long claimed riding range, Fast charging support, Large under-seat storage
+- **Cons**: Premium pricing, Limited public charging network, Heavier than petrol Access
+- **Details Page**: /product/suzuki-e-access
+
+### MONTRA Super cargo
+- **Type**: 3 Wheeler
+- **Pricing**: ₹4.37L
+- **Range**: Up to 200 km
+- **Battery**: Up to 13.8 kWh
+- **Top Speed**: 45 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: MONTRA Super cargo is an electric 3 Wheeler. Pricing is around ₹4.37L. It offers a maximum range of up to 200 km on a single charge. Features a battery capacity of up to 13.8 kWh. Has a top speed of 45 km/h. It was launched on  .
+- **Pros**: Strong battery & range, Good payload capacity, Low running cost
+- **Cons**: No advanced safety features, No passenger use flexibility
+- **Details Page**: /product/montra-super-cargo
+
+### MONTRA Super Auto 
+- **Type**: 3 Wheeler
+- **Pricing**: ₹3.77–3.8L
+- **Range**: Up to 197 km
+- **Battery**: Up to 10.6 kWh
+- **Top Speed**: 55 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: MONTRA Super Auto  is an electric 3 Wheeler. Pricing is around ₹3.77–3.8L. It offers a maximum range of up to 197 km on a single charge. Features a battery capacity of up to 10.6 kWh. Has a top speed of 55 km/h. It was launched on  .
+- **Pros**: High Torque, Reliable Real-World Range, Spacious Cabin
+- **Details Page**: /product/montra-super-auto
+
+### QUANTUM Plasma SR
+- **Type**: 2 Wheeler
+- **Pricing**: ₹0.89L
+- **Range**: Up to 105 km
+- **Battery**: Up to 2.18 kWh
+- **Top Speed**: 60 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: QUANTUM Plasma SR is an electric 2 Wheeler. Pricing is around ₹0.89L. It offers a maximum range of up to 105 km on a single charge. Features a battery capacity of up to 2.18 kWh. Has a top speed of 60 km/h. It was launched on  .
+- **Pros**: Claimed range of up to 120 km, Good ground clearance (178 mm), Lightweight design (101 kg)
+- **Cons**: Drum brakes on both wheels, No fast/DC charging support
+- **Details Page**: /product/quantum-plasma-sr
+
+### QUANTUM Plasma X
+- **Type**: 2 Wheeler
+- **Pricing**: ₹1L
+- **Range**: Up to 120 km
+- **Battery**: Up to 3 kWh
+- **Top Speed**: 65 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: QUANTUM Plasma X is an electric 2 Wheeler. Pricing is around ₹1L. It offers a maximum range of up to 120 km on a single charge. Features a battery capacity of up to 3 kWh. Has a top speed of 65 km/h. It was launched on  .
+- **Pros**: Affordable pricing, Lightweight design (101 kg), Good ground clearance (178 mm)
+- **Cons**: No fast/DC charging support, Drum brakes on both wheels
+- **Details Page**: /product/quantum-plasma-x
+
+### MATTER AERA 5000
+- **Type**: 2 Wheeler
+- **Pricing**: ₹1.83–1.94L
+- **Range**: Up to 172 km
+- **Battery**: Up to 5 kWh
+- **Top Speed**: 105 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: MATTER AERA 5000 is an electric 2 Wheeler. Pricing is around ₹1.83–1.94L. It offers a maximum range of up to 172 km on a single charge. Features a battery capacity of up to 5 kWh. Has a top speed of 105 km/h. It was launched on  .
+- **Details Page**: /product/matter-aera-5000
+
+### AMPERE Reo
+- **Type**: 2 Wheeler
+- **Pricing**: ₹0.6–0.69L
+- **Range**: Up to 80 km
+- **Battery**: Up to 1.44 kWh
+- **Top Speed**: 25 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: AMPERE Reo is an electric 2 Wheeler. Pricing is around ₹0.6–0.69L. It offers a maximum range of up to 80 km on a single charge. Features a battery capacity of up to 1.44 kWh. Has a top speed of 25 km/h. It was launched on  .
+- **Details Page**: /product/ampere-reo
+
+### AMPERE Magnus 
+- **Type**: 2 Wheeler
+- **Pricing**: ₹0.87–9L
+- **Range**: Up to 142 km
+- **Battery**: Up to 3 kWh
+- **Top Speed**: 65 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: AMPERE Magnus  is an electric 2 Wheeler. Pricing is around ₹0.87–9L. It offers a maximum range of up to 142 km on a single charge. Features a battery capacity of up to 3 kWh. Has a top speed of 65 km/h. It was launched on  .
+- **Pros**: Low Running Costs, Comfort & Build
+- **Details Page**: /product/ampere-magnus
+
+### AMPERE Nexus EX ST
+- **Type**: 2 Wheeler
+- **Pricing**: ₹1.1–1.3L
+- **Range**: Up to 136 km
+- **Battery**: Up to 3 kWh
+- **Top Speed**: 93 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: AMPERE Nexus EX ST is an electric 2 Wheeler. Pricing is around ₹1.1–1.3L. It offers a maximum range of up to 136 km on a single charge. Features a battery capacity of up to 3 kWh. Has a top speed of 93 km/h. It was launched on  .
+- **Details Page**: /product/ampere-nexus-ex-st
+
+### REVOLT Blaze X
+- **Type**: 2 Wheeler
+- **Pricing**: ₹1.2L
+- **Range**: Up to 150 km
+- **Battery**: Up to 3.24 kWh
+- **Top Speed**: 85 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: REVOLT Blaze X is an electric 2 Wheeler. Pricing is around ₹1.2L. It offers a maximum range of up to 150 km on a single charge. Features a battery capacity of up to 3.24 kWh. Has a top speed of 85 km/h. It was launched on  .
+- **Pros**: Riding Modes, Punchy Performance
+- **Details Page**: /product/revolt-blaze-x
+
+### VIDA DIRT.E K3
+- **Type**: 2 Wheeler
+- **Pricing**: ₹0.7L
+- **Range**: Up to 2 km
+- **Battery**: Up to 0.36 kWh
+- **Top Speed**: 25 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: VIDA DIRT.E K3 is an electric 2 Wheeler. Pricing is around ₹0.7L. It offers a maximum range of up to 2 km on a single charge. Features a battery capacity of up to 0.36 kWh. Has a top speed of 25 km/h. It was launched on  .
+- **Pros**: Designed for learning, Adjustable as child grows, Lightweight & manageable
+- **Cons**: Not road-legal, Expensive for a kids bike
+- **Details Page**: /product/vida-dirte-k3
+
+### VIDA V2 Plus
+- **Type**: 2 Wheeler
+- **Pricing**: ₹1.41L
+- **Range**: Up to 143 km
+- **Battery**: Up to 3.44 kWh
+- **Top Speed**: 85 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Available
+- **Summary**: VIDA V2 Plus is an electric 2 Wheeler. Pricing is around ₹1.41L. It offers a maximum range of up to 143 km on a single charge. Features a battery capacity of up to 3.44 kWh. Has a top speed of 85 km/h. It was launched on  .
+- **Pros**: Strong Performance, Comfortable Ride Quality, Long Warranty
+- **Cons**: Heavy for Some Riders
+- **Details Page**: /product/vida-v2-plus-3kwh
+
+### VIDA V2 Pro
+- **Type**: 2 Wheeler
+- **Pricing**: ₹1.2L
+- **Range**: Up to 165 km
+- **Battery**: Up to 3.94 kWh
+- **Top Speed**: 90 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Available
+- **Summary**: VIDA V2 Pro is an electric 2 Wheeler. Pricing is around ₹1.2L. It offers a maximum range of up to 165 km on a single charge. Features a battery capacity of up to 3.94 kWh. Has a top speed of 90 km/h. It was launched on  .
+- **Pros**: Comes with a 7-inch TFT touchscreen, Built with a balanced 12-inch wheel, Excellent Range
+- **Cons**: Heavy Weight
+- **Details Page**: /product/vida-v2-pro-3-kwh
+
+### REVOLT RV 400
+- **Type**: 2 Wheeler
+- **Pricing**: ₹1.3–1.4L
+- **Range**: Up to 150 km
+- **Battery**: Up to 3.24 kWh
+- **Top Speed**: 85 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: REVOLT RV 400 is an electric 2 Wheeler. Pricing is around ₹1.3–1.4L. It offers a maximum range of up to 150 km on a single charge. Features a battery capacity of up to 3.24 kWh. Has a top speed of 85 km/h. It was launched on  .
+- **Pros**: Economical Running Costs, Excellent Ground Clearance
+- **Details Page**: /product/rvstandardbrz
+
+### REVOLT Revolt R 
+- **Type**: 2 Wheeler
+- **Pricing**: ₹0.95–1.05L
+- **Range**: Up to 160 km
+- **Battery**: Up to 3.24 kWh
+- **Top Speed**: 70 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: REVOLT Revolt R  is an electric 2 Wheeler. Pricing is around ₹0.95–1.05L. It offers a maximum range of up to 160 km on a single charge. Features a battery capacity of up to 3.24 kWh. Has a top speed of 70 km/h. It was launched on  .
+- **Pros**: Decent Commuter Range, Easy Handling
+- **Details Page**: /product/revolt-standard-pulse
+
+### ROYAL ENFIELD Flying Flea
+- **Type**: 2 Wheeler
+- **Pricing**: ₹2.79L
+- **Range**: Up to 154 km
+- **Battery**: Up to 3.91 kWh
+- **Top Speed**: 115 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: ROYAL ENFIELD Flying Flea is an electric 2 Wheeler. Pricing is around ₹2.79L. It offers a maximum range of up to 154 km on a single charge. Features a battery capacity of up to 3.91 kWh. Has a top speed of 115 km/h. It was launched on  .
+- **Pros**: Ultra-Lightweight Body, Punchy acceleration
+- **Details Page**: /product/c6
+
+### HERO Electric photon
+- **Type**: 2 Wheeler
+- **Pricing**: ₹1.11L
+- **Range**: Up to 90 km
+- **Battery**: Up to 1.87 kWh
+- **Top Speed**: 45 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: HERO Electric photon is an electric 2 Wheeler. Pricing is around ₹1.11L. It offers a maximum range of up to 90 km on a single charge. Features a battery capacity of up to 1.87 kWh. Has a top speed of 45 km/h. It was launched on  .
+- **Pros**: Extremely Light Wieight, Low Running costs, Comfortable Ride Quality
+- **Details Page**: /product/photon-lp
+
+### HERO Optima CX
+- **Type**: 2 Wheeler
+- **Pricing**: ₹1.04L
+- **Range**: Up to 135 km
+- **Battery**: Up to 3 kWh
+- **Top Speed**: 55 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: HERO Optima CX is an electric 2 Wheeler. Pricing is around ₹1.04L. It offers a maximum range of up to 135 km on a single charge. Features a battery capacity of up to 3 kWh. Has a top speed of 55 km/h. It was launched on  .
+- **Pros**: Light Curb Weight, Low Running Costs
+- **Details Page**: /product/cx-20-50
+
+### HERO Optima CX
+- **Type**: 2 Wheeler
+- **Pricing**: ₹0.83L
+- **Range**: Up to 89 km
+- **Battery**: Up to 2 kWh
+- **Top Speed**: 48 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: HERO Optima CX is an electric 2 Wheeler. Pricing is around ₹0.83L. It offers a maximum range of up to 89 km on a single charge. Features a battery capacity of up to 2 kWh. Has a top speed of 48 km/h. It was launched on  .
+- **Pros**: Light Curb Weight, Low Running Costs
+- **Details Page**: /product/cx-20
+
+### OBEN Rorr EZ
+- **Type**: 2 Wheeler
+- **Pricing**: ₹0.9–1.3L
+- **Range**: Up to 175 km
+- **Battery**: Up to 4.4 kWh
+- **Top Speed**: 95 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: OBEN Rorr EZ is an electric 2 Wheeler. Pricing is around ₹0.9–1.3L. It offers a maximum range of up to 175 km on a single charge. Features a battery capacity of up to 4.4 kWh. Has a top speed of 95 km/h. It was launched on  .
+- **Details Page**: /product/26-kwh-34-kwh-
+
+### OBEN Rorr Evo
+- **Type**: 2 Wheeler
+- **Pricing**: ₹1.25L
+- **Range**: Up to 180 km
+- **Battery**: Up to 3.4 kWh
+- **Top Speed**: 110 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: OBEN Rorr Evo is an electric 2 Wheeler. Pricing is around ₹1.25L. It offers a maximum range of up to 180 km on a single charge. Features a battery capacity of up to 3.4 kWh. Has a top speed of 110 km/h. It was launched on  .
+- **Pros**: Cheaper than Petrol, Longer Lifespan
+- **Details Page**: /product/standard
+
+### ATHER Rizta Z
+- **Type**: 2 Wheeler
+- **Pricing**: ₹1.37–1.47L
+- **Range**: Up to 159 km
+- **Battery**: Up to 3.7 kWh
+- **Top Speed**: 80 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: ATHER Rizta Z is an electric 2 Wheeler. Pricing is around ₹1.37–1.47L. It offers a maximum range of up to 159 km on a single charge. Features a battery capacity of up to 3.7 kWh. Has a top speed of 80 km/h. It was launched on  .
+- **Pros**: Softer Suspension Tune, Wallet Friendly
+- **Details Page**: /product/z-29-kwh
+
+### VIDA Vida Vx2 Plus Knight Edition
+- **Type**: 2 Wheeler
+- **Pricing**: ₹1.16L
+- **Range**: Up to 142 km
+- **Battery**: Up to 3.4 kWh
+- **Top Speed**: 80 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: VIDA Vida Vx2 Plus Knight Edition is an electric 2 Wheeler. Pricing is around ₹1.16L. It offers a maximum range of up to 142 km on a single charge. Features a battery capacity of up to 3.4 kWh. Has a top speed of 80 km/h. It was launched on  .
+- **Pros**: Charging Convenience, Stealthy Aesthetics, Punchy Performance
+- **Cons**: Stiff Low-Speed Ride
+- **Details Page**: /product/vida-vx2-plus-knight-edition-34-kwh
+
+### VIDA VX2 PLUS
+- **Type**: 2 Wheeler
+- **Pricing**: ₹1.31L
+- **Range**: Up to 142 km
+- **Battery**: Up to 3.4 kWh
+- **Top Speed**: 80 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: VIDA VX2 PLUS is an electric 2 Wheeler. Pricing is around ₹1.31L. It offers a maximum range of up to 142 km on a single charge. Features a battery capacity of up to 3.4 kWh. Has a top speed of 80 km/h. It was launched on  .
+- **Pros**: Redesigned Seating Ergonomics, Peppy & Predictable Performance, Versatile Charging Infrastructure
+- **Cons**: Reduced Boot Storage
+- **Details Page**: /product/vida-vx2-plus-34-kwh
+
+### ATHER Rizta S 
+- **Type**: 2 Wheeler
+- **Pricing**: ₹1.21–1.44L
+- **Range**: Up to 125 km
+- **Battery**: Up to 3.7 kWh
+- **Top Speed**: 80 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: ATHER Rizta S  is an electric 2 Wheeler. Pricing is around ₹1.21–1.44L. It offers a maximum range of up to 125 km on a single charge. Features a battery capacity of up to 3.7 kWh. Has a top speed of 80 km/h. It was launched on  .
+- **Pros**: Excellent Ergonomics, Identical Performance, Sufficient Daily Range
+- **Details Page**: /product/rizta-s1
+
+### VIDA VX2 Go
+- **Type**: 2 Wheeler
+- **Pricing**: ₹0.99–1.31L
+- **Range**: Up to 142 km
+- **Battery**: Up to 3.4 kWh
+- **Top Speed**: 70 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: VIDA VX2 Go is an electric 2 Wheeler. Pricing is around ₹0.99–1.31L. It offers a maximum range of up to 142 km on a single charge. Features a battery capacity of up to 3.4 kWh. Has a top speed of 70 km/h. It was launched on  .
+- **Pros**: KKR special edition styling, Removable dual battery setup, Fast charging support
+- **Cons**: No ABS
+- **Details Page**: /product/vida-vx2-go-34kwh
+
+### VINFAST VinFast VF7
+- **Type**: 4 Wheeler
+- **Pricing**: ₹28.42L
+- **Range**: Up to 510 km
+- **Battery**: Up to 70.8 kWh
+- **Top Speed**: 175 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: VINFAST VinFast VF7 is an electric 4 Wheeler. Pricing is around ₹28.42L. It offers a maximum range of up to 510 km on a single charge. Features a battery capacity of up to 70.8 kWh. Has a top speed of 175 km/h. It was launched on  .
+- **Pros**: Long claimed range, 150 kW DC fast charging, Level 2 ADAS
+- **Cons**: New brand in India, Service network still expanding
+- **Details Page**: /product/vinfast-vf7
+
+### TATA MOTORS Tata Curvv EV
+- **Type**: 4 Wheeler
+- **Pricing**: ₹17.99–22.49L
+- **Range**: Up to 502 km
+- **Battery**: Up to 55 kWh
+- **Top Speed**: 160 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: TATA MOTORS Tata Curvv EV is an electric 4 Wheeler. Pricing is around ₹17.99–22.49L. It offers a maximum range of up to 502 km on a single charge. Features a battery capacity of up to 55 kWh. Has a top speed of 160 km/h. It was launched on  .
+- **Pros**: Distinctive coupe-SUV design, Excellent range options, 5-star Bharat NCAP safety
+- **Cons**: Rear headroom compromised by roofline, Touch-based controls can be distracting, Top variants are expensive
+- **Details Page**: /product/tata-curvv-ev
+
+### ATHER 450 Apex
+- **Type**: 2 Wheeler
+- **Pricing**: ₹1.95L
+- **Range**: Up to 157 km
+- **Battery**: Up to 3.7 kWh
+- **Top Speed**: 100 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: ATHER 450 Apex is an electric 2 Wheeler. Pricing is around ₹1.95L. It offers a maximum range of up to 157 km on a single charge. Features a battery capacity of up to 3.7 kWh. Has a top speed of 100 km/h. It was launched on  .
+- **Pros**: Insane Performance (Warp+ Mode), Game-Changing 'Magic Twist' (Brake lagane ki zaroorat nahi), Traction Control
+- **Details Page**: /product/ather-450-apex
+
+### HONDA Honda Activa e
+- **Type**: 2 Wheeler
+- **Pricing**: ₹1.18–1.53L
+- **Range**: Up to 102 km
+- **Battery**: Up to 3 kWh
+- **Top Speed**: 80 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Available
+- **Summary**: HONDA Honda Activa e is an electric 2 Wheeler. Pricing is around ₹1.18–1.53L. It offers a maximum range of up to 102 km on a single charge. Features a battery capacity of up to 3 kWh. Has a top speed of 80 km/h. It was launched on  .
+- **Pros**: Trusted Honda reliability, Swappable battery technology, Excellent build quality
+- **Cons**: Battery subscription required, No home charging, Limited swap station availability
+- **Details Page**: /product/honda-activa-e
+
+### BAJAJ Bajaj Chetak
+- **Type**: 2 Wheeler
+- **Pricing**: ₹0.97–1.47L
+- **Range**: Up to 153 km
+- **Battery**: Up to 3.5 kWh
+- **Top Speed**: 55 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: BAJAJ Bajaj Chetak is an electric 2 Wheeler. Pricing is around ₹0.97–1.47L. It offers a maximum range of up to 153 km on a single charge. Features a battery capacity of up to 3.5 kWh. Has a top speed of 55 km/h. It was launched on  .
+- **Pros**: Premium all-metal body, Excellent reliability, Large 35L boot space
+- **Cons**: No ABS, Higher variants are expensive, Heavier than rivals
+- **Details Page**: /product/bajaj-chetak
+
+### TVS TVS Orbiter
+- **Type**: 2 Wheeler
+- **Pricing**: ₹0.84–1.13L
+- **Range**: Up to 158 km
+- **Battery**: Up to 3.1 kWh
+- **Top Speed**: 68 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Available
+- **Summary**: TVS TVS Orbiter is an electric 2 Wheeler. Pricing is around ₹0.84–1.13L. It offers a maximum range of up to 158 km on a single charge. Features a battery capacity of up to 3.1 kWh. Has a top speed of 68 km/h. It was launched on  .
+- **Pros**: Affordable entry price, Large 34L boot space, Connected features with navigation
+- **Cons**: Drum brakes on both wheels, Lower performance than iQube, No ABS
+- **Details Page**: /product/tvs-orbiter
+
+### TVS TVS iQube
+- **Type**: 2 Wheeler
+- **Pricing**: ₹1–1.73L
+- **Range**: Up to 212 km
+- **Battery**: Up to 5.3 kWh
+- **Top Speed**: 75 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: TVS TVS iQube is an electric 2 Wheeler. Pricing is around ₹1–1.73L. It offers a maximum range of up to 212 km on a single charge. Features a battery capacity of up to 5.3 kWh. Has a top speed of 75 km/h. It was launched on  .
+- **Pros**: Trusted TVS service network, Multiple battery options, Comfortable ride quality
+- **Cons**: No ABS, Performance focused on commuting, Top variants are expensive
+- **Details Page**: /product/tvs-iqube
+
+### ULTRAVIOLETTE Ultraviolette F77
+- **Type**: 2 Wheeler
+- **Pricing**: ₹3.09–4.24L
+- **Range**: Up to 323 km
+- **Battery**: Up to 10.3 kWh
+- **Top Speed**: 155 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: ULTRAVIOLETTE Ultraviolette F77 is an electric 2 Wheeler. Pricing is around ₹3.09–4.24L. It offers a maximum range of up to 323 km on a single charge. Features a battery capacity of up to 10.3 kWh. Has a top speed of 155 km/h. It was launched on  .
+- **Pros**: Best-in-class performance, Excellent top speed and acceleration, Long riding range
+- **Cons**: Expensive compared to ICE motorcycles, Heavy kerb weight, Limited dealership network
+- **Details Page**: /product/ultraviolette-f77
+
+### SIMPLE ENERGY Simple One
+- **Type**: 2 Wheeler
+- **Pricing**: ₹1.65–1.9L
+- **Range**: Up to 265 km
+- **Battery**: Up to 5 kWh
+- **Top Speed**: 90 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: SIMPLE ENERGY Simple One is an electric 2 Wheeler. Pricing is around ₹1.65–1.9L. It offers a maximum range of up to 265 km on a single charge. Features a battery capacity of up to 5 kWh. Has a top speed of 90 km/h. It was launched on  .
+- **Pros**: Class-leading IDC range, Excellent acceleration, Large 7-inch touchscreen
+- **Cons**: Premium pricing, Limited service network, Relatively heavy scooter
+- **Details Page**: /product/simple-one
+
+### ATHER 450X
+- **Type**: 2 Wheeler
+- **Pricing**: ₹1.48–1.55L
+- **Range**: Up to 161 km
+- **Battery**: Up to 3.7 kWh
+- **Top Speed**: 90 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: ATHER 450X is an electric 2 Wheeler. Pricing is around ₹1.48–1.55L. It offers a maximum range of up to 161 km on a single charge. Features a battery capacity of up to 3.7 kWh. Has a top speed of 90 km/h. It was launched on  .
+- **Pros**: Fast acceleration ✅, Excellent handling ✅, Premium touchscreen ✅
+- **Details Page**: /product/ather-450x
+
+### ATHER 450 s
+- **Type**: 2 Wheeler
+- **Pricing**: ₹1.36–1.5L
+- **Range**: Up to 161 km
+- **Battery**: Up to 3.7 kWh
+- **Top Speed**: 90 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: ATHER 450 s is an electric 2 Wheeler. Pricing is around ₹1.36–1.5L. It offers a maximum range of up to 161 km on a single charge. Features a battery capacity of up to 3.7 kWh. Has a top speed of 90 km/h. It was launched on  .
+- **Pros**: DeepView Display, Google-Powered TrueRange, Auto-Cancel Indicators & Park Assist
+- **Details Page**: /product/ather-450-s-29-kwh
+
+### OLA S1 PRO SPORT
+- **Type**: 2 Wheeler
+- **Pricing**: ₹1.66–1.85L
+- **Range**: Up to 320 km
+- **Battery**: Up to 5.2 kWh
+- **Top Speed**: 128 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: OLA S1 PRO SPORT is an electric 2 Wheeler. Pricing is around ₹1.66–1.85L. It offers a maximum range of up to 320 km on a single charge. Features a battery capacity of up to 5.2 kWh. Has a top speed of 128 km/h. It was launched on  .
+- **Pros**: Lowest price point, Premium design and ride quality, Large 34L boot space
+- **Details Page**: /product/ola-s1-pro-sport-4-kwh
+
+### OLA S1 Pro Gen 3
+- **Type**: 2 Wheeler
+- **Pricing**: ₹1.15–1.35L
+- **Range**: Up to 242 km
+- **Battery**: Up to 4 kWh
+- **Top Speed**: 117 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: OLA S1 Pro Gen 3 is an electric 2 Wheeler. Pricing is around ₹1.15–1.35L. It offers a maximum range of up to 242 km on a single charge. Features a battery capacity of up to 4 kWh. Has a top speed of 117 km/h. It was launched on  .
+- **Pros**: Long range , Fast acceleration , Dual ABS for better safety
+- **Details Page**: /product/s1-pro-gen-3
+
+### OLA S1 PRO+ 4KWH
+- **Type**: 2 Wheeler
+- **Pricing**: ₹1.66–1.85L
+- **Range**: Up to 320 km
+- **Battery**: Up to 5.2 kWh
+- **Top Speed**: 128 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: OLA S1 PRO+ 4KWH is an electric 2 Wheeler. Pricing is around ₹1.66–1.85L. It offers a maximum range of up to 320 km on a single charge. Features a battery capacity of up to 5.2 kWh. Has a top speed of 128 km/h. It was launched on  .
+- **Pros**: Lowest price point, Premium design and ride quality, Large 34L boot space
+- **Details Page**: /product/ola-s1-pro
+
+### OLA S1 Air
+- **Type**: 2 Wheeler
+- **Pricing**: ₹0.9L
+- **Range**: Up to 151 km
+- **Battery**: Up to 3 kWh
+- **Top Speed**: 90 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: OLA S1 Air is an electric 2 Wheeler. Pricing is around ₹0.9L. It offers a maximum range of up to 151 km on a single charge. Features a battery capacity of up to 3 kWh. Has a top speed of 90 km/h. It was launched on  .
+- **Pros**: Lowest price point, Dual tone styling
+- **Details Page**: /product/s1-air-3kwh
+
+### OLA S1 X+
+- **Type**: 2 Wheeler
+- **Pricing**: ₹1.17L
+- **Range**: Up to 320 km
+- **Battery**: Up to 5.2 kWh
+- **Top Speed**: 125 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: OLA S1 X+ is an electric 2 Wheeler. Pricing is around ₹1.17L. It offers a maximum range of up to 320 km on a single charge. Features a battery capacity of up to 5.2 kWh. Has a top speed of 125 km/h. It was launched on  .
+- **Pros**: Superior Range options, Zero Drivetrain Maintenance
+- **Details Page**: /product/s1-x
+
+### OLA S1 Gen 2
+- **Type**: 2 Wheeler
+- **Pricing**: ₹1.15L
+- **Range**: Up to 195 km
+- **Battery**: Up to 4 kWh
+- **Top Speed**: 120 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: OLA S1 Gen 2 is an electric 2 Wheeler. Pricing is around ₹1.15L. It offers a maximum range of up to 195 km on a single charge. Features a battery capacity of up to 4 kWh. Has a top speed of 120 km/h. It was launched on  .
+- **Pros**: Rapid Acceleration, Powerful Motor
+- **Details Page**: /product/s1-gen-2
+
+### OLA S1 X 
+- **Type**: 2 Wheeler
+- **Pricing**: ₹0.7–1.14L
+- **Range**: Up to 242 km
+- **Battery**: Up to 4 kWh
+- **Top Speed**: 85 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Not Available
+- **Summary**: OLA S1 X  is an electric 2 Wheeler. Pricing is around ₹0.7–1.14L. It offers a maximum range of up to 242 km on a single charge. Features a battery capacity of up to 4 kWh. Has a top speed of 85 km/h. It was launched on  .
+- **Pros**: Lowest price point, Peppy city performance
+- **Details Page**: /product/s1-x-2kwh
+
+### TATA MOTORS Punch
+- **Type**: 4 Wheeler
+- **Pricing**: ₹10.92L
+- **Range**: Up to 210 km
+- **Battery**: Up to 30 kWh
+- **Top Speed**: 110 km/h
+- **Status**: Launched
+- **BaaS (Battery-as-a-Service)**: Available
+- **Summary**: TATA MOTORS Punch is an electric 4 Wheeler. Pricing is around ₹10.92L. It offers a maximum range of up to 210 km on a single charge. Features a battery capacity of up to 30 kWh. Has a top speed of 110 km/h. It was launched on  .
+- **Pros**: More range: Both battery packs are not bigger which offer better real-world range than before, Looks better: Subtle changes to the design had made it look more modern and bigger than before.
+- **Cons**: Needs rear seat convenience: Rear passengers also miss out on rear AC vents and cupholders, A 4 Seater: There is limited space for 5 passengers in the back and the middle passenger does not get a headrest.
+- **Details Page**: /product/punch
+

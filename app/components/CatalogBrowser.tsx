@@ -157,6 +157,7 @@ function CatalogCard({ item, index, isInCompare, addToCompare, removeFromCompare
               e.stopPropagation();
               isInCompare(slug) ? removeFromCompare(slug) : addToCompare(slug);
             }}
+            aria-label={isInCompare(slug) ? `Remove ${item.brand} ${item.name} from comparison` : `Add ${item.brand} ${item.name} to comparison`}
             className={`absolute bottom-3 left-3 grid h-8 w-8 place-items-center rounded-full backdrop-blur-xl transition ${isInCompare(slug)
                 ? "bg-zinc-900 text-white"
                 : "bg-white/80 text-zinc-700 hover:bg-white"
@@ -170,6 +171,7 @@ function CatalogCard({ item, index, isInCompare, addToCompare, removeFromCompare
             <button
               type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsPlaying(!isPlaying); }}
+              aria-label={isPlaying ? "Show photos" : "Play video preview"}
               className="absolute bottom-3 right-3 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-zinc-900/80 text-white backdrop-blur-md hover:bg-zinc-800 transition"
             >
               {isPlaying ? <ImageIcon size={14} /> : <Play size={14} className="ml-0.5 fill-current" />}
@@ -181,7 +183,7 @@ function CatalogCard({ item, index, isInCompare, addToCompare, removeFromCompare
         <div className="flex flex-1 flex-col gap-4 p-5">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">{item.brand}</p>
-            <h3 className="mt-0.5 line-clamp-1 text-[17px] font-bold tracking-tight text-zinc-900">{item.name}</h3>
+            <h2 className="mt-0.5 line-clamp-1 text-[17px] font-bold tracking-tight text-zinc-900">{item.name}</h2>
           </div>
           
           <div className="flex flex-wrap items-center justify-between gap-3 text-sm w-full">
@@ -431,6 +433,7 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
           {/* Share Button - Mobile */}
           <button
             onClick={(e) => { e.stopPropagation(); handleShare(); }}
+            aria-label="Share catalog"
             className="ml-auto w-9 h-9 flex items-center justify-center rounded-2xl bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 transition-all border border-white/10"
           >
             {shared ? <Check size={18} className="text-[#34ebb1]" /> : <Share2 size={18} className="text-zinc-400" />}
@@ -471,7 +474,7 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
                   className="flex-1 bg-transparent text-[15px] font-bold outline-none placeholder:text-zinc-500 text-white"
                 />
                 {query && (
-                  <button onClick={() => updateFilters({ q: null })} className="text-zinc-400 hover:text-white">
+                  <button onClick={() => updateFilters({ q: null })} aria-label="Clear search" className="text-zinc-400 hover:text-white">
                     <X size={18} />
                   </button>
                 )}

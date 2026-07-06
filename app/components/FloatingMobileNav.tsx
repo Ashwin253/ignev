@@ -56,6 +56,7 @@ export default function FloatingMobileNav() {
       {/* Main Trigger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
+        aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}
         className={`w-16 h-16 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(163,255,18,0.4)] border border-white/20 transition-all duration-300 active:scale-90 ${isOpen ? 'bg-slate-800 rotate-0' : 'bg-secondary'}`}
       >
         <motion.div

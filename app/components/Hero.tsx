@@ -106,6 +106,7 @@ function FeaturedCard({ listing, index }: { listing: EvListing; index: number })
             <button
               type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsPlaying(!isPlaying); }}
+              aria-label={isPlaying ? "Show photos" : "Play video preview"}
               className="absolute bottom-3 right-3 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-zinc-900/80 text-white backdrop-blur-md hover:bg-zinc-800 transition"
             >
               {isPlaying ? <ImageIcon size={14} /> : <Play size={14} className="ml-0.5 fill-current" />}
@@ -147,7 +148,7 @@ function FeaturedCard({ listing, index }: { listing: EvListing; index: number })
         <div className="flex flex-1 flex-col gap-4 p-5">
           <div>
             <p className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">{listing.brand}</p>
-            <h3 className="mt-0.5 line-clamp-1 text-[17px] font-semibold tracking-tight text-zinc-900">{listing.title}</h3>
+            <h2 className="mt-0.5 line-clamp-1 text-[17px] font-semibold tracking-tight text-zinc-900">{listing.title}</h2>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-3 text-sm w-full">
             {listing.prices.length > 0 && <span className="font-medium text-zinc-900">{formatPricing(listing.prices)}</span>}
@@ -204,6 +205,7 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
             <button
               type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsPlaying(!isPlaying); }}
+              aria-label={isPlaying ? "Show photos" : "Play video preview"}
               className="absolute bottom-3 right-3 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-zinc-900/80 text-white backdrop-blur-md hover:bg-zinc-800 transition"
             >
               {isPlaying ? <ImageIcon size={14} /> : <Play size={14} className="ml-0.5 fill-current" />}
@@ -241,7 +243,7 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
         <div className="flex flex-1 flex-col gap-4 p-5">
           <div>
             <p className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">{product.brand}</p>
-            <h3 className="mt-0.5 line-clamp-1 text-[17px] font-semibold tracking-tight text-zinc-900">{product.name}</h3>
+            <h2 className="mt-0.5 line-clamp-1 text-[17px] font-semibold tracking-tight text-zinc-900">{product.name}</h2>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-3 text-sm w-full">
             <span className="font-medium text-zinc-900">{product.pricing}</span>
@@ -369,7 +371,7 @@ export default function Hero({
               <div className="flex flex-1 items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 focus-within:border-[#34ebb1]/60 focus-within:bg-white/10">
                 <Search size={16} className="text-zinc-400" />
                 <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onKeyDown={e => e.key === "Enter" && handleSearch()} placeholder="Search Rizta, S1, Nexon EV..." className="h-11 w-full bg-transparent text-sm text-white placeholder:text-zinc-400 outline-none" />
-                {searchQuery && <button type="button" onClick={() => setSearchQuery("")}><X size={14} className="text-zinc-400" /></button>}
+                {searchQuery && <button type="button" onClick={() => setSearchQuery("")} aria-label="Clear search query"><X size={14} className="text-zinc-400" /></button>}
               </div>
               <button onClick={handleSearch} className="rounded-2xl bg-[#34ebb1] px-5 text-sm font-medium text-zinc-900 hover:bg-[#2bd49e] active:scale-[0.98]">Search</button>
             </div>

@@ -117,7 +117,7 @@ export default function Header() {
 
             {/* Preferences */}
             <div className="relative">
-              <button onClick={() => setPrefOpen(!prefOpen)} className={`p-2.5 rounded-full border transition-all shadow-sm active:scale-95 cursor-pointer ${iconBtnClass}`}>
+              <button onClick={() => setPrefOpen(!prefOpen)} aria-label="Open page preferences" className={`p-2.5 rounded-full border transition-all shadow-sm active:scale-95 cursor-pointer ${iconBtnClass}`}>
                 <SlidersHorizontal size={17} />
               </button>
               <AnimatePresence>
@@ -129,13 +129,13 @@ export default function Header() {
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <span className="flex items-center gap-2 text-sm"><Volume2 size={16} className={soundEnabled ? "text-[#34ebb1]" : "text-zinc-500"} /> Sound</span>
-                          <button onClick={() => { const v = !soundEnabled; setSoundEnabled(v); if(v) setTimeout(playClickSound,50); }} className={`w-10 h-5 rounded-full relative transition ${soundEnabled ? 'bg-[#34ebb1]' : 'bg-zinc-700'}`}>
+                          <button onClick={() => { const v = !soundEnabled; setSoundEnabled(v); if(v) setTimeout(playClickSound,50); }} aria-label={soundEnabled ? "Disable interface sounds" : "Enable interface sounds"} className={`w-10 h-5 rounded-full relative transition ${soundEnabled ? 'bg-[#34ebb1]' : 'bg-zinc-700'}`}>
                             <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition ${soundEnabled ? 'left-5' : 'left-0.5'}`} />
                           </button>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="flex items-center gap-2 text-sm"><Smartphone size={16} className={hapticsEnabled ? "text-[#34ebb1]" : "text-zinc-500"} /> Haptics</span>
-                          <button onClick={() => { const v = !hapticsEnabled; setHapticsEnabled(v); if(v) setTimeout(()=>playHaptic('click'),50); }} className={`w-10 h-5 rounded-full relative transition ${hapticsEnabled ? 'bg-[#34ebb1]' : 'bg-zinc-700'}`}>
+                          <button onClick={() => { const v = !hapticsEnabled; setHapticsEnabled(v); if(v) setTimeout(()=>playHaptic('click'),50); }} aria-label={hapticsEnabled ? "Disable haptic feedback" : "Enable haptic feedback"} className={`w-10 h-5 rounded-full relative transition ${hapticsEnabled ? 'bg-[#34ebb1]' : 'bg-zinc-700'}`}>
                             <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition ${hapticsEnabled ? 'left-5' : 'left-0.5'}`} />
                           </button>
                         </div>
@@ -146,7 +146,7 @@ export default function Header() {
               </AnimatePresence>
             </div>
 
-            <button className={`md:hidden p-2 rounded-full ${isTransparent ? "text-white hover:bg-white/10" : "text-zinc-700 hover:bg-zinc-100"}`} onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+            <button className={`md:hidden p-2 rounded-full ${isTransparent ? "text-white hover:bg-white/10" : "text-zinc-700 hover:bg-zinc-100"}`} onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}>
               {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
           </div>

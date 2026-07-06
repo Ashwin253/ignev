@@ -20,7 +20,7 @@ export default function Footer() {
             <Link href="/" className="flex items-center font-bold text-3xl tracking-tight">
               {/* <span className="text-primary">EV</span>
               <span className="text-secondary">Plse</span> */}
-            <img src="/evplselogo.png" alt="IgnEV Logo" className="h-16 w-auto" />
+            <img src="/evplselogo.png" alt="IgnEV Logo" className="h-16 w-auto" loading="lazy" />
             </Link>
             <p className="text-gray-400">
               India's premier marketplace for electric and hybrid vehicles. Making sustainable mobility accessible to everyone.

@@ -10,7 +10,6 @@ import dynamic from "next/dynamic";
 import Hero from "./components/Hero";
 import FreshReleases from "./components/FreshReleases";
 import type { ComingSoonItem } from "./components/ComingSoonCars";
-import TidioChat from "./components/TidioChat";
 
 const ComingSoonCars = dynamic(() => import("./components/ComingSoonCars"), {
   loading: () => <div className="h-64" />,
@@ -44,6 +43,7 @@ function toComingSoonItem(l: EvListing): ComingSoonItem {
 }
 
 import LoadingSkeleton from "./loading";
+import LazyViewport from "./components/LazyViewport";
 
 export default function Home() {
   return (
@@ -112,13 +112,30 @@ async function HomeContent() {
   return (
     <>
       <Hero products={content.products} featured={featured} freshReleases={freshReleases} banners={banners} />
-      <FreshReleases listings={freshReleases} />
-      <ComingSoonCars items={comingSoonItems} />
-      <PopularBrands />
-      <ElectricCore3D />
-      <LatestUpdates updates={updates} />
-      {/* <WhyEVPULSE /> */}
-      {/* <TidioChat /> */}
+      
+      <LazyViewport fallback={<div className="h-96 bg-[#b5ebea]/30" />}>
+        <FreshReleases listings={freshReleases} />
+      </LazyViewport>
+      
+      <LazyViewport fallback={<div className="h-64" />}>
+        <ComingSoonCars items={comingSoonItems} />
+      </LazyViewport>
+      
+      <LazyViewport fallback={<div className="h-48" />}>
+        <PopularBrands />
+      </LazyViewport>
+      
+      <LazyViewport fallback={<div className="h-64" />}>
+        <ElectricCore3D />
+      </LazyViewport>
+      
+      <LazyViewport fallback={<div className="h-48" />}>
+        <LatestUpdates updates={updates} />
+      </LazyViewport>
+      
+      {/* <LazyViewport fallback={<div className="h-48" />}>
+        <WhyEVPULSE />
+      </LazyViewport> */}
     </>
   );
 }

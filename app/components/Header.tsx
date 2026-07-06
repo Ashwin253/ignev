@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Menu, X, Home, LayoutGrid, MapPin, IndianRupee, Download, SlidersHorizontal, Volume2, VolumeX, Smartphone } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -81,7 +82,14 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-[72px]">
           <Link href="/" className="flex items-center gap-2">
-            <img src="/evplsenewlogo.png" alt="logo" className="h-11 w-auto" />
+            <Image
+              src="/evplsenewlogo.png"
+              alt="logo"
+              width={176}
+              height={44}
+              priority
+              className="h-11 w-auto object-contain"
+            />
           </Link>
 
           <nav className="hidden md:flex items-center gap-1">

@@ -73,7 +73,7 @@ export default function LoanCalculator({ initialPrice }: { initialPrice?: number
                 : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
             }`}
           >
-            <img src={item.icon} alt={item.name} className="h-3.5 w-3.5 rounded-full object-contain" />
+            <img src={item.icon} alt={item.name} className="h-3.5 w-3.5 rounded-full object-contain" loading="lazy" />
             {item.name}
           </button>
         ))}

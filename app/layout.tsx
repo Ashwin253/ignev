@@ -8,6 +8,7 @@ const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
   display: "swap",   // prevent FOIT
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -30,7 +31,9 @@ import FloatingMobileNav from "./components/FloatingMobileNav";
 import { CompareProvider } from "./context/CompareContext";
 import { FeedbackProvider } from "./context/FeedbackContext";
 import CompareWidget from "./components/CompareWidget";
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from "@vercel/analytics/next";
+import TidioChat from "./components/TidioChat";
+import TawkChat from "./components/TawkChat";
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -62,6 +65,8 @@ export default function RootLayout({
             <EnquiryModal />
             <AddToHomescreen />
             <FloatingMobileNav />
+            {/* <TidioChat /> */}
+            <TawkChat />
           </CompareProvider>
         </FeedbackProvider>
       </body>

@@ -120,7 +120,7 @@ export default function CompareOwnershipView({
               {/* Compact Vehicle Header */}
               <div className="flex items-center gap-3 mb-2 px-1">
                 <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-slate-100 border border-slate-200">
-                  {p.photo && <img src={p.photo} alt={p.title} className="object-cover w-full h-full" />}
+                  {p.photo && <img src={p.photo} alt={p.title} className="object-cover w-full h-full" loading="lazy" />}
                 </div>
                 <div className="min-w-0">
                   <p className="text-[8px] font-black uppercase tracking-[0.2em] text-sky-600 truncate">{p.brand}</p>

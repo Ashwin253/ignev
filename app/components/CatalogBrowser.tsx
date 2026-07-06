@@ -329,7 +329,9 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
         params.set(key, String(value));
       }
     });
-    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    const queryString = params.toString();
+    const newUrl = queryString ? `${pathname}?${queryString}` : pathname;
+    window.history.replaceState(null, "", newUrl);
   };
 
   const categoryOptions = useMemo(() => [...CATALOG_CATEGORIES], []);
@@ -395,7 +397,7 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
   const activeFilterCount = [category !== "all", brand !== "all", price !== "all", usage !== "all", commercialOnly, launchedOnly, comingSoonOnly, baasOnly, !!query].filter(Boolean).length;
 
   const clearAll = () => {
-    router.push(pathname, { scroll: false });
+    window.history.replaceState(null, "", pathname);
   };
 
   return (

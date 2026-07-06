@@ -447,7 +447,7 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
                       <Play size={20} className="text-white opacity-80" />
                     </div>
                   ) : (
-                    <img src={photo} alt={`${name} ${i + 1}`} className="w-full h-full object-cover" />
+                    <img src={photo} alt={`${name} ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
                   )}
                 </button>
               ))}
@@ -538,7 +538,7 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
                       <Play size={24} className="text-white opacity-80" />
                     </div>
                   ) : (
-                    <img src={photo} alt={`${name} ${i + 1}`} className="w-full h-full object-cover" />
+                    <img src={photo} alt={`${name} ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
                   )}
                 </button>
               ))}
@@ -563,7 +563,7 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
                   <Play size={28} className="text-white opacity-80" />
                 </div>
               ) : (
-                <img src={photo} alt={`${name} thumbnail ${i + 1}`} className="w-full h-full object-cover" />
+                <img src={photo} alt={`${name} thumbnail ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
               )}
             </button>
           ))}

@@ -172,7 +172,7 @@ export default function BannersPanel({ supabase }: { supabase: any }) {
               <div className="flex items-center gap-4">
                 <GripVertical size={16} className="text-slate-300 cursor-grab" />
                 <div className="h-12 w-20 rounded bg-slate-100 overflow-hidden relative shrink-0">
-                  {b.image_horizontal && <img src={b.image_horizontal} alt={b.cta} className="object-cover w-full h-full" />}
+                  {b.image_horizontal && <img src={b.image_horizontal} alt={b.cta} className="object-cover w-full h-full" loading="lazy" />}
                 </div>
                 <div>
                   <p className="text-sm font-bold text-slate-800">{b.cta || "(No CTA)"}</p>

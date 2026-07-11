@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Menu, X, Home, LayoutGrid, MapPin, IndianRupee, Download, SlidersHorizontal, Volume2, VolumeX, Smartphone } from "lucide-react";
+import { Menu, X, Home, LayoutGrid, MapPin, IndianRupee, Download, SlidersHorizontal, Volume2, VolumeX, Smartphone, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useFeedback } from "../context/FeedbackContext";
 import { playClickSound, playHaptic } from "../lib/feedback";
@@ -13,6 +13,7 @@ const navLinks = [
   { name: "Home", href: "/", icon: Home },
   { name: "Explore", href: "/catalog", icon: LayoutGrid },
   { name: "Map", href: "/map", icon: MapPin },
+  { name: "For You", href: "/foryou", icon: Sparkles },
   // { name: "Compare", href: "/compare", icon: IndianRupee },
 ];
 
@@ -95,15 +96,34 @@ export default function Header() {
           <nav className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => {
               const isActive = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
+              const isForYou = link.href === "/foryou";
+              
+              let customClass = `${linkBase} ${isActive ? activeLinkColor : linkColor}`;
+              if (isForYou) {
+                if (isActive) {
+                  customClass = `${linkBase} bg-violet-600 text-white font-bold shadow-md shadow-violet-500/15`;
+                } else {
+                  customClass = isTransparent
+                    ? `${linkBase} bg-violet-500/20 text-violet-200 border border-violet-400/20 hover:bg-violet-500/30 hover:text-white font-bold`
+                    : `${linkBase} bg-violet-50 hover:bg-violet-100 text-violet-700 border border-violet-200/50 font-bold`;
+                }
+              }
+
               return (
                 <Link
                   key={link.name}
                   href={link.href}
-                  className={`${linkBase} ${isActive ? activeLinkColor : linkColor}`}
+                  className={customClass}
                 >
                   <span className="inline-flex items-center gap-1.5">
                     <link.icon size={15} />
                     {link.name}
+                    {isForYou && !isActive && (
+                      <span className="relative flex h-1.5 w-1.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-violet-600"></span>
+                      </span>
+                    )}
                   </span>
                 </Link>
               );
@@ -158,11 +178,31 @@ export default function Header() {
         {mobileMenuOpen && (
           <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="md:hidden absolute top-full left-0 right-0 bg-white/95 backdrop-blur-xl border-b border-emerald-100 shadow-xl">
             <div className="p-4 space-y-1">
-              {navLinks.map(link => (
-                <Link key={link.name} href={link.href} onClick={()=>setMobileMenuOpen(false)} className="flex items-center gap-2 px-4 py-3 rounded-xl text-zinc-700 hover:bg-zinc-100 font-medium">
-                  <link.icon size={16} /> {link.name}
-                </Link>
-              ))}
+              {navLinks.map(link => {
+                const isForYou = link.href === "/foryou";
+                const isSelected = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
+                return (
+                  <Link 
+                    key={link.name} 
+                    href={link.href} 
+                    onClick={()=>setMobileMenuOpen(false)} 
+                    className={`flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-all ${
+                      isForYou 
+                        ? (isSelected ? "bg-violet-600 text-white font-bold" : "bg-violet-50 hover:bg-violet-100/80 text-violet-700 border border-violet-100")
+                        : (isSelected ? "bg-emerald-50 text-emerald-800" : "text-zinc-700 hover:bg-zinc-100")
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <link.icon size={16} className={isForYou && !isSelected ? "text-violet-500" : ""} /> {link.name}
+                    </span>
+                    {isForYou && (
+                      <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${isSelected ? "bg-white text-violet-700" : "bg-violet-600 text-white animate-pulse"}`}>
+                        New
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
               <Link href="/nearme" onClick={()=>setMobileMenuOpen(false)} className="mt-3 flex items-center justify-center gap-2 w-full bg-emerald-600 text-white py-3 rounded-xl font-medium">
                 <MapPin size={16} /> Near Me
               </Link>

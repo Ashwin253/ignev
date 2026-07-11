@@ -28,6 +28,7 @@ export default function LeadsPanel({ supabase, userId }: { supabase: any; userId
     const { data } = await supabase
       .from("leads")
       .select("*")
+      .neq("source", "/foryou Recommendation")
       .order("created_at", { ascending: false });
     setLeads((data ?? []) as Lead[]);
     setLoading(false);

@@ -1246,7 +1246,7 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
                         required
                         value={contact.name}
                         onChange={(e) => setContact(prev => ({ ...prev, name: e.target.value }))}
-                        placeholder="John Doe"
+                        placeholder="Enter your name"
                         className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 pl-10 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-violet-500 focus:bg-white transition-all"
                       />
                     </div>
@@ -1262,7 +1262,7 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
                         required
                         value={contact.phone}
                         onChange={(e) => setContact(prev => ({ ...prev, phone: e.target.value }))}
-                        placeholder="98765 43210"
+                        placeholder="Enter your mobile number"
                         className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 pl-10 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-violet-500 focus:bg-white transition-all"
                       />
                     </div>
@@ -1278,7 +1278,7 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
                         required
                         value={contact.email}
                         onChange={(e) => setContact(prev => ({ ...prev, email: e.target.value }))}
-                        placeholder="john@example.com"
+                        placeholder="Enter your email"
                         className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 pl-10 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-violet-500 focus:bg-white transition-all"
                       />
                     </div>

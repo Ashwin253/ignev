@@ -29,9 +29,15 @@ export default function LoanCalculator({ initialPrice }: { initialPrice?: number
   const [rateOfInterest, setRateOfInterest] = useState("");
   const [selectedBank, setSelectedBank] = useState(banks[0].name);
 
+  const bank = banks.find((b) => b.name === selectedBank) ?? banks[0];
+
   useEffect(() => {
     if (initialPrice) setVehiclePrice(String(initialPrice));
   }, [initialPrice]);
+
+  useEffect(() => {
+    setRateOfInterest(String(bank.interest["3_year"]));
+  }, [selectedBank, bank]);
 
   const parsed = {
     vehiclePrice: Number(vehiclePrice) || defaults.vehiclePrice,
@@ -39,7 +45,6 @@ export default function LoanCalculator({ initialPrice }: { initialPrice?: number
     loanYears: Number(loanYears) || defaults.loanYears,
   };
 
-  const bank = banks.find((b) => b.name === selectedBank) ?? banks[0];
   const customRate = Number(rateOfInterest);
   const annualRate = Number.isFinite(customRate) && customRate > 0 ? customRate : bank.interest["3_year"];
 
@@ -54,11 +59,13 @@ export default function LoanCalculator({ initialPrice }: { initialPrice?: number
   return (
     <section className="space-y-5">
       {/* Inputs */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        <MiniField label="Price (₹)" value={vehiclePrice} onChange={setVehiclePrice} placeholder={String(defaults.vehiclePrice)} highlight={!!initialPrice} />
-        <MiniField label="Down %" value={downPaymentPercent} onChange={setDownPaymentPercent} placeholder={String(defaults.downPaymentPercent)} />
-        <MiniField label="Years" value={loanYears} onChange={setLoanYears} placeholder={String(defaults.loanYears)} />
-        <MiniField label="Rate %" value={rateOfInterest} onChange={setRateOfInterest} placeholder={String(bank.interest["3_year"])} />
+      <div className="space-y-4">
+        <MiniField label="Ex-Showroom Price (₹)" value={vehiclePrice} onChange={setVehiclePrice} placeholder={String(defaults.vehiclePrice)} highlight={!!initialPrice} />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <SliderField label="Down Payment" value={downPaymentPercent} onChange={setDownPaymentPercent} min={10} max={90} step={5} displaySuffix="%" />
+          <SliderField label="Loan Tenure" value={loanYears} onChange={setLoanYears} min={1} max={7} step={1} displaySuffix=" Years" />
+          <SliderField label="Interest Rate" value={rateOfInterest} onChange={setRateOfInterest} min={5} max={20} step={0.1} displaySuffix="%" />
+        </div>
       </div>
 
       {/* Bank selector */}
@@ -116,6 +123,44 @@ function OutputCard({ label, value, highlight }: { label: string; value: string;
     <div className={`rounded-xl p-3 border ${highlight ? "border-sky-300 bg-sky-50" : "border-slate-200 bg-white"}`}>
       <p className="text-[9px] uppercase tracking-wider text-slate-400 font-bold mb-0.5">{label}</p>
       <p className={`text-base font-black leading-tight ${highlight ? "text-sky-700" : "text-slate-900"}`}>{value}</p>
+    </div>
+  );
+}
+
+function SliderField({
+  label,
+  value,
+  onChange,
+  min,
+  max,
+  step,
+  displaySuffix = "",
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  min: number;
+  max: number;
+  step: number;
+  displaySuffix?: string;
+}) {
+  return (
+    <div className="flex flex-col gap-2 p-3 bg-slate-50 dark:bg-zinc-800/40 rounded-2xl border border-slate-100 dark:border-zinc-850">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">{label}</span>
+        <span className="text-xs font-bold text-slate-900 dark:text-white">
+          {value || min}{displaySuffix}
+        </span>
+      </div>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value || String(min)}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full h-1 bg-slate-200 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-sky-500"
+      />
     </div>
   );
 }

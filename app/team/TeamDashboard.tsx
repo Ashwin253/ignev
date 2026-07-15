@@ -9,6 +9,7 @@ import LeadsPanel from "./LeadsPanel";
 import AnalyticsPanel from "./AnalyticsPanel";
 import MapPanel from "./MapPanel";
 import FuelPricesPanel from "./FuelPricesPanel";
+import ChargersPanel from "./ChargersPanel";
 import BannersPanel from "./BannersPanel";
 import ContentPanel from "./ContentPanel";
 import OffersPanel from "./OffersPanel";
@@ -418,7 +419,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
     }
   };
 
-  const [activeSection, setActiveSection] = useState<"listings" | "all_listings" | "leads" | "foryou_leads" | "prices" | "analytics" | "map" | "banners" | "content" | "offers" | "media">("listings");
+  const [activeSection, setActiveSection] = useState<"listings" | "all_listings" | "leads" | "foryou_leads" | "prices" | "analytics" | "map" | "banners" | "content" | "offers" | "media" | "chargers">("listings");
   const [selectedModelId, setSelectedModelId] = useState<string>("");
   const [selectedBrand, setSelectedBrand] = useState<string>("");
   const [tableBrandFilter, setTableBrandFilter] = useState<string>("");
@@ -1599,8 +1600,22 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   <Download size={12} /> Install App
                 </button>
               )}
+            </div>             <p className="text-xs sm:text-sm text-slate-500 truncate max-w-[150px] sm:max-w-none">{user.email}</p>
+            <div className="flex gap-2.5 mt-1">
+              <button 
+                onClick={() => setShowChangePassword(true)} 
+                className="text-[10px] sm:text-xs font-bold text-sky-600 hover:text-sky-700 transition"
+              >
+                Change Password
+              </button>
+              <span className="text-[10px] sm:text-xs text-slate-350">|</span>
+              <button 
+                onClick={handleLogout} 
+                className="text-[10px] sm:text-xs font-bold text-rose-550 hover:text-rose-750 transition"
+              >
+                Logout
+              </button>
             </div>
-            <p className="text-xs sm:text-sm text-slate-500 truncate max-w-[150px] sm:max-w-none">{user.email}</p>
           </div>
           <div className="flex gap-1.5 sm:gap-2 shrink-0">
             <button onClick={() => { setActiveSection("all_listings"); setEditing(null); setSelectedBrand(""); setSelectedModelId(""); setTableBrandFilter(""); }} className="inline-flex items-center gap-1 sm:gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
@@ -1609,11 +1624,8 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             <button onClick={() => { setActiveSection("media"); }} className="inline-flex items-center gap-1 sm:gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
               View All Media
             </button>
-            <button onClick={() => setShowChangePassword(true)} className="inline-flex items-center gap-1 sm:gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold text-sky-600 hover:bg-sky-50 transition-colors">
-              Change Password
-            </button>
-            <button onClick={handleLogout} className="inline-flex items-center gap-1 sm:gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold text-rose-600 hover:bg-rose-50 transition-colors">
-              <LogOut size={16} /> Logout
+            <button onClick={() => { setActiveSection("chargers"); }} className="inline-flex items-center gap-1 sm:gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
+              View All Chargers
             </button>
           </div>
         </div>
@@ -1641,6 +1653,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             <option value="banners">🖼️ Banners</option>
             <option value="content">📄 Content</option>
             <option value="offers">🏷️ Offers</option>
+            <option value="chargers">🔌 Chargers Compatibility</option>
           </select>
         </div>
 
@@ -1700,6 +1713,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
         {activeSection === "prices" && <FuelPricesPanel supabase={supabase} userEmail={user.email || ""} />}
         {activeSection === "analytics" && <AnalyticsPanel supabase={supabase} />}
         {activeSection === "map" && <MapPanel supabase={supabase} userEmail={user.email || ""} />}
+        {activeSection === "chargers" && <ChargersPanel supabase={supabase} userEmail={user.email || ""} listings={listings} />}
         {activeSection === "banners" && <BannersPanel supabase={supabase} />}
         {activeSection === "content" && <ContentPanel supabase={supabase} />}
         {activeSection === "offers" && <OffersPanel supabase={supabase} uniqueBrands={uniqueBrands} />}

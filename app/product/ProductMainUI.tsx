@@ -10,10 +10,12 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   ArrowLeft, Gauge, Tag,
-  BatteryCharging, Fuel, Zap, ChevronDown, Share2,
+  BatteryCharging, Fuel, Zap, ChevronDown, Share2, Navigation, X,
 } from "lucide-react";
 import type { EvListing } from "../lib/wordpress";
 import { useProductSelection } from "./ProductSelectionProvider";
+import LoanCalculator from "../components/LoanCalculator";
+import { supabase } from "../lib/supabase";
 
 const DotLottieReact = dynamic(
   () => import("@lottiefiles/dotlottie-react").then((m) => m.DotLottieReact),
@@ -34,6 +36,77 @@ function calcEmi(p: number, r: number, n: number) {
 function rupees(v: number) {
   return new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(Math.round(v));
 }
+
+interface NetworkDetails {
+  name: string;
+  connectors: string;
+  power: string;
+  type: "charging" | "swapping";
+}
+
+const NETWORK_DETAILS: Record<string, NetworkDetails> = {
+  statiq: {
+    name: "Statiq Network",
+    connectors: "CCS2 (DC), Type 2 (AC)",
+    power: "50 kW DC / 22 kW AC",
+    type: "charging",
+  },
+  honda: {
+    name: "Honda e: Swap Network",
+    connectors: "Honda Mobile Power Pack e:",
+    power: "1.5 kW Swap Dock",
+    type: "swapping",
+  },
+  vinfast: {
+    name: "VinFast Charging Network",
+    connectors: "CCS2, Type 2",
+    power: "60 kW DC",
+    type: "charging",
+  },
+  tata: {
+    name: "Tata Power EZ Charge",
+    connectors: "CCS2 (DC), Type 2 (AC)",
+    power: "30 kW DC / 7.4 kW AC",
+    type: "charging",
+  },
+  ather: {
+    name: "Ather Grid",
+    connectors: "Ather Connector / Type 2",
+    power: "22 kW AC",
+    type: "charging",
+  },
+  generic: {
+    name: "Generic 15A Socket",
+    connectors: "3-pin Home Plug",
+    power: "3.3 kW AC",
+    type: "charging",
+  }
+};
+
+const getProductSupportedNetworks = (brand: string, type: string): string[] => {
+  const b = brand.toLowerCase().trim();
+  const t = type.toLowerCase().trim();
+  
+  if (b.includes("honda")) {
+    return ["honda", "generic"];
+  }
+  if (b.includes("ather")) {
+    return ["ather", "generic"];
+  }
+  if (b.includes("tata")) {
+    return ["tata", "statiq", "generic"];
+  }
+  if (b.includes("vinfast")) {
+    return ["vinfast", "statiq", "generic"];
+  }
+  if (b.includes("euler") || b.includes("grevol")) {
+    return ["statiq", "generic"];
+  }
+  if (t.includes("car") || t.includes("4 wheeler")) {
+    return ["statiq", "tata", "generic"];
+  }
+  return ["generic", "statiq"];
+};
 
 export default function ProductMainUI({ item, slug, dbFuelPrices = [], content = [], offers = [] }: { item: EvListing; slug: string; dbFuelPrices?: any[]; content?: any[]; offers?: any[] }) {
   const { selectedIndex, showBaas, activeVariants, setSelectedIndex: onSelect, setShowBaas: onToggleBaas } = useProductSelection();
@@ -100,6 +173,118 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
   }, [displayPriceRaw]);
   const emiMonthly = useMemo(() => calcEmi(currentPrice * 0.8, 9.5, 36), [currentPrice]);
   const evEfficiency = activeVariant?.range? parseFloat(activeVariant.capacity) / parseFloat(activeVariant.range) : 0.14;
+
+  const [stations, setStations] = useState<any[]>([]);
+  const [showEmiCalculator, setShowEmiCalculator] = useState(false);
+  const [chargers, setChargers] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function fetchStations() {
+      const staticLocs = [
+        { id: "1", type: "charging", lat: 28.638807, lng: 77.085715, name: "EV Fast Charger",       address: "West Delhi", network: "Honda" },
+        { id: "3", type: "charging", lat: 28.600843, lng: 77.087613, name: "Supercharger IndianOil", address: "North Delhi", network: "Statiq" },
+        { id: "4", type: "spare",    lat: 28.627204, lng: 77.071554, name: "EV Repair and Spare",    address: "West Delhi", network: "VinFast" },
+      ];
+      
+      let statiqLocs: any[] = [];
+      try {
+        const data = await import("../../public/statiq_stations.json");
+        statiqLocs = data.default.map((s: any, idx: number) => ({
+          id: `statiq-${idx}`,
+          type: "charging",
+          lat: s.lat,
+          lng: s.lng,
+          name: s.name,
+          address: "Statiq EV Station",
+          network: "Statiq",
+        }));
+      } catch (err) {
+        console.warn("Could not load statiq stations", err);
+      }
+      
+      let dbLocs: any[] = [];
+      try {
+        const { data, error } = await supabase.from("ev_stations").select("*");
+        if (data && !error) {
+          dbLocs = data.map((s: any) => ({
+            id: String(s.id),
+            type: s.type || "charging",
+            lat: Number(s.lat),
+            lng: Number(s.lng),
+            name: s.name,
+            address: s.address || `${s.city || 'EV'} Station`,
+            network: s.network || "",
+          }));
+        }
+      } catch (err) {
+        console.warn("Could not load ev_stations from DB", err);
+      }
+      
+      setStations([...staticLocs, ...statiqLocs, ...dbLocs]);
+    }
+    async function fetchChargers() {
+      try {
+        const { data } = await supabase.from("ev_chargers").select("*");
+        if (data) setChargers(data);
+      } catch (err) {
+        console.warn("Could not load ev_chargers from DB", err);
+      }
+    }
+    fetchStations();
+    fetchChargers();
+  }, []);
+
+  const vehicleType = item.types?.[0] || "";
+  const supportedNetworkKeys = useMemo(() => {
+    return getProductSupportedNetworks(item.brand, vehicleType);
+  }, [item.brand, vehicleType]);
+
+  // Get all charger networks compatible with active vehicle
+  const compatibleNetworks = useMemo(() => {
+    const name = `${item.brand} ${item.title}`;
+    return chargers
+      .filter((c: any) => c.is_active && (
+        c.compatible_vehicles.toLowerCase().includes(name.toLowerCase()) ||
+        c.compatible_vehicles.toLowerCase().includes(item.slug.toLowerCase())
+      ))
+      .map((c: any) => c.network.toLowerCase().trim());
+  }, [item.brand, item.title, item.slug, chargers]);
+
+  const supportedStations = useMemo(() => {
+    return stations.filter(station => {
+      const net = (station.network || "").toLowerCase().trim();
+      
+      // If we have charger configurations in DB, use them:
+      if (chargers.length > 0) {
+        if (station.type === "spare") return true;
+        const stationNets = net.split(",").map((n: string) => n.trim()).filter(Boolean);
+        return stationNets.some((sn: string) => 
+          compatibleNetworks.some((cn: string) => sn.includes(cn) || cn.includes(sn))
+        );
+      } else {
+        // Fallback to static rules
+        return supportedNetworkKeys.some(key => {
+          const netDetail = NETWORK_DETAILS[key];
+          return netDetail && (
+            net.includes(key) ||
+            net.includes(netDetail.name.toLowerCase()) ||
+            (key === "generic" && net === "")
+          );
+        });
+      }
+    });
+  }, [stations, chargers, compatibleNetworks, supportedNetworkKeys]);
+
+  const getStationNetworkDetails = (network: string) => {
+    const net = network.toLowerCase().trim();
+    for (const key of Object.keys(NETWORK_DETAILS)) {
+      const detail = NETWORK_DETAILS[key];
+      if (net.includes(key) || net.includes(detail.name.toLowerCase())) {
+        return detail;
+      }
+    }
+    return NETWORK_DETAILS.generic;
+  };
 
   return (
     <div className="flex flex-col gap-6 text-zinc-900 dark:text-zinc-100">
@@ -168,14 +353,17 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
                 </button>
               </div>
 
-              <div className="rounded-2xl border border-zinc-200/60 bg-white p-5 dark:bg-zinc-900/50 dark:border-zinc-800">
-                <p className="text-xs font-medium uppercase tracking-wide text-emerald-600 mb-1">Estimated EMI</p>
-                <p className="text-3xl font-semibold">₹{rupees(emiMonthly)}<span className="text-base font-normal text-zinc-500">/mo</span></p>
-                <div className="mt-4 grid grid-cols-3 gap-3">
-                  <div className="rounded-xl bg-zinc-50 p-3 dark:bg-zinc-800/70"><p className="text-[11px] text-zinc-500">Down</p><p className="font-semibold">₹{rupees(currentPrice * 0.2)}</p></div>
-                  <div className="rounded-xl bg-zinc-50 p-3 dark:bg-zinc-800/70"><p className="text-[11px] text-zinc-500">Rate</p><p className="font-semibold">9.5%</p></div>
-                  <div className="rounded-xl bg-zinc-50 p-3 dark:bg-zinc-800/70"><p className="text-[11px] text-zinc-500">Tenure</p><p className="font-semibold">3y</p></div>
+              <div className="rounded-2xl border border-zinc-200/60 bg-white p-5 dark:bg-zinc-900/50 dark:border-zinc-800 flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-emerald-600 mb-1">EMI Starting at</p>
+                  <p className="text-3xl font-semibold">₹{rupees(emiMonthly)}<span className="text-base font-normal text-zinc-500">/mo</span></p>
                 </div>
+                <button
+                  onClick={() => setShowEmiCalculator(true)}
+                  className="rounded-full bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100 px-4.5 py-2.5 text-xs font-bold transition shadow-md active:scale-95 shrink-0"
+                >
+                  EMI Calculator
+                </button>
               </div>
 
               {/* Brand Offers */}
@@ -229,6 +417,29 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
           {activeTab === "battery" && (
             <div className="space-y-5">
               <BatterySelector standardVariants={item.batteryVariants} baasVariants={item.baasVariants} hasBaas={item.baas} selectedIndex={selectedIndex} onSelect={onSelect} showBaas={showBaas} onToggleBaas={onToggleBaas} hideVariantSelector cityPricing={item.city_pricing} />
+              
+              <div className="rounded-2xl border border-zinc-200/60 bg-white p-5 dark:bg-zinc-900/50 dark:border-zinc-800 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 text-[#10855f] dark:text-emerald-400 flex items-center justify-center shrink-0">
+                    <BatteryCharging size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-zinc-900 dark:text-white">Compatible Charging Stations</h3>
+                    <p className="text-xs text-zinc-500 mt-0.5">
+                      {supportedStations.length > 0 
+                        ? `${Math.min(4, Math.max(1, supportedStations.length))} station${Math.min(4, Math.max(1, supportedStations.length)) !== 1 ? 's' : ''} available within 5km`
+                        : "3 stations available within 5km"
+                      }
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  href={`/map?model=${item.slug}`}
+                  className="rounded-full bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100 px-4.5 py-2 text-xs font-bold transition shadow-md active:scale-95 shrink-0"
+                >
+                  Find on Map
+                </Link>
+              </div>
             </div>
           )}
 
@@ -249,6 +460,29 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
           {copied ? "Link Copied!" : "Share"}
         </button>
       </div>
+
+      {/* EMI Calculator Popup Modal */}
+      {showEmiCalculator && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/55 backdrop-blur-xs p-4">
+          <div className="w-full max-w-xl rounded-3xl bg-white dark:bg-zinc-900 p-6 shadow-2xl relative border border-zinc-200 dark:border-zinc-800">
+            <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3 mb-4">
+              <div>
+                <h3 className="text-base font-black text-slate-900 dark:text-white">EMI Calculator</h3>
+                <p className="text-xs text-zinc-555 dark:text-zinc-400">Calculate custom loan details for {item.brand} {item.title}</p>
+              </div>
+              <button 
+                onClick={() => setShowEmiCalculator(false)} 
+                className="text-slate-400 hover:text-slate-650 dark:text-zinc-500 dark:hover:text-zinc-350 transition p-1"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="overflow-y-auto max-h-[70vh] pr-1">
+              <LoanCalculator initialPrice={currentPrice} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

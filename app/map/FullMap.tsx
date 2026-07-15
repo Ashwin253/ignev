@@ -7,7 +7,72 @@ import {
   Share2, X, Loader2, SlidersHorizontal, ChevronDown,
   IndianRupee, Fuel,
 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { supabase, supabaseEnabled } from "../lib/supabase";
+
+const NETWORK_DETAILS: Record<string, { name: string; connectors: string; power: string; type: "charging" | "swapping" }> = {
+  statiq: {
+    name: "Statiq Network",
+    connectors: "CCS2 (DC), Type 2 (AC)",
+    power: "50 kW DC / 22 kW AC",
+    type: "charging",
+  },
+  honda: {
+    name: "Honda e: Swap Network",
+    connectors: "Honda Mobile Power Pack e:",
+    power: "1.5 kW Swap Dock",
+    type: "swapping",
+  },
+  vinfast: {
+    name: "VinFast Charging Network",
+    connectors: "CCS2, Type 2",
+    power: "60 kW DC",
+    type: "charging",
+  },
+  tata: {
+    name: "Tata Power EZ Charge",
+    connectors: "CCS2 (DC), Type 2 (AC)",
+    power: "30 kW DC / 7.4 kW AC",
+    type: "charging",
+  },
+  ather: {
+    name: "Ather Grid",
+    connectors: "Ather Connector / Type 2",
+    power: "22 kW AC",
+    type: "charging",
+  },
+  generic: {
+    name: "Generic 15A Socket",
+    connectors: "3-pin Home Plug",
+    power: "3.3 kW AC",
+    type: "charging",
+  }
+};
+
+const getProductSupportedNetworks = (brand: string, type: string): string[] => {
+  const b = brand.toLowerCase().trim();
+  const t = type.toLowerCase().trim();
+  
+  if (b.includes("honda")) {
+    return ["honda", "generic"];
+  }
+  if (b.includes("ather")) {
+    return ["ather", "generic"];
+  }
+  if (b.includes("tata")) {
+    return ["tata", "statiq", "generic"];
+  }
+  if (b.includes("vinfast")) {
+    return ["vinfast", "statiq", "generic"];
+  }
+  if (b.includes("euler") || b.includes("grevol")) {
+    return ["statiq", "generic"];
+  }
+  if (t.includes("car") || t.includes("4 wheeler")) {
+    return ["statiq", "tata", "generic"];
+  }
+  return ["generic", "statiq"];
+};
 
 // ── Location data ─────────────────────────────────────────────────────────────
 import statiqStationsData from "../../public/statiq_stations.json";
@@ -359,6 +424,8 @@ function SidebarContent({
   onClose,
   selectedNetwork, setSelectedNetwork,
   networks,
+  selectedVehicle, setSelectedVehicle,
+  vehicles = [],
 }: {
   activeTab: "route" | "filters" | "cost";
   setActiveTab: (t: "route" | "filters" | "cost") => void;
@@ -382,8 +449,12 @@ function SidebarContent({
   selectedNetwork: string;
   setSelectedNetwork: (v: string) => void;
   networks: string[];
+  selectedVehicle?: string;
+  setSelectedVehicle?: (v: string) => void;
+  vehicles?: any[];
 }) {
   const [routeSubTab, setRouteSubTab] = useState<"points" | "cost">("points");
+  const activeVehicle = vehicles.find(v => v.slug === selectedVehicle);
 
   const placeTypeFilter = (
     <div className="space-y-3">
@@ -417,6 +488,41 @@ function SidebarContent({
         </select>
         <ChevronDown size={12} className="text-slate-400 absolute right-3 pointer-events-none" />
       </div>
+
+      {setSelectedVehicle && (
+        <div className="relative flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2">
+          <Zap size={13} className="text-slate-400 shrink-0 pointer-events-none animate-pulse" />
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide shrink-0 pointer-events-none">Vehicle</span>
+          <select
+            value={selectedVehicle || "all"}
+            onChange={(e) => { setSelectedVehicle(e.target.value); setSelectedId?.(null); }}
+            className="flex-grow bg-transparent text-xs font-semibold outline-none cursor-pointer appearance-none text-slate-700 pr-6"
+          >
+            <option value="all">All Vehicles (Show All Stations)</option>
+            {vehicles.map((v) => (
+              <option key={v.slug} value={v.slug}>{v.brand} {v.title}</option>
+            ))}
+          </select>
+          <ChevronDown size={12} className="text-slate-400 absolute right-3 pointer-events-none" />
+        </div>
+      )}
+
+      {activeVehicle && (
+        <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 mt-2 shadow-sm">
+          <div className="flex items-center gap-2">
+            <Zap size={14} className="text-emerald-600 animate-pulse fill-emerald-200" />
+            <span className="text-xs font-bold text-emerald-800">
+              Filtering by: {activeVehicle.brand} {activeVehicle.title}
+            </span>
+          </div>
+          <button 
+            onClick={() => setSelectedVehicle?.("all")} 
+            className="text-[10px] font-black uppercase text-emerald-700 hover:text-emerald-900 bg-emerald-100 hover:bg-emerald-250 px-2 py-1 rounded transition cursor-pointer"
+          >
+            Clear
+          </button>
+        </div>
+      )}
     </div>
   );
 
@@ -425,6 +531,20 @@ function SidebarContent({
       <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3 px-1">
         {displayedLocations.length} match{displayedLocations.length !== 1 ? "es" : ""} found
       </p>
+      {activeVehicle && (
+        <div className="flex items-center gap-1.5 mb-3 px-1">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-[10px] font-extrabold text-emerald-750 shadow-sm">
+            <Zap size={10} className="fill-emerald-200 text-emerald-600 animate-pulse" />
+            {activeVehicle.brand} {activeVehicle.title} compatible
+            <button 
+              onClick={() => setSelectedVehicle?.("all")} 
+              className="ml-1.5 text-emerald-500 hover:text-emerald-805 cursor-pointer font-black text-xs"
+            >
+              ✕
+            </button>
+          </span>
+        </div>
+      )}
       {displayedLocations.length === 0 ? (
         <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-300">
           <MapPin className="mx-auto h-8 w-8 mb-3 text-slate-300" />
@@ -615,6 +735,9 @@ function SidebarContent({
 export default function FullMap() {
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const searchParams = useSearchParams();
+  const modelParam = searchParams ? searchParams.get("model") || "" : "";
+
   const [activeTab, setActiveTab]           = useState<"route" | "filters" | "cost">("route");
   const [selectedId, setSelectedId]         = useState<string | null>(null);
   const [filterType, setFilterType]         = useState<"all" | "charging" | "spare">("all");
@@ -633,18 +756,17 @@ export default function FullMap() {
   const [userLocation, setUserLocation]     = useState<[number, number] | null>(null);
   const [dbLocations, setDbLocations]       = useState<Location[]>([]);
   const [selectedNetwork, setSelectedNetwork] = useState<string>("all");
+  const [vehicles, setVehicles]             = useState<any[]>([]);
+  const [selectedVehicle, setSelectedVehicle] = useState<string>("all");
+  const [chargers, setChargers]             = useState<any[]>([]);
 
   useEffect(() => {
     async function loadStations() {
-      if (!supabaseEnabled()) return;
       try {
-        const { data, error } = await supabase.from("ev_stations").select("*");
-        if (error) {
-          console.warn("Error fetching stations:", error.message);
-          return;
-        }
-        if (data) {
-          const formatted = data.map((s: any) => ({
+        const res = await fetch("/api/stations");
+        const { stations } = await res.json();
+        if (stations?.length) {
+          const formatted = stations.map((s: any) => ({
             id: String(s.id),
             type: s.type || "charging",
             lat: Number(s.lat),
@@ -656,17 +778,44 @@ export default function FullMap() {
           setDbLocations(formatted);
         }
       } catch (e) {
-        console.warn("Could not fetch stations from DB", e);
+        console.warn("Could not fetch stations", e);
+      }
+    }
+    async function loadVehicles() {
+      if (!supabaseEnabled()) return;
+      try {
+        const { data } = await supabase.from("evlistings").select("brand, title, slug, types");
+        if (data) setVehicles(data);
+      } catch (e) {
+        console.warn("Could not fetch vehicles for map filter:", e);
+      }
+    }
+    async function loadChargers() {
+      if (!supabaseEnabled()) return;
+      try {
+        const { data } = await supabase.from("ev_chargers").select("*");
+        if (data) setChargers(data);
+      } catch (e) {
+        console.warn("Could not fetch chargers for map compatibility filter:", e);
       }
     }
     loadStations();
+    loadVehicles();
+    loadChargers();
   }, []);
 
-  const locations = useMemo(() => {
-    if (supabaseEnabled() && dbLocations.length > 0) {
-      return dbLocations;
+  useEffect(() => {
+    if (modelParam && vehicles.length > 0) {
+      const matched = vehicles.find(v => v.slug === modelParam);
+      if (matched) {
+        setSelectedVehicle(matched.slug);
+        setActiveTab("filters");
+      }
     }
-    return allLocations;
+  }, [modelParam, vehicles]);
+
+  const locations = useMemo(() => {
+    return dbLocations;
   }, [dbLocations]);
 
   const networks = useMemo(() => {
@@ -674,17 +823,19 @@ export default function FullMap() {
     const seen = new Set<string>();
     locations.forEach(loc => {
       if (loc.network) {
-        const net = loc.network.trim();
-        const lower = net.toLowerCase();
-        
-        let displayNet = net;
-        if (lower === "vinfast") displayNet = "VinFast";
-        else if (lower === "statiq") displayNet = "Statiq";
-        else if (lower === "honda") displayNet = "Honda";
+        // Split comma-separated networks
+        const nets = loc.network.split(",").map(n => n.trim()).filter(Boolean);
+        for (const net of nets) {
+          const lower = net.toLowerCase();
+          let displayNet = net;
+          if (lower === "vinfast") displayNet = "VinFast";
+          else if (lower === "statiq") displayNet = "Statiq";
+          else if (lower === "honda") displayNet = "Honda";
 
-        if (!seen.has(displayNet.toLowerCase())) {
-          seen.add(displayNet.toLowerCase());
-          netSet.add(displayNet);
+          if (!seen.has(displayNet.toLowerCase())) {
+            seen.add(displayNet.toLowerCase());
+            netSet.add(displayNet);
+          }
         }
       }
     });
@@ -695,9 +846,60 @@ export default function FullMap() {
     ? getMapSearchSuggestions(mapSearchQuery, locations)
     : [];
 
+  const activeVehicleData = useMemo(() => {
+    if (selectedVehicle === "all") return null;
+    return vehicles.find(v => v.slug === selectedVehicle) || null;
+  }, [selectedVehicle, vehicles]);
+
+  const activeVehicleSupportedNetworkKeys = useMemo(() => {
+    if (!activeVehicleData) return [];
+    const type = activeVehicleData.types?.[0] || "";
+    return getProductSupportedNetworks(activeVehicleData.brand, type);
+  }, [activeVehicleData]);
+
+  // Get all charger networks compatible with active vehicle
+  const compatibleNetworks = useMemo(() => {
+    if (!activeVehicleData) return [];
+    const name = `${activeVehicleData.brand} ${activeVehicleData.title}`;
+    // Find all chargers where compatible_vehicles includes this vehicle name or slug
+    return chargers
+      .filter((c: any) => c.is_active && (
+        c.compatible_vehicles.toLowerCase().includes(name.toLowerCase()) ||
+        c.compatible_vehicles.toLowerCase().includes(activeVehicleData.slug.toLowerCase())
+      ))
+      .map((c: any) => c.network.toLowerCase().trim());
+  }, [activeVehicleData, chargers]);
+
   const displayedLocations = locations.filter((l) => {
     if (filterType !== "all" && l.type !== filterType) return false;
-    if (selectedNetwork !== "all" && l.network?.toLowerCase() !== selectedNetwork.toLowerCase()) return false;
+    if (selectedNetwork !== "all" && !l.network?.toLowerCase().includes(selectedNetwork.toLowerCase())) return false;
+    
+    // Filter by compatible vehicle if selected
+    if (activeVehicleData) {
+      const net = (l.network || "").toLowerCase().trim();
+      
+      // If we have charger configurations in DB, use them:
+      if (chargers.length > 0) {
+        // If it's a service/spare point, keep it
+        if (l.type === "spare") return true;
+        
+        // Find if this station's network matches any compatible charger network
+        const isCompatible = compatibleNetworks.some((cn: string) => net.includes(cn) || cn.includes(net));
+        if (!isCompatible) return false;
+      } else {
+        // Fallback to static rules
+        const isCompatible = activeVehicleSupportedNetworkKeys.some(key => {
+          const netDetail = NETWORK_DETAILS[key];
+          return netDetail && (
+            net.includes(key) ||
+            net.includes(netDetail.name.toLowerCase()) ||
+            (key === "generic" && net === "")
+          );
+        });
+        if (!isCompatible) return false;
+      }
+    }
+
     if (routeActive && routeCoords) {
       return isLocationNearRoute(l.lat, l.lng, routeCoords, 1); // 1km radius
     }
@@ -896,6 +1098,8 @@ export default function FullMap() {
     onPickMyLocation: handlePickMyLocation,
     selectedNetwork, setSelectedNetwork,
     networks,
+    selectedVehicle, setSelectedVehicle: modelParam ? setSelectedVehicle : undefined,
+    vehicles: modelParam ? vehicles : [],
   };
 
   return (

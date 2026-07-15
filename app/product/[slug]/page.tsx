@@ -209,7 +209,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         <Suspense fallback={
           <div className="mt-32">
             <h2 className="mb-8 text-2xl font-black text-black">More like this</h2>
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              <ProductSkeleton />
               <ProductSkeleton />
               <ProductSkeleton />
               <ProductSkeleton />
@@ -241,7 +242,7 @@ async function RelatedListings({ slug, currentItem }: { slug: string; currentIte
         }
         return false;
       })
-      .slice(0, 3);
+      .slice(0, 4);
   } catch { /* skip related if DB is down */ }
 
   if (related.length === 0) {
@@ -249,7 +250,8 @@ async function RelatedListings({ slug, currentItem }: { slug: string; currentIte
       <SmoothCollapseEmptyState>
         <div className="mt-32">
           <h2 className="mb-8 text-2xl font-black text-black">More like this</h2>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <ProductSkeleton />
             <ProductSkeleton />
             <ProductSkeleton />
             <ProductSkeleton />
@@ -262,7 +264,7 @@ async function RelatedListings({ slug, currentItem }: { slug: string; currentIte
   return (
     <div className="mt-32">
       <h2 className="mb-8 text-2xl font-black text-black">More like this</h2>
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {related.map((rel) => (
           <Link key={rel.id} href={`/product/${rel.slug}`}
             className="group flex flex-col h-full overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-md hover:border-[#a5e6d1]/60 hover:shadow-xl transition-all duration-350 hover:-translate-y-1">

@@ -231,6 +231,7 @@ create table if not exists public.ev_stations (
   power_kw numeric default null,
   network text default '',
   is_active boolean default true,
+  is_service_center boolean default false,
   added_by_email text default '',
   created_at timestamptz default now()
 );
@@ -242,6 +243,37 @@ create policy "Team update stations" on public.ev_stations for update to authent
 create policy "Team delete stations" on public.ev_stations for delete to authenticated using (true);
 
 create index if not exists idx_ev_stations_city on public.ev_stations(city);
+create index if not exists idx_ev_stations_connectors on public.ev_stations using gin(connector_types);
+
+-- ── Charger Types (master list) ──────────────────────────────────────────────
+
+create table if not exists public.ev_charger_types (
+  id uuid default gen_random_uuid() primary key,
+  name text unique not null,          -- e.g. "CCS2", "Type2", "CHAdeMO", "GB/T"
+  description text default '',
+  max_power_kw numeric default null,
+  connector_image text default '',
+  created_at timestamptz default now()
+);
+
+alter table public.ev_charger_types enable row level security;
+create policy "Public read charger types" on public.ev_charger_types for select using (true);
+create policy "Team manage charger types" on public.ev_charger_types for all to authenticated using (true) with check (true);
+
+-- ── Vehicle-Charger compatibility (which vehicles support which charger) ─────
+
+create table if not exists public.ev_vehicle_chargers (
+  id uuid default gen_random_uuid() primary key,
+  variant_id uuid references public.ev_variants(id) on delete cascade not null,
+  charger_type_id uuid references public.ev_charger_types(id) on delete cascade not null,
+  max_charging_speed_kw numeric default null,
+  notes text default '',
+  unique(variant_id, charger_type_id)
+);
+
+alter table public.ev_vehicle_chargers enable row level security;
+create policy "Public read vehicle chargers" on public.ev_vehicle_chargers for select using (true);
+create policy "Team manage vehicle chargers" on public.ev_vehicle_chargers for all to authenticated using (true) with check (true);
 
 -- ── City-wise On Road Prices ──────────────────────────────────────────────────
 

@@ -11,18 +11,27 @@ export default function MapPanel({ supabase, userEmail }: { supabase: any; userE
   const [stations, setStations] = useState<(Station & { id: string })[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [filterNetwork, setFilterNetwork] = useState<string>("all");
   const [editing, setEditing] = useState<string | null>(null); // id or "new"
   const [form, setForm] = useState<Station>(emptyStation);
   const [saving, setSaving] = useState(false);
   const [mapsLink, setMapsLink] = useState("");
   const [extracting, setExtracting] = useState(false);
   const [bulkJson, setBulkJson] = useState("");
+  const [chargers, setChargers] = useState<any[]>([]);
 
   const PREDEFINED_NETWORKS = ["Statiq", "Honda", "VinFast"];
-  const isCustomNetwork = form.network !== "" && !PREDEFINED_NETWORKS.includes(form.network);
+  const dynamicNetworks = Array.from(new Set([
+    ...PREDEFINED_NETWORKS,
+    ...chargers.map(c => c.network)
+  ].filter(Boolean)));
+  const isCustomNetwork = form.network !== "" && !dynamicNetworks.includes(form.network);
   const selectNetworkValue = isCustomNetwork ? "other" : form.network;
 
-  useEffect(() => { fetchStations(); }, []);
+  useEffect(() => { 
+    fetchStations(); 
+    fetchChargers();
+  }, []);
 
   const fetchStations = async () => {
     setLoading(true);
@@ -30,6 +39,15 @@ export default function MapPanel({ supabase, userEmail }: { supabase: any; userE
     if (error) console.warn("Fetch stations error:", error.message);
     setStations((data ?? []) as any);
     setLoading(false);
+  };
+
+  const fetchChargers = async () => {
+    try {
+      const { data } = await supabase.from("ev_chargers").select("*").order("name");
+      setChargers(data ?? []);
+    } catch (e) {
+      console.warn("Could not fetch chargers:", e);
+    }
   };
 
   const startNew = () => { setEditing("new"); setForm(emptyStation); setMapsLink(""); };
@@ -62,8 +80,20 @@ export default function MapPanel({ supabase, userEmail }: { supabase: any; userE
 
   const handleSave = async () => {
     setSaving(true);
-    const payload = { ...form, added_by_email: userEmail };
-    delete (payload as any).id;
+    const { id, ...rest } = form as any;
+    const payload = { 
+      name: rest.name || "",
+      type: rest.type || "charging",
+      lat: rest.lat,
+      lng: rest.lng,
+      city: rest.city || "",
+      address: rest.address || "",
+      connector_types: rest.connector_types || [],
+      power_kw: rest.power_kw || null,
+      network: rest.network || "",
+      is_active: rest.is_active ?? true,
+      added_by_email: userEmail,
+    };
     if (editing === "new") {
       const { error } = await supabase.from("ev_stations").insert(payload);
       if (error) { alert(`Save failed: ${error.message}`); setSaving(false); return; }
@@ -186,10 +216,21 @@ export default function MapPanel({ supabase, userEmail }: { supabase: any; userE
     }
   };
 
-  const filtered = stations.filter((s) =>
-    s.name.toLowerCase().includes(search.toLowerCase()) ||
-    (s.network || "").toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = stations.filter((s) => {
+    const matchesSearch = s.name.toLowerCase().includes(search.toLowerCase()) ||
+      (s.network || "").toLowerCase().includes(search.toLowerCase());
+    
+    let matchesNetwork = true;
+    if (filterNetwork !== "all") {
+      if (filterNetwork === "none") {
+        matchesNetwork = !s.network;
+      } else {
+        matchesNetwork = s.network === filterNetwork;
+      }
+    }
+    
+    return matchesSearch && matchesNetwork;
+  });
 
   return (
     <div className="space-y-6">
@@ -228,7 +269,7 @@ export default function MapPanel({ supabase, userEmail }: { supabase: any; userE
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            <label className="block"><span className="text-xs font-bold text-slate-600">Name</span><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
+            <label className="block"><span className="text-xs font-bold text-slate-650">Name</span><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
             <label className="block">
               <span className="text-xs font-bold text-slate-600">Type</span>
               <select value={form.type || "charging"} onChange={(e) => setForm({ ...form, type: e.target.value })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none bg-white">
@@ -236,35 +277,53 @@ export default function MapPanel({ supabase, userEmail }: { supabase: any; userE
                 <option value="spare">Repair / Spare</option>
               </select>
             </label>
-            <label className="block">
-              <span className="text-xs font-bold text-slate-600">Network</span>
-              <select
-                value={selectNetworkValue}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  if (val === "other") {
-                    setForm({ ...form, network: "Custom" });
-                  } else {
-                    setForm({ ...form, network: val });
-                  }
-                }}
-                className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none bg-white cursor-pointer"
-              >
-                <option value="">Unknown / None</option>
-                <option value="Statiq">Statiq</option>
-                <option value="Honda">Honda</option>
-                <option value="VinFast">VinFast</option>
-                <option value="other">Other (Specify...)</option>
-              </select>
-              {selectNetworkValue === "other" && (
-                <input
-                  value={form.network}
-                  onChange={(e) => setForm({ ...form, network: e.target.value })}
-                  placeholder="Enter custom network name"
-                  className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none"
-                  autoFocus
-                />
-              )}
+            <label className="block sm:col-span-2 lg:col-span-3">
+              <span className="text-xs font-bold text-slate-650">Supported Networks</span>
+              <div className="mt-1 border border-slate-200 bg-white rounded-xl p-3 max-h-32 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {dynamicNetworks.map((netName) => {
+                  const isChecked = form.network ? form.network.split(",").map(n => n.trim()).includes(netName) : false;
+                  return (
+                    <label key={netName} className="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => {
+                          const currentNetworks = form.network ? form.network.split(",").map(n => n.trim()).filter(Boolean) : [];
+                          const updated = isChecked 
+                            ? currentNetworks.filter(n => n !== netName)
+                            : [...currentNetworks, netName];
+                          
+                          // Merge connectors and power for all checked networks
+                          const matchedChargers = chargers.filter(c => updated.includes(c.network));
+                          const mergedConnectors = Array.from(new Set(
+                            matchedChargers.flatMap(c => c.connector_type.split(",").map((t: string) => t.trim()))
+                          )).filter(Boolean) as string[];
+                          const maxPower = matchedChargers.reduce((max, c) => {
+                            const p = parseFloat(c.power_output) || 0;
+                            return p > max ? p : max;
+                          }, 0);
+
+                          setForm(prev => ({
+                            ...prev,
+                            network: updated.join(", "),
+                            connector_types: mergedConnectors.length > 0 ? mergedConnectors : prev.connector_types,
+                            power_kw: maxPower > 0 ? maxPower : prev.power_kw
+                          }));
+                        }}
+                        className="h-3.5 w-3.5 rounded border-slate-300 text-sky-650 focus:ring-sky-500 cursor-pointer"
+                      />
+                      {netName}
+                    </label>
+                  );
+                })}
+              </div>
+              <input
+                type="text"
+                value={form.network || ""}
+                onChange={e => setForm({ ...form, network: e.target.value })}
+                placeholder="Custom/Unlisted Networks (comma-separated)"
+                className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none"
+              />
             </label>
             <label className="block"><span className="text-xs font-bold text-slate-600">Latitude</span><input type="number" step="any" value={form.lat || ""} onChange={(e) => setForm({ ...form, lat: Number(e.target.value) })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
             <label className="block"><span className="text-xs font-bold text-slate-600">Longitude</span><input type="number" step="any" value={form.lng || ""} onChange={(e) => setForm({ ...form, lng: Number(e.target.value) })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
@@ -333,9 +392,26 @@ export default function MapPanel({ supabase, userEmail }: { supabase: any; userE
         </div>
       )}
 
-      {/* Search */}
-      <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name or network..."
-        className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-sky-400" />
+      {/* Search & Network Filter */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <input 
+          value={search} 
+          onChange={(e) => setSearch(e.target.value)} 
+          placeholder="Search by name or network..."
+          className="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-sky-400" 
+        />
+        <select
+          value={filterNetwork}
+          onChange={(e) => setFilterNetwork(e.target.value)}
+          className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:border-sky-400 cursor-pointer"
+        >
+          <option value="all">All Networks</option>
+          {Array.from(new Set(stations.map(s => s.network).filter(Boolean))).map(net => (
+            <option key={net} value={net}>{net}</option>
+          ))}
+          <option value="none">Unknown / Unspecified Network</option>
+        </select>
+      </div>
 
       {/* Station list */}
       {loading ? <p className="text-slate-400 text-sm text-center py-8">Loading...</p> : (

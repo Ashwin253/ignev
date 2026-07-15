@@ -138,6 +138,7 @@ export type EvListingRow = {
   updated_at: string;
   created_by_email?: string;
   editors_emails?: string[];
+  featured?: boolean;
 };
 
 export type EvVariantRow = {
@@ -358,6 +359,7 @@ function mapToEvListing(row: EvListingRow, variants: EvVariantRow[], features?: 
     databaseId: 0,
     title: row.title,
     slug: row.slug,
+    body_type: row.body_type,
     usage_type: row.usage_type,
     date: row.created_at,
     photo: row.photo || (() => {
@@ -377,6 +379,7 @@ function mapToEvListing(row: EvListingRow, variants: EvVariantRow[], features?: 
     launchdate: row.launchdate,
     discontinued: row.discontinued ?? false,
     discontinued_date: row.discontinued_date,
+    featured: row.featured ?? false,
     video_links: (() => {
       const parsed = typeof row.video_links === "string" ? (() => { try { return JSON.parse(row.video_links); } catch { return []; } })() : row.video_links;
       return Array.isArray(parsed) ? parsed : [];

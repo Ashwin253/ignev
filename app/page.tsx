@@ -2,6 +2,7 @@ import { getSiteContent } from "./lib/site-content";
 import {
   fetchHomepageData,
   formatLaunchDate, isLaunched,
+  formatPricing,
   type EvListing,
 } from "./lib/wordpress";
 import { fetchEvListingsFromSupabase, fetchHeroBanners } from "./lib/supabase";
@@ -35,7 +36,7 @@ function toComingSoonItem(l: EvListing): ComingSoonItem {
     name:    l.title,
     brand:   l.brand,
     type:    l.types[0] ?? "",
-    pricing: l.prices.length ? `₹${l.prices[0]} Lakh` : "",
+    pricing: l.prices.length ? formatPricing(l.prices) : "",
     launch:  formatLaunchDate(l.launchdate),
     photo:   l.photo,
     slug:    l.slug,
@@ -60,7 +61,7 @@ async function HomeContent() {
   let updates: any[] = [];
 
   try {
-    const sbListings = await fetchEvListingsFromSupabase(20);
+    const sbListings = await fetchEvListingsFromSupabase(100);
     if (sbListings.length) listings = sbListings;
 
     const sbBanners = await fetchHeroBanners();
@@ -96,6 +97,15 @@ async function HomeContent() {
     return !isNaN(d.getTime()) && d <= new Date() && d >= twoMonthsAgo;
   }).slice(0, 8);
 
+  // Upcoming Releases: vehicles launching in the next 2 months
+  const twoMonthsFromNow = new Date();
+  twoMonthsFromNow.setMonth(twoMonthsFromNow.getMonth() + 2);
+  const upcoming = listings.filter((l) => {
+    if (!l.launchdate) return false;
+    const d = new Date(l.launchdate);
+    return !isNaN(d.getTime()) && d > new Date() && d <= twoMonthsFromNow;
+  }).slice(0, 8);
+
   const wpUpcoming: ComingSoonItem[] = listings
     .filter((l) => !isLaunched(l.launchdate))
     .slice(0, 8)
@@ -111,7 +121,7 @@ async function HomeContent() {
 
   return (
     <>
-      <Hero products={content.products} featured={featured} freshReleases={freshReleases} banners={banners} />
+      <Hero products={content.products} listings={listings} freshReleases={freshReleases} upcoming={upcoming} banners={banners} />
       
       <LazyViewport fallback={<div className="h-96 bg-[#b5ebea]/30" />}>
         <FreshReleases listings={freshReleases} />

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Sparkles, ArrowRight, Gauge, Send, Play } from "lucide-react";
 import { triggerEnquiryModal } from "./EnquiryModal";
-import type { EvListing } from "../lib/wordpress";
+import { formatPricing, type EvListing } from "../lib/wordpress";
 
 function FreshReleaseCard({ listing, index }: { listing: EvListing; index: number }) {
   const [isHovered, setIsHovered] = useState(false);
@@ -105,7 +105,7 @@ function FreshReleaseCard({ listing, index }: { listing: EvListing; index: numbe
 
           <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
             {listing.prices.length > 0 && (
-              <span className="font-bold text-slate-800">₹{Math.round(Number(listing.prices[0]) * 100) / 100} Lakh</span>
+              <span className="font-bold text-slate-800">{formatPricing(listing.prices)}</span>
             )}
             {listing.topSpeed !== null && (
               <span className="inline-flex items-center gap-0.5">

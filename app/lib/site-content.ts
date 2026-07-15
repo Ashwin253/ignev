@@ -13,6 +13,7 @@ export type Product = {
   drivingRange?: string;
   commercial?: boolean;
   video_links?: Array<{ url: string; title?: string; variantId?: string | null; variantName?: string | null }>;
+  bodyType?: string;
 };
 
 export type ComingSoonItem = {
@@ -79,6 +80,7 @@ async function loadFromSupabase(): Promise<SiteContent> {
         drivingRange: l.batteryVariants?.[0]?.range || "",
         commercial: l.commercial,
         video_links: l.video_links,
+        bodyType: l.body_type,
       };
 
       if (bucket === "car")         cars.push(product);

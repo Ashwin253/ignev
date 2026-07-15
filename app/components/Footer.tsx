@@ -29,9 +29,9 @@ const Footer = () => {
       <div className="relative z-10 w-5/6 mx-auto py-16 px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3  gap-12">
           {/* Column 1 - Regional Offices (Tabbed) */}
-          <div className="space-y-4 text-black">
+          <div className="space-y-4 text-black bg-transparent">
             {/* <h3 className="text-4xl font-bold mb-2 border-b-2 pb-1 inline-block">EVPlse</h3> */}
-             <img src="/evplsenewlogo.jpg" alt="IgnEV Logo" className="h-16 w-auto" loading="lazy" />
+             <img src="/evplsenewlogo.png" alt="IgnEV Logo" className="h-16 bg-transparent w-auto" loading="lazy" />
             <p className="text-gray-600">
               India's premier marketplace for electric and hybrid vehicles. Making sustainable mobility accessible to everyone.
             </p>

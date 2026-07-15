@@ -20,19 +20,13 @@ type Product = {
   name: string; brand: string; type: string; pricing: string; photo: string; slug?: string;
   topSpeed?: number | null; drivingRange?: string;
   video_links?: Array<{ url: string; title?: string; variantId?: string | null; variantName?: string | null }>;
+  bodyType?: string;
 };
 type ProductsPayload = {
   electric_cars: Product[]; electric_two_wheelers: Product[]; electric_autos: Product[];
 };
-type TabKey = "featured" | "fresh" | "buy" | "cars" | "twoWheelers" | "autos";
-
-const tabs: Array<{ key: TabKey; label: string; icon: typeof CarFront }> = [
-  { key: "featured", label: "Newly Added", icon: Star },
-  { key: "fresh", label: "New Release", icon: Sparkles },
-  { key: "cars", label: "Cars", icon: CarFront },
-  { key: "twoWheelers", label: "2 Wheelers", icon: Bike },
-  { key: "autos", label: "Autos", icon: Truck },
-];
+type TabKey = "dropdown" | "cars" | "twoWheelers" | "commercial";
+type SubCategoryKey = "trending" | "fresh" | "upcoming";
 
 function toSlug(brand: string, name: string) {
   return `${brand}-${name}`.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
@@ -275,22 +269,32 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
 
 export default function Hero({
   products,
-  featured = [],
+  listings = [],
   freshReleases = [],
+  upcoming = [],
 }: {
   products: ProductsPayload;
-  featured?: EvListing[];
+  listings?: EvListing[];
   freshReleases?: EvListing[];
+  upcoming?: EvListing[];
   banners?: HeroBanner[];
 }) {
   const router = useRouter();
-  const [selectedType, setSelectedType] = useState<"2 Wheeler" | "3 Wheeler" | "commercial">("2 Wheeler");
+  const [selectedType, setSelectedType] = useState<"2 Wheeler" | "4 Wheeler" | "commercial">("2 Wheeler");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedBrand, setSelectedBrand] = useState("all");
-  const [activeTab, setActiveTab] = useState<TabKey>(featured.length ? "featured" : "cars");
+  const [activeTab, setActiveTab] = useState<TabKey>("dropdown");
+  const [activeSubCategory, setActiveSubCategory] = useState<SubCategoryKey>("trending");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+
+  const subCategories = [
+    { key: "trending", label: "Trending", icon: Star },
+    { key: "fresh", label: "New Release", icon: Sparkles },
+    { key: "upcoming", label: "Coming Soon", icon: CalendarDays },
+  ] as const;
 
   const handleScroll = () => {
     const el = scrollRef.current;
@@ -304,10 +308,13 @@ export default function Hero({
     if (scrollRef.current) {
       scrollRef.current.scrollLeft = 0;
     }
-  }, [activeTab]);
+  }, [activeTab, activeSubCategory]);
 
-  const POPULAR_BRANDS = ["Ather", "TVS", "Bajaj", "Euler"];
-  const visibleTabs = useMemo(() => tabs.filter(t => (t.key !== "featured" || featured.length) && (t.key !== "fresh" || freshReleases.length)), [featured.length, freshReleases.length]);
+  const POPULAR_BRANDS = useMemo(() => {
+    if (selectedType === "4 Wheeler") return ["Tata", "Mahindra", "BYD", "Vinfast"];
+    if (selectedType === "commercial") return ["Euler", "Bajaj", "TVS", "Grevol"];
+    return ["Ather", "TVS", "Bajaj", "Euler"];
+  }, [selectedType]);
 
   const catalogProducts = useMemo(() => {
     if (activeTab === "cars") {
@@ -317,30 +324,79 @@ export default function Hero({
         const t = normalized(p.type);
         return !excluded.some(ex => t === ex || t.startsWith(ex + " ") || t.endsWith(" " + ex));
       });
-      const allowed = ["suv", "hatchback", "compact suv", "sedan"];
-      const filtered = validCars.filter(p => allowed.includes(p.type?.toLowerCase().trim() || ""));
-      return (filtered.length ? filtered : validCars).slice(0, 4);
+      const allowed = ["suv", "hatchback", "compact suv"];
+      const filtered = validCars.filter(p => allowed.includes(p.bodyType?.toLowerCase().trim() || ""));
+      return filtered.slice(0, 4);
     }
     if (activeTab === "twoWheelers") return products.electric_two_wheelers.slice(0, 4);
-    if (activeTab === "autos") return products.electric_autos.slice(0, 4);
+    if (activeTab === "commercial") {
+      return listings
+        .filter(l => l.commercial === true)
+        .map(l => ({
+          name: l.title,
+          brand: l.brand,
+          type: l.types[0] || "",
+          pricing: formatPricing(l.prices),
+          photo: l.photo,
+          slug: l.slug,
+          topSpeed: l.topSpeed,
+          drivingRange: l.batteryVariants?.[0]?.range || "",
+          commercial: l.commercial,
+          video_links: l.video_links,
+        }))
+        .slice(0, 4);
+     }
     return [...products.electric_cars.slice(0, 2), ...products.electric_two_wheelers.slice(0, 2)];
   }, [activeTab, products]);
 
   const currentItems = useMemo(() => {
-    if (activeTab === "featured") return featured;
-    if (activeTab === "fresh") return freshReleases;
-    return catalogProducts;
-  }, [activeTab, featured, freshReleases, catalogProducts]);
+    if (activeTab === "dropdown") {
+      if (activeSubCategory === "trending") {
+        const explicitFeatured = listings.filter(l => (l as any).featured === true);
+        if (explicitFeatured.length > 0) return explicitFeatured;
 
-  const BRAND_MAP: Record<string, string> = { Ather: "ATHER", Euler: "EULER MOTORS", TVS: "TVS", Bajaj: "BAJAJ", Ola: "OLA", Vida: "VIDA", Revolt: "REVOLT", Mahindra: "MAHINDRA LAST MILE MOBILITY", Montra: "MONTRA", Tata: "TATA MOTORS" };
+        // Fallback: show a mix of cars, two wheelers, and autos
+        const cars = listings.filter(l => {
+          const t = (l.types && l.types[0] || "").toLowerCase();
+          return t.includes("car") || t.includes("suv") || t.includes("sedan") || t.includes("hatchback") || t.includes("4 wheeler");
+        }).slice(0, 4);
+
+        const twoWheelers = listings.filter(l => {
+          const t = (l.types && l.types[0] || "").toLowerCase();
+          return t.includes("scooter") || t.includes("bike") || t.includes("motorcycle") || t.includes("2 wheeler") || t.includes("2-wheeler");
+        }).slice(0, 4);
+
+        const autos = listings.filter(l => {
+          const t = (l.types && l.types[0] || "").toLowerCase();
+          return t.includes("auto") || t.includes("rickshaw") || t.includes("3 wheeler") || t.includes("3-wheeler") || t.includes("tempo");
+        }).slice(0, 2);
+
+        return [...cars, ...twoWheelers, ...autos];
+      }
+      if (activeSubCategory === "fresh") {
+        return freshReleases;
+      }
+      if (activeSubCategory === "upcoming") {
+        return upcoming;
+      }
+      return listings.slice(0, 8);
+    }
+    return catalogProducts;
+  }, [activeTab, activeSubCategory, listings, freshReleases, upcoming, catalogProducts]);
+
+  const BRAND_MAP: Record<string, string> = { Ather: "ATHER", Euler: "EULER MOTORS", TVS: "TVS", Bajaj: "BAJAJ", Ola: "OLA", Vida: "VIDA", Revolt: "REVOLT", Mahindra: "MAHINDRA LAST MILE MOBILITY", Montra: "MONTRA", Tata: "TATA MOTORS", BYD: "BYD", Vinfast: "VINFAST", Grevol: "GREVOL" };
 
   const handleBrandClick = (brand: string) => {
     setSelectedBrand(brand);
-    router.push(catalogFilterUrl({ brand: BRAND_MAP[brand] || brand }));
+    router.push(catalogFilterUrl({
+      brand: BRAND_MAP[brand] || brand,
+      type: selectedType === "commercial" ? null : selectedType === "4 Wheeler" ? "Electric Car" : selectedType,
+      comm: selectedType === "commercial" ? true : undefined,
+    }));
   };
 
   const handleSearch = () => router.push(catalogFilterUrl({
-    type: selectedType === "commercial" ? null : selectedType,
+    type: selectedType === "commercial" ? null : selectedType === "4 Wheeler" ? "Electric Car" : selectedType,
     comm: selectedType === "commercial" ? true : undefined,
     brand: selectedBrand !== "all" ? BRAND_MAP[selectedBrand] || selectedBrand : null,
     q: searchQuery || null
@@ -350,7 +406,7 @@ export default function Hero({
     <section id="home" className="relative text-zinc-900" style={{ backgroundImage: "url('/listingbackgroundsecond.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}>
       {/* Hero (unchanged) */}
       <div className="relative min-h-[750px] sm:h-screen sm:min-h-[640px] w-full overflow-hidden">
-        <Image src="/customhero.jpg" alt="Electric Vehicle" fill priority className="object-cover" sizes="100vw" />
+        <Image src="/evhomepage.webp" alt="Electric Vehicle" fill priority className="object-cover" sizes="80vw" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/70 pointer-events-none" />
         <div className="relative z-20 md:z-10 mx-auto flex min-h-[750px] sm:h-full sm:min-h-[640px] max-w-7xl flex-col items-center justify-center px-6 py-12 sm:py-0 text-center">
           <h1 className="max-w-3xl text-balance text-4xl font-semibold tracking-tight text-white sm:text-5xl lg:text-6xl">
@@ -360,9 +416,9 @@ export default function Hero({
 
           <div className="mt-8 w-full max-w-2xl rounded-3xl border border-white/15 bg-black/40 p-2 shadow-xl sm:p-5 backdrop-blur-xl relative z-20 touch-manipulation">
             <div className="flex gap-1.5 border-b border-white/10 pb-3">
-              {(["2 Wheeler", "3 Wheeler", "commercial"] as const).map(tab => (
-                <button key={tab} onClick={() => setSelectedType(tab)} className={`relative rounded-full px-3.5 py-1.5 text-xs font-medium transition ${selectedType === tab ? "text-zinc-900" : "text-zinc-300 hover:text-white"}`}>
-                  {selectedType === tab && <motion.span layoutId="heroTab" className="absolute inset-0 -z-10 rounded-full bg-[#d1fae5] border-2 border-emerald-800 font-bold ring-1 ring-emerald-200" />}
+              {(["2 Wheeler", "4 Wheeler", "commercial"] as const).map(tab => (
+                <button key={tab} onClick={() => setSelectedType(tab)} className={`relative rounded-md px-3.5 py-1.5 text-xs font-medium transition ${selectedType === tab ? "text-zinc-900" : "text-zinc-300 hover:text-white"}`}>
+                  {selectedType === tab && <motion.span layoutId="heroTab" className="absolute inset-0 -z-10 rounded-md bg-[#d1fae5] border-2 border-emerald-800 font-bold ring-1 ring-emerald-200" />}
                   {tab === "commercial" ? "Commercial" : tab}
                 </button>
               ))}
@@ -370,7 +426,7 @@ export default function Hero({
             <div className="mt-3 flex gap-2">
               <div className="flex flex-1 items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 focus-within:border-[#34ebb1]/60 focus-within:bg-white/10">
                 <Search size={16} className="text-zinc-400" />
-                <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onKeyDown={e => e.key === "Enter" && handleSearch()} placeholder="Search Rizta, S1, Nexon EV..." className="h-11 w-full bg-transparent text-sm text-white placeholder:text-zinc-400 outline-none" />
+                <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onKeyDown={e => e.key === "Enter" && handleSearch()} placeholder={`Search ${selectedType === "4 Wheeler" ? "Tata Sierra EV" : selectedType === "commercial" ? "Euler Hiload EV" : "Rizta, Ola S1"}...`} className="h-11 w-full bg-transparent text-sm text-white placeholder:text-zinc-400 outline-none" />
                 {searchQuery && <button type="button" onClick={() => setSearchQuery("")} aria-label="Clear search query"><X size={14} className="text-zinc-400" /></button>}
               </div>
               <button onClick={handleSearch} className="rounded-2xl bg-[#34ebb1] px-5 text-sm font-medium text-zinc-900 hover:bg-[#2bd49e] active:scale-[0.98]">Search</button>
@@ -398,27 +454,122 @@ export default function Hero({
           <div className="relative z-10 p-6 md:p-8">
             {/* Tabs */}
             <div className="flex items-center gap-3 w-full md:w-auto justify-between">
+              {/* Mobile tabs (Select Dropdown) */}
               <div className="md:hidden flex-1 max-w-[220px] relative">
-                <select value={activeTab} onChange={e => setActiveTab(e.target.value as TabKey)} className="w-full rounded-md border border-zinc-200 bg-white pl-4 pr-10 py-2.5 text-sm font-medium outline-none appearance-none">
-                  {visibleTabs.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
+                <select
+                  value={activeTab === "dropdown" ? activeSubCategory : activeTab}
+                  onChange={e => {
+                    const val = e.target.value;
+                    if (val === "trending" || val === "fresh" || val === "upcoming") {
+                      setActiveTab("dropdown");
+                      setActiveSubCategory(val as SubCategoryKey);
+                    } else {
+                      setActiveTab(val as TabKey);
+                    }
+                  }}
+                  className="w-full rounded-md border border-zinc-200 bg-white pl-4 pr-10 py-2.5 text-sm font-medium outline-none appearance-none text-zinc-700"
+                >
+                  <option value="trending">⭐ Trending</option>
+                  <option value="fresh">✨ New Release</option>
+                  <option value="upcoming">📅 Coming Soon</option>
+                  <option value="cars">🚗 Cars</option>
+                  <option value="twoWheelers">🏍️ 2 Wheelers</option>
+                  <option value="commercial">🚚 Commercial</option>
                 </select>
                 <ChevronDown size={16} className="text-zinc-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
 
               {/* Desktop tabs */}
-              <div className="hidden md:flex gap-1.5 rounded-md bg-[#f0fdf9] p-1 ring-1 ring-emerald-100">
-                {visibleTabs.map(tab => {
-                  const active = tab.key === activeTab;
-                  return (
-                    <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`relative flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-medium transition ${active ? "text-white font-bold bg-emerald-600" : "text-zinc-600 hover:text-zinc-900"}`}>
-                      {active && <motion.span layoutId="tabPill" className="absolute inset-0 -z-10 rounded-md bg-[#d1fae5] shadow-sm ring-1 ring-emerald-200" transition={{ type: "spring", stiffness: 400, damping: 30 }} />}
-                      <tab.icon size={15} /> {tab.label}
-                    </button>
-                  );
-                })}
+              <div className="hidden md:flex gap-1.5 rounded-md bg-[#f0fdf9] p-1 ring-1 ring-emerald-100 relative">
+                {/* Dropdown Tab Button */}
+                <div className="relative">
+                  <button
+                    onClick={() => {
+                      if (activeTab !== "dropdown") {
+                        setActiveTab("dropdown");
+                      } else {
+                        setIsDropdownOpen(!isDropdownOpen);
+                      }
+                    }}
+                    className={`relative flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold transition cursor-pointer ${
+                      activeTab === "dropdown"
+                        ? "text-white bg-emerald-700 hover:bg-emerald-800 shadow-sm ring-1 ring-emerald-700"
+                        : "text-zinc-700 bg-zinc-100 hover:bg-zinc-200/80 ring-1 ring-zinc-200/50"
+                    }`}
+                  >
+                    {activeSubCategory === "trending" && <Star size={15} className={activeTab === "dropdown" ? "text-yellow-300 fill-current" : "text-zinc-500"} />}
+                    {activeSubCategory === "fresh" && <Sparkles size={15} className={activeTab === "dropdown" ? "text-teal-200" : "text-zinc-500"} />}
+                    {activeSubCategory === "upcoming" && <CalendarDays size={15} className={activeTab === "dropdown" ? "text-sky-200" : "text-zinc-500"} />}
+                    {activeSubCategory === "trending" ? "Trending" : activeSubCategory === "fresh" ? "New Release" : "Coming Soon"}
+                    <ChevronDown size={14} className={`transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`} />
+                  </button>
+                  
+                  <AnimatePresence>
+                    {isDropdownOpen && (
+                      <>
+                        <div className="fixed inset-0 z-30" onClick={() => setIsDropdownOpen(false)} />
+                        <motion.div
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 8 }}
+                          className="absolute left-0 mt-2 w-48 rounded-md bg-white p-1 shadow-lg ring-1 ring-zinc-200/50 z-40"
+                        >
+                          {subCategories.map((sub) => (
+                            <button
+                              key={sub.key}
+                              onClick={() => {
+                                setActiveSubCategory(sub.key);
+                                setActiveTab("dropdown");
+                                setIsDropdownOpen(false);
+                              }}
+                              className={`w-full text-left rounded-md px-3 py-2 text-sm font-medium transition flex items-center gap-2 ${
+                                activeSubCategory === sub.key && activeTab === "dropdown"
+                                  ? "bg-[#d1fae5] text-emerald-950 font-semibold"
+                                  : "text-zinc-700 hover:bg-zinc-50"
+                              }`}
+                            >
+                              <sub.icon size={14} className={sub.key === "trending" ? "text-amber-500 fill-current" : "text-emerald-600"} />
+                              {sub.label}
+                            </button>
+                          ))}
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Cars Tab Button */}
+                <button
+                  onClick={() => { setActiveTab("cars"); setIsDropdownOpen(false); }}
+                  className={`relative flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-medium transition ${
+                    activeTab === "cars" ? "text-emerald-950 font-bold bg-[#d1fae5] shadow-sm ring-1 ring-emerald-200" : "text-zinc-600 hover:text-zinc-900"
+                  }`}
+                >
+                  <CarFront size={15} /> Cars
+                </button>
+
+                {/* 2 Wheelers Tab Button */}
+                <button
+                  onClick={() => { setActiveTab("twoWheelers"); setIsDropdownOpen(false); }}
+                  className={`relative flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-medium transition ${
+                    activeTab === "twoWheelers" ? "text-emerald-950 font-bold bg-[#d1fae5] shadow-sm ring-1 ring-emerald-200" : "text-zinc-600 hover:text-zinc-900"
+                  }`}
+                >
+                  <Bike size={15} /> 2 Wheelers
+                </button>
+
+                {/* Commercial Tab Button */}
+                <button
+                  onClick={() => { setActiveTab("commercial"); setIsDropdownOpen(false); }}
+                  className={`relative flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-medium transition ${
+                    activeTab === "commercial" ? "text-emerald-950 font-bold bg-[#d1fae5] shadow-sm ring-1 ring-emerald-200" : "text-zinc-600 hover:text-zinc-900"
+                  }`}
+                >
+                  <Truck size={15} /> Commercial
+                </button>
               </div>
 
-              <Link href={activeTab === "cars" ? catalogFilterUrl({ type: "Electric Car" }) : activeTab === "twoWheelers" ? catalogFilterUrl({ type: "2 Wheeler" }) : activeTab === "autos" ? catalogFilterUrl({ type: "3 Wheeler" }) : "/catalog"} className="flex items-center p-2.5 rounded-md font-bold gap-1.5 text-sm bg-[#d1fae5] text-zinc-600 hover:text-zinc-900 whitespace-nowrap shrink-0">
+              <Link href={activeTab === "cars" ? catalogFilterUrl({ type: "Electric Car" }) : activeTab === "twoWheelers" ? catalogFilterUrl({ type: "2 Wheeler" }) : activeTab === "commercial" ? catalogFilterUrl({ comm: true }) : "/catalog"} className="flex items-center p-2.5 rounded-md font-bold gap-1.5 text-sm bg-[#d1fae5] text-zinc-600 hover:text-zinc-900 whitespace-nowrap shrink-0">
                 View all <ArrowRight size={14} />
               </Link>
             </div>
@@ -428,16 +579,27 @@ export default function Hero({
               <motion.div
                 ref={scrollRef}
                 onScroll={handleScroll}
-                key={activeTab}
+                key={activeTab === "dropdown" ? `${activeTab}-${activeSubCategory}` : activeTab}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
                 className="mt-5 flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory [-webkit-overflow-scrolling:touch] md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:overflow-visible md:snap-none"
               >
-                {activeTab === "featured" ? featured.map((l, i) => <FeaturedCard key={l.id} listing={l} index={i} />)
-                  : activeTab === "fresh" ? freshReleases.map((l, i) => <FeaturedCard key={l.id} listing={l} index={i} />)
-                  : catalogProducts.map((p, i) => <ProductCard key={p.name + i} product={p} index={i} />)
-                }
+                {currentItems.length === 0 ? (
+                  <div className="col-span-full py-16 flex flex-col items-center justify-center text-center w-full">
+                    <div className="rounded-full bg-[#f0fdf9] p-4 text-emerald-600 ring-4 ring-[#d1fae5]">
+                      <CarFront size={28} className="animate-pulse" />
+                    </div>
+                    <h3 className="mt-4 text-lg font-bold text-zinc-900 font-sans">No Vehicles Found</h3>
+                    <p className="mt-1 text-sm text-zinc-500 max-w-xs font-sans">
+                      We couldn't find any listings matching this category. Please check back later.
+                    </p>
+                  </div>
+                ) : activeTab === "dropdown" ? (
+                  (currentItems as EvListing[]).map((l, i) => <FeaturedCard key={l.id} listing={l} index={i} />)
+                ) : (
+                  (currentItems as Product[]).map((p, i) => <ProductCard key={p.name + i} product={p} index={i} />)
+                )}
               </motion.div>
             </AnimatePresence>
 

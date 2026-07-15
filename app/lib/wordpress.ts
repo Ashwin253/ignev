@@ -149,8 +149,20 @@ export function formatPricing(prices: string[]): string {
   const max = Math.max(...starts);
   const fmt = (v: number) => v % 1 === 0 ? String(v) : v.toFixed(2).replace(/\.?0+$/, "");
   
-  if (min === max) return `₹${fmt(min)}L`;
-  return `₹${fmt(min)}–${fmt(max)}L`;
+  if (min === max) {
+    if (min >= 100) return `₹${fmt(min / 100)}Cr`;
+    return `₹${fmt(min)}L`;
+  }
+
+  if (min >= 100 && max >= 100) {
+    return `₹${fmt(min / 100)}–${fmt(max / 100)}Cr`;
+  }
+  
+  if (min < 100 && max < 100) {
+    return `₹${fmt(min)}–${fmt(max)}L`;
+  }
+
+  return `₹${fmt(min)}L–${fmt(max / 100)}Cr`;
 }
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -174,6 +186,7 @@ export type EvListing = {
   launchdate: string | null;
   discontinued?: boolean;
   discontinued_date?: string | null;
+  featured?: boolean;
   video_links?: Array<{ url: string; title?: string; variantId?: string | null; variantName?: string | null }>;
   featured_photos?: Array<{ url: string; variantId?: string | null; variantName?: string | null }>;
   gallery_raw?: Array<{ url: string; type?: string; colorCode?: string; variantId?: string | null; variantName?: string | null }>;

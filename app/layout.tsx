@@ -61,7 +61,7 @@ export default function RootLayout({
             </main>
             <Footer />
             <CompareWidget />
-            <AssistPopup />
+            {/* <AssistPopup /> */}
             <EnquiryModal />
             <AddToHomescreen />
             <FloatingMobileNav />

@@ -58,6 +58,7 @@ type ListingForm = {
   editors_emails?: string[];
   discontinued: boolean;
   discontinued_date: string | null;
+  featured: boolean;
   video_links: Array<{ url: string; title?: string; variantId?: string | null; variantName?: string | null }>;
   featured_photos: Array<{ url: string; variantId?: string | null; variantName?: string | null }>;
   city_pricing: Array<{
@@ -133,6 +134,7 @@ const emptyListing: ListingForm = {
   editors_emails: [],
   discontinued: false,
   discontinued_date: null,
+  featured: false,
   video_links: [],
   featured_photos: [],
   city_pricing: [],
@@ -360,6 +362,8 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
   const supabase = browserSupabaseClient;
   const [user, setUser] = useState<any>(null);
   const [loginError, setLoginError] = useState("");
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
   const [listings, setListings] = useState<(EvListingRow & { variants: EvVariantRow[] })[]>([]);
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
@@ -1146,6 +1150,20 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
 
   const handleLogout = async () => { await supabase.auth.signOut(); setUser(null); };
 
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) {
+      alert("Error: " + error.message);
+    } else {
+      alert("Password updated successfully!");
+      setShowChangePassword(false);
+      setNewPassword("");
+    }
+    setLoading(false);
+  };
+
   const startNew = () => {
     setEditing("new");
     const initialForm = {
@@ -1208,6 +1226,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
       editors_emails: l.editors_emails ?? [],
       discontinued: l.discontinued || false,
       discontinued_date: l.discontinued_date || null,
+      featured: (l as any).featured || false,
       video_links: rawVideoLinks,
       featured_photos: rawFeaturedPhotos.length > 0
         ? rawFeaturedPhotos
@@ -1548,6 +1567,25 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
 
   return (
     <div className="min-h-screen bg-slate-200 py-28 px-4">
+      {showChangePassword && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl relative">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-slate-900">Change Password</h3>
+              <button onClick={() => setShowChangePassword(false)} className="text-slate-400 hover:text-slate-600"><X size={20} /></button>
+            </div>
+            <form onSubmit={handleUpdatePassword} className="space-y-4">
+              <label className="block">
+                <span className="text-[10px] font-bold uppercase text-slate-500">New Password</span>
+                <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required minLength={6} className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-sky-400" />
+              </label>
+              <button type="submit" disabled={loading} className="w-full rounded-xl bg-slate-900 py-3 text-sm font-bold text-white hover:bg-sky-600 disabled:opacity-50">
+                {loading ? "Updating..." : "Update Password"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
       <div className="mx-auto max-w-5xl">
         <div className="flex items-center justify-between gap-4 mb-8">
           <div>
@@ -1570,6 +1608,12 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             </button>
             <button onClick={() => { setActiveSection("media"); }} className="inline-flex items-center gap-1 sm:gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
               View All Media
+            </button>
+            <button onClick={() => setShowChangePassword(true)} className="inline-flex items-center gap-1 sm:gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold text-sky-600 hover:bg-sky-50 transition-colors">
+              Change Password
+            </button>
+            <button onClick={handleLogout} className="inline-flex items-center gap-1 sm:gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold text-rose-600 hover:bg-rose-50 transition-colors">
+              <LogOut size={16} /> Logout
             </button>
           </div>
         </div>
@@ -1682,6 +1726,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                     <th className="px-6 py-3">Brand</th>
                     <th className="px-6 py-3">Model</th>
                     <th className="px-6 py-3">Variants</th>
+                    <th className="px-6 py-3">Featured</th>
                     <th className="px-6 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
@@ -1691,6 +1736,23 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                       <td className="px-6 py-3 font-bold text-slate-900">{l.brand}</td>
                       <td className="px-6 py-3 font-bold text-sky-700">{l.title} {(l as any).discontinued ? <span className="ml-2 text-[10px] bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded border border-rose-200 uppercase tracking-wider font-bold">Discontinued</span> : null}</td>
                       <td className="px-6 py-3 text-slate-500">{l.variants?.length || 0} variants</td>
+                      <td className="px-6 py-3">
+                        <input
+                          type="checkbox"
+                          checked={!!(l as any).featured}
+                          onChange={async () => {
+                            const newFeatured = !(l as any).featured;
+                            const { error } = await supabase
+                              .from("evlistings")
+                              .update({ featured: newFeatured })
+                              .eq("id", l.id);
+                            if (!error) {
+                              setListings(prev => prev.map(item => item.id === l.id ? { ...item, featured: newFeatured } : item));
+                            }
+                          }}
+                          className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer"
+                        />
+                      </td>
                       <td className="px-6 py-3 text-right">
                         <button 
                           onClick={() => { setActiveSection("listings"); setSelectedBrand(l.brand); setSelectedModelId(l.id); }}
@@ -2218,6 +2280,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
               <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.commercial} onChange={(e) => setForm({ ...form, commercial: e.target.checked })} /> Commercial</label>
               <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.has_baas} onChange={(e) => setForm({ ...form, has_baas: e.target.checked })} /> Has BAAS (Battery as a Service)</label>
               <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.discontinued} onChange={(e) => setForm({ ...form, discontinued: e.target.checked })} /> Discontinued</label>
+              <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })} /> Featured</label>
             </div>
 
             {form.discontinued && (
@@ -4950,7 +5013,7 @@ function LoginScreen({ supabase, loginError, setLoginError, onSuccess }: { supab
         {mode === "forgot" && (
           <form onSubmit={handleForgotPassword} className="space-y-4">
             <label className="block"><span className="text-[10px] font-bold uppercase text-slate-500">Email</span><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-sky-400" /></label>
-            <button type="submit" disabled={loading} className="w-full rounded-xl bg-slate-900 py-3 text-sm font-bold text-white hover:bg-sky-600 disabled:opacity-50">{loading ? "Sending..." : "Send Reset Link"}</button>
+            <button type="submit" disabled={loading} className="w-full rounded-xl bg-slate-900 py-3 text-sm font-bold text-white hover:bg-sky-600 disabled:opacity-50">{loading ? "Sending..." : "Send Reset"}</button>
             <button type="button" onClick={() => { setMode("password"); setMessage(""); }} className="w-full text-center text-xs text-slate-500">← Back to login</button>
           </form>
         )}

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { 
-  Download, Trash2, Upload, Search, Loader2, RefreshCw, X, CheckCircle, Sparkles, Crop, FlipHorizontal
+  Download, Trash2, Upload, Search, Loader2, RefreshCw, X, CheckCircle, Sparkles, Crop, FlipHorizontal, FileImage
 } from "lucide-react";
 import CropModal from "./CropModal";
 
@@ -69,6 +69,9 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
   const [flippingId, setFlippingId] = useState<string | null>(null);
   const [cropImage, setCropImage] = useState<ImageItem | null>(null);
   const [visibleMediaCount, setVisibleMediaCount] = useState(10);
+
+  // AVIF Conversion state
+  const [convertingAvifId, setConvertingAvifId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchListings();
@@ -625,6 +628,94 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
     setFlippingId(null);
   };
 
+  const handleConvertToAvif = async (item: ImageItem) => {
+    if (!confirm("Are you sure you want to convert this image to AVIF? The converted image will immediately replace the original in the database.")) return;
+
+    setConvertingAvifId(item.id);
+    try {
+      // 1. Request conversion from backend
+      const res = await fetch("/api/convert-to-avif", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ imageUrl: item.url }),
+      });
+
+      if (!res.ok) {
+        const errorJson = await res.json().catch(() => ({}));
+        throw new Error(errorJson.error || "Failed to convert image on the server.");
+      }
+
+      const avifBlob = await res.blob();
+      const sig = getFileSignature(item);
+      const filename = `${sig}.avif`;
+      const path = `vehicles/${Date.now()}-${sig}.avif`;
+
+      // 2. Upload to Supabase Storage
+      const { data, error } = await supabase.storage
+        .from("evphotos")
+        .upload(path, new File([avifBlob], filename, { type: "image/avif" }), { upsert: true });
+
+      if (error) {
+        alert("Upload of AVIF image failed: " + error.message);
+        setConvertingAvifId(null);
+        return;
+      }
+
+      const publicUrl = supabase.storage.from("evphotos").getPublicUrl(data.path).data.publicUrl;
+
+      // 3. Find original listing row & prepare update payload
+      const listing = listings.find((l) => l.id === item.listingId);
+      if (!listing) return;
+
+      let updatePayload: Partial<EvListingRow> = {};
+
+      if (item.type === "main") {
+        updatePayload.photo = publicUrl;
+      } else if (item.type === "featured") {
+        const rawPhotos = Array.isArray(listing.featured_photos)
+          ? [...listing.featured_photos]
+          : JSON.parse(typeof listing.featured_photos === "string" ? listing.featured_photos : "[]");
+
+        if (typeof rawPhotos[item.index] === "string") {
+          rawPhotos[item.index] = publicUrl;
+        } else {
+          rawPhotos[item.index] = { ...rawPhotos[item.index], url: publicUrl };
+        }
+        updatePayload.featured_photos = rawPhotos;
+      } else if (item.type === "gallery") {
+        const rawGallery = Array.isArray(listing.gallery_images)
+          ? [...listing.gallery_images]
+          : JSON.parse(typeof listing.gallery_images === "string" ? listing.gallery_images : "[]");
+
+        if (typeof rawGallery[item.index] === "string") {
+          rawGallery[item.index] = publicUrl;
+        } else {
+          rawGallery[item.index] = { ...rawGallery[item.index], url: publicUrl };
+        }
+        updatePayload.gallery_images = rawGallery;
+      }
+
+      // 4. Update evlistings table
+      const { error: updateError } = await supabase
+        .from("evlistings")
+        .update(updatePayload)
+        .eq("id", item.listingId);
+
+      if (updateError) {
+        alert("Failed to update database with AVIF image: " + updateError.message);
+      } else {
+        // Auto rebuild search summary
+        fetch("/api/build-summary").catch((err) => console.error("Error rebuilding summary:", err));
+        await fetchListings();
+      }
+    } catch (err: any) {
+      alert("AVIF conversion failed: " + err.message);
+    }
+    setConvertingAvifId(null);
+  };
+
   const handleReplace = async (e: React.ChangeEvent<HTMLInputElement>, item: ImageItem) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -1027,6 +1118,28 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
                           <>
                             <FlipHorizontal size={14} className="mb-1 text-indigo-600" />
                             Flip Horiz.
+                          </>
+                        )}
+                      </button>
+
+                      {/* Convert to AVIF */}
+                      <button
+                        onClick={() => handleConvertToAvif(img)}
+                        disabled={
+                          convertingAvifId !== null ||
+                          bgRemovingId !== null ||
+                          uploadingId !== null ||
+                          deletingId !== null ||
+                          getFileExtension(img.url) === "avif"
+                        }
+                        className="col-span-2 flex items-center justify-center gap-1.5 p-2 rounded-xl bg-slate-100 hover:bg-sky-50 hover:text-sky-700 text-slate-650 text-[10px] font-extrabold transition-colors border border-slate-200 cursor-pointer text-center disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        {convertingAvifId === img.id ? (
+                          <Loader2 size={14} className="animate-spin text-sky-600 animate-pulse" />
+                        ) : (
+                          <>
+                            <FileImage size={14} className="text-sky-600" />
+                            {getFileExtension(img.url) === "avif" ? "Already AVIF File" : "Convert to AVIF"}
                           </>
                         )}
                       </button>

@@ -123,13 +123,13 @@ async function HomeContent() {
     <>
       <Hero products={content.products} listings={listings} freshReleases={freshReleases} upcoming={upcoming} banners={banners} />
       
-      <LazyViewport fallback={<div className="h-96 bg-[#b5ebea]/30" />}>
+      {/* <LazyViewport fallback={<div className="h-96 bg-[#b5ebea]/30" />}>
         <FreshReleases listings={freshReleases} />
       </LazyViewport>
       
       <LazyViewport fallback={<div className="h-64" />}>
         <ComingSoonCars items={comingSoonItems} />
-      </LazyViewport>
+      </LazyViewport> */}
       
       <LazyViewport fallback={<div className="h-48" />}>
         <PopularBrands />

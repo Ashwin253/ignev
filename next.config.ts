@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  env: {
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_SUPABASE_URL || "",
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_SUPABASE_PUBLISHABLE_KEY || "",
+  },
   // Remove X-Powered-By header (minor security + saves bytes)
   poweredByHeader: false,
 

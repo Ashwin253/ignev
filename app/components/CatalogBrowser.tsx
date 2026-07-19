@@ -235,7 +235,19 @@ function matchesPrice(item: CatalogItem, bucket: string): boolean {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
+export default function CatalogBrowser({
+  items,
+  hideComingSoonToggle = false,
+  forceUpcoming = false,
+  forceNewLaunches = false,
+  forceLaunched = false,
+}: {
+  items: CatalogItem[];
+  hideComingSoonToggle?: boolean;
+  forceUpcoming?: boolean;
+  forceNewLaunches?: boolean;
+  forceLaunched?: boolean;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -345,6 +357,9 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
 
   const filteredItems = useMemo(() => {
     const q = query.trim().toLowerCase();
+    const twoMonthsAgo = new Date();
+    twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+
     return allItems.filter((item) => {
       if (q && !item.name.toLowerCase().includes(q) &&
         !item.brand.toLowerCase().includes(q) &&
@@ -355,13 +370,28 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
       if (brand !== "all" && item.brand !== brand) return false;
       if (!matchesPrice(item, price)) return false;
       if (commercialOnly && !item.commercial) return false;
-      if (launchedOnly && !isLaunched(item.launchdate)) return false;
-      if (comingSoonOnly && isLaunched(item.launchdate)) return false;
+
+      // Forced filters
+      if (forceUpcoming) {
+        if (isLaunched(item.launchdate)) return false;
+      } else if (forceLaunched) {
+        if (!isLaunched(item.launchdate)) return false;
+      } else if (forceNewLaunches) {
+        if (!isLaunched(item.launchdate)) return false;
+        if (!item.launchdate) return false;
+        const d = new Date(item.launchdate);
+        if (isNaN(d.getTime()) || d < twoMonthsAgo) return false;
+      } else {
+        // Standard toggles
+        if (launchedOnly && !isLaunched(item.launchdate)) return false;
+        if (comingSoonOnly && isLaunched(item.launchdate)) return false;
+      }
+
       if (baasOnly && !item.baas) return false;
       if (usage !== "all" && item.usageType !== usage) return false;
       return true;
     });
-  }, [brand, category, commercialOnly, allItems, launchedOnly, comingSoonOnly, price, query, baasOnly, usage]);
+  }, [brand, category, commercialOnly, allItems, launchedOnly, comingSoonOnly, price, query, baasOnly, usage, forceUpcoming, forceNewLaunches, forceLaunched]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -548,15 +578,17 @@ export default function CatalogBrowser({ items }: { items: CatalogItem[] }) {
                 <Truck size={16} /> Commercial
               </button>
 
-              <button
-                onClick={() => updateFilters({ upcoming: !comingSoonOnly })}
-                className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-bold transition-all ${comingSoonOnly
-                    ? "bg-[#34ebb1] border-[#34ebb1] text-zinc-950 shadow-sm"
-                    : "bg-white/5 border-white/10 text-zinc-300 hover:bg-white/10 hover:border-white/30 hover:text-white"
-                  }`}
-              >
-                <CalendarDays size={16} />Coming Soon
-              </button>
+              {!hideComingSoonToggle && (
+                <button
+                  onClick={() => updateFilters({ upcoming: !comingSoonOnly })}
+                  className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-bold transition-all ${comingSoonOnly
+                      ? "bg-[#34ebb1] border-[#34ebb1] text-zinc-950 shadow-sm"
+                      : "bg-white/5 border-white/10 text-zinc-300 hover:bg-white/10 hover:border-white/30 hover:text-white"
+                    }`}
+                >
+                  <CalendarDays size={16} />Coming Soon
+                </button>
+              )}
 
               <button
                 onClick={() => updateFilters({ baas: !baasOnly })}

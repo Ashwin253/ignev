@@ -4,10 +4,11 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Menu, X, Home, LayoutGrid, MapPin, IndianRupee, Download, SlidersHorizontal, Volume2, VolumeX, Smartphone, Sparkles } from "lucide-react";
+import { Menu, X, Home, LayoutGrid, MapPin, IndianRupee, Download, SlidersHorizontal, Volume2, VolumeX, Smartphone, Sparkles, ChevronDown, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useFeedback } from "../context/FeedbackContext";
 import { playClickSound, playHaptic } from "../lib/feedback";
+import { supabaseClient } from "../lib/supabase-client";
 
 const navLinks = [
   { name: "Home", href: "/", icon: Home },
@@ -17,14 +18,31 @@ const navLinks = [
   // { name: "Compare", href: "/compare", icon: IndianRupee },
 ];
 
-const lightBgRoutes = ["/catalog", "/product", "/updates", "/map", "/own", "/service", "/shop", "/team", "/mis", "/analytics"];
+const lightBgRoutes = ["/catalog", "/product", "/updates", "/map", "/own", "/service", "/shop", "/team", "/mis", "/analytics", "/buy-ev", "/sell-ev", "/upcoming", "/new-launches", "/charging-station"];
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileBuySellOpen, setMobileBuySellOpen] = useState(false);
+  const [mobileServiceOpen, setMobileServiceOpen] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [prefOpen, setPrefOpen] = useState(false);
   const { soundEnabled, setSoundEnabled, hapticsEnabled, setHapticsEnabled } = useFeedback();
   const pathname = usePathname();
+
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    supabaseClient.auth.getUser().then(({ data }) => {
+      setUser(data.user);
+    });
+
+    const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const isHome = pathname === "/";
   const isLightPage = !isHome && lightBgRoutes.some(r => pathname.startsWith(r));
@@ -79,7 +97,8 @@ export default function Header() {
     : "bg-zinc-100 hover:bg-zinc-200 text-zinc-700 border-zinc-200";
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${headerBg}`}>
+    <>
+      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${headerBg}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-[72px]">
           <Link href="/" className="flex items-center gap-2">
@@ -94,47 +113,134 @@ export default function Header() {
             />
           </Link>
 
-          <nav className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => {
-              const isActive = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
-              const isForYou = link.href === "/foryou";
-              
-              let customClass = `${linkBase} ${isActive ? activeLinkColor : linkColor}`;
-              if (isForYou) {
-                if (isActive) {
-                  customClass = `${linkBase} bg-violet-600 text-white font-bold shadow-md shadow-violet-500/15`;
-                } else {
-                  customClass = isTransparent
-                    ? `${linkBase} bg-violet-500/20 text-violet-200 border border-violet-400/20 hover:bg-violet-500/30 hover:text-white font-bold`
-                    : `${linkBase} bg-violet-50 hover:bg-violet-100 text-violet-700 border border-violet-200/50 font-bold`;
-                }
-              }
+          <nav className="hidden md:flex items-center gap-2">
+            {/* Buy/Sell Dropdown */}
+            <div
+              className="relative"
+              onMouseEnter={() => setActiveDropdown("buysell")}
+              onMouseLeave={() => setActiveDropdown(null)}
+            >
+              <button
+                className={`${linkBase} ${
+                  pathname.startsWith("/buy-ev") || pathname.startsWith("/sell-ev") || pathname.startsWith("/upcoming") || pathname.startsWith("/new-launches")
+                    ? activeLinkColor
+                    : linkColor
+                } flex items-center gap-1.5 cursor-pointer font-medium text-sm`}
+              >
+                Buy/Sell <ChevronDown size={14} className={`transition-transform duration-200 ${activeDropdown === "buysell" ? "rotate-180" : ""}`} />
+              </button>
+              <AnimatePresence>
+                {activeDropdown === "buysell" && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    className="absolute left-0 mt-1 w-48 rounded-xl bg-white p-1.5 shadow-xl ring-1 ring-zinc-200/60 z-50 border border-zinc-100 text-zinc-800"
+                  >
+                    <Link href="/buy-ev" className="flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium hover:bg-zinc-100/70 transition-colors">
+                      Buy EV
+                    </Link>
+                    <Link href="/sell-ev" className="flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium hover:bg-zinc-100/70 transition-colors">
+                      Sell EV
+                    </Link>
+                    <Link href="/upcoming" className="flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium hover:bg-zinc-100/70 transition-colors">
+                      Upcoming
+                    </Link>
+                    <Link href="/new-launches" className="flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium hover:bg-zinc-100/70 transition-colors">
+                      New Launches
+                    </Link>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
-              return (
-                <Link
-                  key={link.name}
-                  href={link.href}
-                  className={customClass}
-                >
-                  <span className="inline-flex items-center gap-1.5">
-                    <link.icon size={15} />
-                    {link.name}
-                    {isForYou && !isActive && (
-                      <span className="relative flex h-1.5 w-1.5">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-violet-600"></span>
-                      </span>
-                    )}
+            {/* Service Dropdown */}
+            <div
+              className="relative"
+              onMouseEnter={() => setActiveDropdown("service")}
+              onMouseLeave={() => setActiveDropdown(null)}
+            >
+              <button
+                className={`${linkBase} ${
+                  pathname.startsWith("/service/")
+                    ? activeLinkColor
+                    : linkColor
+                } flex items-center gap-1.5 cursor-pointer font-medium text-sm`}
+              >
+                Service <ChevronDown size={14} className={`transition-transform duration-200 ${activeDropdown === "service" ? "rotate-180" : ""}`} />
+              </button>
+              <AnimatePresence>
+                {activeDropdown === "service" && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    className="absolute left-0 mt-1 w-48 rounded-xl bg-white p-1.5 shadow-xl ring-1 ring-zinc-200/60 z-50 border border-zinc-100 text-zinc-800"
+                  >
+                    <Link href="/service/insurance" className="flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium hover:bg-zinc-100/70 transition-colors">
+                      Insurance
+                    </Link>
+                    <Link href="/service/scrap" className="flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium hover:bg-zinc-100/70 transition-colors">
+                      Scrap
+                    </Link>
+                    <Link href="/service/product" className="flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium hover:bg-zinc-100/70 transition-colors">
+                      Product
+                    </Link>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Charging Station */}
+            <Link
+              href="/charging-station"
+              className={`${linkBase} ${pathname.startsWith("/charging-station") ? activeLinkColor : linkColor}`}
+            >
+              Charging Station
+            </Link>
+
+            {/* For You */}
+            <Link
+              href="/foryou"
+              className={`${linkBase} ${
+                pathname.startsWith("/foryou")
+                  ? "bg-violet-600 text-white font-bold shadow-md shadow-violet-500/15"
+                  : isTransparent
+                  ? "bg-violet-500/20 text-violet-200 border border-violet-400/20 hover:bg-violet-500/30 hover:text-white font-bold"
+                  : "bg-violet-50 hover:bg-violet-100 text-violet-700 border border-violet-200/50 font-bold"
+              }`}
+            >
+              <span className="inline-flex items-center gap-1.5">
+                <Sparkles size={15} />
+                For You
+                {!pathname.startsWith("/foryou") && (
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-violet-600"></span>
                   </span>
-                </Link>
-              );
-            })}
+                )}
+              </span>
+            </Link>
           </nav>
 
           <div className="flex items-center gap-2.5">
             <Link href="/nearme" className={`hidden md:flex items-center gap-1.5 font-medium px-4 py-2 rounded-full text-sm transition-all border shadow-sm active:scale-95 ${ctaClass}`}>
               <MapPin size={15} /> Near Me
             </Link>
+
+            {/* User Profile / Auth Button
+            <Link
+              href={user ? "/profile" : "/login"}
+              className={`hidden md:flex items-center gap-1.5 font-semibold px-4 py-2 rounded-full text-sm transition-all border shadow-sm active:scale-95 ${
+                user
+                  ? "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100"
+                  : ctaClass
+              }`}
+            >
+              <User size={15} />
+              <span>{user ? (user.user_metadata?.full_name?.split(" ")[0] || "Profile") : "Login / Register"}</span>
+            </Link>
+            */}
 
             {/* Preferences */}
             <div className="relative">
@@ -177,40 +283,131 @@ export default function Header() {
       {/* Mobile */}
       <AnimatePresence>
         {mobileMenuOpen && (
-          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="md:hidden absolute top-full left-0 right-0 bg-white/95 backdrop-blur-xl border-b border-emerald-100 shadow-xl">
-            <div className="p-4 space-y-1">
-              {navLinks.map(link => {
-                const isForYou = link.href === "/foryou";
-                const isSelected = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
-                return (
-                  <Link 
-                    key={link.name} 
-                    href={link.href} 
-                    onClick={()=>setMobileMenuOpen(false)} 
-                    className={`flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-all ${
-                      isForYou 
-                        ? (isSelected ? "bg-violet-600 text-white font-bold" : "bg-violet-50 hover:bg-violet-100/80 text-violet-700 border border-violet-100")
-                        : (isSelected ? "bg-emerald-50 text-emerald-800" : "text-zinc-700 hover:bg-zinc-100")
-                    }`}
-                  >
-                    <span className="flex items-center gap-2">
-                      <link.icon size={16} className={isForYou && !isSelected ? "text-violet-500" : ""} /> {link.name}
-                    </span>
-                    {isForYou && (
-                      <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${isSelected ? "bg-white text-violet-700" : "bg-violet-600 text-white animate-pulse"}`}>
-                        New
-                      </span>
-                    )}
-                  </Link>
-                );
-              })}
-              <Link href="/nearme" onClick={()=>setMobileMenuOpen(false)} className="mt-3 flex items-center justify-center gap-2 w-full bg-emerald-600 text-white py-3 rounded-xl font-medium">
+          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="md:hidden absolute top-full left-0 right-0 bg-white/95 backdrop-blur-xl border-b border-emerald-100 shadow-xl max-h-[85vh] overflow-y-auto">
+            <div className="p-4 space-y-2">
+              {/* Buy/Sell Accordion */}
+              <div className="border border-zinc-100 rounded-xl overflow-hidden bg-zinc-50/50">
+                <button
+                  onClick={() => setMobileBuySellOpen(!mobileBuySellOpen)}
+                  className="flex items-center justify-between w-full px-4 py-3 font-semibold text-zinc-700 hover:bg-zinc-100 transition-all"
+                >
+                  <span className="flex items-center gap-2 text-sm">
+                    <LayoutGrid size={16} className="text-emerald-600" /> Buy/Sell
+                  </span>
+                  <ChevronDown size={15} className={`transition-transform duration-200 text-zinc-400 ${mobileBuySellOpen ? "rotate-180" : ""}`} />
+                </button>
+                <AnimatePresence>
+                  {mobileBuySellOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden bg-white border-t border-zinc-100 px-6 py-2 space-y-1.5"
+                    >
+                      <Link href="/buy-ev" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-medium text-zinc-600 hover:text-emerald-700">
+                        Buy EV
+                      </Link>
+                      <Link href="/sell-ev" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-medium text-zinc-600 hover:text-emerald-700">
+                        Sell EV
+                      </Link>
+                      <Link href="/upcoming" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-medium text-zinc-600 hover:text-emerald-700">
+                        Upcoming
+                      </Link>
+                      <Link href="/new-launches" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-medium text-zinc-600 hover:text-emerald-700">
+                        New Launches
+                      </Link>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Service Accordion */}
+              <div className="border border-zinc-100 rounded-xl overflow-hidden bg-zinc-50/50">
+                <button
+                  onClick={() => setMobileServiceOpen(!mobileServiceOpen)}
+                  className="flex items-center justify-between w-full px-4 py-3 font-semibold text-zinc-700 hover:bg-zinc-100 transition-all"
+                >
+                  <span className="flex items-center gap-2 text-sm">
+                    <SlidersHorizontal size={16} className="text-emerald-600" /> Service
+                  </span>
+                  <ChevronDown size={15} className={`transition-transform duration-200 text-zinc-400 ${mobileServiceOpen ? "rotate-180" : ""}`} />
+                </button>
+                <AnimatePresence>
+                  {mobileServiceOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden bg-white border-t border-zinc-100 px-6 py-2 space-y-1.5"
+                    >
+                      <Link href="/service/insurance" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-medium text-zinc-600 hover:text-emerald-700">
+                        Insurance
+                      </Link>
+                      <Link href="/service/scrap" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-medium text-zinc-600 hover:text-emerald-700">
+                        Scrap
+                      </Link>
+                      <Link href="/service/product" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-medium text-zinc-600 hover:text-emerald-700">
+                        Product
+                      </Link>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Charging Station */}
+              <Link
+                href="/charging-station"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`flex items-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
+                  pathname.startsWith("/charging-station") ? "bg-emerald-50 text-emerald-800" : "text-zinc-700 hover:bg-zinc-100"
+                }`}
+              >
+                <MapPin size={16} className="text-emerald-600" /> Charging Station
+              </Link>
+
+              {/* For You */}
+              <Link
+                href="/foryou"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`flex items-center justify-between px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
+                  pathname.startsWith("/foryou")
+                    ? "bg-violet-600 text-white font-bold"
+                    : "bg-violet-50 hover:bg-violet-100/80 text-violet-700 border border-violet-100"
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <Sparkles size={16} className={pathname.startsWith("/foryou") ? "" : "text-violet-500"} /> For You
+                </span>
+                {!pathname.startsWith("/foryou") && (
+                  <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${pathname.startsWith("/foryou") ? "bg-white text-violet-700" : "bg-violet-600 text-white animate-pulse"}`}>
+                    New
+                  </span>
+                )}
+              </Link>
+
+              <Link href="/nearme" onClick={() => setMobileMenuOpen(false)} className="mt-3 flex items-center justify-center gap-2 w-full bg-emerald-600 text-white py-3 rounded-xl font-semibold text-sm shadow-md">
                 <MapPin size={16} /> Near Me
               </Link>
+
+              {/* User Profile / Auth Button
+              <Link
+                href={user ? "/profile" : "/login"}
+                onClick={() => setMobileMenuOpen(false)}
+                className={`mt-2 flex items-center justify-center gap-2 w-full py-3 rounded-xl font-semibold text-sm shadow-md border ${
+                  user
+                    ? "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100"
+                    : "bg-zinc-900 text-white hover:bg-zinc-800"
+                }`}
+              >
+                <User size={16} />
+                <span>{user ? (user.user_metadata?.full_name || "Profile") : "Login / Register"}</span>
+              </Link>
+              */}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </header>
+      </header>
+    </>
   );
 }

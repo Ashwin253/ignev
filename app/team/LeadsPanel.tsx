@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Check, Phone, MapPin, MessageSquare, Clock, User } from "lucide-react";
 
 type Lead = {
@@ -20,6 +20,7 @@ export default function LeadsPanel({ supabase, userId }: { supabase: any; userId
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "pending" | "assisted">("all");
+  const [selectedSource, setSelectedSource] = useState<string>("all");
 
   useEffect(() => { fetchLeads(); }, []);
 
@@ -50,9 +51,19 @@ export default function LeadsPanel({ supabase, userId }: { supabase: any; userId
     fetchLeads();
   };
 
+  const sourceOptions = useMemo(() => {
+    const sources = [...new Set(leads.map((l) => l.source).filter(Boolean))].sort();
+    return ["all", ...sources];
+  }, [leads]);
+
   const filtered = leads.filter((l) => {
-    if (filter === "pending") return !l.assisted_by;
-    if (filter === "assisted") return !!l.assisted_by;
+    // 1. Status Filter
+    if (filter === "pending" && l.assisted_by) return false;
+    if (filter === "assisted" && !l.assisted_by) return false;
+
+    // 2. Source Filter
+    if (selectedSource !== "all" && l.source !== selectedSource) return false;
+
     return true;
   });
 
@@ -62,18 +73,37 @@ export default function LeadsPanel({ supabase, userId }: { supabase: any; userId
 
   return (
     <div className="space-y-4">
-      {/* Filter tabs */}
-      <div className="flex items-center gap-2">
-        <button onClick={() => setFilter("all")} className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${filter === "all" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600"}`}>
-          All ({leads.length})
-        </button>
-        <button onClick={() => setFilter("pending")} className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${filter === "pending" ? "bg-amber-500 text-white" : "bg-slate-100 text-slate-600"}`}>
-          Pending ({pendingCount})
-        </button>
-        <button onClick={() => setFilter("assisted")} className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${filter === "assisted" ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-600"}`}>
-          Assisted ({leads.length - pendingCount})
-        </button>
-        <button onClick={fetchLeads} className="ml-auto text-xs text-sky-600 font-bold hover:text-sky-700">Refresh</button>
+      {/* Filter bar */}
+      <div className="flex flex-wrap items-center gap-4 bg-slate-50 p-3 rounded-xl border border-slate-200/60">
+        <div className="flex items-center gap-2">
+          <button onClick={() => setFilter("all")} className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${filter === "all" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+            All ({leads.length})
+          </button>
+          <button onClick={() => setFilter("pending")} className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${filter === "pending" ? "bg-amber-500 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+            Pending ({pendingCount})
+          </button>
+          <button onClick={() => setFilter("assisted")} className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${filter === "assisted" ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+            Assisted ({leads.length - pendingCount})
+          </button>
+        </div>
+
+        {/* Source Dropdown Filter */}
+        <div className="flex items-center gap-2 text-xs">
+          <span className="font-bold text-slate-500">Source:</span>
+          <select
+            value={selectedSource}
+            onChange={(e) => setSelectedSource(e.target.value)}
+            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 font-bold text-slate-700 outline-none focus:border-slate-300 transition"
+          >
+            {sourceOptions.map((src) => (
+              <option key={src} value={src}>
+                {src === "all" ? "All Sources" : src}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <button onClick={fetchLeads} className="ml-auto text-xs text-sky-600 font-bold hover:text-sky-700 cursor-pointer">Refresh</button>
       </div>
 
       {/* Leads list */}
@@ -110,12 +140,12 @@ export default function LeadsPanel({ supabase, userId }: { supabase: any; userId
               <div className="shrink-0">
                 {!lead.assisted_by ? (
                   <button onClick={() => markAssisted(lead.id)}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-[10px] font-bold text-white hover:bg-emerald-700 transition-colors">
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-[10px] font-bold text-white hover:bg-emerald-700 transition-colors cursor-pointer">
                     <Check size={12} /> I Assisted
                   </button>
                 ) : lead.assisted_by === userId ? (
                   <button onClick={() => unmarkAssisted(lead.id)}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-[10px] font-bold text-slate-500 hover:bg-slate-50 transition-colors">
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-[10px] font-bold text-slate-500 hover:bg-slate-50 transition-colors cursor-pointer">
                     Undo
                   </button>
                 ) : null}

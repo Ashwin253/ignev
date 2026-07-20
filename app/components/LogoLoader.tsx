@@ -29,18 +29,18 @@ export default function LogoLoader({ fullscreen = true, message = "Loading..." }
     : "w-full min-h-[300px] flex flex-col items-center justify-center bg-[#0f1115] rounded-3xl p-8 border border-white/5";
 
   const videoSizeClasses = fullscreen
-    ? "h-[40vh] aspect-square"
+    ? "w-64 h-64 md:w-[420px] md:h-[420px] lg:w-[500px] lg:h-[500px] max-w-[90vw] aspect-square"
     : "h-[30vh] max-h-[160px] aspect-square";
 
   return (
     <div className={containerClasses}>
       <div className={`relative ${videoSizeClasses} flex items-center justify-center`}>
         {/* Glow effect behind logo */}
-        <div className="absolute inset-0 bg-[#007BFF]/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute inset-0 bg-[#007BFF]/20 rounded-full blur-[100px] animate-pulse" />
         
         <video
           ref={videoRef}
-          src="/loadinganimate.mp4"
+          src="/evplsenextconcept.mp4"
           className="w-full h-full object-contain rounded-full relative z-10"
           autoPlay
           loop

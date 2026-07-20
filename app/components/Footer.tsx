@@ -77,18 +77,7 @@ const Footer = () => {
               <FaEnvelope className="text-black" />
               <a href="mailto:evplseadmin@gmail.com" className="hover:text-amber-400 transition">evplseadmin@gmail.com</a>
             </div> */}
-            <div className="flex items-center space-x-4 text-black">
-              <FaGlobe className="text-black" />
-              <Link  href="/about" className="hover:text-amber-400 transition">About Us</Link>
-            </div>
-            <div className="flex items-center space-x-4 text-black">
-              <FaGlobe className="text-black" />
-              <Link  href="/privacy" className="hover:text-amber-400 transition">Privacy Policy</Link>
-            </div>
-            <div className="flex items-center space-x-4 text-black">
-              <FaGlobe className="text-black" />
-              <Link  href="/terms" className="hover:text-amber-400 transition">Terms of Services</Link>
-            </div>
+
              {/* <ul className="space-y-3">
               <li>
                 <Link href="/about" className="text-gray-400 hover:text-secondary transition-colors">
@@ -140,17 +129,14 @@ const Footer = () => {
           </div>
         </div>
 
-        <footer className="flex flex-col text-md md:flex-row justify-center items-center pt-1 mt-1">
-          <div className="mb-4 md:mb-0 text-sm h-30 text-black">
-            {/* <Link 
-              href="https://www.greenpronatura.com/" 
-              className="text-black hover:text-amber-600 transition"
-            >
-              Developed and Maintained by Greenpro Natura
-            </Link> */}
-           {/* <div></div> */}
-           </div>
-        </footer>
+        <div className="border-t border-black/10 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-black">
+          <p className="mb-4 md:mb-0">&copy; {new Date().getFullYear()} EVPLSE. All rights reserved.</p>
+          <div className="flex space-x-6">
+            <Link href="/about" className="hover:text-amber-600 transition font-medium">About Us</Link>
+            <Link href="/privacy" className="hover:text-amber-600 transition font-medium">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-amber-600 transition font-medium">Terms of Services</Link>
+          </div>
+        </div>
       </div>
     </footer>
   );

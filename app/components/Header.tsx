@@ -9,6 +9,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useFeedback } from "../context/FeedbackContext";
 import { playClickSound, playHaptic } from "../lib/feedback";
 import { supabaseClient } from "../lib/supabase-client";
+import { auth } from "../lib/firebaseClient";
+import { onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
 
 const navLinks = [
   { name: "Home", href: "/", icon: Home },
@@ -30,18 +32,14 @@ export default function Header() {
   const { soundEnabled, setSoundEnabled, hapticsEnabled, setHapticsEnabled } = useFeedback();
   const pathname = usePathname();
 
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<FirebaseUser | null>(null);
 
   useEffect(() => {
-    supabaseClient.auth.getUser().then(({ data }) => {
-      setUser(data.user);
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser);
     });
 
-    const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
+    return () => unsubscribe();
   }, []);
 
   const isHome = pathname === "/";
@@ -228,7 +226,7 @@ export default function Header() {
               <MapPin size={15} /> Near Me
             </Link>
 
-            {/* User Profile / Auth Button
+            {/* User Profile / Auth Button */}
             <Link
               href={user ? "/profile" : "/login"}
               className={`hidden md:flex items-center gap-1.5 font-semibold px-4 py-2 rounded-full text-sm transition-all border shadow-sm active:scale-95 ${
@@ -238,9 +236,8 @@ export default function Header() {
               }`}
             >
               <User size={15} />
-              <span>{user ? (user.user_metadata?.full_name?.split(" ")[0] || "Profile") : "Login / Register"}</span>
+              <span>{user ? (user.displayName?.split(" ")[0] || "Profile") : "Login / Register"}</span>
             </Link>
-            */}
 
             {/* Preferences */}
             <div className="relative">
@@ -389,7 +386,7 @@ export default function Header() {
                 <MapPin size={16} /> Near Me
               </Link>
 
-              {/* User Profile / Auth Button
+              {/* User Profile / Auth Button */}
               <Link
                 href={user ? "/profile" : "/login"}
                 onClick={() => setMobileMenuOpen(false)}
@@ -400,9 +397,8 @@ export default function Header() {
                 }`}
               >
                 <User size={16} />
-                <span>{user ? (user.user_metadata?.full_name || "Profile") : "Login / Register"}</span>
+                <span>{user ? (user.displayName || "Profile") : "Login / Register"}</span>
               </Link>
-              */}
             </div>
           </motion.div>
         )}

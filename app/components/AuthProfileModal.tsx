@@ -3,7 +3,9 @@
 import React, { useEffect, useState } from "react";
 import { X, User, Mail, Lock, Phone, MapPin, LogOut, CheckCircle2, UserPlus, Key } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabaseClient } from "../lib/supabase-client";
+import { auth, db } from "../lib/firebaseClient";
+import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signOut, User as FirebaseUser } from "firebase/auth";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 interface AuthProfileModalProps {
   isOpen: boolean;
@@ -11,7 +13,7 @@ interface AuthProfileModalProps {
 }
 
 export default function AuthProfileModal({ isOpen, onClose }: AuthProfileModalProps) {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<FirebaseUser | null>(null);
   const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -25,27 +27,61 @@ export default function AuthProfileModal({ isOpen, onClose }: AuthProfileModalPr
   const [city, setCity] = useState("");
 
   useEffect(() => {
-    // Sync current session user
-    supabaseClient.auth.getUser().then(({ data }) => {
-      setUser(data.user);
-      if (data.user) {
-        setFullName(data.user.user_metadata?.full_name || "");
-        setMobile(data.user.user_metadata?.phone || "");
-        setCity(data.user.user_metadata?.city || "");
+    // Sync current session user using Firebase Auth
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setUser(firebaseUser);
+      if (firebaseUser) {
+        setFullName(firebaseUser.displayName || "");
+        
+        let userMobile = "";
+        let userCity = "";
+
+        // Try to fetch additional info from Firestore
+        try {
+          const docRef = doc(db, "users", firebaseUser.uid);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            userMobile = data.mobile || "";
+            userCity = data.city || "";
+          }
+        } catch (err) {
+          console.warn("Firestore fetch failed in modal:", err);
+        }
+
+        // local storage fallback
+        if (!userMobile || !userCity) {
+          try {
+            const cached = localStorage.getItem(`user_meta_${firebaseUser.uid}`);
+            if (cached) {
+              const data = JSON.parse(cached);
+              userMobile = userMobile || data.mobile || "";
+              userCity = userCity || data.city || "";
+            }
+          } catch (e) {}
+        }
+
+        setMobile(userMobile);
+        setCity(userCity);
       }
     });
 
-    const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        setFullName(session.user.user_metadata?.full_name || "");
-        setMobile(session.user.user_metadata?.phone || "");
-        setCity(session.user.user_metadata?.city || "");
-      }
-    });
-
-    return () => subscription.unsubscribe();
+    return () => unsubscribe();
   }, []);
+
+  const getFriendlyErrorMessage = (error: any) => {
+    const code = error?.code || error?.message || "";
+    if (code.includes("auth/invalid-credential") || code.includes("auth/wrong-password") || code.includes("auth/user-not-found")) {
+      return "Invalid email or password. Please try again.";
+    }
+    if (code.includes("auth/email-already-in-use")) {
+      return "This email is already registered.";
+    }
+    if (code.includes("auth/weak-password")) {
+      return "Password should be at least 6 characters.";
+    }
+    return error.message || "An unexpected error occurred.";
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,14 +90,8 @@ export default function AuthProfileModal({ isOpen, onClose }: AuthProfileModalPr
     setSuccessMsg("");
 
     try {
-      const { error } = await supabaseClient.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        setErrorMsg(error.message);
-      } else {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      if (userCredential.user) {
         setSuccessMsg("Logged in successfully!");
         setTimeout(() => {
           onClose();
@@ -69,7 +99,7 @@ export default function AuthProfileModal({ isOpen, onClose }: AuthProfileModalPr
         }, 1500);
       }
     } catch (err: any) {
-      setErrorMsg(err.message || "An error occurred during login.");
+      setErrorMsg(getFriendlyErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -82,27 +112,30 @@ export default function AuthProfileModal({ isOpen, onClose }: AuthProfileModalPr
     setSuccessMsg("");
 
     try {
-      const { error } = await supabaseClient.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-            phone: mobile,
-            city: city,
-          },
-        },
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const firebaseUser = userCredential.user;
+
+      await updateProfile(firebaseUser, {
+        displayName: fullName,
       });
 
-      if (error) {
-        setErrorMsg(error.message);
-      } else {
-        setSuccessMsg("Registration complete! Check your email for verification link if required.");
-        // Clear fields
-        setPassword("");
+      try {
+        await setDoc(doc(db, "users", firebaseUser.uid), {
+          fullName,
+          email,
+          mobile,
+          city,
+          createdAt: new Date().toISOString(),
+        });
+      } catch (firestoreErr) {
+        console.warn("Firestore save failed in modal sign up:", firestoreErr);
+        localStorage.setItem(`user_meta_${firebaseUser.uid}`, JSON.stringify({ fullName, mobile, city }));
       }
+
+      setSuccessMsg("Registration complete!");
+      setPassword("");
     } catch (err: any) {
-      setErrorMsg(err.message || "An error occurred during sign up.");
+      setErrorMsg(getFriendlyErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -115,22 +148,29 @@ export default function AuthProfileModal({ isOpen, onClose }: AuthProfileModalPr
     setSuccessMsg("");
 
     try {
-      const { error } = await supabaseClient.auth.updateUser({
-        data: {
-          full_name: fullName,
-          phone: mobile,
-          city: city,
-        },
+      if (!user) throw new Error("No authenticated user found.");
+
+      await updateProfile(user, {
+        displayName: fullName,
       });
 
-      if (error) {
-        setErrorMsg(error.message);
-      } else {
-        setSuccessMsg("Profile updated successfully!");
-        setTimeout(() => {
-          setSuccessMsg("");
-        }, 3000);
+      try {
+        await setDoc(doc(db, "users", user.uid), {
+          fullName,
+          email: user.email,
+          mobile,
+          city,
+          updatedAt: new Date().toISOString(),
+        }, { merge: true });
+      } catch (firestoreErr) {
+        console.warn("Firestore update failed in modal:", firestoreErr);
+        localStorage.setItem(`user_meta_${user.uid}`, JSON.stringify({ fullName, mobile, city }));
       }
+
+      setSuccessMsg("Profile updated successfully!");
+      setTimeout(() => {
+        setSuccessMsg("");
+      }, 3000);
     } catch (err: any) {
       setErrorMsg(err.message || "An error occurred while updating profile.");
     } finally {
@@ -140,7 +180,7 @@ export default function AuthProfileModal({ isOpen, onClose }: AuthProfileModalPr
 
   const handleLogout = async () => {
     setLoading(true);
-    await supabaseClient.auth.signOut();
+    await signOut(auth);
     setLoading(false);
     onClose();
   };

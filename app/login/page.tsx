@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Mail, Lock, ArrowLeft, Eye, EyeOff, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { supabaseClient } from "../lib/supabase-client";
+import { auth } from "../lib/firebaseClient";
+import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "firebase/auth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -18,15 +19,33 @@ export default function LoginPage() {
   const [successMsg, setSuccessMsg] = useState("");
 
   useEffect(() => {
-    // Check if user is already logged in
-    supabaseClient.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
+    // Check if user is already logged in using Firebase Auth
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
         router.push("/profile");
       } else {
         setCheckingAuth(false);
       }
     });
+    return () => unsubscribe();
   }, [router]);
+
+  const getFriendlyErrorMessage = (error: any) => {
+    const code = error?.code || error?.message || "";
+    if (code.includes("auth/invalid-credential") || code.includes("auth/wrong-password") || code.includes("auth/user-not-found")) {
+      return "Invalid email or password. Please try again.";
+    }
+    if (code.includes("auth/invalid-email")) {
+      return "Please enter a valid email address.";
+    }
+    if (code.includes("auth/user-disabled")) {
+      return "This account has been disabled.";
+    }
+    if (code.includes("auth/too-many-requests")) {
+      return "Too many failed attempts. Please try again later.";
+    }
+    return error.message || "An unexpected error occurred.";
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,43 +54,35 @@ export default function LoginPage() {
     setSuccessMsg("");
 
     try {
-      const { data, error } = await supabaseClient.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        setErrorMsg(error.message);
-        setLoading(false);
-      } else if (data.user) {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      if (userCredential.user) {
         setSuccessMsg("Logged in successfully! Redirecting...");
         setTimeout(() => {
           router.push("/profile");
         }, 1500);
       }
     } catch (err: any) {
-      setErrorMsg(err.message || "An unexpected error occurred.");
+      setErrorMsg(getFriendlyErrorMessage(err));
       setLoading(false);
     }
   };
 
   const handleGoogleLogin = async () => {
+    setLoading(true);
+    setErrorMsg("");
+    setSuccessMsg("");
     try {
-      const { error } = await supabaseClient.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/profile`,
-        },
-      });
-      if (error) {
-        if (error.message.toLowerCase().includes("provider") || error.status === 400) {
-          setErrorMsg("Google Sign-In is not yet enabled in your Supabase Auth settings. Please go to 'Authentication -> Providers -> Google' in your Supabase console to enable Google OAuth.");
-        } else {
-          setErrorMsg(error.message);
-        }
+      const provider = new GoogleAuthProvider();
+      const userCredential = await signInWithPopup(auth, provider);
+      if (userCredential.user) {
+        setSuccessMsg("Logged in successfully with Google! Redirecting...");
+        setTimeout(() => {
+          router.push("/profile");
+        }, 1500);
       }
     } catch (err: any) {
-      setErrorMsg(err.message || "Google login failed.");
+      setErrorMsg(getFriendlyErrorMessage(err));
+      setLoading(false);
     }
   };
 
@@ -161,16 +172,16 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Divider
+          {/* Divider */}
           <div className="relative my-6 text-center text-xs">
             <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-zinc-200"></div></div>
             <span className="relative bg-white px-2 text-zinc-400">Or continue with</span>
           </div>
-          */}
 
-          {/* Social Auth
+          {/* Social Auth */}
           <button
             onClick={handleGoogleLogin}
+            type="button"
             className="w-full flex items-center justify-center gap-2.5 rounded-xl border border-zinc-200 hover:bg-zinc-50 py-3 text-sm font-semibold text-zinc-700 transition cursor-pointer"
           >
             <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
@@ -181,7 +192,6 @@ export default function LoginPage() {
             </svg>
             Google Account
           </button>
-          */}
 
 
           {/* Footer link */}

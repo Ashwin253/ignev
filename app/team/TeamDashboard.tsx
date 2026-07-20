@@ -15,6 +15,8 @@ import ContentPanel from "./ContentPanel";
 import OffersPanel from "./OffersPanel";
 import MediaPanel from "./MediaPanel";
 import ForYouLeadsPanel from "./ForYouLeadsPanel";
+import ApprovalsPanel from "./ApprovalsPanel";
+import VehicleApprovalsPanel from "./VehicleApprovalsPanel";
 import { requestFcmToken } from "../lib/firebase";
 import { useVoiceDictation, MicButton } from "./VoiceInput";
 import { appendExtra, isCheckboxExtra, isExtraChecked, normalizeExtras, type SpecExtraItem } from "../lib/spec-extras";
@@ -419,7 +421,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
     }
   };
 
-  const [activeSection, setActiveSection] = useState<"listings" | "all_listings" | "leads" | "foryou_leads" | "prices" | "analytics" | "map" | "banners" | "content" | "offers" | "media" | "chargers">("listings");
+  const [activeSection, setActiveSection] = useState<"listings" | "all_listings" | "leads" | "foryou_leads" | "prices" | "analytics" | "map" | "banners" | "content" | "offers" | "media" | "chargers" | "approvals" | "vehicle_approvals">("listings");
   const [selectedModelId, setSelectedModelId] = useState<string>("");
   const [selectedBrand, setSelectedBrand] = useState<string>("");
   const [tableBrandFilter, setTableBrandFilter] = useState<string>("");
@@ -1026,6 +1028,20 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
         }, 1200);
       }
     }); 
+
+    // Listen for auth events (specifically PASSWORD_RECOVERY)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: string, session: any) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setShowChangePassword(true);
+      }
+      if (session?.user) {
+        setUser(session.user);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
   useEffect(() => {
     if (user) {
@@ -1706,10 +1722,20 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${activeSection === "offers" ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-955 border border-slate-300"}`}>
             🏷️ Offers
           </button>
+          <button onClick={() => setActiveSection("approvals")}
+            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${activeSection === "approvals" ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-955 border border-slate-300"}`}>
+            🛡️ B2B Approvals
+          </button>
+          <button onClick={() => setActiveSection("vehicle_approvals")}
+            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${activeSection === "vehicle_approvals" ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-955 border border-slate-300"}`}>
+            🚗 Vehicle Approvals
+          </button>
         </div>
 
         {activeSection === "leads" && <LeadsPanel supabase={supabase} userId={user.id} />}
         {activeSection === "foryou_leads" && <ForYouLeadsPanel supabase={supabase} userId={user.id} />}
+        {activeSection === "approvals" && <ApprovalsPanel />}
+        {activeSection === "vehicle_approvals" && <VehicleApprovalsPanel supabase={supabase} />}
         {activeSection === "prices" && <FuelPricesPanel supabase={supabase} userEmail={user.email || ""} />}
         {activeSection === "analytics" && <AnalyticsPanel supabase={supabase} />}
         {activeSection === "map" && <MapPanel supabase={supabase} userEmail={user.email || ""} />}

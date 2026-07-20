@@ -285,8 +285,14 @@ export default function AuthProfileModal({ isOpen, onClose }: AuthProfileModalPr
                         type="tel"
                         name="mobile"
                         value={mobile}
-                        onChange={(e) => setMobile(e.target.value)}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, "");
+                          if (val.length <= 10) setMobile(val);
+                        }}
                         placeholder="9876543210"
+                        maxLength={10}
+                        pattern="[0-9]{10}"
+                        title="Please enter a valid 10-digit mobile number."
                         className="h-10 w-full bg-transparent text-sm outline-none text-zinc-900"
                       />
                     </div>
@@ -449,8 +455,14 @@ export default function AuthProfileModal({ isOpen, onClose }: AuthProfileModalPr
                         <input
                           type="tel"
                           value={mobile}
-                          onChange={(e) => setMobile(e.target.value)}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, "");
+                            if (val.length <= 10) setMobile(val);
+                          }}
                           placeholder="9876543210"
+                          maxLength={10}
+                          pattern="[0-9]{10}"
+                          title="Please enter a valid 10-digit mobile number."
                           className="h-10 w-full bg-transparent text-sm outline-none text-zinc-900"
                         />
                       </div>

@@ -1261,8 +1261,16 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
                         type="tel" 
                         required
                         value={contact.phone}
-                        onChange={(e) => setContact(prev => ({ ...prev, phone: e.target.value }))}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, "");
+                          if (val.length <= 10) {
+                            setContact(prev => ({ ...prev, phone: val }));
+                          }
+                        }}
                         placeholder="Enter your mobile number"
+                        maxLength={10}
+                        pattern="[0-9]{10}"
+                        title="Please enter a valid 10-digit mobile number."
                         className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 pl-10 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-violet-500 focus:bg-white transition-all"
                       />
                     </div>

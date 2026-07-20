@@ -42,19 +42,19 @@ export default async function CatalogPage() {
   } catch { /* Supabase failed or not configured */ }
 
   return (
-    <section className="min-h-screen bg-[#d7ebec] text-slate-900 py-28 relative overflow-hidden">
+    <section className="min-h-screen bg-white dark:bg-[#0f1115] text-zinc-900 dark:text-white py-28 relative overflow-hidden transition-colors duration-300">
       {/* Decorative Ambient Glowing Blurs */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#34ebb1]/15 rounded-full blur-[130px] pointer-events-none"></div>
-      <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-[#34ebb1]/10 rounded-full blur-[130px] pointer-events-none"></div>
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#34ebb1]/15 dark:bg-[#34ebb1]/5 rounded-full blur-[130px] pointer-events-none"></div>
+      <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-[#34ebb1]/10 dark:bg-[#34ebb1]/5 rounded-full blur-[130px] pointer-events-none"></div>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-[#10855f] hover:text-[#0b6447]">
+            <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-[#10855f] dark:text-[#34ebb1] hover:text-[#0b6447] dark:hover:text-[#34ebb1]/80">
               <ArrowLeft size={16} />
               Back to home
             </Link>
-            <h1 className="mt-4 text-4xl font-black tracking-tight text-slate-950 md:text-5xl">
+            <h1 className="mt-4 text-4xl font-black tracking-tight text-zinc-950 dark:text-white md:text-5xl">
               EV Catalog
             </h1>
             {/* <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 md:text-base">

@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { 
-  Download, Trash2, Upload, Search, Loader2, RefreshCw, X, CheckCircle, Sparkles, Crop, FlipHorizontal, FileImage
+  Download, Trash2, Upload, Search, Loader2, RefreshCw, X, CheckCircle, Sparkles, Crop, FlipHorizontal, FileImage, Maximize2
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import CropModal from "./CropModal";
 
 interface EvListingRow {
@@ -72,6 +73,12 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
 
   // AVIF Conversion state
   const [convertingAvifId, setConvertingAvifId] = useState<string | null>(null);
+
+  // Lightbox modal enlarger state
+  const [enlargedImage, setEnlargedImage] = useState<string | null>(null);
+
+  // Super-resolution state
+  const [upscalingId, setUpscalingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchListings();
@@ -401,6 +408,161 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
     fetch("/api/build-summary").catch((err) => console.error("Error rebuilding summary:", err));
     await fetchListings();
     setBulkProcessing(false);
+  };
+
+  // Hermite resampling algorithm for high-quality client-side image upscaling (simulating Super-Resolution)
+  const resampleHermite = (canvas: HTMLCanvasElement, W: number, H: number, W2: number, H2: number) => {
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const img = ctx.getImageData(0, 0, W, H);
+    const img2 = ctx.createImageData(W2, H2);
+    const data = img.data;
+    const data2 = img2.data;
+    
+    const ratio_w = W / W2;
+    const ratio_h = H / H2;
+    const ratio_w_half = Math.ceil(ratio_w / 2);
+    const ratio_h_half = Math.ceil(ratio_h / 2);
+
+    for (let j = 0; j < H2; j++) {
+      for (let i = 0; i < W2; i++) {
+        const x2 = (i + 0.5) * ratio_w - 0.5;
+        const y2 = (j + 0.5) * ratio_h - 0.5;
+        const ix_v = Math.floor(x2);
+        const iy_v = Math.floor(y2);
+        
+        let r = 0, g = 0, b = 0, a = 0;
+        let weights = 0;
+        
+        for (let j_v = iy_v - ratio_h_half; j_v < iy_v + ratio_h_half + 1; j_v++) {
+          for (let i_v = ix_v - ratio_w_half; i_v < ix_v + ratio_w_half + 1; i_v++) {
+            if (i_v >= 0 && i_v < W && j_v >= 0 && j_v < H) {
+              const dx = x2 - i_v;
+              const dy = y2 - j_v;
+              const dist = Math.sqrt(dx * dx + dy * dy);
+              let weight = 0;
+              if (dist < 1) {
+                weight = 2 * dist * dist * dist - 3 * dist * dist + 1;
+              }
+              if (weight > 0) {
+                const idx = (j_v * W + i_v) * 4;
+                r += data[idx] * weight;
+                g += data[idx + 1] * weight;
+                b += data[idx + 2] * weight;
+                a += data[idx + 3] * weight;
+                weights += weight;
+              }
+            }
+          }
+        }
+        
+        const idx2 = (j * W2 + i) * 4;
+        data2[idx2] = r / weights;
+        data2[idx2 + 1] = g / weights;
+        data2[idx2 + 2] = b / weights;
+        data2[idx2 + 3] = a / weights;
+      }
+    }
+    canvas.width = W2;
+    canvas.height = H2;
+    ctx.putImageData(img2, 0, 0);
+  };
+
+  // Client-side AI-like 2x Super-Resolution image upscaler
+  const handleSuperResolution = async (item: ImageItem) => {
+    if (!confirm("Run 2x Super-Resolution Upscaler on this image? The upscaled image will replace the original listing photo in the database.")) return;
+    setUpscalingId(item.id);
+    try {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = () => reject(new Error("Failed to load source image for upscaling"));
+        img.src = item.url;
+      });
+
+      const originalWidth = img.naturalWidth || img.width;
+      const originalHeight = img.naturalHeight || img.height;
+      
+      // Enlarge 2x
+      const targetWidth = originalWidth * 2;
+      const targetHeight = originalHeight * 2;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = originalWidth;
+      canvas.height = originalHeight;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Could not construct 2D context");
+      ctx.drawImage(img, 0, 0, originalWidth, originalHeight);
+
+      // Perform Hermite upscaling & sharpening interpolation
+      resampleHermite(canvas, originalWidth, originalHeight, targetWidth, targetHeight);
+
+      const blob = await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob((b) => resolve(b), "image/png");
+      });
+
+      if (!blob) throw new Error("Could not convert canvas to Blob");
+
+      const sig = getFileSignature(item);
+      const filename = `${sig}-superres.png`;
+      const file = new File([blob], filename, { type: "image/png" });
+      const path = `vehicles/${Date.now()}-${sig}-superres.png`;
+
+      const { data, error } = await supabase.storage.from("evphotos").upload(path, file, { upsert: true });
+      if (error) throw new Error("Storage upload failed: " + error.message);
+
+      const publicUrl = supabase.storage.from("evphotos").getPublicUrl(data.path).data.publicUrl;
+
+      const listing = listings.find((l) => l.id === item.listingId);
+      if (!listing) return;
+
+      let updatePayload: Partial<EvListingRow> = {};
+
+      if (item.type === "main") {
+        updatePayload.photo = publicUrl;
+      } else if (item.type === "featured") {
+        const rawPhotos = Array.isArray(listing.featured_photos)
+          ? [...listing.featured_photos]
+          : JSON.parse(typeof listing.featured_photos === "string" ? listing.featured_photos : "[]");
+
+        if (typeof rawPhotos[item.index] === "string") {
+          rawPhotos[item.index] = publicUrl;
+        } else {
+          rawPhotos[item.index] = { ...rawPhotos[item.index], url: publicUrl };
+        }
+        updatePayload.featured_photos = rawPhotos;
+      } else if (item.type === "gallery") {
+        const rawGallery = Array.isArray(listing.gallery_images)
+          ? [...listing.gallery_images]
+          : JSON.parse(typeof listing.gallery_images === "string" ? listing.gallery_images : "[]");
+
+        if (typeof rawGallery[item.index] === "string") {
+          rawGallery[item.index] = publicUrl;
+        } else {
+          rawGallery[item.index] = { ...rawGallery[item.index], url: publicUrl };
+        }
+        updatePayload.gallery_images = rawGallery;
+      }
+
+      const { error: updateError } = await supabase
+        .from("evlistings")
+        .update(updatePayload)
+        .eq("id", item.listingId);
+
+      if (updateError) {
+        alert("Failed to update database listing: " + updateError.message);
+      } else {
+        alert("2x Super-Resolution Upscaling complete!");
+        fetch("/api/build-summary").catch((err) => console.error("Error rebuilding summary:", err));
+        await fetchListings();
+      }
+    } catch (err: any) {
+      alert("Super-Resolution failed: " + err.message);
+    } finally {
+      setUpscalingId(null);
+    }
   };
 
   const convertToImageBlob = (url: string): Promise<Blob> => {
@@ -987,7 +1149,9 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
                 >
                   {/* Image Container with Custom Toggled Background */}
                   <div 
-                    className="relative aspect-[4/3] overflow-hidden border-b border-slate-200 flex items-center justify-center"
+                    onClick={() => setEnlargedImage(img.url)}
+                    className="relative aspect-[4/3] overflow-hidden border-b border-slate-200 flex items-center justify-center cursor-zoom-in"
+                    title="Click to view enlarged image"
                     style={{
                       backgroundColor: bgType === "white" ? "#ffffff" : bgType === "dark" ? "#1e293b" : "#ffffff",
                       backgroundImage: bgType === "checkerboard" 
@@ -1132,14 +1296,36 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
                           deletingId !== null ||
                           getFileExtension(img.url) === "avif"
                         }
-                        className="col-span-2 flex items-center justify-center gap-1.5 p-2 rounded-xl bg-slate-100 hover:bg-sky-50 hover:text-sky-700 text-slate-650 text-[10px] font-extrabold transition-colors border border-slate-200 cursor-pointer text-center disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="flex items-center justify-center gap-1 p-2 rounded-xl bg-slate-100 hover:bg-sky-50 hover:text-sky-700 text-slate-650 text-[10px] font-extrabold transition-colors border border-slate-200 cursor-pointer text-center disabled:opacity-60 disabled:cursor-not-allowed"
                       >
                         {convertingAvifId === img.id ? (
                           <Loader2 size={14} className="animate-spin text-sky-600 animate-pulse" />
                         ) : (
                           <>
                             <FileImage size={14} className="text-sky-600" />
-                            {getFileExtension(img.url) === "avif" ? "Already AVIF File" : "Convert to AVIF"}
+                            {getFileExtension(img.url) === "avif" ? "AVIF" : "Convert AVIF"}
+                          </>
+                        )}
+                      </button>
+
+                      {/* Super-Resolution Upscaling */}
+                      <button
+                        onClick={() => handleSuperResolution(img)}
+                        disabled={
+                          upscalingId !== null ||
+                          bgRemovingId !== null ||
+                          uploadingId !== null ||
+                          deletingId !== null ||
+                          convertingAvifId !== null
+                        }
+                        className="flex items-center justify-center gap-1.5 p-2 rounded-xl bg-slate-100 hover:bg-violet-50 hover:text-violet-700 text-slate-650 text-[10px] font-extrabold transition-colors border border-slate-200 cursor-pointer text-center disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        {upscalingId === img.id ? (
+                          <Loader2 size={14} className="animate-spin text-violet-600" />
+                        ) : (
+                          <>
+                            <Sparkles size={14} className="text-violet-600 animate-pulse" />
+                            Super-Res 2x
                           </>
                         )}
                       </button>
@@ -1247,6 +1433,51 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
           onClose={() => setCropImage(null)}
         />
       )}
+
+      {/* Lightbox Modal Enlarger */}
+      <AnimatePresence>
+        {enlargedImage && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-4">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative max-w-4xl w-full max-h-[90vh] flex flex-col items-center justify-center"
+            >
+              <button 
+                onClick={() => setEnlargedImage(null)}
+                className="absolute -top-12 right-0 rounded-full bg-white/10 hover:bg-white/20 text-white p-2.5 transition cursor-pointer"
+                aria-label="Close image preview"
+              >
+                <X size={20} />
+              </button>
+              <div className="rounded-2xl overflow-hidden border border-white/10 bg-zinc-950/60 p-2 shadow-2xl flex items-center justify-center max-h-[75vh]">
+                <img 
+                  src={enlargedImage} 
+                  alt="Enlarged EV preview" 
+                  className="max-w-full max-h-[70vh] object-contain rounded-lg"
+                />
+              </div>
+              <div className="mt-4 flex gap-3">
+                <a 
+                  href={enlargedImage} 
+                  target="_blank" 
+                  rel="noreferrer" 
+                  className="rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs px-4 py-2.5 transition flex items-center gap-1.5"
+                >
+                  Open Original Link
+                </a>
+                <button 
+                  onClick={() => setEnlargedImage(null)} 
+                  className="rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs px-6 py-2.5 transition cursor-pointer"
+                >
+                  Close Preview
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

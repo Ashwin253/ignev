@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Menu, X, Home, LayoutGrid, MapPin, IndianRupee, Download, SlidersHorizontal, Volume2, VolumeX, Smartphone, Sparkles, ChevronDown, User } from "lucide-react";
+import { Menu, X, Home, LayoutGrid, MapPin, IndianRupee, Download, SlidersHorizontal, Volume2, VolumeX, Smartphone, Sparkles, ChevronDown, User, Sun, Moon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useFeedback } from "../context/FeedbackContext";
 import { playClickSound, playHaptic } from "../lib/feedback";
@@ -29,7 +29,7 @@ export default function Header() {
   const [mobileServiceOpen, setMobileServiceOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [prefOpen, setPrefOpen] = useState(false);
-  const { soundEnabled, setSoundEnabled, hapticsEnabled, setHapticsEnabled } = useFeedback();
+  const { soundEnabled, setSoundEnabled, hapticsEnabled, setHapticsEnabled, theme, setTheme } = useFeedback();
   const pathname = usePathname();
 
   const [user, setUser] = useState<FirebaseUser | null>(null);
@@ -76,15 +76,15 @@ export default function Header() {
   // ── Styles ──
   const headerBg = isTransparent
     ? "bg-transparent border-transparent"
-    : "bg-white/80 backdrop-blur-xl border-emerald-100/60 shadow-[0_4px_24px_-12px_rgba(16,185,129,0.2)]";
+    : "bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl border-emerald-100/60 dark:border-zinc-800/60 shadow-[0_4px_24px_-12px_rgba(16,185,129,0.2)] dark:shadow-none";
 
   const linkBase = "text-sm font-medium px-3 py-2 rounded-full transition-all";
   const linkColor = isTransparent
     ? "text-white/85 hover:text-white hover:bg-white/10"
-    : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100/70";
+    : "text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100/70 dark:hover:bg-zinc-800/70";
   const activeLinkColor = isTransparent
     ? "text-white bg-white/15 backdrop-blur-sm"
-    : "text-emerald-700 bg-emerald-50";
+    : "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30";
 
   const ctaClass = isTransparent
     ? "bg-white/12 hover:bg-white/20 text-white border border-white/25 backdrop-blur-md"
@@ -92,7 +92,7 @@ export default function Header() {
 
   const iconBtnClass = isTransparent
     ? "bg-white/12 hover:bg-white/20 text-white border-white/25"
-    : "bg-zinc-100 hover:bg-zinc-200 text-zinc-700 border-zinc-200";
+    : "bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700";
 
   return (
     <>
@@ -261,6 +261,23 @@ export default function Header() {
                           <span className="flex items-center gap-2 text-sm"><Smartphone size={16} className={hapticsEnabled ? "text-[#34ebb1]" : "text-zinc-500"} /> Haptics</span>
                           <button onClick={() => { const v = !hapticsEnabled; setHapticsEnabled(v); if(v) setTimeout(()=>playHaptic('click'),50); }} aria-label={hapticsEnabled ? "Disable haptic feedback" : "Enable haptic feedback"} className={`w-10 h-5 rounded-full relative transition ${hapticsEnabled ? 'bg-[#34ebb1]' : 'bg-zinc-700'}`}>
                             <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition ${hapticsEnabled ? 'left-5' : 'left-0.5'}`} />
+                          </button>
+                        </div>
+                        <div className="flex items-center justify-between border-t border-white/10 pt-2.5 mt-2.5">
+                          <span className="flex items-center gap-2 text-sm">
+                            {theme === "dark" ? <Moon size={16} className="text-[#34ebb1]" /> : <Sun size={16} className="text-amber-400" />} 
+                            Dark Mode
+                          </span>
+                          <button 
+                            onClick={() => {
+                              const newTheme = theme === "dark" ? "light" : "dark";
+                              setTheme(newTheme);
+                              playHaptic('click');
+                            }} 
+                            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} 
+                            className={`w-10 h-5 rounded-full relative transition ${theme === "dark" ? 'bg-[#34ebb1]' : 'bg-zinc-700'}`}
+                          >
+                            <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition ${theme === "dark" ? 'left-5' : 'left-0.5'}`} />
                           </button>
                         </div>
                       </div>

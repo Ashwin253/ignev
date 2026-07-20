@@ -136,10 +136,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   };
 
   return (
-    <section className="min-h-screen bg-[#f8f5f0] text-slate-900 py-28 overflow-x-hidden relative">
+    <section className="min-h-screen bg-white dark:bg-[#0f1115] text-zinc-900 dark:text-white py-28 overflow-x-hidden relative transition-colors duration-300">
       {/* Decorative Ambient Glowing Blurs */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#a5e6d1]/15 rounded-full blur-[130px] pointer-events-none"></div>
-      <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-[#a5e6d1]/10 rounded-full blur-[130px] pointer-events-none"></div>
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#a5e6d1]/15 dark:bg-[#a5e6d1]/5 rounded-full blur-[130px] pointer-events-none"></div>
+      <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-[#a5e6d1]/10 dark:bg-[#a5e6d1]/5 rounded-full blur-[130px] pointer-events-none"></div>
 
       {/* JSON-LD Schema for AI Crawlers / SEO */}
       <script
@@ -150,14 +150,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
         {/* Breadcrumb row */}
         <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <nav className="flex items-center gap-2 text-sm text-slate-500">
-            <Link href="/" className="hover:text-[#10855f] transition-colors">Home</Link>
+          <nav className="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
+            <Link href="/" className="hover:text-[#10855f] dark:hover:text-[#34ebb1] transition-colors">Home</Link>
             <span>/</span>
-            <Link href="/catalog" className="hover:text-[#10855f] transition-colors">Catalog</Link>
+            <Link href="/catalog" className="hover:text-[#10855f] dark:hover:text-[#34ebb1] transition-colors">Catalog</Link>
             <span>/</span>
-            <span className="font-semibold text-slate-900 line-clamp-1">{item.brand} {item.title}</span>
+            <span className="font-semibold text-zinc-900 dark:text-white line-clamp-1">{item.brand} {item.title}</span>
           </nav>
-          <Link href="/catalog" className="shrink-0 inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-4 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:bg-zinc-900 dark:border-zinc-700 transition">
+          <Link href="/catalog" className="shrink-0 inline-flex items-center gap-2 rounded-full border border-slate-350 bg-white px-4 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:bg-zinc-900 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800 transition">
             <ArrowLeft size={14} /> Back to Catalog
           </Link>
         </div>
@@ -173,25 +173,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           {/* ── Details Area ── */}
           <div className="flex flex-col gap-5">
 
-            {/* Title + badges */}
             <div className="mb-2">
               <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#10855f] mb-1">{item.brand}</p>
               <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-black tracking-tight text-slate-950 md:text-4xl">{item.title}</h1>
-                <div className="flex flex-col gap-1 ml-auto shrink-0">
-                  {item.types[0] && (
-                    <span className="inline-flex items-center gap-1 rounded-full border border-[#a5e6d1]/40 bg-[#a5e6d1]/20 px-2 py-0.5 text-[10px] font-semibold text-[#10855f]">
-                      <Zap size={10} className="text-[#10855f]" />{item.types[0]}
-                    </span>
-                  )}
-                  <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${
-                    launched ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-amber-50 border-amber-200 text-amber-700"
-                  }`}>
-                    {launched
-                      ? <><BadgeCheck size={10} className="text-emerald-400" /> {launchLabel}</>
-                      : <><CalendarDays size={10} className="text-amber-450" /> {launchLabel}</>}
-                  </span>
-                </div>
+                <h1 className="text-3xl font-black tracking-tight text-slate-955 dark:text-white md:text-4xl">{item.title}</h1>
               </div>
             </div>
 
@@ -249,7 +234,7 @@ async function RelatedListings({ slug, currentItem }: { slug: string; currentIte
     return (
       <SmoothCollapseEmptyState>
         <div className="mt-32">
-          <h2 className="mb-8 text-2xl font-black text-black">More like this</h2>
+          <h2 className="mb-8 text-2xl font-black text-zinc-900 dark:text-white">More like this</h2>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             <ProductSkeleton />
             <ProductSkeleton />
@@ -263,11 +248,11 @@ async function RelatedListings({ slug, currentItem }: { slug: string; currentIte
 
   return (
     <div className="mt-32">
-      <h2 className="mb-8 text-2xl font-black text-black">More like this</h2>
+      <h2 className="mb-8 text-2xl font-black text-zinc-900 dark:text-white">More like this</h2>
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {related.map((rel) => (
           <Link key={rel.id} href={`/product/${rel.slug}`}
-            className="group flex flex-col h-full overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-md hover:border-[#a5e6d1]/60 hover:shadow-xl transition-all duration-350 hover:-translate-y-1">
+            className="group flex flex-col h-full overflow-hidden rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-md hover:border-[#a5e6d1]/60 hover:shadow-xl transition-all duration-350 hover:-translate-y-1">
             <div className="relative aspect-4/3 overflow-hidden bg-transparent shrink-0">
               {rel.photo && (
                 <Image src={rel.photo} alt={rel.title} fill sizes="33vw"
@@ -276,15 +261,15 @@ async function RelatedListings({ slug, currentItem }: { slug: string; currentIte
             </div>
             <div className="p-5 flex flex-col grow">
               <div>
-                <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#10855f]">{rel.brand}</p>
-                <h3 className="mt-1 text-lg font-black text-slate-900">{rel.title}</h3>
-                {rel.prices.length > 0 && <p className="mt-1 text-sm text-slate-650 font-bold">{formatPricing(rel.prices)}</p>}
+                <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#10855f] dark:text-[#34ebb1]">{rel.brand}</p>
+                <h3 className="mt-1 text-lg font-black text-zinc-900 dark:text-white">{rel.title}</h3>
+                {rel.prices.length > 0 && <p className="mt-1 text-sm text-zinc-550 dark:text-zinc-350 font-bold">{formatPricing(rel.prices)}</p>}
                 <p className={`mt-1.5 text-xs font-medium ${isLaunched(rel.launchdate) ? "text-emerald-600" : "text-amber-600"}`}>
                   {formatLaunchDate(rel.launchdate)}
                 </p>
               </div>
               <div className="mt-auto pt-5">
-                <span className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-50 border border-slate-250 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-all duration-300 group-hover:bg-[#a5e6d1] group-hover:border-[#a5e6d1] group-hover:text-slate-950 group-hover:font-extrabold shadow-inner group-hover:shadow-[0_0_15px_rgba(165,230,209,0.3)]">
+                <span className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-50 dark:bg-zinc-800 border border-slate-250 dark:border-zinc-700 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-zinc-300 transition-all duration-300 group-hover:bg-[#a5e6d1] group-hover:border-[#a5e6d1] group-hover:text-slate-950 group-hover:font-extrabold shadow-inner group-hover:shadow-[0_0_15px_rgba(165,230,209,0.3)]">
                   View Details <ArrowRight size={16} />
                 </span>
               </div>

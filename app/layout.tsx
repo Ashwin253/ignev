@@ -46,10 +46,21 @@ export default function RootLayout({
     >
       <head>
         <meta name="google-adsense-account" content="ca-pub-4463436920905079" />
+        <Script id="theme-loader" strategy="beforeInteractive">
+          {`
+            (function() {
+              var theme = localStorage.getItem('theme_preference');
+              if (!theme) {
+                theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+              }
+              document.documentElement.classList.add(theme);
+            })();
+          `}
+        </Script>
         <Script src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4463436920905079" strategy="lazyOnload" crossOrigin="anonymous" />
         <Script src="https://t.contentsquare.net/uxa/11fb40d69f477.js" strategy="lazyOnload" />
       </head>
-      <body className="min-h-full flex flex-col bg-[#0f1115] text-white">
+      <body className="min-h-full flex flex-col bg-zinc-50 text-zinc-900 dark:bg-[#0f1115] dark:text-white transition-colors duration-300">
         <ClarityScript />
         <PageTracker />
         <FeedbackProvider>

@@ -108,12 +108,12 @@ export default function AddToHomescreen() {
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
           className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] w-[90%] max-w-md"
         >
-          <div className="bg-zinc-900/80 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-[0_0_40px_rgba(0,0,0,0.5)] flex items-center gap-4 relative overflow-hidden group">
+          <div className="bg-zinc-900/80 backdrop-blur-xl border border-white/10 rounded-md p-2 shadow-[0_0_40px_rgba(0,0,0,0.5)] flex items-center gap-4 relative overflow-hidden group">
             {/* Ambient Background Glow */}
             <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-blue-500/10 opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
             
             {/* Icon */}
-            <div className="relative flex-shrink-0 overflow-hidden rounded-xl shadow-lg ring-1 ring-white/10">
+            <div className="relative flex-shrink-0 overflow-hidden rounded-md shadow-md ring-1 ring-white/10">
               <Image
                 src="/images/android-chrome-512x512.png"
                 alt="EVPULSE app icon"
@@ -128,11 +128,11 @@ export default function AddToHomescreen() {
               <h3 className="text-white font-semibold text-sm tracking-wide">
                 Install EVPULSE App
               </h3>
-              <p className="text-zinc-400 text-xs mt-1 leading-relaxed">
+              {/* <p className="text-zinc-400 text-xs mt-1 leading-relaxed">
                 {isIOS 
                   ? "Tap the share icon below and select 'Add to Home Screen'."
                   : "Get the best experience by installing our app on your device."}
-              </p>
+              </p> */}
             </div>
             
             {/* Actions */}

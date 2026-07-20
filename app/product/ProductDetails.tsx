@@ -204,8 +204,8 @@ export default function ProductDetails({ item }: { item: EvListing }) {
       content: (
         <div className="grid sm:grid-cols-2 gap-3">
           {relevantCityPricing.map((row, i) => (
-            <div key={i} className="flex justify-between items-center rounded-xl bg-zinc-50 px-4 py-3 border-2 border-zinc-200/60 dark:bg-zinc-800/70">
-              <span className="text-sm text-zinc-600 dark:text-zinc-400">{row.location_name}</span>
+            <div key={i} className="flex justify-between items-center rounded-xl bg-zinc-50 dark:bg-zinc-850 px-4 py-3 border-2 border-zinc-200/60 dark:border-zinc-800/80">
+              <span className="text-sm text-zinc-650 dark:text-zinc-400">{row.location_name}</span>
               <span className="text-sm font-bold text-zinc-900 dark:text-white">₹{row.on_road_price} L</span>
             </div>
           ))}
@@ -220,7 +220,7 @@ export default function ProductDetails({ item }: { item: EvListing }) {
       content: (
         <ul className="space-y-3">
           {item.pros.map((p, i) => (
-            <li key={i} className="flex gap-3 text-sm font-medium text-zinc-800 dark:text-zinc-200 bg-emerald-50/50 p-3 rounded-xl border border-emerald-100">
+            <li key={i} className="flex gap-3 text-sm font-medium text-zinc-800 dark:text-zinc-200 bg-emerald-50/50 dark:bg-emerald-950/20 p-3 rounded-xl border border-emerald-100 dark:border-emerald-900/30">
               <CheckCircle2 size={18} className="text-emerald-600 shrink-0" />{p}
             </li>
           ))}
@@ -235,7 +235,7 @@ export default function ProductDetails({ item }: { item: EvListing }) {
       content: (
         <ul className="space-y-3">
           {item.cons.map((c, i) => (
-            <li key={i} className="flex gap-3 text-sm font-medium text-zinc-800 dark:text-zinc-200 bg-rose-50/50 p-3 rounded-xl border border-rose-100">
+            <li key={i} className="flex gap-3 text-sm font-medium text-zinc-800 dark:text-zinc-200 bg-rose-50/50 dark:bg-rose-950/20 p-3 rounded-xl border border-rose-100 dark:border-rose-900/30">
               <CircleMinus size={18} className="text-rose-500 shrink-0" />{c}
             </li>
           ))}
@@ -271,7 +271,7 @@ export default function ProductDetails({ item }: { item: EvListing }) {
   }, [sections, activeTabId]);
 
   return (
-    <div className="mt-12 rounded-[28px] border-2 border-black bg-white/70 backdrop-blur-xl shadow-[4px_4px_0px_rgba(0,0,0,1)] dark:bg-zinc-900/60 p-6 md:p-8">
+    <div className="mt-12 rounded-[28px] border-2 border-black dark:border-zinc-800 bg-white/70 backdrop-blur-xl shadow-[4px_4px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_rgba(255,255,255,0.05)] dark:bg-zinc-900/60 p-6 md:p-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
           <h2 className="text-[28px] font-semibold tracking-tight text-zinc-900 dark:text-white">Specifications & Details</h2>
@@ -279,20 +279,20 @@ export default function ProductDetails({ item }: { item: EvListing }) {
         </div>
         
         {variants.length > 0 && (
-          <label className="relative inline-flex items-center gap-2.5 rounded-2xl border-2 border-black bg-white px-4 py-2.5 shadow-[2px_2px_0px_rgba(0,0,0,1)] dark:bg-zinc-800 shrink-0">
+          <label className="relative inline-flex items-center gap-2.5 rounded-2xl border-2 border-black dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 shadow-[2px_2px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_rgba(255,255,255,0.05)] shrink-0">
             <Gauge size={15} className="text-emerald-600 shrink-0" />
             {variants.length > 1 ? (
               <select
                 value={selectedVariant}
                 onChange={(e) => { setLocalSelectedVariant(e.target.value); selectVariantByName(e.target.value); }}
-                className="bg-transparent text-sm font-bold text-zinc-900 outline-none pr-6 dark:text-white cursor-pointer"
+                className="bg-transparent text-sm font-bold text-zinc-900 outline-none pr-6 dark:text-white cursor-pointer [&>option]:text-black dark:[&>option]:text-white dark:[&>option]:bg-zinc-800"
               >
                 {variants.map((v) => <option key={v} value={v}>{v}</option>)}
               </select>
             ) : (
               <span className="text-sm font-bold text-zinc-900 dark:text-white pr-4">{variants[0]}</span>
             )}
-            {variants.length > 1 && <ChevronDown size={14} className="text-zinc-900 absolute right-3 pointer-events-none" />}
+            {variants.length > 1 && <ChevronDown size={14} className="text-zinc-900 dark:text-white absolute right-3 pointer-events-none" />}
           </label>
         )}
       </div>
@@ -303,11 +303,11 @@ export default function ProductDetails({ item }: { item: EvListing }) {
           <select 
              value={activeTabId} 
              onChange={(e) => setActiveTabId(e.target.value)}
-             className="w-full rounded-2xl border-2 border-black bg-white px-4 py-3.5 font-bold shadow-[2px_2px_0px_rgba(0,0,0,1)] outline-none appearance-none"
+             className="w-full rounded-2xl border-2 border-black dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white px-4 py-3.5 font-bold shadow-[2px_2px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_rgba(255,255,255,0.05)] outline-none appearance-none cursor-pointer"
           >
              {sections.map(s => <option key={s.id} value={s.id}>{s.title}</option>)}
           </select>
-          <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <ChevronDown size={16} className="text-zinc-900 dark:text-white absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
 
         {/* Desktop Vertical Tabs */}
@@ -318,20 +318,20 @@ export default function ProductDetails({ item }: { item: EvListing }) {
               onClick={() => setActiveTabId(s.id)}
               className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl border-2 transition-all ${
                 activeTabId === s.id 
-                ? 'border-black bg-white shadow-[2px_2px_0px_rgba(0,0,0,1)]' 
-                : 'border-transparent hover:border-black/20 hover:bg-white/50 text-zinc-500 hover:text-zinc-900'
+                ? 'border-black dark:border-zinc-750 bg-white dark:bg-zinc-800 shadow-[2px_2px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_rgba(255,255,255,0.05)]' 
+                : 'border-transparent hover:border-black/20 dark:hover:border-white/20 hover:bg-white/50 dark:hover:bg-zinc-800/50 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
               }`}
             >
               <div className={activeTabId === s.id ? "text-emerald-600" : "text-zinc-500"}>{s.icon}</div>
-              <span className={`font-bold text-[13px] text-left flex-1 ${activeTabId === s.id ? "text-zinc-900" : ""}`}>{s.title}</span>
+              <span className={`font-bold text-[13px] text-left flex-1 ${activeTabId === s.id ? "text-zinc-900 dark:text-white" : ""}`}>{s.title}</span>
             </button>
           ))}
         </div>
 
         {/* Tab Content */}
         <div className="flex-1 min-w-0">
-          <div className="rounded-2xl border-2 border-black bg-white p-5 md:p-7 shadow-[4px_4px_0px_rgba(0,0,0,1)] dark:bg-zinc-900/40">
-            <h3 className="text-lg font-bold text-zinc-900 mb-5 flex items-center gap-2 border-b border-zinc-100 pb-4">
+          <div className="rounded-2xl border-2 border-black dark:border-zinc-800 bg-white dark:bg-zinc-900/40 p-5 md:p-7 shadow-[4px_4px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_rgba(255,255,255,0.05)]">
+            <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-5 flex items-center gap-2 border-b border-zinc-100 dark:border-zinc-850 pb-4">
                <span className="text-emerald-600">{sections.find(s => s.id === activeTabId)?.icon}</span>
                {sections.find(s => s.id === activeTabId)?.title}
             </h3>

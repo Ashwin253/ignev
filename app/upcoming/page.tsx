@@ -48,16 +48,16 @@ export default async function UpcomingPage() {
   }));
 
   return (
-    <main className="min-h-screen pt-28 pb-20 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.1),_transparent_40%),linear-gradient(180deg,#fcfdfd_0%,#f0f9ff_100%)] text-zinc-900">
+    <main className="min-h-screen pt-28 pb-20 bg-white dark:bg-[#0f1115] text-zinc-900 dark:text-white transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header Breadcrumbs & Title */}
         <div className="mb-10">
-          <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-blue-700 hover:text-blue-800 transition">
+          <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-blue-700 dark:text-[#34ebb1] hover:text-blue-800 dark:hover:text-[#34ebb1]/80 transition">
             <ArrowLeft size={16} /> Back to Home
           </Link>
           <div className="mt-4">
-            <p className="text-xs font-bold uppercase tracking-wider text-blue-600">Buy/Sell Subcategory</p>
-            <h1 className="mt-1 text-4xl font-extrabold tracking-tight text-zinc-900 sm:text-5xl">
+            <p className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Buy/Sell Subcategory</p>
+            <h1 className="mt-1 text-4xl font-extrabold tracking-tight text-zinc-900 dark:text-white sm:text-5xl">
               Upcoming Electric Vehicles
             </h1>
             <p className="mt-3 max-w-2xl text-sm sm:text-base text-zinc-500">

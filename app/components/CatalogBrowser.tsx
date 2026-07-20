@@ -86,10 +86,10 @@ function CatalogCard({ item, index, isInCompare, addToCompare, removeFromCompare
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.04 }}
-      className="group relative flex h-full flex-col overflow-hidden rounded-md ring-1 ring-zinc-200/60 shadow-sm hover:shadow-md transition-all"
+      className="group relative flex h-full flex-col overflow-hidden rounded-md ring-1 ring-zinc-200/60 dark:ring-zinc-800/60 shadow-sm hover:shadow-md transition-all"
       style={{ backgroundImage: "url('/listingbackground.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}
     >
-      <div className="absolute inset-0 bg-[#f0fdf9]/85 backdrop-blur-[1px]" />
+      <div className="absolute inset-0 bg-[#f0fdf9]/85 dark:bg-zinc-900/85 backdrop-blur-[1px]" />
       <Link href={`/product/${slug}`} className="relative flex flex-1 flex-col">
         <div
           className="relative aspect-[4/3] overflow-hidden"
@@ -159,8 +159,8 @@ function CatalogCard({ item, index, isInCompare, addToCompare, removeFromCompare
             }}
             aria-label={isInCompare(slug) ? `Remove ${item.brand} ${item.name} from comparison` : `Add ${item.brand} ${item.name} to comparison`}
             className={`absolute bottom-3 left-3 grid h-8 w-8 place-items-center rounded-full backdrop-blur-xl transition ${isInCompare(slug)
-                ? "bg-zinc-900 text-white"
-                : "bg-white/80 text-zinc-700 hover:bg-white"
+                ? "bg-zinc-900 dark:bg-zinc-800 text-white"
+                : "bg-white/80 dark:bg-zinc-950/80 text-zinc-700 dark:text-zinc-300 hover:bg-white dark:hover:bg-zinc-900"
               }`}
           >
             <GitCompare size={14} />
@@ -182,26 +182,26 @@ function CatalogCard({ item, index, isInCompare, addToCompare, removeFromCompare
         {/* Content */}
         <div className="flex flex-1 flex-col gap-4 p-5">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">{item.brand}</p>
-            <h2 className="mt-0.5 line-clamp-1 text-[17px] font-bold tracking-tight text-zinc-900">{item.name}</h2>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{item.brand}</p>
+            <h2 className="mt-0.5 line-clamp-1 text-[17px] font-bold tracking-tight text-zinc-900 dark:text-white">{item.name}</h2>
           </div>
           
           <div className="flex flex-wrap items-center justify-between gap-3 text-sm w-full">
-            <span className="font-bold text-zinc-900">
+            <span className="font-bold text-zinc-900 dark:text-white">
               {item.pricing || "TBA"} 
-              {item.baas && <span className="ml-1 text-[10px] font-mono bg-sky-100 text-sky-700 px-1.5 py-0.5 rounded">BAAS</span>}
+              {item.baas && <span className="ml-1 text-[10px] font-mono bg-sky-100 dark:bg-sky-950/40 text-sky-700 dark:text-sky-400 px-1.5 py-0.5 rounded">BAAS</span>}
             </span>
             <div className="flex items-center gap-3">
-              {item.topSpeed != null && <span className="inline-flex items-center gap-1 text-xs font-bold text-zinc-500"><Gauge size={12} />{item.topSpeed} km/h</span>}
-              {item.drivingRange && <span className="inline-flex items-center gap-1 text-xs font-bold text-zinc-500"><Battery size={12} className="text-emerald-500"/>{item.drivingRange} km</span>}
+              {item.topSpeed != null && <span className="inline-flex items-center gap-1 text-xs font-bold text-zinc-500 dark:text-zinc-400"><Gauge size={12} />{item.topSpeed} km/h</span>}
+              {item.drivingRange && <span className="inline-flex items-center gap-1 text-xs font-bold text-zinc-500 dark:text-zinc-400"><Battery size={12} className="text-emerald-500"/>{item.drivingRange} km</span>}
             </div>
           </div>
 
           <div className="mt-auto flex gap-2 pt-1">
-            <span className="flex flex-1 items-center justify-center gap-1 rounded-xl bg-zinc-100 py-2.5 text-xs font-bold text-zinc-700 group-hover:bg-zinc-200 transition">Details <ArrowUpRight size={12} /></span>
+            <span className="flex flex-1 items-center justify-center gap-1 rounded-xl bg-zinc-100 dark:bg-zinc-800 py-2.5 text-xs font-bold text-zinc-700 dark:text-zinc-300 group-hover:bg-zinc-200 dark:group-hover:bg-zinc-700 transition">Details <ArrowUpRight size={12} /></span>
             <button
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); triggerEnquiryModal(`${item.brand} ${item.name}`); }}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-zinc-900 py-2.5 text-xs font-bold text-white hover:bg-zinc-800 active:scale-[0.98] transition"
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-zinc-900 dark:bg-emerald-600 py-2.5 text-xs font-bold text-white hover:bg-zinc-800 dark:hover:bg-emerald-700 active:scale-[0.98] transition"
             >
               Enquire <Send size={12} />
             </button>
@@ -436,18 +436,18 @@ export default function CatalogBrowser({
     <div className="space-y-6">
 
       {/* ── Glass Filter Panel (2026) ── */}
-      <div className="rounded-3xl border border-white/10 bg-zinc-950/95 backdrop-blur-2xl shadow-xl shadow-slate-950/5 overflow-hidden relative z-10 text-white">
+      <div className="rounded-3xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-950/95 backdrop-blur-2xl shadow-xl shadow-slate-200/50 dark:shadow-slate-950/5 overflow-hidden relative z-10 text-zinc-900 dark:text-white">
         
         {/* Mobile Header */}
         <div
-          className="md:hidden flex items-center gap-3 px-5 py-4 cursor-pointer active:bg-zinc-800 transition-colors"
+          className="md:hidden flex items-center gap-3 px-5 py-4 cursor-pointer active:bg-zinc-100 dark:active:bg-zinc-800 transition-colors"
           onClick={() => setFiltersOpen((v) => !v)}
         >
-          <div className="w-8 h-8 rounded-2xl bg-zinc-800 flex items-center justify-center border border-white/10">
-            <SlidersHorizontal size={18} className="text-zinc-400" />
+          <div className="w-8 h-8 rounded-2xl bg-white dark:bg-zinc-800 flex items-center justify-center border border-zinc-200 dark:border-white/10">
+            <SlidersHorizontal size={18} className="text-zinc-500 dark:text-zinc-400" />
           </div>
           <div className="flex-1">
-            <div className="text-sm font-bold text-white flex items-center gap-2">
+            <div className="text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-2">
               {category !== "all" ? category : "All Vehicles"}
               {activeFilterCount > 0 && (
                 <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#34ebb1] text-[10px] font-bold text-zinc-900">
@@ -455,18 +455,18 @@ export default function CatalogBrowser({
                 </span>
               )}
             </div>
-            <div className="text-xs font-bold text-zinc-400">{filteredItems.length} results</div>
+            <div className="text-xs font-bold text-zinc-550 dark:text-zinc-400">{filteredItems.length} results</div>
           </div>
           
-          {filtersOpen ? <ChevronUp size={20} className="text-zinc-400" /> : <ChevronDown size={20} className="text-zinc-400" />}
+          {filtersOpen ? <ChevronUp size={20} className="text-zinc-500 dark:text-zinc-400" /> : <ChevronDown size={20} className="text-zinc-500 dark:text-zinc-400" />}
 
           {/* Share Button - Mobile */}
           <button
             onClick={(e) => { e.stopPropagation(); handleShare(); }}
             aria-label="Share catalog"
-            className="ml-auto w-9 h-9 flex items-center justify-center rounded-2xl bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 transition-all border border-white/10"
+            className="ml-auto w-9 h-9 flex items-center justify-center rounded-2xl bg-white hover:bg-zinc-50 dark:bg-zinc-800 dark:hover:bg-zinc-700 active:bg-zinc-100 dark:active:bg-zinc-600 transition-all border border-zinc-205 dark:border-white/10"
           >
-            {shared ? <Check size={18} className="text-[#34ebb1]" /> : <Share2 size={18} className="text-zinc-400" />}
+            {shared ? <Check size={18} className="text-[#34ebb1]" /> : <Share2 size={18} className="text-zinc-500 dark:text-zinc-400" />}
           </button>
         </div>
 
@@ -474,15 +474,15 @@ export default function CatalogBrowser({
         <div className={filtersOpen ? "block" : "hidden md:block"}>
 
           {/* Type Pills - Glass style */}
-          <div className="px-5 pt-5 pb-4 border-b border-white/10">
+          <div className="px-5 pt-5 pb-4 border-b border-zinc-200 dark:border-white/10">
             <div className="flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1 snap-x snap-mandatory scrollbar-hide">
               {categoryOptions.map((opt) => (
                 <button
                   key={opt.value}
                   onClick={() => updateFilters({ type: opt.value })}
                   className={`snap-start whitespace-nowrap px-5 py-2.5 rounded-2xl text-sm font-bold transition-all border flex-shrink-0 ${category === opt.value
-                      ? "bg-[#34ebb1] text-zinc-950 border-[#34ebb1] shadow-md shadow-[#34ebb1]/20"
-                      : "bg-white/5 border-white/10 hover:border-white/30 hover:bg-white/10 text-white"
+                      ? "bg-emerald-600 border-emerald-600 text-white dark:bg-[#34ebb1] dark:border-[#34ebb1] dark:text-zinc-950 shadow-md"
+                      : "bg-white dark:bg-white/5 border-zinc-200 dark:border-white/10 hover:border-zinc-300 dark:hover:border-white/30 hover:bg-zinc-50 dark:hover:bg-white/10 text-zinc-700 dark:text-white"
                     }`}
                 >
                   {opt.label}
@@ -495,16 +495,16 @@ export default function CatalogBrowser({
           <div className="p-5 grid gap-4 md:grid-cols-[2fr_1fr_1fr_1fr]">
             {/* Search */}
             <div className="relative">
-              <div className="flex items-center gap-3 rounded-3xl border border-white/10 bg-white/5 px-5 py-3.5 focus-within:border-[#34ebb1]/50 focus-within:bg-white/10 transition-all">
-                <Search size={18} className="text-zinc-400" />
+              <div className="flex items-center gap-3 rounded-3xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900 px-5 py-3.5 focus-within:border-emerald-500 dark:focus-within:border-[#34ebb1]/50 transition-all">
+                <Search size={18} className="text-zinc-500 dark:text-zinc-400" />
                 <input
                   value={query}
                   onChange={(e) => updateFilters({ q: e.target.value })}
                   placeholder="Search by model or brand..."
-                  className="flex-1 bg-transparent text-[15px] font-bold outline-none placeholder:text-zinc-500 text-white"
+                  className="flex-1 bg-transparent text-[15px] font-bold outline-none placeholder:text-zinc-400 text-zinc-900 dark:text-white"
                 />
                 {query && (
-                  <button onClick={() => updateFilters({ q: null })} aria-label="Clear search" className="text-zinc-400 hover:text-white">
+                  <button onClick={() => updateFilters({ q: null })} aria-label="Clear search" className="text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white">
                     <X size={18} />
                   </button>
                 )}
@@ -513,29 +513,29 @@ export default function CatalogBrowser({
 
             {/* Brand */}
             <div className="relative">
-              <div className="flex items-center gap-3 rounded-3xl border border-white/10 bg-white/5 px-5 py-3.5 focus-within:border-[#34ebb1]/50 focus-within:bg-white/10 transition-all">
-                <span className="text-xs font-bold text-zinc-400 shrink-0">Brand</span>
+              <div className="flex items-center gap-3 rounded-3xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900 px-5 py-3.5 focus-within:border-emerald-500 dark:focus-within:border-[#34ebb1]/50 transition-all">
+                <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400 shrink-0">Brand</span>
                 <select
                   value={brand}
                   onChange={(e) => updateFilters({ brand: e.target.value })}
-                  className="flex-1 bg-transparent text-[15px] font-bold outline-none text-white cursor-pointer appearance-none [&>option]:text-black"
+                  className="flex-1 bg-transparent text-[15px] font-bold outline-none text-zinc-900 dark:text-white cursor-pointer appearance-none [&>option]:text-black dark:[&>option]:text-white dark:[&>option]:bg-zinc-950"
                 >
                   {brandOptions.map((b) => (
                     <option key={b} value={b}>{b === "all" ? "All brands" : b}</option>
                   ))}
                 </select>
-                <ChevronDown size={16} className="text-zinc-400 pointer-events-none" />
+                <ChevronDown size={16} className="text-zinc-500 dark:text-zinc-400 pointer-events-none" />
               </div>
             </div>
 
             {/* Price */}
             <div className="relative">
-              <div className="flex items-center gap-3 rounded-3xl border border-white/10 bg-white/5 px-5 py-3.5 focus-within:border-[#34ebb1]/50 focus-within:bg-white/10 transition-all">
-                <span className="text-xs font-bold text-zinc-400 shrink-0">Price</span>
+              <div className="flex items-center gap-3 rounded-3xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900 px-5 py-3.5 focus-within:border-emerald-500 dark:focus-within:border-[#34ebb1]/50 transition-all">
+                <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400 shrink-0">Price</span>
                 <select
                   value={price}
                   onChange={(e) => updateFilters({ price: e.target.value })}
-                  className="flex-1 bg-transparent text-[15px] font-bold outline-none text-white cursor-pointer appearance-none [&>option]:text-black"
+                  className="flex-1 bg-transparent text-[15px] font-bold outline-none text-zinc-900 dark:text-white cursor-pointer appearance-none [&>option]:text-black dark:[&>option]:text-white dark:[&>option]:bg-zinc-950"
                 >
                   <option value="all">All prices</option>
                   <option value="0-5">Under ₹5L</option>
@@ -543,24 +543,24 @@ export default function CatalogBrowser({
                   <option value="15-30">₹15–30L</option>
                   <option value="30+">₹30L+</option>
                 </select>
-                <ChevronDown size={16} className="text-zinc-400 pointer-events-none" />
+                <ChevronDown size={16} className="text-zinc-500 dark:text-zinc-400 pointer-events-none" />
               </div>
             </div>
 
             {/* Usage */}
             <div className="relative">
-              <div className="flex items-center gap-3 rounded-3xl border border-white/10 bg-white/5 px-5 py-3.5 focus-within:border-[#34ebb1]/50 focus-within:bg-white/10 transition-all">
-                <span className="text-xs font-bold text-zinc-400 shrink-0">Usage</span>
+              <div className="flex items-center gap-3 rounded-3xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900 px-5 py-3.5 focus-within:border-emerald-500 dark:focus-within:border-[#34ebb1]/50 transition-all">
+                <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400 shrink-0">Usage</span>
                 <select
                   value={usage}
                   onChange={(e) => updateFilters({ usage: e.target.value })}
-                  className="flex-1 bg-transparent text-[15px] font-bold outline-none text-white cursor-pointer appearance-none [&>option]:text-black"
+                  className="flex-1 bg-transparent text-[15px] font-bold outline-none text-zinc-900 dark:text-white cursor-pointer appearance-none [&>option]:text-black dark:[&>option]:text-white dark:[&>option]:bg-zinc-950"
                 >
                   <option value="all">All usage</option>
                   <option value="Passenger">Passenger</option>
                   <option value="Goods">Goods</option>
                 </select>
-                <ChevronDown size={16} className="text-zinc-400 pointer-events-none" />
+                <ChevronDown size={16} className="text-zinc-500 dark:text-zinc-400 pointer-events-none" />
               </div>
             </div>
           </div>
@@ -571,8 +571,8 @@ export default function CatalogBrowser({
               <button
                 onClick={() => updateFilters({ comm: !commercialOnly })}
                 className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-bold transition-all ${commercialOnly
-                    ? "bg-[#34ebb1] border-[#34ebb1] text-zinc-950 shadow-sm"
-                    : "bg-white/5 border-white/10 text-zinc-300 hover:bg-white/10 hover:border-white/30 hover:text-white"
+                    ? "bg-emerald-600 border-emerald-600 text-white dark:bg-[#34ebb1] dark:border-[#34ebb1] dark:text-zinc-950 shadow-sm"
+                    : "bg-white dark:bg-white/5 border-zinc-200 dark:border-white/10 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-white/10 hover:border-zinc-300 dark:hover:border-white/30 hover:text-zinc-900 dark:hover:text-white"
                   }`}
               >
                 <Truck size={16} /> Commercial
@@ -582,8 +582,8 @@ export default function CatalogBrowser({
                 <button
                   onClick={() => updateFilters({ upcoming: !comingSoonOnly })}
                   className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-bold transition-all ${comingSoonOnly
-                      ? "bg-[#34ebb1] border-[#34ebb1] text-zinc-950 shadow-sm"
-                      : "bg-white/5 border-white/10 text-zinc-300 hover:bg-white/10 hover:border-white/30 hover:text-white"
+                      ? "bg-emerald-600 border-emerald-600 text-white dark:bg-[#34ebb1] dark:border-[#34ebb1] dark:text-zinc-950 shadow-sm"
+                      : "bg-white dark:bg-white/5 border-zinc-200 dark:border-white/10 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-white/10 hover:border-zinc-300 dark:hover:border-white/30 hover:text-zinc-900 dark:hover:text-white"
                     }`}
                 >
                   <CalendarDays size={16} />Coming Soon
@@ -593,8 +593,8 @@ export default function CatalogBrowser({
               <button
                 onClick={() => updateFilters({ baas: !baasOnly })}
                 className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-bold transition-all ${baasOnly
-                    ? "bg-[#34ebb1] border-[#34ebb1] text-zinc-950 shadow-sm"
-                    : "bg-white/5 border-white/10 text-zinc-300 hover:bg-white/10 hover:border-white/30 hover:text-white"
+                    ? "bg-emerald-600 border-emerald-600 text-white dark:bg-[#34ebb1] dark:border-[#34ebb1] dark:text-zinc-950 shadow-sm"
+                    : "bg-white dark:bg-white/5 border-zinc-200 dark:border-white/10 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-white/10 hover:border-zinc-300 dark:hover:border-white/30 hover:text-zinc-900 dark:hover:text-white"
                   }`}
               >
                 <Zap size={16} /> BAAS
@@ -611,12 +611,12 @@ export default function CatalogBrowser({
             </div>
 
             <div className="hidden md:flex items-center gap-4 text-sm font-bold">
-              <div className="text-zinc-400">
-                <span className="text-white">{filteredItems.length}</span> of {items.length}
+              <div className="text-zinc-500 dark:text-zinc-400">
+                <span className="text-zinc-900 dark:text-white">{filteredItems.length}</span> of {items.length}
               </div>
               <button
                 onClick={handleShare}
-                className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/10 px-5 py-2.5 text-sm font-bold hover:bg-white/20 hover:border-white/30 active:scale-[0.985] transition-all"
+                className="flex items-center gap-2 rounded-2xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-white/10 px-5 py-2.5 text-sm font-bold text-zinc-800 dark:text-white hover:bg-zinc-50 dark:hover:bg-white/20 hover:border-zinc-300 dark:hover:border-white/30 active:scale-[0.985] transition-all"
               >
                 {shared ? <Check className="text-[#34ebb1]" size={17} /> : <Share2 size={17} />}
                 {getShareButtonText()}

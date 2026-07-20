@@ -25,6 +25,7 @@ export default function AuthProfileModal({ isOpen, onClose }: AuthProfileModalPr
   const [fullName, setFullName] = useState("");
   const [mobile, setMobile] = useState("");
   const [city, setCity] = useState("");
+  const [accountType, setAccountType] = useState<"customer" | "dealer" | "expert">("customer");
 
   useEffect(() => {
     // Sync current session user using Firebase Auth
@@ -125,11 +126,21 @@ export default function AuthProfileModal({ isOpen, onClose }: AuthProfileModalPr
           email,
           mobile,
           city,
+          role: "customer",
+          requestedRole: accountType !== "customer" ? accountType : null,
+          isApproved: accountType === "customer",
           createdAt: new Date().toISOString(),
         });
       } catch (firestoreErr) {
         console.warn("Firestore save failed in modal sign up:", firestoreErr);
-        localStorage.setItem(`user_meta_${firebaseUser.uid}`, JSON.stringify({ fullName, mobile, city }));
+        localStorage.setItem(`user_meta_${firebaseUser.uid}`, JSON.stringify({ 
+          fullName, 
+          mobile, 
+          city,
+          role: "customer",
+          requestedRole: accountType !== "customer" ? accountType : null,
+          isApproved: accountType === "customer"
+        }));
       }
 
       setSuccessMsg("Registration complete!");
@@ -459,6 +470,22 @@ export default function AuthProfileModal({ isOpen, onClose }: AuthProfileModalPr
                       </div>
                     </label>
                   </div>
+
+                  <label className="block">
+                    <span className="text-xs font-bold text-zinc-600">Account Type</span>
+                    <div className="mt-1.5 flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500">
+                      <User size={16} className="text-zinc-400" />
+                      <select
+                        value={accountType}
+                        onChange={(e) => setAccountType(e.target.value as any)}
+                        className="h-10 w-full bg-transparent text-sm outline-none text-zinc-900 cursor-pointer"
+                      >
+                        <option value="customer">Customer / Buyer</option>
+                        <option value="dealer">Dealer / Partner Business</option>
+                        <option value="expert">EV Expert Advisor</option>
+                      </select>
+                    </div>
+                  </label>
 
                   <label className="block">
                     <span className="text-xs font-bold text-zinc-600">Password</span>

@@ -17,6 +17,7 @@ import MediaPanel from "./MediaPanel";
 import ForYouLeadsPanel from "./ForYouLeadsPanel";
 import ApprovalsPanel from "./ApprovalsPanel";
 import VehicleApprovalsPanel from "./VehicleApprovalsPanel";
+import EventsPanel from "./EventsPanel";
 import { requestFcmToken } from "../lib/firebase";
 import { useVoiceDictation, MicButton } from "./VoiceInput";
 import { appendExtra, isCheckboxExtra, isExtraChecked, normalizeExtras, type SpecExtraItem } from "../lib/spec-extras";
@@ -421,7 +422,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
     }
   };
 
-  const [activeSection, setActiveSection] = useState<"listings" | "all_listings" | "leads" | "foryou_leads" | "prices" | "analytics" | "map" | "banners" | "content" | "offers" | "media" | "chargers" | "approvals" | "vehicle_approvals">("listings");
+  const [activeSection, setActiveSection] = useState<"listings" | "all_listings" | "leads" | "foryou_leads" | "prices" | "analytics" | "map" | "banners" | "content" | "offers" | "media" | "chargers" | "approvals" | "vehicle_approvals" | "protest">("listings");
   const [selectedModelId, setSelectedModelId] = useState<string>("");
   const [selectedBrand, setSelectedBrand] = useState<string>("");
   const [tableBrandFilter, setTableBrandFilter] = useState<string>("");
@@ -1670,6 +1671,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             <option value="content">📄 Content</option>
             <option value="offers">🏷️ Offers</option>
             <option value="chargers">🔌 Chargers Compatibility</option>
+            <option value="protest">📢 Protest</option>
           </select>
         </div>
 
@@ -1727,8 +1729,12 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             🛡️ B2B Approvals
           </button>
           <button onClick={() => setActiveSection("vehicle_approvals")}
-            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${activeSection === "vehicle_approvals" ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-955 border border-slate-300"}`}>
+            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 relative ${activeSection === "vehicle_approvals" ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-955 border border-slate-300"}`}>
             🚗 Vehicle Approvals
+          </button>
+          <button onClick={() => setActiveSection("protest")}
+            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 relative ${activeSection === "protest" ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-955 border border-slate-300"}`}>
+            📢 Protest
           </button>
         </div>
 
@@ -1736,6 +1742,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
         {activeSection === "foryou_leads" && <ForYouLeadsPanel supabase={supabase} userId={user.id} />}
         {activeSection === "approvals" && <ApprovalsPanel />}
         {activeSection === "vehicle_approvals" && <VehicleApprovalsPanel supabase={supabase} />}
+        {activeSection === "protest" && <EventsPanel supabase={supabase} userEmail={user.email || ""} />}
         {activeSection === "prices" && <FuelPricesPanel supabase={supabase} userEmail={user.email || ""} />}
         {activeSection === "analytics" && <AnalyticsPanel supabase={supabase} />}
         {activeSection === "map" && <MapPanel supabase={supabase} userEmail={user.email || ""} />}

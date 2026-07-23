@@ -124,9 +124,10 @@ async function HomeContent() {
 
   return (
     <>
-      <Hero products={content.products} listings={listings} freshReleases={freshReleases} upcoming={upcoming} banners={banners} />
+      {/* <Hero products={content.products} listings={listings} freshReleases={freshReleases} upcoming={upcoming} banners={banners} /> */}
 
- 
+       <EcosystemSection updates={updates} listings={listings} banners={banners} />
+{/*       
       <LazyViewport fallback={<div className="h-48" />}>
         <PopularBrands />
       </LazyViewport>
@@ -137,7 +138,7 @@ async function HomeContent() {
       
       <LazyViewport fallback={<div className="h-48" />}>
         <LatestUpdates updates={updates} />
-      </LazyViewport> 
+      </LazyViewport> */}
     </>
   );
 }

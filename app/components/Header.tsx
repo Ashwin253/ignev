@@ -74,24 +74,36 @@ export default function Header() {
   };
 
   // ── Styles ──
+  const isLight = theme === "light";
+
   const headerBg = isTransparent
     ? "bg-transparent border-transparent"
-    : "bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl border-emerald-100/60 dark:border-zinc-800/60 shadow-[0_4px_24px_-12px_rgba(16,185,129,0.2)] dark:shadow-none";
+    : "bg-white/85 dark:bg-zinc-950/85 backdrop-blur-xl border-emerald-100/60 dark:border-zinc-800/60 shadow-[0_4px_24px_-12px_rgba(16,185,129,0.15)] dark:shadow-none";
 
   const linkBase = "text-sm font-medium px-3 py-2 rounded-full transition-all";
+  
   const linkColor = isTransparent
-    ? "text-white/85 hover:text-white hover:bg-white/10"
-    : "text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100/70 dark:hover:bg-zinc-800/70";
+    ? isLight
+      ? "text-zinc-800 hover:text-emerald-800 hover:bg-emerald-950/5 font-semibold"
+      : "text-white/85 hover:text-white hover:bg-white/10"
+    : "text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100/70 dark:hover:bg-zinc-800/70";
+
   const activeLinkColor = isTransparent
-    ? "text-white bg-white/15 backdrop-blur-sm"
+    ? isLight
+      ? "text-emerald-900 bg-emerald-100/80 font-bold"
+      : "text-white bg-white/15 backdrop-blur-sm"
     : "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30";
 
   const ctaClass = isTransparent
-    ? "bg-white/12 hover:bg-white/20 text-white border border-white/25 backdrop-blur-md"
-    : "bg-emerald-600 hover:bg-emerald-700 text-white";
+    ? isLight
+      ? "bg-[#0A2A1E] hover:bg-[#1B6642] text-white font-medium border border-[#0A2A1E]/20 shadow-xs"
+      : "bg-white/12 hover:bg-white/20 text-white border border-white/25 backdrop-blur-md"
+    : "bg-emerald-600 dark:bg-emerald-600 hover:bg-emerald-700 dark:hover:bg-emerald-700 text-white";
 
   const iconBtnClass = isTransparent
-    ? "bg-white/12 hover:bg-white/20 text-white border-white/25"
+    ? isLight
+      ? "bg-emerald-950/5 hover:bg-emerald-950/10 text-zinc-800 border-zinc-300/80"
+      : "bg-white/12 hover:bg-white/20 text-white border-white/25"
     : "bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700";
 
   return (
@@ -204,7 +216,9 @@ export default function Header() {
                 pathname.startsWith("/foryou")
                   ? "bg-violet-600 text-white font-bold shadow-md shadow-violet-500/15"
                   : isTransparent
-                  ? "bg-violet-500/20 text-violet-200 border border-violet-400/20 hover:bg-violet-500/30 hover:text-white font-bold"
+                  ? isLight
+                    ? "bg-violet-100 text-violet-800 border border-violet-300 hover:bg-violet-200 font-bold"
+                    : "bg-violet-500/20 text-violet-200 border border-violet-400/20 hover:bg-violet-500/30 hover:text-white font-bold"
                   : "bg-violet-50 hover:bg-violet-100 text-violet-700 border border-violet-200/50 font-bold"
               }`}
             >
@@ -287,7 +301,7 @@ export default function Header() {
               </AnimatePresence>
             </div>
 
-            <button className={`md:hidden p-2 rounded-full ${isTransparent ? "text-white hover:bg-white/10" : "text-zinc-700 hover:bg-zinc-100"}`} onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}>
+            <button className={`md:hidden p-2 rounded-full ${isTransparent ? (isLight ? "text-zinc-800 hover:bg-black/5" : "text-white hover:bg-white/10") : "text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800"}`} onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}>
               {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
           </div>

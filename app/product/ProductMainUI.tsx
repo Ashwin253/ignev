@@ -288,7 +288,7 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
 
   return (
     <div className="flex flex-col gap-6 text-zinc-900 dark:text-zinc-100">
-      <div className="rounded-[28px] border-2 border-black bg-white/70 backdrop-blur-xl shadow-[4px_4px_0px_rgba(0,0,0,1)] dark:bg-zinc-900/60 dark:border-zinc-800 p-5 sm:p-6">
+      <div className="rounded-[28px] border-2 border-black bg-white/70 backdrop-blur-xl shadow-[4px_4px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_rgba(255,255,255,0.05)] dark:bg-zinc-900/60 dark:border-zinc-800 p-5 sm:p-6">
 
         {/* selectors */}
         <div className={`mb-4 grid ${hasUsageType ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"} gap-3`}>
@@ -454,7 +454,7 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
         <CompareButton slug={slug} name={`${item.brand} ${item.title}`} />
         <button
           onClick={handleShare}
-          className="flex-1 inline-flex items-center justify-center gap-2 rounded-full border border-zinc-300 bg-white px-5 py-3 text-sm font-bold text-zinc-700 hover:bg-zinc-50 dark:bg-zinc-900 dark:border-zinc-700 transition active:scale-95 shadow-xs"
+          className="flex-1 inline-flex items-center justify-center gap-2 rounded-full border border-zinc-300 bg-white px-5 py-3 text-sm font-bold text-zinc-700 hover:bg-zinc-50 dark:bg-zinc-900 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800 transition active:scale-95 shadow-xs"
         >
           <Share2 size={16} />
           {copied ? "Link Copied!" : "Share"}

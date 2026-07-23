@@ -102,6 +102,7 @@ export default function ProductDetails({ item }: { item: EvListing }) {
 
   const feat = item.variantFeatures?.find((f) => f.variantName === selectedVariant)?? item.variantFeatures?.[0];
   const showFeatures = feat && hasFeatureContent(feat);
+  if (item.slug === 'mg-m9') console.log("MG M9 FEATURES:", JSON.stringify(feat, null, 2));
 
   if (feat?.drivetrain) motorRows.push({ label: "Drivetrain", value: String(feat.drivetrain) });
   if (feat?.seating_capacity) dimensionRows.push({ label: "Seating Capacity", value: String(feat.seating_capacity) });
@@ -113,6 +114,70 @@ export default function ProductDetails({ item }: { item: EvListing }) {
   ].filter(Boolean) as { label: string; value: string }[];
 
   const brakesChecks = brakesAndWheelsSection? sectionCheckboxLabels(brakesAndWheelsSection.fields) : [];
+
+  const featuresRows = [
+    feat?.airbag_count && { label: "Airbags", value: String(feat.airbag_count) },
+    feat?.adas_level && { label: "ADAS Level", value: String(feat.adas_level) },
+    feat?.ncap_safety_rating && { label: "NCAP Rating", value: String(feat.ncap_safety_rating) },
+    feat?.screen_size_inches && { label: "Screen Size", value: `${feat.screen_size_inches}"` },
+    (feat?.speaker_count || feat?.front_speakers || feat?.rear_speakers) && { label: "Speakers", value: String(feat.speaker_count || (Number(feat.front_speakers || 0) + Number(feat.rear_speakers || 0))) },
+    feat?.boot_storage_litres && { label: "Boot Storage", value: `${feat.boot_storage_litres} L` },
+  ].filter(Boolean) as { label: string; value: string }[];
+
+  const featuresChecks = [
+    feat?.has_sunroof && "Sunroof",
+    feat?.has_climate_control && "Climate Control",
+    feat?.has_cruise_control && "Cruise Control",
+    feat?.has_wireless_charger && "Wireless Charger",
+    feat?.has_keyless_entry && "Keyless Entry",
+    feat?.has_wireless_carplay_android_auto && "Wireless CarPlay/Android Auto",
+    feat?.has_connected_car_app && "Connected Car App",
+    feat?.has_ota_updates && "OTA Updates",
+    feat?.has_abs && "ABS",
+    feat?.has_ebd && "EBD",
+    feat?.has_esp && "ESP",
+    feat?.has_tpms && "TPMS",
+    feat?.has_360_camera && "360° Camera",
+    feat?.has_gps && "GPS",
+    feat?.has_navigation && "Navigation",
+    feat?.has_speedometer_digital && "Digital Speedometer",
+    feat?.has_odometer_digital && "Digital Odometer",
+    feat?.has_voice_assist && "Voice Assist",
+    feat?.has_stand_alarm && "Stand Alarm",
+    feat?.has_low_battery_indicator && "Low Battery Indicator",
+    feat?.has_clock && "Clock",
+    feat?.has_call_sms_alert && "Call/SMS Alert",
+    feat?.has_tripmeter && "Tripmeter",
+    feat?.has_usb_charging_port && "USB Charging Port",
+    feat?.has_keyless_lock_unlock && "Keyless Lock/Unlock",
+    feat?.has_start_type_self && "Self Start",
+    feat?.has_boot_storage && "Boot Storage",
+  ].filter(Boolean) as string[];
+
+  const extraFeatures = normalizeExtras(feat?.extra_features as unknown[]);
+  const extraFeaturesRows = sectionFieldRows(extraFeatures as any);
+  const extraFeaturesChecks = sectionCheckboxLabels(extraFeatures as any);
+
+  const lightsRows = [
+    feat?.headlight_type && { label: "Headlight Type", value: String(feat.headlight_type) },
+  ].filter(Boolean) as { label: string; value: string }[];
+
+  const lightsChecks = [
+    feat?.has_boot_light && "Boot Light",
+    feat?.has_tail_light && "Tail Light",
+    feat?.has_break_light && "Brake Light",
+    feat?.has_turn_signal && "Turn Signal",
+    feat?.has_drls && "DRLs",
+  ].filter(Boolean) as string[];
+
+  const drivingModesChecks = [
+    feat?.has_mode_eco && "Eco Mode",
+    feat?.has_mode_normal && "Normal Mode",
+    feat?.has_mode_sports && "Sports Mode",
+    feat?.has_mode_hyper && "Hyper Mode",
+    feat?.has_mode_cruise && "Cruise Mode",
+    (feat?.has_mode_reverse || feat?.has_reverse_mode) && "Reverse Mode",
+  ].filter(Boolean) as string[];
 
   const relevantCityPricing = useMemo(() => {
     if (!item.city_pricing?.length) return [];
@@ -188,12 +253,33 @@ export default function ProductDetails({ item }: { item: EvListing }) {
       id: "features",
       title: "Features & Safety",
       icon: <CheckCircle2 size={16} />,
-      condition: showFeatures && feat,
+      condition: featuresRows.length > 0 || featuresChecks.length > 0 || extraFeaturesRows.length > 0 || extraFeaturesChecks.length > 0,
       content: (
-        <SpecCheckboxChips labels={[
-          feat?.has_sunroof && "Sunroof", feat?.has_abs && "ABS", feat?.has_esp && "ESP",
-          feat?.has_360_camera && "360° Camera", feat?.has_tpms && "TPMS",
-        ].filter(Boolean) as string[]} />
+        <>
+          <SpecList rows={[...featuresRows, ...extraFeaturesRows]} />
+          <SpecCheckboxChips labels={[...featuresChecks, ...extraFeaturesChecks]} />
+        </>
+      )
+    },
+    {
+      id: "lights",
+      title: "Lights",
+      icon: <Lightbulb size={16} />,
+      condition: lightsRows.length > 0 || lightsChecks.length > 0,
+      content: (
+        <>
+          <SpecList rows={lightsRows} />
+          <SpecCheckboxChips labels={lightsChecks} />
+        </>
+      )
+    },
+    {
+      id: "drivingModes",
+      title: "Driving Modes",
+      icon: <Activity size={16} />,
+      condition: drivingModesChecks.length > 0,
+      content: (
+        <SpecCheckboxChips labels={drivingModesChecks} />
       )
     },
     {

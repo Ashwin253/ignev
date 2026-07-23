@@ -373,7 +373,7 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
               className={`flex items-center gap-1.5 rounded-full px-3 py-2 text-[10px] font-bold shadow-md transition-all ${
                 showColors
                   ? "bg-slate-900 text-white"
-                  : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200"
+                  : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700 dark:hover:bg-zinc-700"
               }`}
             >
               <Palette size={13} />
@@ -388,7 +388,7 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
               className={`hidden items-center gap-1.5 rounded-full px-3 py-2 text-[10px] font-bold shadow-md transition-all ${
                 showThumbs
                   ? "bg-slate-900 text-white"
-                  : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200"
+                  : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700 dark:hover:bg-zinc-700"
               }`}
             >
               <LayoutGrid size={13} />
@@ -404,7 +404,7 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              className="hidden md:flex absolute bottom-24 right-3 z-10 gap-2 rounded-2xl bg-white/95 backdrop-blur-md border border-slate-200 p-2.5 shadow-xl"
+              className="hidden md:flex absolute bottom-24 right-3 z-10 gap-2 rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-slate-200 dark:border-zinc-800 p-2.5 shadow-xl"
             >
               {resolvedColors.map((hex, i) => {
                 const splitColors = hex.includes("/") ? hex.split("/") : hex.includes(",") ? hex.split(",") : [hex];
@@ -432,7 +432,7 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              className="hidden md:flex absolute bottom-24 right-3 z-10 gap-1.5 rounded-2xl bg-white/95 backdrop-blur-md border border-slate-200 p-2 shadow-xl max-w-[75%] overflow-x-auto"
+              className="hidden md:flex absolute bottom-24 right-3 z-10 gap-1.5 rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-slate-200 dark:border-zinc-800 p-2 shadow-xl max-w-[75%] overflow-x-auto"
             >
               {resolvedPhotos.map((photo, i) => (
                 <button
@@ -465,7 +465,7 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
               className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold shadow-sm transition-all ${
                 showColors
                   ? "bg-slate-900 text-white"
-                  : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200"
+                  : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700 dark:hover:bg-zinc-700"
               }`}
             >
               <Palette size={14} />
@@ -479,7 +479,7 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
               className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold shadow-sm transition-all ${
                 showThumbs
                   ? "bg-slate-900 text-white"
-                  : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200"
+                  : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700 dark:hover:bg-zinc-700"
               }`}
             >
               <LayoutGrid size={14} />
@@ -495,7 +495,7 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="flex flex-wrap gap-2 rounded-2xl bg-white border border-slate-200 p-3 shadow-sm overflow-hidden"
+              className="flex flex-wrap gap-2 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-3 shadow-sm overflow-hidden"
             >
               {resolvedColors.map((hex, i) => {
                 const splitColors = hex.includes("/") ? hex.split("/") : hex.includes(",") ? hex.split(",") : [hex];
@@ -523,7 +523,7 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="flex gap-2 rounded-2xl bg-white border border-slate-200 p-3 shadow-sm overflow-x-auto"
+              className="flex gap-2 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-3 shadow-sm overflow-x-auto"
             >
               {resolvedPhotos.map((photo, i) => (
                 <button

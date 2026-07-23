@@ -37,10 +37,10 @@ function ProductOwnershipInner({ item }: { item: EvListing }) {
     : undefined;
 
   return (
-    <div className="mt-20 rounded-3xl bg-white border border-slate-200 px-5 py-10 md:px-10 md:py-14 shadow-lg">
+    <div className="mt-20 rounded-3xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 px-5 py-10 md:px-10 md:py-14 shadow-lg">
       {/* Header */}
       <div className="text-center mb-8">
-        {/* <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500 shadow-sm mb-4">
+        {/* <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-800 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500 dark:text-zinc-400 shadow-sm mb-4">
           Ownership
         </span> */}
         <h2 className="text-2xl font-black text-slate-900 md:text-3xl">
@@ -55,7 +55,7 @@ function ProductOwnershipInner({ item }: { item: EvListing }) {
           className={`flex-1 flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition-all ${
             activeTab === "emi"
               ? "bg-[#a5e6d1] text-slate-950 font-black shadow-md"
-              : "text-slate-500 hover:text-slate-900 hover:bg-white"
+              : "text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-zinc-800"
           }`}
         >
           <Banknote size={16} />
@@ -66,7 +66,7 @@ function ProductOwnershipInner({ item }: { item: EvListing }) {
           className={`flex-1 flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition-all ${
             activeTab === "cost"
               ? "bg-[#a5e6d1] text-slate-950 font-black shadow-md"
-              : "text-slate-500 hover:text-slate-900 hover:bg-white"
+              : "text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-zinc-800"
           }`}
         >
           <Fuel size={16} />

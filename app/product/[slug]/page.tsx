@@ -17,13 +17,13 @@ import { ProductSelectionProvider } from "../ProductSelectionProvider";
 import dynamic from "next/dynamic";
 
 const ProductDetailsSkeleton = () => (
-  <div className="mt-16 rounded-3xl border-2 border-slate-300 bg-slate-100 px-5 py-8 md:px-10 md:py-10 shadow-sm animate-pulse">
+  <div className="mt-16 rounded-3xl border-2 border-slate-300 dark:border-zinc-800 bg-slate-100 dark:bg-zinc-900 px-5 py-8 md:px-10 md:py-10 shadow-sm animate-pulse">
     <div className="flex justify-center mb-5">
-      <div className="h-8 w-48 bg-slate-300 rounded-lg"></div>
+      <div className="h-8 w-48 bg-slate-300 dark:bg-zinc-700 rounded-lg"></div>
     </div>
     <div className="space-y-3">
       {[1, 2, 3, 4].map((i) => (
-        <div key={i} className="h-[60px] w-full bg-slate-200 rounded-2xl border-2 border-slate-300"></div>
+        <div key={i} className="h-[60px] w-full bg-slate-200 dark:bg-zinc-800 rounded-2xl border-2 border-slate-300 dark:border-zinc-700"></div>
       ))}
     </div>
   </div>

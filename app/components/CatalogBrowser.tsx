@@ -369,7 +369,10 @@ export default function CatalogBrowser({
 
       if (brand !== "all" && item.brand !== brand) return false;
       if (!matchesPrice(item, price)) return false;
+      
+      // Hide commercial vehicles by default. Show ONLY commercial when toggled.
       if (commercialOnly && !item.commercial) return false;
+      if (!commercialOnly && item.commercial) return false;
 
       // Forced filters
       if (forceUpcoming) {
@@ -570,34 +573,46 @@ export default function CatalogBrowser({
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => updateFilters({ comm: !commercialOnly })}
-                className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-bold transition-all ${commercialOnly
-                    ? "bg-emerald-600 border-emerald-600 text-white dark:bg-[#34ebb1] dark:border-[#34ebb1] dark:text-zinc-950 shadow-sm"
-                    : "bg-white dark:bg-white/5 border-zinc-200 dark:border-white/10 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-white/10 hover:border-zinc-300 dark:hover:border-white/30 hover:text-zinc-900 dark:hover:text-white"
-                  }`}
+                className={`inline-flex items-center gap-2.5 rounded-2xl border px-3 py-1.5 text-sm font-bold transition-all ${
+                  commercialOnly
+                    ? "border-emerald-500/30 bg-emerald-50/50 text-emerald-700 dark:border-[#34ebb1]/30 dark:bg-[#34ebb1]/10 dark:text-[#34ebb1]"
+                    : "border-zinc-200 dark:border-white/10 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-white/5 hover:border-zinc-300 dark:hover:border-white/20"
+                }`}
               >
-                <Truck size={16} /> Commercial
+                <div className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${commercialOnly ? 'bg-emerald-500 dark:bg-[#34ebb1]' : 'bg-zinc-300 dark:bg-zinc-600'}`}>
+                  <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform duration-200 ${commercialOnly ? 'translate-x-[18px] dark:bg-zinc-900' : 'translate-x-1'}`} />
+                </div>
+                <span className="flex items-center gap-1.5"><Truck size={15} /> Commercial</span>
               </button>
 
               {!hideComingSoonToggle && (
                 <button
                   onClick={() => updateFilters({ upcoming: !comingSoonOnly })}
-                  className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-bold transition-all ${comingSoonOnly
-                      ? "bg-emerald-600 border-emerald-600 text-white dark:bg-[#34ebb1] dark:border-[#34ebb1] dark:text-zinc-950 shadow-sm"
-                      : "bg-white dark:bg-white/5 border-zinc-200 dark:border-white/10 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-white/10 hover:border-zinc-300 dark:hover:border-white/30 hover:text-zinc-900 dark:hover:text-white"
-                    }`}
+                  className={`inline-flex items-center gap-2.5 rounded-2xl border px-3 py-1.5 text-sm font-bold transition-all ${
+                    comingSoonOnly
+                      ? "border-emerald-500/30 bg-emerald-50/50 text-emerald-700 dark:border-[#34ebb1]/30 dark:bg-[#34ebb1]/10 dark:text-[#34ebb1]"
+                      : "border-zinc-200 dark:border-white/10 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-white/5 hover:border-zinc-300 dark:hover:border-white/20"
+                  }`}
                 >
-                  <CalendarDays size={16} />Coming Soon
+                  <div className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${comingSoonOnly ? 'bg-emerald-500 dark:bg-[#34ebb1]' : 'bg-zinc-300 dark:bg-zinc-600'}`}>
+                    <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform duration-200 ${comingSoonOnly ? 'translate-x-[18px] dark:bg-zinc-900' : 'translate-x-1'}`} />
+                  </div>
+                  <span className="flex items-center gap-1.5"><CalendarDays size={15} /> Coming Soon</span>
                 </button>
               )}
 
               <button
                 onClick={() => updateFilters({ baas: !baasOnly })}
-                className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-bold transition-all ${baasOnly
-                    ? "bg-emerald-600 border-emerald-600 text-white dark:bg-[#34ebb1] dark:border-[#34ebb1] dark:text-zinc-950 shadow-sm"
-                    : "bg-white dark:bg-white/5 border-zinc-200 dark:border-white/10 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-white/10 hover:border-zinc-300 dark:hover:border-white/30 hover:text-zinc-900 dark:hover:text-white"
-                  }`}
+                className={`inline-flex items-center gap-2.5 rounded-2xl border px-3 py-1.5 text-sm font-bold transition-all ${
+                  baasOnly
+                    ? "border-emerald-500/30 bg-emerald-50/50 text-emerald-700 dark:border-[#34ebb1]/30 dark:bg-[#34ebb1]/10 dark:text-[#34ebb1]"
+                    : "border-zinc-200 dark:border-white/10 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-white/5 hover:border-zinc-300 dark:hover:border-white/20"
+                }`}
               >
-                <Zap size={16} /> BAAS
+                <div className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${baasOnly ? 'bg-emerald-500 dark:bg-[#34ebb1]' : 'bg-zinc-300 dark:bg-zinc-600'}`}>
+                  <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform duration-200 ${baasOnly ? 'translate-x-[18px] dark:bg-zinc-900' : 'translate-x-1'}`} />
+                </div>
+                <span className="flex items-center gap-1.5"><Zap size={15} /> BAAS</span>
               </button>
 
               {hasActiveFilters && (

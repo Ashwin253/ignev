@@ -120,6 +120,19 @@ export default function AiChatPopup({ vehicleContext }: { vehicleContext?: strin
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
+  // Hide/show Tawk widget when Ask Plse chat opens/closes on mobile
+  useEffect(() => {
+    const tawk = (window as any).Tawk_API;
+    if (!tawk) return;
+    try {
+      if (open && !minimized) {
+        tawk.hideWidget?.();
+      } else {
+        tawk.showWidget?.();
+      }
+    } catch {}
+  }, [open, minimized]);
+
   const sendMessage = async () => {
     if (!input.trim() || loading) return;
     doClick();

@@ -15,7 +15,7 @@ export default function TawkChat() {
         mobile: { position: 'br', xOffset: 10, yOffset: 10 },
       }
     };
-    // Ensure widget shows on mobile
+    // Hide Tawk widget when Ask Plse chat is open (to avoid overlap)
     (window as any).Tawk_API.onLoad = function() {
       (window as any).Tawk_API.showWidget();
     };

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import Script from "next/script";
+import { Suspense } from "react";
 import "./globals.css";
 import AddToHomescreen from "./components/AddToHomescreen";
 
@@ -79,7 +80,9 @@ export default function RootLayout({
             <FloatingMobileNav />
             {/* <TidioChat /> */}
             <TawkChat />
-            <AiChatPopup />
+            <Suspense fallback={null}>
+              <AiChatPopup />
+            </Suspense>
           </CompareProvider>
         </FeedbackProvider>
       </body>

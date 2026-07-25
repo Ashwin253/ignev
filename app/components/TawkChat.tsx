@@ -9,6 +9,16 @@ export default function TawkChat() {
 
     // Set up Tawk_API globally
     (window as any).Tawk_API = (window as any).Tawk_API || {};
+    (window as any).Tawk_API.customStyle = {
+      visibility: {
+        desktop: { position: 'br', xOffset: 20, yOffset: 20 },
+        mobile: { position: 'br', xOffset: 10, yOffset: 10 },
+      }
+    };
+    // Ensure widget shows on mobile
+    (window as any).Tawk_API.onLoad = function() {
+      (window as any).Tawk_API.showWidget();
+    };
     (window as any).Tawk_LoadStart = new Date();
 
     const s1 = document.createElement("script");

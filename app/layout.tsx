@@ -27,6 +27,7 @@ import AssistPopup from "./components/AssistPopup";
 import EnquiryModal from "./components/EnquiryModal";
 import ClarityScript from "./components/ClarityScript";
 import PageTracker from "./components/PageTracker";
+import AiChatPopup from "./components/AiChatPopup";
 import FloatingMobileNav from "./components/FloatingMobileNav";
 import { CompareProvider } from "./context/CompareContext";
 import { FeedbackProvider } from "./context/FeedbackContext";
@@ -67,7 +68,7 @@ export default function RootLayout({
           <CompareProvider>
             <Header />
             <Analytics />
-            <main className="flex-grow">
+            <main className="flex-grow relative z-0">
               {children}
             </main>
             <Footer />
@@ -78,6 +79,7 @@ export default function RootLayout({
             <FloatingMobileNav />
             {/* <TidioChat /> */}
             <TawkChat />
+            <AiChatPopup />
           </CompareProvider>
         </FeedbackProvider>
       </body>

@@ -15,14 +15,11 @@ import {
   Truck,
   Bike,
   Compass,
-  Wrench,
   Gauge,
-  IndianRupee,
-  BatteryCharging,
-  TrendingDown
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { WPUpdate, EvListing, HeroBanner } from "../lib/wordpress";
+import { isLaunched } from "../lib/wordpress";
 
 interface EcosystemSectionProps {
   updates?: WPUpdate[];
@@ -43,37 +40,6 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
     return () => clearInterval(timer);
   }, [activeBanners]);
 
-  // Tools state: "charging" | "savings" | "emi" | "range"
-  const [activeTool, setActiveTool] = useState<"charging" | "savings" | "emi" | "range">("charging");
-
-  // 1. Charging Calculator state
-  const [chargeBatteryKwh, setChargeBatteryKwh] = useState(30);
-  const [chargerPowerKw, setChargerPowerKw] = useState(7.2);
-  const [chargeStartPct, setChargeStartPct] = useState(10);
-  const [chargeTargetPct, setChargeTargetPct] = useState(80);
-  const [chargeElecRate, setChargeElecRate] = useState(8);
-
-  // 2. Savings Calculator state
-  const [savingsDailyKm, setSavingsDailyKm] = useState(40);
-  const [savingsPetrolPrice, setSavingsPetrolPrice] = useState(102);
-  const [savingsPetrolMileage, setSavingsPetrolMileage] = useState(14);
-  const [savingsElecRate, setSavingsElecRate] = useState(8);
-  const [savingsYears, setSavingsYears] = useState(5);
-
-  // 3. EMI Calculator state
-  const [emiVehiclePrice, setEmiVehiclePrice] = useState(1200000);
-  const [emiDownPct, setEmiDownPct] = useState(20);
-  const [emiTenureYears, setEmiTenureYears] = useState(5);
-  const [emiRate, setEmiRate] = useState(8.5);
-
-  // 4. Range Calculator state
-  const [rangeBatteryKwh, setRangeBatteryKwh] = useState(40);
-  const [rangeRatedKm, setRangeRatedKm] = useState(315);
-  const [rangeDriveMode, setRangeDriveMode] = useState<"eco" | "city" | "sport">("city");
-  const [rangeTerrain, setRangeTerrain] = useState<"flat" | "hilly">("flat");
-  const [rangeAcOn, setRangeAcOn] = useState(true);
-  const [rangePassengers, setRangePassengers] = useState(2);
-
   // Stats count animation
   const [countProgress, setCountProgress] = useState(0);
 
@@ -81,70 +47,6 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
     const timer = setTimeout(() => setCountProgress(1), 300);
     return () => clearTimeout(timer);
   }, []);
-
-  // --- Calculations ---
-
-  // Charging calc
-  const chargingResults = useMemo(() => {
-    const energyToAdd = (chargeBatteryKwh * Math.max(0, chargeTargetPct - chargeStartPct)) / 100;
-    const hoursNeeded = (energyToAdd / chargerPowerKw) * 1.12; // ~12% loss buffer
-    const hours = Math.floor(hoursNeeded);
-    const mins = Math.round((hoursNeeded - hours) * 60);
-    const cost = Math.round(energyToAdd * chargeElecRate);
-    return { energyToAdd, hours, mins, cost };
-  }, [chargeBatteryKwh, chargerPowerKw, chargeStartPct, chargeTargetPct, chargeElecRate]);
-
-  // Savings calc
-  const savingsResults = useMemo(() => {
-    const totalKm = savingsDailyKm * 365 * savingsYears;
-    const evKwhTotal = (totalKm * 12) / 100; // 12 kWh per 100 km average
-    const evCost = evKwhTotal * savingsElecRate;
-    const petrolLitersTotal = totalKm / savingsPetrolMileage;
-    const petrolCost = petrolLitersTotal * savingsPetrolPrice;
-    const totalSavings = Math.max(0, petrolCost - evCost);
-
-    const monthlyKm = savingsDailyKm * 30;
-    const evMonthly = ((monthlyKm * 12) / 100) * savingsElecRate;
-    const petrolMonthly = (monthlyKm / savingsPetrolMileage) * savingsPetrolPrice;
-    const monthlySavings = Math.max(0, petrolMonthly - evMonthly);
-
-    return { totalSavings, monthlySavings, evMonthly, petrolMonthly, evCost, petrolCost };
-  }, [savingsDailyKm, savingsPetrolPrice, savingsPetrolMileage, savingsElecRate, savingsYears]);
-
-  // EMI calc
-  const emiResults = useMemo(() => {
-    const downPayment = (emiVehiclePrice * emiDownPct) / 100;
-    const loanAmount = Math.max(0, emiVehiclePrice - downPayment);
-    const monthlyRate = emiRate / 12 / 100;
-    const months = emiTenureYears * 12;
-
-    let monthlyEmi = 0;
-    if (monthlyRate > 0 && months > 0) {
-      monthlyEmi = (loanAmount * monthlyRate * Math.pow(1 + monthlyRate, months)) / (Math.pow(1 + monthlyRate, months) - 1);
-    } else if (months > 0) {
-      monthlyEmi = loanAmount / months;
-    }
-
-    const totalInterest = Math.max(0, monthlyEmi * months - loanAmount);
-    const totalPayable = downPayment + monthlyEmi * months;
-
-    return { downPayment, loanAmount, monthlyEmi, totalInterest, totalPayable };
-  }, [emiVehiclePrice, emiDownPct, emiTenureYears, emiRate]);
-
-  // Range calc
-  const rangeResults = useMemo(() => {
-    let factor = 1.0;
-    if (rangeDriveMode === "eco") factor *= 1.1;
-    if (rangeDriveMode === "sport") factor *= 0.84;
-    if (rangeTerrain === "hilly") factor *= 0.78;
-    if (rangeAcOn) factor *= 0.88;
-    factor *= 1 - (rangePassengers - 1) * 0.025;
-
-    const estimatedRange = Math.max(10, Math.round(rangeRatedKm * factor));
-    const efficiencyWhPerKm = Math.round((rangeBatteryKwh * 1000) / estimatedRange);
-
-    return { estimatedRange, efficiencyWhPerKm };
-  }, [rangeBatteryKwh, rangeRatedKm, rangeDriveMode, rangeTerrain, rangeAcOn, rangePassengers]);
 
   // Fallback reviews/updates if WP updates empty
   const displayUpdates = updates.length > 0 ? updates.slice(0, 3) : [
@@ -175,7 +77,7 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
   ];
 
   return (
-    <div className="w-full bg-[#F6F8F2] pt-8 dark:bg-[#07130E] text-[#0E1F16] dark:text-slate-100 font-sans overflow-hidden transition-colors duration-300">
+    <div className="w-full bg-[#F6F8F2] pt-8 dark:bg-[#07130E] text-[#0E1F16] dark:text-slate-100 font-sans overflow-hidden transition-colors duration-300 relative z-0">
       {/* 1. HERO / ECOSYSTEM BANNER */}
       <section className="relative pt-12 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
@@ -306,7 +208,7 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
                       {/* Pagination dots if multiple banners exist */}
                       {activeBanners.length > 1 && (
                         <div className="flex gap-1.5 items-center">
-                          {activeBanners.map((b, idx) => (
+                          {activeBanners.map((b: any, idx: number) => (
                             <button
                               key={b.id || idx}
                               onClick={() => setCurrentBannerIdx(idx)}
@@ -614,606 +516,116 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
         </div>
       </section>
 
-      {/* 6. TOOLS SECTION (Interactive Calculators - Subsidy Checker hidden) */}
-      <section id="tools" className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#D8E3D3] dark:border-emerald-900/30">
-        <div className="mb-8">
-          <div className="text-xs font-mono text-[#1F7A4D] dark:text-[#8FE24A] tracking-wider uppercase mb-2">Decide With Numbers</div>
-          <h2 className="text-3xl sm:text-4xl font-bold text-[#0A2A1E] dark:text-white">Tools that do the maths for you.</h2>
-          <p className="text-[#3C5347] dark:text-emerald-100/70 text-sm mt-1">
-            Calculators built specifically for Indian EV buyers &amp; operators.
-          </p>
-        </div>
-
-        {/* Tool Tabs Navigation */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-          {[
-            {
-              id: "charging",
-              name: "Charging Calculator",
-              desc: "Estimate charge time & cost",
-              icon: BatteryCharging
-            },
-            {
-              id: "savings",
-              name: "Savings Calculator",
-              desc: "Fuel vs EV cost over 5 years",
-              icon: TrendingDown
-            },
-            {
-              id: "emi",
-              name: "EMI Calculator",
-              desc: "Loan monthly payment",
-              icon: IndianRupee
-            },
-            {
-              id: "range",
-              name: "Range Calculator",
-              desc: "Real-world driving range",
-              icon: Gauge
-            }
-          ].map((t) => {
-            const Icon = t.icon;
-            const isActive = activeTool === t.id;
-            return (
-              <button
-                key={t.id}
-                onClick={() => setActiveTool(t.id as any)}
-                className={`p-4 rounded-2xl text-left border transition-all ${
-                  isActive
-                    ? "bg-[#0A2A1E] border-[#0A2A1E] text-white dark:bg-[#0F3A28] dark:border-[#8FE24A] dark:text-white shadow-lg shadow-[#0A2A1E]/10 dark:shadow-[#8FE24A]/10"
-                    : "bg-white border-[#D8E3D3] text-[#0E1F16] hover:border-[#2C9A5F] dark:bg-[#0B2117] dark:border-emerald-900/40 dark:text-slate-300 dark:hover:border-emerald-600/40 dark:hover:bg-[#0F2F20]"
-                }`}
-              >
-                <div
-                  className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${
-                    isActive
-                      ? "bg-[#8FE24A] text-[#07130E]"
-                      : "bg-[#EBF1E5] text-[#1B6642] dark:bg-emerald-950 dark:text-[#8FE24A]"
-                  }`}
-                >
-                  <Icon className="w-5 h-5" />
-                </div>
-                <div className="text-sm font-bold">{t.name}</div>
-                <div className={`text-[11px] mt-0.5 ${isActive ? "text-emerald-200/80" : "text-[#6C8377] dark:text-emerald-200/60"}`}>{t.desc}</div>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Active Tool Interactive Interface */}
-        <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#0B2117] border border-[#D8E3D3] dark:border-emerald-800/40 shadow-xl">
-          {/* A. CHARGING CALCULATOR */}
-          {activeTool === "charging" && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between border-b border-[#D8E3D3] dark:border-emerald-900/40 pb-4">
-                <div>
-                  <h3 className="text-lg font-bold text-[#0A2A1E] dark:text-white flex items-center gap-2">
-                    <BatteryCharging className="text-[#1F7A4D] dark:text-[#8FE24A] w-5 h-5" />
-                    EV Charging Time &amp; Cost Estimator
-                  </h3>
-                  <p className="text-xs text-[#3C5347] dark:text-emerald-200/60 mt-0.5">
-                    Select your EV battery size and charger power output to calculate duration.
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                {/* Inputs */}
-                <div className="lg:col-span-7 space-y-5">
-                  <div>
-                    <div className="flex justify-between text-xs text-[#0E1F16] dark:text-slate-300 mb-1.5 font-medium">
-                      <span>Battery Capacity</span>
-                      <span className="font-mono text-[#1F7A4D] dark:text-[#8FE24A] font-bold">{chargeBatteryKwh} kWh</span>
-                    </div>
-                    <input
-                      type="range"
-                      min={3}
-                      max={120}
-                      value={chargeBatteryKwh}
-                      onChange={(e) => setChargeBatteryKwh(Number(e.target.value))}
-                      className="w-full accent-[#1F7A4D] dark:accent-[#8FE24A] cursor-pointer"
-                    />
-                    <div className="flex justify-between text-[10px] text-[#6C8377] dark:text-emerald-400/50 mt-1 font-mono">
-                      <span>3 kWh (Scooter)</span>
-                      <span>30 kWh (Nexon EV)</span>
-                      <span>120 kWh (Heavy Bus/Truck)</span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs text-[#0E1F16] dark:text-slate-300 font-medium mb-1.5">
-                      Charger Output Rating
-                    </label>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                      {[
-                        { label: "3.3 kW", val: 3.3, sub: "Home Wall Socket" },
-                        { label: "7.2 kW", val: 7.2, sub: "AC Fast Charger" },
-                        { label: "30 kW", val: 30, sub: "DC Fast Station" },
-                        { label: "60 kW", val: 60, sub: "DC Ultra Fast" }
-                      ].map((c) => (
-                        <button
-                          key={c.val}
-                          type="button"
-                          onClick={() => setChargerPowerKw(c.val)}
-                          className={`p-2.5 rounded-xl text-left border text-xs font-bold transition-all ${
-                            chargerPowerKw === c.val
-                              ? "bg-[#0A2A1E] text-white border-[#0A2A1E] dark:bg-[#8FE24A] dark:text-[#07130E] dark:border-[#8FE24A]"
-                              : "bg-[#F6F8F2] border-[#D8E3D3] text-[#0E1F16] hover:border-[#2C9A5F] dark:bg-emerald-950/60 dark:border-emerald-800/40 dark:text-slate-300 dark:hover:border-emerald-600"
-                          }`}
-                        >
-                          <div>{c.label}</div>
-                          <div className="text-[10px] font-normal opacity-80 mt-0.5">{c.sub}</div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <div className="flex justify-between text-xs text-[#0E1F16] dark:text-slate-300 mb-1 font-medium">
-                        <span>Current Charge %</span>
-                        <span className="font-mono text-[#1F7A4D] dark:text-[#8FE24A]">{chargeStartPct}%</span>
-                      </div>
-                      <input
-                        type="range"
-                        min={0}
-                        max={90}
-                        value={chargeStartPct}
-                        onChange={(e) => setChargeStartPct(Number(e.target.value))}
-                        className="w-full accent-[#1F7A4D] dark:accent-[#8FE24A]"
-                      />
-                    </div>
-                    <div>
-                      <div className="flex justify-between text-xs text-[#0E1F16] dark:text-slate-300 mb-1 font-medium">
-                        <span>Target Charge %</span>
-                        <span className="font-mono text-[#1F7A4D] dark:text-[#8FE24A]">{chargeTargetPct}%</span>
-                      </div>
-                      <input
-                        type="range"
-                        min={10}
-                        max={100}
-                        value={chargeTargetPct}
-                        onChange={(e) => setChargeTargetPct(Number(e.target.value))}
-                        className="w-full accent-[#1F7A4D] dark:accent-[#8FE24A]"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Output Card */}
-                <div className="lg:col-span-5 flex flex-col justify-between p-6 rounded-2xl bg-gradient-to-b from-[#0F3A28] to-[#0A2A1E] border border-emerald-500/30 text-white shadow-xl">
-                  <div>
-                    <div className="text-xs font-mono text-emerald-300 uppercase tracking-wider mb-4">
-                      ESTIMATED RESULT
-                    </div>
-
-                    <div className="space-y-4">
-                      <div>
-                        <div className="text-xs text-slate-300">Charging Duration</div>
-                        <div className="text-3xl font-bold text-white font-mono mt-1">
-                          {chargingResults.hours > 0 ? `${chargingResults.hours}h ` : ""}
-                          {chargingResults.mins} mins
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-3 pt-3 border-t border-emerald-800/40">
-                        <div>
-                          <div className="text-[11px] text-emerald-200/70">Energy Added</div>
-                          <div className="text-lg font-bold text-[#8FE24A] font-mono mt-0.5">
-                            {chargingResults.energyToAdd.toFixed(1)} kWh
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-[11px] text-emerald-200/70">Est. Charge Cost</div>
-                          <div className="text-lg font-bold text-[#8FE24A] font-mono mt-0.5">
-                            ₹{chargingResults.cost}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-6 p-3 rounded-xl bg-black/20 text-[11px] text-emerald-200/60 leading-tight">
-                    * Calculation includes 12% thermal &amp; conversion efficiency loss buffer typical of AC/DC charging systems.
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* B. SAVINGS CALCULATOR */}
-          {activeTool === "savings" && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between border-b border-[#D8E3D3] dark:border-emerald-900/40 pb-4">
-                <div>
-                  <h3 className="text-lg font-bold text-[#0A2A1E] dark:text-white flex items-center gap-2">
-                    <TrendingDown className="text-[#1F7A4D] dark:text-[#8FE24A] w-5 h-5" />
-                    Fuel vs EV Running Cost Savings
-                  </h3>
-                  <p className="text-xs text-[#3C5347] dark:text-emerald-200/60 mt-0.5">
-                    Compare daily fuel expenditure against electricity costs over 1 to 5 years.
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                <div className="lg:col-span-7 space-y-5">
-                  <div>
-                    <div className="flex justify-between text-xs text-[#0E1F16] dark:text-slate-300 mb-1.5 font-medium">
-                      <span>Daily Distance Travelled</span>
-                      <span className="font-mono text-[#1F7A4D] dark:text-[#8FE24A] font-bold">{savingsDailyKm} km / day</span>
-                    </div>
-                    <input
-                      type="range"
-                      min={10}
-                      max={200}
-                      step={5}
-                      value={savingsDailyKm}
-                      onChange={(e) => setSavingsDailyKm(Number(e.target.value))}
-                      className="w-full accent-[#1F7A4D] dark:accent-[#8FE24A] cursor-pointer"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    <div>
-                      <label className="block text-xs text-[#0E1F16] dark:text-slate-300 mb-1">Petrol Price (₹/L)</label>
-                      <input
-                        type="number"
-                        value={savingsPetrolPrice}
-                        onChange={(e) => setSavingsPetrolPrice(Number(e.target.value))}
-                        className="w-full rounded-xl bg-[#F6F8F2] dark:bg-emerald-950 border border-[#D8E3D3] dark:border-emerald-800/40 px-3 py-2 text-xs font-mono font-bold text-[#0A2A1E] dark:text-white outline-none focus:border-[#2C9A5F] dark:focus:border-[#8FE24A]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-[#0E1F16] dark:text-slate-300 mb-1">ICE Mileage (km/L)</label>
-                      <input
-                        type="number"
-                        value={savingsPetrolMileage}
-                        onChange={(e) => setSavingsPetrolMileage(Number(e.target.value))}
-                        className="w-full rounded-xl bg-[#F6F8F2] dark:bg-emerald-950 border border-[#D8E3D3] dark:border-emerald-800/40 px-3 py-2 text-xs font-mono font-bold text-[#0A2A1E] dark:text-white outline-none focus:border-[#2C9A5F] dark:focus:border-[#8FE24A]"
-                      />
-                    </div>
-                    <div className="col-span-2 sm:col-span-1">
-                      <label className="block text-xs text-[#0E1F16] dark:text-slate-300 mb-1">Elec Rate (₹/kWh)</label>
-                      <input
-                        type="number"
-                        value={savingsElecRate}
-                        onChange={(e) => setSavingsElecRate(Number(e.target.value))}
-                        className="w-full rounded-xl bg-[#F6F8F2] dark:bg-emerald-950 border border-[#D8E3D3] dark:border-emerald-800/40 px-3 py-2 text-xs font-mono font-bold text-[#0A2A1E] dark:text-white outline-none focus:border-[#2C9A5F] dark:focus:border-[#8FE24A]"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs text-[#0E1F16] dark:text-slate-300 font-medium mb-1.5">Ownership Timeframe</label>
-                    <div className="flex gap-2">
-                      {[1, 3, 5].map((y) => (
-                        <button
-                          key={y}
-                          type="button"
-                          onClick={() => setSavingsYears(y)}
-                          className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all border ${
-                            savingsYears === y
-                              ? "bg-[#0A2A1E] text-white border-[#0A2A1E] dark:bg-[#8FE24A] dark:text-[#07130E] dark:border-[#8FE24A]"
-                              : "bg-[#F6F8F2] border-[#D8E3D3] text-[#0E1F16] hover:border-[#2C9A5F] dark:bg-emerald-950/60 dark:border-emerald-800/40 dark:text-slate-300 dark:hover:border-emerald-600"
-                          }`}
-                        >
-                          {y} {y === 1 ? "Year" : "Years"}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Output Card */}
-                <div className="lg:col-span-5 flex flex-col justify-between p-6 rounded-2xl bg-gradient-to-b from-[#0F3A28] to-[#0A2A1E] border border-emerald-500/30 text-white shadow-xl">
-                  <div>
-                    <div className="text-xs font-mono text-emerald-300 uppercase tracking-wider mb-4">
-                      TOTAL SAVINGS ESTIMATE
-                    </div>
-
-                    <div className="space-y-4">
-                      <div>
-                        <div className="text-xs text-slate-300">{savingsYears}-Year Fuel Savings</div>
-                        <div className="text-3xl sm:text-4xl font-bold text-[#8FE24A] font-mono mt-1">
-                          ₹{savingsResults.totalSavings.toLocaleString("en-IN")}
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-3 pt-3 border-t border-emerald-800/40">
-                        <div>
-                          <div className="text-[11px] text-emerald-200/70">Monthly EV Cost</div>
-                          <div className="text-base font-bold text-white font-mono mt-0.5">
-                            ₹{Math.round(savingsResults.evMonthly).toLocaleString("en-IN")}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-[11px] text-emerald-200/70">Monthly Petrol Cost</div>
-                          <div className="text-base font-bold text-slate-400 font-mono mt-0.5">
-                            ₹{Math.round(savingsResults.petrolMonthly).toLocaleString("en-IN")}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-6 p-3 rounded-xl bg-black/20 text-[11px] text-emerald-200/60 leading-tight">
-                    * You save approx. ₹{Math.round(savingsResults.monthlySavings).toLocaleString("en-IN")} every month on fuel!
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* C. EMI CALCULATOR */}
-          {activeTool === "emi" && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between border-b border-[#D8E3D3] dark:border-emerald-900/40 pb-4">
-                <div>
-                  <h3 className="text-lg font-bold text-[#0A2A1E] dark:text-white flex items-center gap-2">
-                    <IndianRupee className="text-[#1F7A4D] dark:text-[#8FE24A] w-5 h-5" />
-                    EV Loan EMI Calculator
-                  </h3>
-                  <p className="text-xs text-[#3C5347] dark:text-emerald-200/60 mt-0.5">
-                    Calculate monthly installments and total loan interest breakdown.
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                <div className="lg:col-span-7 space-y-5">
-                  <div>
-                    <div className="flex justify-between text-xs text-[#0E1F16] dark:text-slate-300 mb-1.5 font-medium">
-                      <span>Vehicle Price (Ex-Showroom)</span>
-                      <span className="font-mono text-[#1F7A4D] dark:text-[#8FE24A] font-bold">
-                        ₹{emiVehiclePrice.toLocaleString("en-IN")}
-                      </span>
-                    </div>
-                    <input
-                      type="range"
-                      min={100000}
-                      max={6000000}
-                      step={50000}
-                      value={emiVehiclePrice}
-                      onChange={(e) => setEmiVehiclePrice(Number(e.target.value))}
-                      className="w-full accent-[#1F7A4D] dark:accent-[#8FE24A] cursor-pointer"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-3">
-                    <div>
-                      <label className="block text-xs text-[#0E1F16] dark:text-slate-300 mb-1">Down Payment %</label>
-                      <input
-                        type="number"
-                        min={0}
-                        max={80}
-                        value={emiDownPct}
-                        onChange={(e) => setEmiDownPct(Number(e.target.value))}
-                        className="w-full rounded-xl bg-[#F6F8F2] dark:bg-emerald-950 border border-[#D8E3D3] dark:border-emerald-800/40 px-3 py-2 text-xs font-mono font-bold text-[#0A2A1E] dark:text-white outline-none focus:border-[#2C9A5F] dark:focus:border-[#8FE24A]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-[#0E1F16] dark:text-slate-300 mb-1">Tenure (Years)</label>
-                      <input
-                        type="number"
-                        min={1}
-                        max={7}
-                        value={emiTenureYears}
-                        onChange={(e) => setEmiTenureYears(Number(e.target.value))}
-                        className="w-full rounded-xl bg-[#F6F8F2] dark:bg-emerald-950 border border-[#D8E3D3] dark:border-emerald-800/40 px-3 py-2 text-xs font-mono font-bold text-[#0A2A1E] dark:text-white outline-none focus:border-[#2C9A5F] dark:focus:border-[#8FE24A]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-[#0E1F16] dark:text-slate-300 mb-1">Interest Rate %</label>
-                      <input
-                        type="number"
-                        step={0.1}
-                        value={emiRate}
-                        onChange={(e) => setEmiRate(Number(e.target.value))}
-                        className="w-full rounded-xl bg-[#F6F8F2] dark:bg-emerald-950 border border-[#D8E3D3] dark:border-emerald-800/40 px-3 py-2 text-xs font-mono font-bold text-[#0A2A1E] dark:text-white outline-none focus:border-[#2C9A5F] dark:focus:border-[#8FE24A]"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Output Card */}
-                <div className="lg:col-span-5 flex flex-col justify-between p-6 rounded-2xl bg-gradient-to-b from-[#0F3A28] to-[#0A2A1E] border border-emerald-500/30 text-white shadow-xl">
-                  <div>
-                    <div className="text-xs font-mono text-emerald-300 uppercase tracking-wider mb-4">
-                      LOAN BREAKDOWN
-                    </div>
-
-                    <div className="space-y-4">
-                      <div>
-                        <div className="text-xs text-slate-300">Monthly EMI</div>
-                        <div className="text-3xl font-bold text-white font-mono mt-1">
-                          ₹{Math.round(emiResults.monthlyEmi).toLocaleString("en-IN")} / mo
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-3 pt-3 border-t border-emerald-800/40 text-xs">
-                        <div>
-                          <div className="text-[11px] text-emerald-200/70">Down Payment</div>
-                          <div className="font-bold text-[#8FE24A] font-mono mt-0.5">
-                            ₹{Math.round(emiResults.downPayment).toLocaleString("en-IN")}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-[11px] text-emerald-200/70">Loan Principal</div>
-                          <div className="font-bold text-white font-mono mt-0.5">
-                            ₹{Math.round(emiResults.loanAmount).toLocaleString("en-IN")}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-6 p-3 rounded-xl bg-black/20 text-[11px] text-emerald-200/60 leading-tight">
-                    * Total Interest Payable over {emiTenureYears} years: ₹{Math.round(emiResults.totalInterest).toLocaleString("en-IN")}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* D. RANGE CALCULATOR */}
-          {activeTool === "range" && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between border-b border-[#D8E3D3] dark:border-emerald-900/40 pb-4">
-                <div>
-                  <h3 className="text-lg font-bold text-[#0A2A1E] dark:text-white flex items-center gap-2">
-                    <Gauge className="text-[#1F7A4D] dark:text-[#8FE24A] w-5 h-5" />
-                    Real-World EV Range Predictor
-                  </h3>
-                  <p className="text-xs text-[#3C5347] dark:text-emerald-200/60 mt-0.5">
-                    Adjust speed mode, terrain, air conditioning, and load to calculate true highway/city range.
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                <div className="lg:col-span-7 space-y-5">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs text-[#0E1F16] dark:text-slate-300 mb-1">Battery Size (kWh)</label>
-                      <input
-                        type="number"
-                        value={rangeBatteryKwh}
-                        onChange={(e) => setRangeBatteryKwh(Number(e.target.value))}
-                        className="w-full rounded-xl bg-[#F6F8F2] dark:bg-emerald-950 border border-[#D8E3D3] dark:border-emerald-800/40 px-3 py-2 text-xs font-mono font-bold text-[#0A2A1E] dark:text-white outline-none focus:border-[#2C9A5F] dark:focus:border-[#8FE24A]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-[#0E1F16] dark:text-slate-300 mb-1">ARAI / Claimed Range (km)</label>
-                      <input
-                        type="number"
-                        value={rangeRatedKm}
-                        onChange={(e) => setRangeRatedKm(Number(e.target.value))}
-                        className="w-full rounded-xl bg-[#F6F8F2] dark:bg-emerald-950 border border-[#D8E3D3] dark:border-emerald-800/40 px-3 py-2 text-xs font-mono font-bold text-[#0A2A1E] dark:text-white outline-none focus:border-[#2C9A5F] dark:focus:border-[#8FE24A]"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs text-[#0E1F16] dark:text-slate-300 font-medium mb-1.5">Drive Mode</label>
-                    <div className="flex gap-2">
-                      {(["eco", "city", "sport"] as const).map((m) => (
-                        <button
-                          key={m}
-                          type="button"
-                          onClick={() => setRangeDriveMode(m)}
-                          className={`flex-1 py-2 rounded-xl text-xs font-bold capitalize transition-all border ${
-                            rangeDriveMode === m
-                              ? "bg-[#0A2A1E] text-white border-[#0A2A1E] dark:bg-[#8FE24A] dark:text-[#07130E] dark:border-[#8FE24A]"
-                              : "bg-[#F6F8F2] border-[#D8E3D3] text-[#0E1F16] hover:border-[#2C9A5F] dark:bg-emerald-950/60 dark:border-emerald-800/40 dark:text-slate-300 dark:hover:border-emerald-600"
-                          }`}
-                        >
-                          {m}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs text-[#0E1F16] dark:text-slate-300 font-medium mb-1.5">Air Conditioning</label>
-                      <button
-                        type="button"
-                        onClick={() => setRangeAcOn(!rangeAcOn)}
-                        className={`w-full py-2.5 px-3 rounded-xl text-xs font-bold transition-all border text-left flex justify-between items-center ${
-                          rangeAcOn
-                            ? "bg-[#0A2A1E] text-white border-[#0A2A1E] dark:bg-[#8FE24A] dark:text-[#07130E] dark:border-[#8FE24A]"
-                            : "bg-[#F6F8F2] border-[#D8E3D3] text-[#0E1F16] dark:bg-emerald-950/60 dark:border-emerald-800/40 dark:text-slate-300"
-                        }`}
-                      >
-                        <span>{rangeAcOn ? "AC On (Cooling)" : "AC Off"}</span>
-                        <span className="text-[10px] opacity-75">{rangeAcOn ? "-12% range" : "0% loss"}</span>
-                      </button>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs text-[#0E1F16] dark:text-slate-300 font-medium mb-1.5">Terrain</label>
-                      <div className="flex gap-2">
-                        {(["flat", "hilly"] as const).map((t) => (
-                          <button
-                            key={t}
-                            type="button"
-                            onClick={() => setRangeTerrain(t)}
-                            className={`flex-1 py-2.5 rounded-xl text-xs font-bold capitalize transition-all border ${
-                              rangeTerrain === t
-                                ? "bg-[#0A2A1E] text-white border-[#0A2A1E] dark:bg-[#8FE24A] dark:text-[#07130E] dark:border-[#8FE24A]"
-                                : "bg-[#F6F8F2] border-[#D8E3D3] text-[#0E1F16] dark:bg-emerald-950/60 dark:border-emerald-800/40 dark:text-slate-300"
-                            }`}
-                          >
-                            {t}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Output Card */}
-                <div className="lg:col-span-5 flex flex-col justify-between p-6 rounded-2xl bg-gradient-to-b from-[#0F3A28] to-[#0A2A1E] border border-emerald-500/30 text-white shadow-xl">
-                  <div>
-                    <div className="text-xs font-mono text-emerald-300 uppercase tracking-wider mb-4">
-                      EXPECTED REAL RANGE
-                    </div>
-
-                    <div className="space-y-4">
-                      <div>
-                        <div className="text-xs text-slate-300">Estimated Distance</div>
-                        <div className="text-4xl font-bold text-white font-mono mt-1">
-                          {rangeResults.estimatedRange} <span className="text-2xl text-[#8FE24A]">km</span>
-                        </div>
-                      </div>
-
-                      <div className="pt-3 border-t border-emerald-800/40">
-                        <div className="text-[11px] text-emerald-200/70">Efficiency Rating</div>
-                        <div className="text-lg font-bold text-[#8FE24A] font-mono mt-0.5">
-                          {rangeResults.efficiencyWhPerKm} Wh / km
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-6 p-3 rounded-xl bg-black/20 text-[11px] text-emerald-200/60 leading-tight">
-                    * ARAI ratings are under test laboratory conditions. Real-world range varies with weather &amp; driving habits.
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* 7. PARTNER CTA SECTION (Dealers, OEMs hidden as requested, Fleet Operator active) */}
-      {/* <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#D8E3D3] dark:border-emerald-900/30">
-        <div className="text-center max-w-2xl mx-auto mb-10">
-          <div className="text-xs font-mono text-[#1F7A4D] dark:text-[#8FE24A] tracking-wider uppercase mb-2">Partner With Us</div>
-          <h2 className="text-3xl sm:text-4xl font-bold text-[#0A2A1E] dark:text-white">
-            Fleet operator or mobility partner?<br />Let's build the future together.
-          </h2>
-        </div>
-
-        <div className="max-w-md mx-auto">
-          <div className="p-8 rounded-3xl bg-white dark:bg-[#0B2117] border border-[#D8E3D3] dark:border-emerald-700/40 hover:border-[#1F7A4D] dark:hover:border-[#8FE24A] transition-all text-center group shadow-xs hover:shadow-xl">
-            <div className="w-12 h-12 rounded-2xl bg-[#0A2A1E] text-[#8FE24A] dark:bg-[#8FE24A] dark:text-[#07130E] flex items-center justify-center mx-auto mb-4">
-              <Gauge className="w-6 h-6" />
-            </div>
-            <h3 className="text-xl font-bold text-[#0A2A1E] dark:text-white mb-2">Fleet Operator</h3>
-            <p className="text-xs text-[#3C5347] dark:text-emerald-200/70 mb-6 leading-relaxed">
-              Tools to source, manage &amp; scale your commercial EV fleet with real-time analytics.
-            </p>
+      {/* 6. VEHICLES ROW + TOOLS LINK */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#D8E3D3] dark:border-emerald-900/30">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 gap-4">
+          <div>
+            <div className="text-xs font-mono text-[#1F7A4D] dark:text-[#8FE24A] tracking-wider uppercase mb-2">Fresh On Road</div>
+            <h2 className="text-3xl sm:text-4xl font-bold text-[#0A2A1E] dark:text-white">New Releases & Upcoming</h2>
+            <p className="text-[#3C5347] dark:text-emerald-100/70 text-sm mt-1">Recently launched and upcoming electric vehicles in India.</p>
+          </div>
+          <div className="flex gap-3">
             <Link
-              href="/catalog?comm=true"
-              className="inline-flex items-center gap-2 text-xs font-bold font-mono text-[#1F7A4D] dark:text-[#8FE24A] group-hover:underline"
+              href="/catalog"
+              className="inline-flex items-center gap-1.5 text-xs font-bold font-mono text-[#1F7A4D] dark:text-[#8FE24A] hover:underline"
             >
-              TALK TO US <ArrowRight className="w-4 h-4" />
+              VIEW ALL <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
         </div>
-      </section> */}
+
+        {/* Horizontal scrollable vehicle row */}
+        <div className="overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
+          <div className="flex gap-4" style={{ minWidth: "max-content" }}>
+            {listings.slice(0, 10).map((l, i) => {
+              const pricing = l.prices?.length ? (
+                parseFloat(String(l.prices[0])) > 100
+                  ? `₹${(parseFloat(String(l.prices[0])) / 100000).toFixed(2)}L`
+                  : `₹${l.prices[0]}L`
+              ) : (l as any).price_bracket || "";
+              const range = l.batteryVariants?.[0]?.range || "";
+              return (
+                <Link
+                  key={l.slug || i}
+                  href={`/product/${l.slug}`}
+                  className="group flex-shrink-0 w-[260px] rounded-2xl border border-[#D8E3D3] dark:border-emerald-900/40 bg-white dark:bg-[#0B2117] overflow-hidden hover:border-[#2C9A5F] dark:hover:border-emerald-500/40 hover:shadow-lg transition-all"
+                >
+                  <div className="relative h-40 bg-[#F6F8F2] dark:bg-emerald-950/60 overflow-hidden">
+                    {l.photo ? (
+                      <Image
+                        src={l.photo}
+                        alt={l.title}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        sizes="260px"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-[#6C8377]"><Zap className="w-8 h-8" /></div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent pointer-events-none" />
+                    {!isLaunched(l.launchdate) && (
+                      <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-amber-400/90 text-[10px] font-bold text-zinc-900">
+                        <Calendar className="inline w-3 h-3 mr-0.5" /> Upcoming
+                      </span>
+                    )}
+                  </div>
+                  <div className="p-4">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-[#6C8377] dark:text-emerald-400/60">{l.brand}</p>
+                    <h3 className="text-sm font-bold text-[#0A2A1E] dark:text-white mt-0.5 line-clamp-1">{l.title}</h3>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-xs font-bold text-[#1F7A4D] dark:text-[#8FE24A]">{pricing || "TBA"}</span>
+                      {range && <span className="text-[10px] font-mono text-[#6C8377] dark:text-emerald-300/60">{range} km</span>}
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* TOOLS BANNER */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#D8E3D3] dark:border-emerald-900/30">
+        <div className="mb-8 max-w-2xl">
+          <div className="text-xs font-mono text-[#1F7A4D] dark:text-[#8FE24A] tracking-wider uppercase mb-2">Decide With Numbers</div>
+          <h2 className="text-3xl sm:text-4xl font-bold text-[#0A2A1E] dark:text-white tracking-tight">
+            Tools that do the maths for you.
+          </h2>
+          <p className="text-[#3C5347] dark:text-slate-300/70 mt-3 text-sm sm:text-base">
+            Calculators built specifically for Indian EV buyers & operators.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { title: "Charging Calculator", desc: "Estimate charge time & cost for any EV battery", icon: Zap, tab: "charging" },
+            { title: "Savings Calculator", desc: "Compare fuel vs EV running costs over years", icon: ArrowUpRight, tab: "savings" },
+            { title: "EMI Calculator", desc: "Monthly loan payment & interest breakdown", icon: Gauge, tab: "emi" },
+            { title: "Range Calculator", desc: "Real-world range based on driving conditions", icon: Sparkles, tab: "range" },
+          ].map((tool, idx) => {
+            const Icon = tool.icon;
+            return (
+              <Link
+                key={idx}
+                href={`/tools?tab=${tool.tab}`}
+                className="group relative p-6 rounded-2xl border transition-all duration-300 flex flex-col justify-between min-h-[150px] bg-white dark:bg-[#0B2117]/80 border-[#D8E3D3] dark:border-emerald-900/40 hover:border-[#2C9A5F] dark:hover:border-emerald-500/50 hover:bg-[#F0F5EC] dark:hover:bg-[#0F2A1E]"
+              >
+                <div className="flex justify-between items-start">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center transition-colors bg-[#EBF1E5] dark:bg-emerald-950 border border-[#D8E3D3] dark:border-emerald-800/40 text-[#1B6642] dark:text-[#8FE24A] group-hover:bg-[#0A2A1E] group-hover:text-white dark:group-hover:bg-[#8FE24A] dark:group-hover:text-[#07130E]">
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <ArrowUpRight className="w-4 h-4 transition-all text-[#6C8377] dark:text-emerald-400/50 group-hover:text-[#1F7A4D] dark:group-hover:text-[#8FE24A] group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold mt-4 text-[#0A2A1E] dark:text-white">{tool.title}</h3>
+                  <p className="text-[11px] mt-1 text-[#6C8377] dark:text-emerald-200/60">{tool.desc}</p>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
     </div>
   );
 }

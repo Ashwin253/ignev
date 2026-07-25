@@ -78,7 +78,7 @@ export default function Header() {
 
   const headerBg = isTransparent
     ? "bg-transparent border-transparent"
-    : "bg-white/85 dark:bg-zinc-950/85 backdrop-blur-xl border-emerald-100/60 dark:border-zinc-800/60 shadow-[0_4px_24px_-12px_rgba(16,185,129,0.15)] dark:shadow-none";
+    : "bg-white dark:bg-zinc-950/85 dark:backdrop-blur-xl border-zinc-200 dark:border-zinc-800/60 shadow-sm dark:shadow-none";
 
   const linkBase = "text-sm font-medium px-3 py-2 rounded-full transition-all";
   
@@ -108,7 +108,7 @@ export default function Header() {
 
   return (
     <>
-      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${headerBg}`}>
+      <header className={`fixed top-0 left-0 right-0 z-[60] transition-all duration-300 border-b pointer-events-auto ${headerBg}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-[72px]">
           <Link href="/" className="flex items-center gap-2">
@@ -311,7 +311,7 @@ export default function Header() {
       {/* Mobile */}
       <AnimatePresence>
         {mobileMenuOpen && (
-          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="md:hidden absolute top-full left-0 right-0 bg-white/95 backdrop-blur-xl border-b border-emerald-100 shadow-xl max-h-[85vh] overflow-y-auto">
+          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="md:hidden absolute top-full left-0 right-0 bg-white backdrop-blur-xl border-b border-zinc-200 shadow-2xl max-h-[85vh] overflow-y-auto z-[60]">
             <div className="p-4 space-y-2">
               {/* Buy/Sell Accordion */}
               <div className="border border-zinc-100 rounded-xl overflow-hidden bg-zinc-50/50">

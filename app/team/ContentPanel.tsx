@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Plus, Trash2, Pencil, X, Save, Loader2, Video, FileText } from "lucide-react";
+import MarkdownEditor from "./MarkdownEditor";
 
 export type ProductContent = {
   id?: string;
@@ -101,15 +102,14 @@ export default function ContentPanel({ supabase }: { supabase: any }) {
             <label className="block sm:col-span-2"><span className="text-xs font-bold text-slate-600">Article Title</span><input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g. 5 Reasons to Buy Tata Nexon EV" className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
             <label className="block"><span className="text-xs font-bold text-slate-600">Product Slug (Link To)</span><input value={form.product_slug} onChange={(e) => setForm({ ...form, product_slug: e.target.value })} placeholder="e.g. tata-nexon-ev" className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
             <label className="block"><span className="text-xs font-bold text-slate-600">Thumbnail URL (Optional)</span><input value={form.thumbnail || ""} onChange={(e) => setForm({ ...form, thumbnail: e.target.value })} placeholder="https://... (.jpg, .png)" className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
-            <label className="block sm:col-span-2">
-              <span className="text-xs font-bold text-slate-600">Article Body (Markdown Supported)</span>
-              <textarea
+            <div className="block sm:col-span-2">
+              <span className="text-xs font-bold text-slate-600 block mb-2">Article Body</span>
+              <MarkdownEditor
                 value={form.body}
-                onChange={(e) => setForm({ ...form, body: e.target.value })}
-                placeholder="Write your article here... You can use markdown to add lists, captions, and image/video links."
-                className="mt-1 w-full h-64 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none font-mono"
+                onChange={(v) => setForm({ ...form, body: v })}
+                placeholder="Write your article here... Use the toolbar above to add styles, links, and images."
               />
-            </label>
+            </div>
           </div>
           <div className="flex items-center gap-3 mt-4">
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} /> Active</label>

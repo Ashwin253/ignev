@@ -5,7 +5,7 @@ import {
   formatPricing,
   type EvListing,
 } from "./lib/wordpress";
-import { fetchEvListingsFromSupabase, fetchHeroBanners } from "./lib/supabase";
+import { fetchEvListingsFromSupabase, fetchHeroBanners, fetchLatestUpdates } from "./lib/supabase";
 import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import Hero from "./components/Hero";
@@ -69,6 +69,19 @@ async function HomeContent() {
 
     const sbBanners = await fetchHeroBanners();
     if (sbBanners.length) banners = sbBanners;
+    
+    const sbUpdates = await fetchLatestUpdates(3);
+    if (sbUpdates.length) {
+      updates = sbUpdates.map((u: any) => ({
+        id: u.id,
+        title: u.title,
+        slug: u.product_slug || "",
+        href: `/article/${u.id}`,
+        excerpt: u.body ? u.body.substring(0, 100) + "..." : "",
+        date: u.created_at,
+        photo: u.thumbnail || "https://images.unsplash.com/photo-1563720223185-11003d516935?w=800&auto=format&fit=crop&q=80"
+      }));
+    }
   } catch { /* Supabase not configured or failed */ }
 
   // Fall back to WP if Supabase returned nothing
@@ -84,7 +97,7 @@ async function HomeContent() {
     try {
       const wpData = await fetchHomepageData();
       if (!banners.length) banners = wpData.banners;
-      updates = wpData.updates;
+      if (!updates.length) updates = wpData.updates;
     } catch { /* use empty */ }
   }
 

@@ -25,8 +25,8 @@ export default function LogoLoader({ fullscreen = true, message = "Loading..." }
   }, []);
 
   const containerClasses = fullscreen
-    ? "fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#0f1115]"
-    : "w-full min-h-[300px] flex flex-col items-center justify-center bg-[#0f1115] rounded-3xl p-8 border border-white/5";
+    ? "fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#F6F8F2] dark:bg-[#0f1115] transition-colors duration-300"
+    : "w-full min-h-[300px] flex flex-col items-center justify-center bg-[#F6F8F2] dark:bg-[#0f1115] rounded-3xl p-8 border border-[#D8E3D3] dark:border-white/5 transition-colors duration-300";
 
   const videoSizeClasses = fullscreen
     ? "w-64 h-64 md:w-[420px] md:h-[420px] lg:w-[500px] lg:h-[500px] max-w-[90vw] aspect-square"
@@ -52,19 +52,19 @@ export default function LogoLoader({ fullscreen = true, message = "Loading..." }
       
       {/* Loading message & Progress bar */}
       <div className="mt-6 flex flex-col items-center gap-3 relative z-10 max-w-md px-6 text-center">
-        <span className="text-xs md:text-sm font-semibold tracking-widest text-slate-400 uppercase animate-pulse">
+        <span className="text-xs md:text-sm font-semibold tracking-widest text-[#0A2A1E] dark:text-slate-400 uppercase animate-pulse">
           {message}
         </span>
-        <div className="w-24 h-[2px] bg-slate-800 rounded-full overflow-hidden">
+        <div className="w-24 h-[2px] bg-slate-300 dark:bg-slate-800 rounded-full overflow-hidden">
           <div className="h-full bg-gradient-to-r from-[#007BFF] via-[#A3FF12] to-[#007BFF] w-1/2 rounded-full animate-loader-slide" />
         </div>
 
         {fact && (
-          <div className="mt-4 max-w-xs md:max-w-sm bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-md shadow-2xl transition-all duration-300">
-            <span className="text-[10px] md:text-xs font-bold tracking-wider text-[#A3FF12] uppercase block mb-1">
+          <div className="mt-4 max-w-xs md:max-w-sm bg-white dark:bg-white/5 border border-[#D8E3D3] dark:border-white/10 rounded-2xl p-4 backdrop-blur-md shadow-xl dark:shadow-2xl transition-all duration-300">
+            <span className="text-[10px] md:text-xs font-bold tracking-wider text-[#1F7A4D] dark:text-[#A3FF12] uppercase block mb-1">
               ⚡ EV Fact
             </span>
-            <p className="text-[11px] md:text-xs text-slate-300 leading-relaxed font-medium">
+            <p className="text-[11px] md:text-xs text-[#3C5347] dark:text-slate-300 leading-relaxed font-medium">
               {fact}
             </p>
           </div>

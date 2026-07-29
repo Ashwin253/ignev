@@ -53,60 +53,75 @@ export default async function UpdateDetailPage({
     .slice(0, 3);
 
   return (
-    <article className="bg-white min-h-screen py-28">
-      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-        {/* Breadcrumb */}
-        <nav className="mb-8 flex items-center gap-2 text-sm text-slate-500">
-          <Link href="/" className="hover:text-sky-600 transition-colors">Home</Link>
-          <span>/</span>
-          <Link href="/updates" className="hover:text-sky-600 transition-colors">Updates</Link>
-          <span>/</span>
-          <span className="text-slate-900 font-medium line-clamp-1">{update.title}</span>
-        </nav>
+    <article className="bg-white min-h-screen py-24 selection:bg-emerald-100 selection:text-emerald-900">
+      <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
+        
+        {/* Header Section (Centered and narrower) */}
+        <header className="mx-auto max-w-3xl text-center mb-12">
+          <nav className="mb-8 flex items-center justify-center gap-2 text-xs font-semibold uppercase tracking-widest text-emerald-600">
+            <Link href="/" className="hover:text-emerald-800 transition-colors">Home</Link>
+            <span className="text-slate-300">/</span>
+            <Link href="/updates" className="hover:text-emerald-800 transition-colors">Updates</Link>
+          </nav>
 
-        {/* Title */}
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl lg:text-5xl leading-tight mb-5">
-          {update.title}
-        </h1>
+          <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl leading-[1.15] mb-6 font-sans">
+            {update.title}
+          </h1>
 
-        {/* Meta */}
-        <div className="flex items-center gap-3 text-sm text-slate-400 mb-10 pb-8 border-b border-slate-100">
-          <Calendar size={15} />
-          <span>{formatDate(update.date)}</span>
-        </div>
+          <div className="flex items-center justify-center gap-4 text-sm text-slate-500 font-medium">
+            <div className="flex items-center gap-2">
+              <span className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 border border-slate-200">
+                EV
+              </span>
+              <span>EVPLSE Editorial</span>
+            </div>
+            <span className="w-1 h-1 rounded-full bg-slate-300" />
+            <div className="flex items-center gap-1.5">
+              <Calendar size={14} className="text-slate-400" />
+              <span>{formatDate(update.date)}</span>
+            </div>
+            <span className="w-1 h-1 rounded-full bg-slate-300" />
+            <span>4 min read</span>
+          </div>
+        </header>
 
-        {/* Featured image */}
+        {/* Featured image (Wider than text) */}
         {update.photo && (
-          <div className="relative aspect-[16/9] overflow-hidden rounded-3xl bg-slate-100 mb-10 shadow-[0_12px_40px_rgba(15,23,42,0.08)]">
+          <div className="mx-auto max-w-5xl relative aspect-[21/9] sm:aspect-[16/9] overflow-hidden rounded-3xl bg-slate-50 mb-16 shadow-2xl ring-1 ring-slate-900/5">
             <Image
               src={update.photo}
               alt={update.title}
               fill
-              sizes="(max-width: 896px) 100vw, 896px"
+              sizes="(max-width: 1024px) 100vw, 1024px"
               className="object-cover"
               priority
             />
           </div>
         )}
 
-        {/* Content */}
-        <div
-          className="prose prose-slate prose-lg max-w-none
-            prose-headings:font-semibold prose-headings:tracking-tight
-            prose-a:text-sky-600 prose-a:no-underline hover:prose-a:underline
-            prose-img:rounded-2xl prose-img:shadow-md
-            prose-blockquote:border-sky-400 prose-blockquote:bg-sky-50 prose-blockquote:rounded-xl prose-blockquote:px-6 prose-blockquote:py-1"
-          dangerouslySetInnerHTML={{ __html: update.content }}
-        />
+        {/* Content (Narrow column for reading) */}
+        <div className="mx-auto max-w-2xl">
+          <div
+            className="prose prose-lg sm:prose-xl prose-slate max-w-none
+              prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-900
+              prose-p:leading-relaxed prose-p:text-slate-700
+              prose-a:text-emerald-600 prose-a:no-underline hover:prose-a:underline prose-a:font-medium
+              prose-img:rounded-2xl prose-img:shadow-lg prose-img:mx-auto
+              prose-blockquote:border-l-4 prose-blockquote:border-emerald-500 prose-blockquote:bg-emerald-50/50 prose-blockquote:rounded-r-xl prose-blockquote:px-6 prose-blockquote:py-2 prose-blockquote:text-slate-800 prose-blockquote:font-medium prose-blockquote:not-italic
+              prose-ul:marker:text-emerald-500 prose-ol:marker:text-emerald-600
+              prose-strong:text-slate-900 prose-strong:font-bold"
+            dangerouslySetInnerHTML={{ __html: update.content }}
+          />
 
-        {/* Back link */}
-        <div className="mt-16 pt-8 border-t border-slate-100">
-          <Link
-            href="/updates"
-            className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
-          >
-            <ArrowLeft size={15} /> All updates
-          </Link>
+          {/* Share & Back link */}
+          <div className="mt-16 pt-8 border-t border-slate-200 flex items-center justify-between">
+            <Link
+              href="/updates"
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-6 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all active:scale-95"
+            >
+              <ArrowLeft size={16} /> Back to updates
+            </Link>
+          </div>
         </div>
       </div>
 

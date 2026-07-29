@@ -61,6 +61,26 @@ export async function fetchProductContent(productSlug: string) {
   }
 }
 
+export async function fetchLatestUpdates(limit = 3) {
+  if (!supabaseEnabled()) return [];
+  try {
+    const { data, error } = await supabase
+      .from("product_content")
+      .select("*")
+      .eq("is_active", true)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    if (error) {
+      console.warn("fetchLatestUpdates error:", error.message);
+      return [];
+    }
+    return data || [];
+  } catch (e) {
+    console.warn("fetchLatestUpdates exception:", e);
+    return [];
+  }
+}
+
 export async function fetchArticleById(id: string) {
   if (!supabaseEnabled() || !id) return null;
   try {

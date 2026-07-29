@@ -82,7 +82,7 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
       <section className="relative pt-12 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           {/* Hero Left Content */}
-          <div className="lg:col-span-7 space-y-6">
+          <div className="lg:col-span-5 space-y-6">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#EBF1E5] dark:bg-[#11291F] border border-[#D8E3D3] dark:border-[#1E4D37] text-xs font-mono font-medium text-[#1F7A4D] dark:text-[#8FE24A]">
               <span className="w-2 h-2 rounded-full bg-[#1F7A4D] dark:bg-[#8FE24A] animate-pulse" />
               INDIA'S ELECTRIC MOBILITY ECOSYSTEM
@@ -92,11 +92,11 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
               India's <span className="text-[#1F7A4D] dark:text-[#8FE24A]">Trusted</span> Electric Mobility Platform.
             </h1>
 
-            <p className="text-base sm:text-lg text-[#3C5347] dark:text-emerald-100/70 max-w-2xl leading-relaxed">
+            {/* <p className="text-base sm:text-lg text-[#3C5347] dark:text-emerald-100/70 max-w-2xl leading-relaxed">
               Compare EVs, discover charging solutions, explore commercial fleets, find genuine parts, and make confident electric mobility decisions — all in one place.
-            </p>
+            </p> */}
 
-            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            {/* <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
               {[
                 "Honest comparisons",
                 // "Expert reviews",
@@ -109,21 +109,21 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
                   {item}
                 </li>
               ))}
-            </ul>
+            </ul> */}
 
             <div className="flex flex-wrap gap-4 pt-4">
               <a
                 href="/catalog"
                 className="inline-flex items-center gap-2 bg-[#0A2A1E] hover:bg-[#1B6642] text-white dark:bg-[#8FE24A] dark:hover:bg-[#a0f05d] dark:text-[#07130E] font-bold px-6 py-3.5 rounded-full text-sm transition-all transform hover:-translate-y-0.5 shadow-lg shadow-[#0A2A1E]/10 dark:shadow-[#8FE24A]/20"
               >
-                Explore ecosystem
+                Explore listings
                 <ArrowRight className="w-4 h-4" />
               </a>
             </div>
           </div>
 
           {/* Hero Right Panel: Only Supabase Banner with details at bottom */}
-          <div className="lg:col-span-5">
+          <div className="lg:col-span-7">
             <div className="relative rounded-3xl border border-emerald-500/30 dark:border-emerald-500/20 shadow-2xl overflow-hidden min-h-[420px] h-full flex flex-col justify-between bg-[#0A2A1E]">
               {/* Banner Media Layer */}
               {activeBanners.length > 0 ? (
@@ -469,7 +469,7 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
           {displayUpdates.map((item: any, idx) => (
             <Link
               key={idx}
-              href={`/updates/${item.slug || ""}`}
+              href={item.href || `/updates/${item.slug || ""}`}
               className="group rounded-2xl bg-white dark:bg-[#0B2117] border border-[#D8E3D3] dark:border-emerald-900/40 hover:border-[#2C9A5F] dark:hover:border-emerald-500/40 overflow-hidden flex flex-col justify-between shadow-xs dark:shadow-none hover:shadow-lg transition-all"
             >
               <div>

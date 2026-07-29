@@ -69,7 +69,7 @@ export default function RootLayout({
           <CompareProvider>
             <Header />
             <Analytics />
-            <main className="flex-grow relative z-0">
+            <main className="flex-grow relative">
               {children}
             </main>
             <Footer />

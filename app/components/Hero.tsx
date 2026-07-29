@@ -99,19 +99,26 @@ export default function Hero({
                   className="absolute inset-0 w-full h-full object-cover"
                 />
               ) : (
-                <picture className="absolute inset-0 w-full h-full">
+                <>
                   {(activeBanners[currentBannerIdx].image_vertical || activeBanners[currentBannerIdx].imageVertical) && (
-                    <source
-                      media="(max-width: 640px)"
-                      srcSet={activeBanners[currentBannerIdx].image_vertical || activeBanners[currentBannerIdx].imageVertical}
+                    <Image
+                      src={activeBanners[currentBannerIdx].image_vertical || activeBanners[currentBannerIdx].imageVertical}
+                      alt={activeBanners[currentBannerIdx].cta || "Banner Vertical"}
+                      fill
+                      priority={currentBannerIdx === 0}
+                      className="object-cover sm:hidden"
+                      sizes="(max-width: 640px) 100vw"
                     />
                   )}
-                  <img
+                  <Image
                     src={activeBanners[currentBannerIdx].image_horizontal || activeBanners[currentBannerIdx].imageHorizontal}
-                    alt={activeBanners[currentBannerIdx].cta || "Banner"}
-                    className="absolute inset-0 w-full h-full object-cover"
+                    alt={activeBanners[currentBannerIdx].cta || "Banner Horizontal"}
+                    fill
+                    priority={currentBannerIdx === 0}
+                    className={`object-cover ${(activeBanners[currentBannerIdx].image_vertical || activeBanners[currentBannerIdx].imageVertical) ? 'hidden sm:block' : ''}`}
+                    sizes="100vw"
                   />
-                </picture>
+                </>
               )}
             </motion.div>
           ) : (

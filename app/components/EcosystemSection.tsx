@@ -77,18 +77,30 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
   ];
 
   return (
-    <div className="w-full bg-[#F6F8F2] pt-8 dark:bg-[#07130E] text-[#0E1F16] dark:text-slate-100 font-sans overflow-hidden transition-colors duration-300 relative z-0">
+    <div 
+      className="w-full bg-[#F6F8F2] pt-8 dark:bg-[#07130E] text-[#0E1F16] dark:text-slate-100 font-sans overflow-hidden transition-colors duration-1000 relative z-0"
+      style={
+        activeBanners[currentBannerIdx]?.background_color
+          ? { backgroundColor: activeBanners[currentBannerIdx].background_color }
+          : undefined
+      }
+    >
       {/* 1. HERO / ECOSYSTEM BANNER */}
       <section className="relative pt-12 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           {/* Hero Left Content */}
           <div className="lg:col-span-5 space-y-6">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#EBF1E5] dark:bg-[#11291F] border border-[#D8E3D3] dark:border-[#1E4D37] text-xs font-mono font-medium text-[#1F7A4D] dark:text-[#8FE24A]">
-              <span className="w-2 h-2 rounded-full bg-[#1F7A4D] dark:bg-[#8FE24A] animate-pulse" />
-              INDIA'S ELECTRIC MOBILITY ECOSYSTEM
-            </div>
-
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-[#0A2A1E] dark:text-white leading-[1.08]">
+            
+            <h1 
+              className={`text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.08] transition-colors duration-1000 ${
+                !activeBanners[currentBannerIdx]?.text_color && !activeBanners[currentBannerIdx]?.background_color
+                  ? 'text-[#0A2A1E] dark:text-white'
+                  : ''
+              }`}
+              style={{
+                color: activeBanners[currentBannerIdx]?.text_color || (activeBanners[currentBannerIdx]?.background_color ? '#ffffff' : undefined)
+              }}
+            >
               India's <span className="text-[#1F7A4D] dark:text-[#8FE24A]">Trusted</span> Electric Mobility Platform.
             </h1>
 
@@ -122,19 +134,19 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
             </div>
           </div>
 
-          {/* Hero Right Panel: Only Supabase Banner with details at bottom */}
+          {/* Hero Right Panel: Supabase Banner directly on background */}
           <div className="lg:col-span-7">
-            <div className="relative rounded-3xl border border-emerald-500/30 dark:border-emerald-500/20 shadow-2xl overflow-hidden min-h-[420px] h-full flex flex-col justify-between bg-[#0A2A1E]">
+            <div className="relative w-full h-[450px] flex flex-col justify-end overflow-hidden">
               {/* Banner Media Layer */}
               {activeBanners.length > 0 ? (
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={currentBannerIdx}
-                    initial={{ opacity: 0, scale: 1.04 }}
+                    initial={{ opacity: 0, scale: 1.02 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.7 }}
-                    className="absolute inset-0 w-full h-full z-0 overflow-hidden"
+                    className="absolute inset-0 w-full h-full z-0"
                   >
                     {activeBanners[currentBannerIdx].video_url ? (
                       <video
@@ -158,48 +170,40 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
                         className="w-full h-full object-cover"
                       />
                     )}
-                    {/* Dark gradient overlay for bottom text contrast */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/20" />
                   </motion.div>
                 </AnimatePresence>
               ) : (
                 /* Fallback when activeBanners is empty */
-                <div className="absolute inset-0 w-full h-full z-0 overflow-hidden">
+                <div className="absolute inset-0 w-full h-full z-0">
                   <img
                     src="https://images.unsplash.com/photo-1563720223185-11003d516935?w=1000&auto=format&fit=crop&q=80"
                     alt="EV Ecosystem"
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0A2A1E] via-black/40 to-black/20" />
                 </div>
               )}
 
-              {/* Top Tag inside Card */}
-              <div className="relative z-10 p-6 flex justify-between items-center">
-                {/* <span className="px-3 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/20 text-[10px] font-mono font-bold tracking-wider text-[#8FE24A] uppercase">
-                  {activeBanners.length > 0 && activeBanners[currentBannerIdx]?.label
-                    ? activeBanners[currentBannerIdx].label
-                    : "FEATURED BANNER"}
-                </span> */}
-
-                {/* <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/20 text-xs font-mono font-semibold text-[#8FE24A]">
-                  <span className="w-2 h-2 rounded-full bg-[#8FE24A] animate-ping" />
-                  LIVE
-                </span> */}
-              </div>
-
-              {/* Bottom Details Panel inside Card */}
-              <div className="relative z-10 p-6 sm:p-8 bg-gradient-to-t from-black/95 via-black/75 to-transparent pt-12">
+              {/* Bottom Details Panel - borderless and transparent */}
+              <div className="relative z-10 p-6 sm:p-8 pt-12">
                 {activeBanners.length > 0 && activeBanners[currentBannerIdx] ? (
                   <div className="space-y-3">
-                    <h3 className="text-xl sm:text-2xl font-bold text-white leading-tight font-sans">
+                    <h3 
+                      className={`text-xl  font-bold leading-tight font-sans transition-colors duration-1000 ${
+                        !activeBanners[currentBannerIdx]?.text_color && !activeBanners[currentBannerIdx]?.background_color
+                          ? 'text-white'
+                          : ''
+                      }`}
+                      style={{
+                        color: activeBanners[currentBannerIdx]?.text_color || (activeBanners[currentBannerIdx]?.background_color ? '#ffffff' : undefined)
+                      }}
+                    >
                       {activeBanners[currentBannerIdx].details || activeBanners[currentBannerIdx].label || "India's Electric Mobility Platform"}
                     </h3>
 
                     <div className="flex items-center justify-between pt-2">
                       <Link
                         href={activeBanners[currentBannerIdx].href || "/catalog"}
-                        className="inline-flex items-center gap-2 bg-[#8FE24A] hover:bg-[#a0f05d] text-[#07130E] font-bold px-5 py-2.5 rounded-full text-xs transition-all transform hover:scale-105 shadow-lg shadow-[#8FE24A]/20"
+                        className="inline-flex items-center gap-2 bg-[#8FE24A] hover:bg-[#a0f05d] text-[#07130E] font-bold p-2.5 rounded-md text-xs transition-all transform hover:scale-105 shadow-lg shadow-[#8FE24A]/20"
                       >
                         {activeBanners[currentBannerIdx].cta || "Explore Now"}
                         <ArrowRight className="w-3.5 h-3.5" />
@@ -516,13 +520,13 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
         </div>
       </section>
 
-      {/* 6. VEHICLES ROW + TOOLS LINK */}
+      {/* 6. NEW RELEASES ROW */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#D8E3D3] dark:border-emerald-900/30">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 gap-4">
           <div>
             <div className="text-xs font-mono text-[#1F7A4D] dark:text-[#8FE24A] tracking-wider uppercase mb-2">Fresh On Road</div>
-            <h2 className="text-3xl sm:text-4xl font-bold text-[#0A2A1E] dark:text-white">New Releases & Upcoming</h2>
-            <p className="text-[#3C5347] dark:text-emerald-100/70 text-sm mt-1">Recently launched and upcoming electric vehicles in India.</p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-[#0A2A1E] dark:text-white">New Releases</h2>
+            <p className="text-[#3C5347] dark:text-emerald-100/70 text-sm mt-1">Recently launched electric vehicles in India.</p>
           </div>
           <div className="flex gap-3">
             <Link
@@ -537,7 +541,7 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
         {/* Horizontal scrollable vehicle row */}
         <div className="overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
           <div className="flex gap-4" style={{ minWidth: "max-content" }}>
-            {listings.slice(0, 10).map((l, i) => {
+            {listings.filter(l => isLaunched(l.launchdate)).slice(0, 10).map((l, i) => {
               const pricing = l.prices?.length ? (
                 parseFloat(String(l.prices[0])) > 100
                   ? `₹${(parseFloat(String(l.prices[0])) / 100000).toFixed(2)}L`
@@ -563,11 +567,72 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
                       <div className="w-full h-full flex items-center justify-center text-[#6C8377]"><Zap className="w-8 h-8" /></div>
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent pointer-events-none" />
-                    {!isLaunched(l.launchdate) && (
-                      <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-amber-400/90 text-[10px] font-bold text-zinc-900">
-                        <Calendar className="inline w-3 h-3 mr-0.5" /> Upcoming
-                      </span>
+                  </div>
+                  <div className="p-4">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-[#6C8377] dark:text-emerald-400/60">{l.brand}</p>
+                    <h3 className="text-sm font-bold text-[#0A2A1E] dark:text-white mt-0.5 line-clamp-1">{l.title}</h3>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-xs font-bold text-[#1F7A4D] dark:text-[#8FE24A]">{pricing || "TBA"}</span>
+                      {range && <span className="text-[10px] font-mono text-[#6C8377] dark:text-emerald-300/60">{range} km</span>}
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* 7. UPCOMING ROW */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#D8E3D3] dark:border-emerald-900/30">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 gap-4">
+          <div>
+            <div className="text-xs font-mono text-amber-500 tracking-wider uppercase mb-2">Coming Soon</div>
+            <h2 className="text-3xl sm:text-4xl font-bold text-[#0A2A1E] dark:text-white">Upcoming Vehicles</h2>
+            <p className="text-[#3C5347] dark:text-emerald-100/70 text-sm mt-1">Anticipated electric vehicles set to launch in India.</p>
+          </div>
+          <div className="flex gap-3">
+            <Link
+              href="/catalog"
+              className="inline-flex items-center gap-1.5 text-xs font-bold font-mono text-[#1F7A4D] dark:text-[#8FE24A] hover:underline"
+            >
+              VIEW ALL <ChevronRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+
+        {/* Horizontal scrollable vehicle row */}
+        <div className="overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
+          <div className="flex gap-4" style={{ minWidth: "max-content" }}>
+            {listings.filter(l => !isLaunched(l.launchdate)).slice(0, 10).map((l, i) => {
+              const pricing = l.prices?.length ? (
+                parseFloat(String(l.prices[0])) > 100
+                  ? `₹${(parseFloat(String(l.prices[0])) / 100000).toFixed(2)}L`
+                  : `₹${l.prices[0]}L`
+              ) : (l as any).price_bracket || "";
+              const range = l.batteryVariants?.[0]?.range || "";
+              return (
+                <Link
+                  key={l.slug || i}
+                  href={`/product/${l.slug}`}
+                  className="group flex-shrink-0 w-[260px] rounded-2xl border border-[#D8E3D3] dark:border-emerald-900/40 bg-white dark:bg-[#0B2117] overflow-hidden hover:border-[#2C9A5F] dark:hover:border-emerald-500/40 hover:shadow-lg transition-all"
+                >
+                  <div className="relative h-40 bg-[#F6F8F2] dark:bg-emerald-950/60 overflow-hidden">
+                    {l.photo ? (
+                      <Image
+                        src={l.photo}
+                        alt={l.title}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        sizes="260px"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-[#6C8377]"><Zap className="w-8 h-8" /></div>
                     )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent pointer-events-none" />
+                    <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-amber-400/90 text-[10px] font-bold text-zinc-900">
+                      <Calendar className="inline w-3 h-3 mr-0.5" /> Upcoming
+                    </span>
                   </div>
                   <div className="p-4">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-[#6C8377] dark:text-emerald-400/60">{l.brand}</p>

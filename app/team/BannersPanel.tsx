@@ -14,6 +14,8 @@ export type HeroBanner = {
   is_active: boolean;
   label?: string;
   order_index?: number;
+  background_color?: string;
+  text_color?: string;
 };
 
 const emptyBanner: HeroBanner = {
@@ -25,6 +27,8 @@ const emptyBanner: HeroBanner = {
   video_url: "",
   is_active: true,
   label: "",
+  background_color: "#000000",
+  text_color: "#ffffff",
 };
 
 export default function BannersPanel({ supabase }: { supabase: any }) {
@@ -210,6 +214,52 @@ export default function BannersPanel({ supabase }: { supabase: any }) {
               </div>
             </label>
             <label className="block sm:col-span-2"><span className="text-xs font-bold text-slate-600">Details (Optional Text)</span><input value={form.details || ""} onChange={(e) => setForm({ ...form, details: e.target.value })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
+            <label className="block sm:col-span-1">
+              <span className="text-xs font-bold text-slate-600">Background Color (Color Wheel)</span>
+              <div className="flex gap-2 mt-1">
+                <div className="relative flex-1">
+                  <input
+                    value={form.background_color || ""}
+                    onChange={(e) => setForm({ ...form, background_color: e.target.value })}
+                    placeholder="#000000"
+                    className="w-full rounded-lg border border-slate-200 pl-10 pr-3 py-2 text-sm outline-none bg-white"
+                  />
+                  <div
+                    className="absolute left-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-md border border-slate-300 shadow-sm transition-colors duration-200"
+                    style={{ backgroundColor: form.background_color || "#000000" }}
+                  />
+                </div>
+                <input
+                  type="color"
+                  value={form.background_color || "#000000"}
+                  onChange={(e) => setForm({ ...form, background_color: e.target.value })}
+                  className="w-12 h-9 p-0.5 rounded-lg border border-slate-200 cursor-pointer bg-white"
+                />
+              </div>
+            </label>
+            <label className="block sm:col-span-1">
+              <span className="text-xs font-bold text-slate-600">Text/Heading Color (Color Wheel)</span>
+              <div className="flex gap-2 mt-1">
+                <div className="relative flex-1">
+                  <input
+                    value={form.text_color || ""}
+                    onChange={(e) => setForm({ ...form, text_color: e.target.value })}
+                    placeholder="#ffffff"
+                    className="w-full rounded-lg border border-slate-200 pl-10 pr-3 py-2 text-sm outline-none bg-white"
+                  />
+                  <div
+                    className="absolute left-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-md border border-slate-300 shadow-sm transition-colors duration-200"
+                    style={{ backgroundColor: form.text_color || "#ffffff" }}
+                  />
+                </div>
+                <input
+                  type="color"
+                  value={form.text_color || "#ffffff"}
+                  onChange={(e) => setForm({ ...form, text_color: e.target.value })}
+                  className="w-12 h-9 p-0.5 rounded-lg border border-slate-200 cursor-pointer bg-white"
+                />
+              </div>
+            </label>
           </div>
           <div className="flex items-center gap-3 mt-4">
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} /> Active</label>
@@ -229,8 +279,24 @@ export default function BannersPanel({ supabase }: { supabase: any }) {
                   <button onClick={() => moveBanner(idx, -1)} disabled={idx === 0} className="text-slate-400 hover:text-sky-600 disabled:opacity-30 disabled:hover:text-slate-400"><ArrowUp size={14} /></button>
                   <button onClick={() => moveBanner(idx, 1)} disabled={idx === banners.length - 1} className="text-slate-400 hover:text-sky-600 disabled:opacity-30 disabled:hover:text-slate-400"><ArrowDown size={14} /></button>
                 </div>
-                <div className="h-12 w-20 rounded bg-slate-100 overflow-hidden relative shrink-0">
+                <div className="h-12 w-20 rounded bg-slate-100 overflow-hidden relative shrink-0 border border-slate-200">
                   {b.image_horizontal && <img src={b.image_horizontal} alt={b.cta} className="object-cover w-full h-full" loading="lazy" />}
+                  <div className="absolute bottom-1 right-1 flex gap-0.5">
+                    {b.background_color && (
+                      <div
+                        className="w-3.5 h-3.5 rounded-full border border-white shadow-sm"
+                        style={{ backgroundColor: b.background_color }}
+                        title={`Background color: ${b.background_color}`}
+                      />
+                    )}
+                    {b.text_color && (
+                      <div
+                        className="w-3.5 h-3.5 rounded-full border border-white shadow-sm"
+                        style={{ backgroundColor: b.text_color }}
+                        title={`Text color: ${b.text_color}`}
+                      />
+                    )}
+                  </div>
                 </div>
                 <div>
                   <p className="text-sm font-bold text-slate-800">

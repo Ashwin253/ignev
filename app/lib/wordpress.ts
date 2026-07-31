@@ -114,15 +114,33 @@ async function gql<T>(
  */
 export function formatLaunchDate(launchdate: string | null | undefined): string {
   if (!launchdate) return " ";
+  launchdate = launchdate.trim();
+  
+  if (/^\d{4}$/.test(launchdate)) {
+    const year = parseInt(launchdate, 10);
+    const currentYear = new Date().getFullYear();
+    if (year >= currentYear) return "Coming Soon";
+  }
+
   const d = new Date(launchdate);
-  if (isNaN(d.getTime())) return " ";
+  if (isNaN(d.getTime())) return "Coming Soon";
   return d <= new Date() ? " " : "Coming Soon";
 }
 
 /** True when the vehicle is already launched (no future date). */
 export function isLaunched(launchdate: string | null | undefined): boolean {
   if (!launchdate) return true;
-  return new Date(launchdate) <= new Date();
+  launchdate = launchdate.trim();
+
+  if (/^\d{4}$/.test(launchdate)) {
+    const year = parseInt(launchdate, 10);
+    const currentYear = new Date().getFullYear();
+    if (year >= currentYear) return false;
+  }
+
+  const d = new Date(launchdate);
+  if (isNaN(d.getTime())) return false;
+  return d <= new Date();
 }
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -928,6 +946,8 @@ export type HeroBanner = {
   video_url?: string;
   label?: string;
   accent: string;
+  background_color?: string;
+  text_color?: string;
 };
 
 const BANNER_ACCENTS = [

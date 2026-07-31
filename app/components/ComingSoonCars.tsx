@@ -47,10 +47,10 @@ export default function ComingSoonCars({ items }: { items: ComingSoonItem[] }) {
         {/* Header */}
         <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.22em] text-amber-700">
+            {/* <span className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.22em] text-amber-700">
               <Clock3 size={14} />
               Coming soon
-            </span>
+            </span> */}
             <h2 className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
               Upcoming models
             </h2>

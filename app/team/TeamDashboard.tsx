@@ -2279,7 +2279,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
               </label>
               <label className="block">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-700">Launch Date</span>
-                <input type="date" value={form.launchdate ?? ""} onChange={(e) => setForm({ ...form, launchdate: e.target.value || null })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" />
+                <input type="text" placeholder="e.g. 2024, Oct 2024, 2024-10-15" value={form.launchdate ?? ""} onChange={(e) => setForm({ ...form, launchdate: e.target.value || null })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none placeholder:text-slate-400" />
               </label>
               <label className="block">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-700">Parent Model (Optional)</span>
@@ -3051,7 +3051,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                       })()}
                     </div>
                     <MiniInput label="Version/Refresh" value={v.version_name || ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], version_name: val }; setVariants(arr); }} />
-                    <MiniInput label="Launch Date" value={v.launch_date || ""} onChange={(val) => updateVariantField(i, { launch_date: val })} />
+                    <MiniInput label="Launch Date" placeholder="e.g. 2024, Oct 2024" value={v.launch_date || ""} onChange={(val) => updateVariantField(i, { launch_date: val })} />
                     <MiniInput label="Model Year" value={String(v.model_year)} onChange={(val) => updateVariantField(i, { model_year: cleanInt(val, 2026) })} />
                     <MiniInput label="Price (Lakh)" value={String(v.price || "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], price: cleanPriceLakh(val) }; setVariants(arr); }} />
                   </div>

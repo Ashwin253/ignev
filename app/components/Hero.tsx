@@ -75,7 +75,15 @@ export default function Hero({
   }));
 
   return (
-    <section id="home" className="relative text-zinc-900" style={{ backgroundImage: "url('/listingbackgroundsecond.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}>
+    <section 
+      id="home" 
+      className="relative text-zinc-900 transition-all duration-1000" 
+      style={
+        activeBanners[currentBannerIdx]?.background_color
+          ? { backgroundColor: activeBanners[currentBannerIdx].background_color }
+          : { backgroundImage: "url('/listingbackgroundsecond.jpg')", backgroundSize: "cover", backgroundPosition: "center" }
+      }
+    >
       {/* Hero */}
       <div className="relative min-h-[750px] sm:h-screen sm:min-h-[640px] w-full overflow-hidden">
         {/* Animated Banner Slider connected to Supabase */}
@@ -88,6 +96,7 @@ export default function Hero({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.8 }}
               className="absolute inset-0 w-full h-full"
+              style={{ backgroundColor: activeBanners[currentBannerIdx]?.background_color || 'transparent' }}
             >
               {activeBanners[currentBannerIdx].video_url ? (
                 <video
@@ -126,7 +135,6 @@ export default function Hero({
           )}
         </AnimatePresence>
 
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/70 pointer-events-none" />
         <div className="relative z-20 md:z-10 mx-auto flex min-h-[750px] sm:h-screen sm:min-h-[640px] max-w-7xl flex-col items-center justify-between px-6 pt-24 pb-8 sm:pt-32 sm:pb-12 text-center">
           
           {/* Top Heading */}

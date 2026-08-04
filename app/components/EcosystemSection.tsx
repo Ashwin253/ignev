@@ -79,14 +79,16 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
   return (
     <div 
       className="w-full bg-[#F6F8F2] pt-8 dark:bg-[#07130E] text-[#0E1F16] dark:text-slate-100 font-sans overflow-hidden transition-colors duration-1000 relative z-0"
-      style={
-        activeBanners[currentBannerIdx]?.background_color
-          ? { backgroundColor: activeBanners[currentBannerIdx].background_color }
-          : undefined
-      }
     >
       {/* 1. HERO / ECOSYSTEM BANNER */}
-      <section className="relative pt-12 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <section
+        className="relative mx-auto mb-8 max-w-7xl overflow-hidden rounded-[2rem] border border-white/60 bg-white/50 px-4 py-10 shadow-[0_20px_60px_rgba(10,42,30,0.08)] backdrop-blur-sm sm:px-6 sm:py-12 lg:px-8 lg:py-16"
+        style={
+          activeBanners[currentBannerIdx]?.background_color
+            ? { backgroundColor: activeBanners[currentBannerIdx].background_color }
+            : undefined
+        }
+      >
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           {/* Hero Left Content */}
           <div className="lg:col-span-5 space-y-6">
@@ -246,8 +248,8 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
             </div>
           </div>
         </div>
-
-        {/* Trust Strip */}
+</section>
+{/* <section>
         <div className="mt-16 pt-8 border-t border-[#D8E3D3] dark:border-emerald-900/40">
           <div className="flex flex-col md:flex-row items-center gap-6 text-xs text-[#6C8377] dark:text-emerald-200/60 font-mono">
             <span className="uppercase tracking-widest text-[#1F7A4D] dark:text-emerald-400 shrink-0 font-bold">Popular Brands</span>
@@ -262,7 +264,7 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* 2. STATS SECTION */}
       <section className="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#D8E3D3] dark:border-emerald-900/30">

@@ -36,6 +36,7 @@ import CompareWidget from "./components/CompareWidget";
 import { Analytics } from "@vercel/analytics/next";
 import TidioChat from "./components/TidioChat";
 import TawkChat from "./components/TawkChat";
+import { SpeedInsights } from "@vercel/speed-insights/next"
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -68,6 +69,7 @@ export default function RootLayout({
         <FeedbackProvider>
           <CompareProvider>
             <Header />
+            <SpeedInsights/>
             <Analytics />
             <main className="flex-grow relative">
               {children}

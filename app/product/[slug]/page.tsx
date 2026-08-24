@@ -10,6 +10,7 @@ import { SmoothCollapseEmptyState } from "../../components/SmoothCollapse";
 import {
   formatLaunchDate, isLaunched, formatPricing,
 } from "../../lib/wordpress";
+import { getVehicleFallbackImage, getVehiclePhoto } from "../../lib/vehicle-images";
 import { fetchEvListingBySlugFromSupabase, fetchEvListingsFromSupabase, fetchProductContent, fetchProductOffers, supabase } from "../../lib/supabase";
 import ProductGallery from "../../components/ProductGallery";
 import ProductMainUI from "../ProductMainUI";
@@ -83,9 +84,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const launched    = isLaunched(item.launchdate);
   const launchLabel = formatLaunchDate(item.launchdate);
 
+  const fallbackPhoto = getVehicleFallbackImage(item);
   const photos = item.galleryImages.length > 0
     ? item.galleryImages
-    : item.photo ? [item.photo] : [];
+    : item.photo ? [item.photo] : [fallbackPhoto];
 
 
 
@@ -254,10 +256,13 @@ async function RelatedListings({ slug, currentItem }: { slug: string; currentIte
           <Link key={rel.id} href={`/product/${rel.slug}`}
             className="group flex flex-col h-full overflow-hidden rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-md hover:border-[#a5e6d1]/60 hover:shadow-xl transition-all duration-350 hover:-translate-y-1">
             <div className="relative aspect-4/3 overflow-hidden bg-transparent shrink-0">
-              {rel.photo && (
-                <Image src={rel.photo} alt={rel.title} fill sizes="33vw"
-                  className="object-contain group-hover:scale-105 transition-transform duration-500" />
-              )}
+              <Image
+                src={getVehiclePhoto(rel.photo, rel)}
+                alt={rel.title}
+                fill
+                sizes="33vw"
+                className="object-contain group-hover:scale-105 transition-transform duration-500"
+              />
             </div>
             <div className="p-5 flex flex-col grow">
               <div>

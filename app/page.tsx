@@ -6,6 +6,7 @@ import {
   type EvListing,
 } from "./lib/wordpress";
 import { fetchEvListingsFromSupabase, fetchHeroBanners, fetchLatestUpdates } from "./lib/supabase";
+import { getVehiclePhoto } from "./lib/vehicle-images";
 import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import Hero from "./components/Hero";
@@ -41,7 +42,7 @@ function toComingSoonItem(l: EvListing): ComingSoonItem {
     type:    l.types[0] ?? "",
     pricing: l.prices.length ? formatPricing(l.prices) : "",
     launch:  formatLaunchDate(l.launchdate),
-    photo:   l.photo,
+    photo:   getVehiclePhoto(l.photo, l),
     slug:    l.slug,
   };
 }
@@ -133,7 +134,7 @@ async function HomeContent() {
         ...content.comingSoon.electric_cars.slice(0, 2),
         ...content.comingSoon.electric_two_wheelers.slice(0, 1),
         ...content.comingSoon.electric_autos.slice(0, 1),
-      ].map((c) => ({ name: c.name, brand: c.brand, type: c.type, pricing: c.pricing, launch: c.launch, photo: c.photo }));
+      ].map((c) => ({ name: c.name, brand: c.brand, type: c.type, pricing: c.pricing, launch: c.launch, photo: getVehiclePhoto(c.photo, c) }));
 
   return (
     <>

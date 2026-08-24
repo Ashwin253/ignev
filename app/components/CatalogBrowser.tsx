@@ -19,6 +19,7 @@ import {
   matchesCatalogCategory,
   type CatalogCategoryValue,
 } from "../lib/catalog-filters";
+import { getVehiclePhoto } from "../lib/vehicle-images";
 
 function toSlug(brand: string, name: string) {
   return `${brand}-${name}`
@@ -95,19 +96,13 @@ function CatalogCard({ item, index, isInCompare, addToCompare, removeFromCompare
           className="relative aspect-[4/3] overflow-hidden"
           style={{ backgroundImage: "url('/listingbackground.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}
         >
-          {item.photo ? (
-            <Image
-              src={item.photo}
-              alt={item.name}
-              fill
-              sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
-              className={`object-cover transition-transform duration-700 group-hover:scale-105 ${isPlaying ? "opacity-0" : "opacity-100"}`}
-            />
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center bg-zinc-100">
-              <Zap size={48} className="text-zinc-300" />
-            </div>
-          )}
+          <Image
+            src={getVehiclePhoto(item.photo, item)}
+            alt={item.name}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
+            className={`object-cover transition-transform duration-700 group-hover:scale-105 ${isPlaying ? "opacity-0" : "opacity-100"}`}
+          />
 
           {isDirectVideo && isPlaying && (
             <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); }} className="absolute inset-0 z-10 bg-black">

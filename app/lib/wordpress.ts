@@ -19,6 +19,8 @@
  *   WP_APP_PASSWORD       WordPress application password
  */
 
+export { getVehicleFallbackImage, getVehiclePhoto, isTwoWheeler } from "./vehicle-images";
+
 // ── Config ───────────────────────────────────────────────────────────────────
 
 export function gqlEndpoint(): string {

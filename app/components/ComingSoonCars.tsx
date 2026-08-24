@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Clock3, ArrowUpRight, CalendarDays } from "lucide-react";
 import { triggerEnquiryModal } from "./EnquiryModal";
+import { getVehiclePhoto } from "../lib/vehicle-images";
 
 export type ComingSoonItem = {
   name: string;
@@ -83,17 +84,13 @@ export default function ComingSoonCars({ items }: { items: ComingSoonItem[] }) {
               >
                 {/* Image */}
                 <div className="relative aspect-16/10 bg-slate-100 overflow-hidden">
-                  {car.photo ? (
-                    <Image
-                      src={car.photo}
-                      alt={car.name}
-                      fill
-                      sizes="(max-width: 768px) 82vw, 25vw"
-                      className="object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
-                  ) : (
-                    <div className="absolute inset-0 bg-linear-to-br from-amber-50 to-slate-100" />
-                  )}
+                  <Image
+                    src={getVehiclePhoto(car.photo, car)}
+                    alt={car.name}
+                    fill
+                    sizes="(max-width: 768px) 82vw, 25vw"
+                    className="object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
                   {/* Hover enquire overlay */}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
                     <button
@@ -104,11 +101,9 @@ export default function ComingSoonCars({ items }: { items: ComingSoonItem[] }) {
                     </button>
                   </div>
                   {/* Launch badge */}
-                  {car.launch && (
-                    <span className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-amber-400/90 backdrop-blur-sm px-2.5 py-1 text-[10px] font-semibold text-slate-900">
-                      <CalendarDays size={10} /> {car.launch}
-                    </span>
-                  )}
+                  <span className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-amber-400/90 backdrop-blur-sm px-2.5 py-1 text-[10px] font-semibold text-slate-900">
+                    <CalendarDays size={10} /> Upcoming
+                  </span>
                 </div>
 
                 {/* Body */}

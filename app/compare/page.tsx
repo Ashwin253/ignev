@@ -27,6 +27,8 @@ async function CompareContent({ slugs }: { slugs: string[] }) {
     slug: l.slug,
     title: l.title,
     brand: l.brand,
+    types: l.types,
+    type: l.types?.[0],
     photo: l.photo
   }));
 

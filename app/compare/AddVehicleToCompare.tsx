@@ -5,11 +5,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, Search, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
+import { getVehiclePhoto } from "../lib/vehicle-images";
 
 type CompactProduct = {
   slug: string;
   title: string;
   brand: string;
+  types?: string[];
+  type?: string;
   photo: string | null;
 };
 
@@ -116,7 +119,7 @@ export default function AddVehicleToCompare({
                         className="flex items-center gap-4 rounded-2xl p-3 hover:bg-slate-50 transition-colors text-left group"
                       >
                         <div className="relative h-12 w-20 overflow-hidden rounded-lg bg-slate-100">
-                          {p.photo && <Image src={p.photo} alt={p.title} fill className="object-cover" />}
+                          <Image src={getVehiclePhoto(p.photo, p)} alt={p.title} fill className="object-cover" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-[10px] font-bold uppercase tracking-wider text-sky-600">{p.brand}</p>

@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, Palette, LayoutGrid, Maximize, Play, ImageIc
 import { motion, AnimatePresence } from "framer-motion";
 import { useProductSelection } from "../product/ProductSelectionProvider";
 import type { EvListing } from "../lib/wordpress";
+import { getVehicleFallbackImage } from "../lib/vehicle-images";
 
 interface ProductGalleryProps {
   photos: string[];
@@ -113,6 +114,10 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
       item.photo,
       ...(item.galleryImages.length > 0 ? item.galleryImages : [])
     ])).filter(Boolean);
+
+    if (finalUrls.length === 0) {
+      finalUrls = [getVehicleFallbackImage(item)];
+    }
 
     const vUrl = item?.video_links?.[0]?.url;
     if (vUrl) {

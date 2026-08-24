@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { Sparkles, ArrowRight, Gauge, Send, Play } from "lucide-react";
 import { triggerEnquiryModal } from "./EnquiryModal";
 import { formatPricing, type EvListing } from "../lib/wordpress";
+import { getVehiclePhoto } from "../lib/vehicle-images";
 
 function FreshReleaseCard({ listing, index }: { listing: EvListing; index: number }) {
   const [isHovered, setIsHovered] = useState(false);
@@ -55,15 +56,13 @@ function FreshReleaseCard({ listing, index }: { listing: EvListing; index: numbe
     >
       <Link href={`/product/${listing.slug}`} className="flex flex-col h-full">
         <div className="relative aspect-4/3 overflow-hidden bg-slate-100">
-          {listing.photo && (
-            <Image
-              src={listing.photo}
-              alt={listing.title}
-              fill
-              sizes="(max-width: 768px) 78vw, 25vw"
-              className={`object-cover transition-all duration-500 ${isHovered && isDirectVideo ? 'scale-105 opacity-0' : 'group-hover:scale-105'}`}
-            />
-          )}
+          <Image
+            src={getVehiclePhoto(listing.photo, listing)}
+            alt={listing.title}
+            fill
+            sizes="(max-width: 768px) 78vw, 25vw"
+            className={`object-cover transition-all duration-500 ${isHovered && isDirectVideo ? 'scale-105 opacity-0' : 'group-hover:scale-105'}`}
+          />
 
           {/* Video overlay — plays on hover */}
           {isDirectVideo && (

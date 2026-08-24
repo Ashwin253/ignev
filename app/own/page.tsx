@@ -18,6 +18,8 @@ async function OwnContent({ slug }: { slug: string | undefined }) {
     slug: l.slug,
     title: l.title,
     brand: l.brand,
+    types: l.types,
+    type: l.types?.[0],
     photo: l.photo
   }));
 

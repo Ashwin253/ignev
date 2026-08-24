@@ -10,6 +10,7 @@ import {
   CarFront, Banknote, Sparkles, Trash2
 } from "lucide-react";
 import { isLaunched } from "../lib/wordpress";
+import { getVehiclePhoto } from "../lib/vehicle-images";
 import { useCompare } from "../context/CompareContext";
 import AddVehicleToCompare from "./AddVehicleToCompare";
 import CompareOwnershipView from "./CompareOwnershipView";
@@ -218,9 +219,7 @@ export default function CompareMainUI({
                     <X size={12} /> Remove
                   </button>
                   <div className="relative aspect-video overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
-                    {p.photo && (
-                      <Image src={p.photo} alt={p.title} fill className="object-cover" />
-                    )}
+                    <Image src={getVehiclePhoto(p.photo, p)} alt={p.title} fill className="object-cover" />
                   </div>
                   <div className="space-y-1">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-sky-600">{p.brand}</p>

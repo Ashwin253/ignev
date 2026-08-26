@@ -35,10 +35,10 @@ function SpecList({ rows }: { rows: { label: string; value: string }[] }) {
   );
 }
 
-function SpecCheckboxChips({ labels }: { labels: string[] }) {
+function SpecCheckboxChips({ labels, noBorderTop = false }: { labels: string[]; noBorderTop?: boolean }) {
   if (!labels || labels.length === 0) return null;
   return (
-    <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-zinc-200/60 dark:border-zinc-800">
+    <div className={`flex flex-wrap gap-2 ${noBorderTop ? "" : "mt-4 pt-4 border-t border-zinc-200/60 dark:border-zinc-800"}`}>
       {labels.map((lbl, i) => (
         <span key={i} className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50/80 px-2.5 py-1.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-900/30">
           <CheckCircle2 size={12} className="text-emerald-500" />
@@ -94,7 +94,8 @@ export default function ProductDetails({ item }: { item: EvListing }) {
   const allExtraSections = (item.variantExtraSections?.find((v) => v.variantName === selectedVariant)?? item.variantExtraSections?.[0])?.sections?.filter((s) => s.title && sectionHasContent(s.fields))?? [];
 
   const brakesAndWheelsSection = allExtraSections.find(s => s.title === "Brakes & Wheels");
-  const extraSections = allExtraSections.filter(s => s.title!== "Brakes & Wheels");
+  const drivingModesSection = allExtraSections.find(s => s.title === "Driving Modes");
+  const extraSections = allExtraSections.filter(s => s.title !== "Brakes & Wheels" && s.title !== "Driving Modes");
 
   const customFields = (item.variantCustomFields?.find((v) => v.variantName === selectedVariant)?? item.variantCustomFields?.[0])?.fields;
   const customFieldRows = sectionFieldRows(customFields);
@@ -170,14 +171,24 @@ export default function ProductDetails({ item }: { item: EvListing }) {
     feat?.has_drls && "DRLs",
   ].filter(Boolean) as string[];
 
-  const drivingModesChecks = [
+  const rawExtraModes = [
+    ...(feat?.extra_modes ? normalizeExtras(feat.extra_modes as unknown[]) : []),
+    ...(drivingModesSection ? drivingModesSection.fields : []),
+  ];
+  const extraModesRows = sectionFieldRows(rawExtraModes as any);
+  const extraModesChecks = sectionCheckboxLabels(rawExtraModes as any);
+
+  const rawDrivingModesChecks = [
     feat?.has_mode_eco && "Eco Mode",
     feat?.has_mode_normal && "Normal Mode",
     feat?.has_mode_sports && "Sports Mode",
     feat?.has_mode_hyper && "Hyper Mode",
     feat?.has_mode_cruise && "Cruise Mode",
     (feat?.has_mode_reverse || feat?.has_reverse_mode) && "Reverse Mode",
+    ...extraModesChecks,
   ].filter(Boolean) as string[];
+
+  const drivingModesChecks = Array.from(new Set(rawDrivingModesChecks));
 
   const relevantCityPricing = useMemo(() => {
     if (!item.city_pricing?.length) return [];
@@ -277,9 +288,12 @@ export default function ProductDetails({ item }: { item: EvListing }) {
       id: "drivingModes",
       title: "Driving Modes",
       icon: <Activity size={16} />,
-      condition: drivingModesChecks.length > 0,
+      condition: drivingModesChecks.length > 0 || extraModesRows.length > 0,
       content: (
-        <SpecCheckboxChips labels={drivingModesChecks} />
+        <>
+          <SpecList rows={extraModesRows} />
+          <SpecCheckboxChips labels={drivingModesChecks} noBorderTop={extraModesRows.length === 0} />
+        </>
       )
     },
     {

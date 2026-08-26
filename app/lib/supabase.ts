@@ -441,10 +441,15 @@ function mapToEvListing(row: EvListingRow, variants: EvVariantRow[], features?: 
         ...((v as { extra_dimensions?: Array<{ label: string; value: string }> }).extra_dimensions ?? [])
       ].filter(Boolean) as any,
     })),
-    variantFeatures: variants.map((v) => ({
-      variantName: v.variant_name,
-      ...(features?.get(v.id) ?? {}),
-    })),
+    variantFeatures: variants.map((v) => {
+      const allSecs = (v as { extra_sections?: Array<{ title: string; fields: Array<{ label: string; value: string }> }> }).extra_sections ?? [];
+      const drivingModesSec = allSecs.find((s: any) => s.title === "Driving Modes");
+      return {
+        variantName: v.variant_name,
+        ...(features?.get(v.id) ?? {}),
+        extra_modes: (v as any).extra_modes || drivingModesSec?.fields || [],
+      };
+    }),
     variantExtraSections: variants.map((v) => {
       const builtInSections = [
         {

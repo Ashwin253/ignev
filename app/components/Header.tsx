@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Menu, X, Home, LayoutGrid, MapPin, IndianRupee, Download, SlidersHorizontal, Volume2, VolumeX, Smartphone, Sparkles, ChevronDown, User, Sun, Moon } from "lucide-react";
+import { Menu, X, Home, LayoutGrid, MapPin, IndianRupee, Download, SlidersHorizontal, Volume2, VolumeX, Smartphone, Sparkles, ChevronDown, User, Sun, Moon, Zap, Navigation } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useFeedback } from "../context/FeedbackContext";
 import { playClickSound, playHaptic } from "../lib/feedback";
@@ -20,13 +20,14 @@ const navLinks = [
   // { name: "Compare", href: "/compare", icon: IndianRupee },
 ];
 
-const lightBgRoutes = ["/catalog", "/product", "/updates", "/map", "/own", "/service", "/shop", "/team", "/mis", "/analytics", "/buy-ev", "/sell-ev", "/upcoming", "/new-launches", "/charging-station"];
+const lightBgRoutes = ["/catalog", "/product", "/updates", "/map", "/own", "/service", "/shop", "/team", "/mis", "/analytics", "/buy-ev", "/sell-ev", "/upcoming", "/new-launches", "/charging-station", "/nearme"];
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileBuySellOpen, setMobileBuySellOpen] = useState(false);
   const [mobileServiceOpen, setMobileServiceOpen] = useState(false);
+  const [mobileLocatorOpen, setMobileLocatorOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [prefOpen, setPrefOpen] = useState(false);
   const { soundEnabled, setSoundEnabled, hapticsEnabled, setHapticsEnabled, theme, setTheme } = useFeedback();
@@ -201,13 +202,47 @@ export default function Header() {
               </AnimatePresence>
             </div>
 
-            {/* Charging Station */}
-            <Link
-              href="/charging-station"
-              className={`${linkBase} ${pathname.startsWith("/charging-station") ? activeLinkColor : linkColor}`}
+            {/* Locator Dropdown */}
+            <div
+              className="relative"
+              onMouseEnter={() => setActiveDropdown("locator")}
+              onMouseLeave={() => setActiveDropdown(null)}
             >
-              Charging Station
-            </Link>
+              <button
+                className={`${linkBase} ${
+                  pathname.startsWith("/charging-station") || pathname.startsWith("/nearme")
+                    ? activeLinkColor
+                    : linkColor
+                } flex items-center gap-1.5 cursor-pointer font-medium text-sm`}
+              >
+                Locator <ChevronDown size={14} className={`transition-transform duration-200 ${activeDropdown === "locator" ? "rotate-180" : ""}`} />
+              </button>
+              <AnimatePresence>
+                {activeDropdown === "locator" && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    className="absolute left-0 mt-1 w-52 rounded-xl bg-white p-1.5 shadow-xl ring-1 ring-zinc-200/60 z-50 border border-zinc-100 text-zinc-800"
+                  >
+                    <Link href="/charging-station" className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium hover:bg-zinc-100/70 transition-colors">
+                      <Zap size={16} className="text-amber-500 shrink-0" />
+                      <div>
+                        <div className="font-semibold text-zinc-900 leading-tight">Charging Station</div>
+                        <div className="text-[11px] text-zinc-500 font-normal">Find EV charging points</div>
+                      </div>
+                    </Link>
+                    <Link href="/nearme" className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium hover:bg-zinc-100/70 transition-colors">
+                      <Navigation size={16} className="text-emerald-600 shrink-0" />
+                      <div>
+                        <div className="font-semibold text-zinc-900 leading-tight">Near Me</div>
+                        <div className="text-[11px] text-zinc-500 font-normal">Dealers, pumps & chargers</div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
             {/* For You */}
             <Link
@@ -236,21 +271,18 @@ export default function Header() {
           </nav>
 
           <div className="flex items-center gap-2.5">
-            <Link href="/nearme" className={`hidden md:flex items-center gap-1.5 font-medium px-4 py-2 rounded-full text-sm transition-all border shadow-sm active:scale-95 ${ctaClass}`}>
-              <MapPin size={15} /> Near Me
-            </Link>
-
-            {/* User Profile / Auth Button */}
+            {/* User Profile / Auth Button (Icon Only) */}
             <Link
               href={user ? "/profile" : "/login"}
-              className={`hidden md:flex items-center gap-1.5 font-semibold px-4 py-2 rounded-full text-sm transition-all border shadow-sm active:scale-95 ${
+              title={user ? (user.displayName || "My Profile") : "Login / Register"}
+              aria-label={user ? (user.displayName || "My Profile") : "Login or Register"}
+              className={`hidden md:flex items-center justify-center p-2.5 rounded-full border transition-all shadow-sm active:scale-95 cursor-pointer ${
                 user
-                  ? "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100"
-                  : ctaClass
+                  ? "bg-emerald-50 border-emerald-300 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/50 dark:border-emerald-800 dark:text-emerald-300"
+                  : iconBtnClass
               }`}
             >
-              <User size={15} />
-              <span>{user ? (user.displayName?.split(" ")[0] || "Profile") : "Login / Register"}</span>
+              <User size={17} />
             </Link>
 
             {/* Preferences */}
@@ -382,16 +414,35 @@ export default function Header() {
                 </AnimatePresence>
               </div>
 
-              {/* Charging Station */}
-              <Link
-                href="/charging-station"
-                onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
-                  pathname.startsWith("/charging-station") ? "bg-emerald-50 text-emerald-800" : "text-zinc-700 hover:bg-zinc-100"
-                }`}
-              >
-                <MapPin size={16} className="text-emerald-600" /> Charging Station
-              </Link>
+              {/* Locator Accordion */}
+              <div className="border border-zinc-100 rounded-xl overflow-hidden bg-zinc-50/50">
+                <button
+                  onClick={() => setMobileLocatorOpen(!mobileLocatorOpen)}
+                  className="flex items-center justify-between w-full px-4 py-3 font-semibold text-zinc-700 hover:bg-zinc-100 transition-all"
+                >
+                  <span className="flex items-center gap-2 text-sm">
+                    <MapPin size={16} className="text-emerald-600" /> Locator
+                  </span>
+                  <ChevronDown size={15} className={`transition-transform duration-200 text-zinc-400 ${mobileLocatorOpen ? "rotate-180" : ""}`} />
+                </button>
+                <AnimatePresence>
+                  {mobileLocatorOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden bg-white border-t border-zinc-100 px-6 py-2 space-y-1.5"
+                    >
+                      <Link href="/charging-station" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2.5 py-2 text-sm font-medium text-zinc-600 hover:text-emerald-700">
+                        <Zap size={15} className="text-amber-500" /> Charging Station
+                      </Link>
+                      <Link href="/nearme" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2.5 py-2 text-sm font-medium text-zinc-600 hover:text-emerald-700">
+                        <Navigation size={15} className="text-emerald-600" /> Near Me
+                      </Link>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
 
               {/* For You */}
               <Link
@@ -411,10 +462,6 @@ export default function Header() {
                     New
                   </span>
                 )}
-              </Link>
-
-              <Link href="/nearme" onClick={() => setMobileMenuOpen(false)} className="mt-3 flex items-center justify-center gap-2 w-full bg-emerald-600 text-white py-3 rounded-xl font-semibold text-sm shadow-md">
-                <MapPin size={16} /> Near Me
               </Link>
 
               {/* User Profile / Auth Button */}

@@ -144,6 +144,8 @@ export function hasFeatureContent(feat: Record<string, unknown>): boolean {
   if (feat.boot_storage_litres) return true;
   const extra = normalizeExtras(feat.extra_features as unknown[]);
   if (extra.some((e) => e.label && (!isCheckboxExtra(e) ? e.value.trim() : isExtraChecked(e.value)))) return true;
+  const extraModes = normalizeExtras(feat.extra_modes as unknown[]);
+  if (extraModes.some((e) => e.label && (!isCheckboxExtra(e) ? e.value.trim() : isExtraChecked(e.value)))) return true;
   return false;
 }
 

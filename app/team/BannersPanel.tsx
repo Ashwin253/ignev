@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Pencil, X, Save, Loader2, GripVertical, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, Trash2, Pencil, X, Save, Loader2, GripVertical, ArrowUp, ArrowDown, Crop, Smartphone } from "lucide-react";
+import BannerCropModal, { BannerCropField } from "./BannerCropModal";
 
 export type HeroBanner = {
   id?: string;
@@ -38,6 +39,10 @@ export default function BannersPanel({ supabase }: { supabase: any }) {
   const [form, setForm] = useState<HeroBanner>(emptyBanner);
   const [saving, setSaving] = useState(false);
   const [uploadingField, setUploadingField] = useState<string | null>(null);
+  const [cropModalData, setCropModalData] = useState<{
+    url: string;
+    field: BannerCropField;
+  } | null>(null);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: "image_horizontal" | "image_vertical" | "video_url") => {
     const file = e.target.files?.[0];
@@ -89,10 +94,14 @@ export default function BannersPanel({ supabase }: { supabase: any }) {
     
     setUploadingField(field + "_converting");
     try {
+      const fullUrl = currentUrl.startsWith("http")
+        ? currentUrl
+        : `${window.location.origin}${currentUrl.startsWith("/") ? "" : "/"}${currentUrl}`;
+
       const res = await fetch("/api/convert-to-avif", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageUrl: currentUrl }),
+        body: JSON.stringify({ imageUrl: fullUrl }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -183,36 +192,109 @@ export default function BannersPanel({ supabase }: { supabase: any }) {
                 </label>
               </div>
             </label>
-            <label className="block">
-              <span className="text-xs font-bold text-slate-600">Image (Horizontal / Desktop)</span>
-              <div className="flex gap-2">
-                <input value={form.image_horizontal} onChange={(e) => setForm({ ...form, image_horizontal: e.target.value })} placeholder="e.g. /herobanner/banner-1.webp" className="mt-1 flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" />
-                {form.image_horizontal && !form.image_horizontal.toLowerCase().endsWith(".avif") && (
-                  <button type="button" onClick={() => handleConvertToAvif("image_horizontal", form.image_horizontal)} className="mt-1 flex items-center justify-center rounded-lg bg-emerald-100 px-3 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-200 border border-emerald-200 shrink-0">
-                    {uploadingField === "image_horizontal_converting" ? <Loader2 size={14} className="animate-spin" /> : "To AVIF"}
-                  </button>
+
+            {/* Desktop / Horizontal Image */}
+            <div className="p-3.5 rounded-xl bg-white border border-sky-100 shadow-xs space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-700">Image (Horizontal / Desktop)</span>
+                {form.image_horizontal?.toLowerCase().endsWith(".avif") && (
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700">
+                    AVIF
+                  </span>
                 )}
-                <label className="mt-1 flex items-center justify-center rounded-lg bg-slate-100 px-3 py-2 text-xs font-bold text-slate-600 cursor-pointer hover:bg-slate-200 border border-slate-200 shrink-0">
+              </div>
+              <div className="flex gap-2">
+                <input
+                  value={form.image_horizontal}
+                  onChange={(e) => setForm({ ...form, image_horizontal: e.target.value })}
+                  placeholder="e.g. /herobanner/banner-1.webp"
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none bg-slate-50"
+                />
+                <label className="flex items-center justify-center rounded-lg bg-slate-100 px-3 py-2 text-xs font-bold text-slate-600 cursor-pointer hover:bg-slate-200 border border-slate-200 shrink-0">
                   {uploadingField === "image_horizontal" ? <Loader2 size={14} className="animate-spin" /> : "Upload"}
                   <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUpload(e, "image_horizontal")} />
                 </label>
               </div>
-            </label>
-            <label className="block">
-              <span className="text-xs font-bold text-slate-600">Image (Vertical / Mobile)</span>
-              <div className="flex gap-2">
-                <input value={form.image_vertical} onChange={(e) => setForm({ ...form, image_vertical: e.target.value })} placeholder="e.g. /herobanner/banner-1-mob.webp" className="mt-1 flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" />
-                {form.image_vertical && !form.image_vertical.toLowerCase().endsWith(".avif") && (
-                  <button type="button" onClick={() => handleConvertToAvif("image_vertical", form.image_vertical)} className="mt-1 flex items-center justify-center rounded-lg bg-emerald-100 px-3 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-200 border border-emerald-200 shrink-0">
-                    {uploadingField === "image_vertical_converting" ? <Loader2 size={14} className="animate-spin" /> : "To AVIF"}
+
+              {form.image_horizontal && (
+                <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setCropModalData({ url: form.image_horizontal, field: "image_horizontal" })}
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold shadow-xs transition-colors"
+                  >
+                    <Crop size={14} /> Crop, Resize &amp; Add Space
                   </button>
+                  {!form.image_horizontal.toLowerCase().endsWith(".avif") && (
+                    <button
+                      type="button"
+                      onClick={() => handleConvertToAvif("image_horizontal", form.image_horizontal)}
+                      className="inline-flex items-center justify-center px-3 py-2 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-700 text-xs font-bold border border-emerald-200 shrink-0 transition-colors"
+                    >
+                      {uploadingField === "image_horizontal_converting" ? <Loader2 size={14} className="animate-spin" /> : "To AVIF"}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Mobile / Vertical Image */}
+            <div className="p-3.5 rounded-xl bg-white border border-sky-100 shadow-xs space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-700">Image (Vertical / Mobile)</span>
+                {form.image_vertical?.toLowerCase().endsWith(".avif") && (
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700">
+                    AVIF
+                  </span>
                 )}
-                <label className="mt-1 flex items-center justify-center rounded-lg bg-slate-100 px-3 py-2 text-xs font-bold text-slate-600 cursor-pointer hover:bg-slate-200 border border-slate-200 shrink-0">
+              </div>
+              <div className="flex gap-2">
+                <input
+                  value={form.image_vertical}
+                  onChange={(e) => setForm({ ...form, image_vertical: e.target.value })}
+                  placeholder="e.g. /herobanner/banner-1-mob.webp"
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none bg-slate-50"
+                />
+                <label className="flex items-center justify-center rounded-lg bg-slate-100 px-3 py-2 text-xs font-bold text-slate-600 cursor-pointer hover:bg-slate-200 border border-slate-200 shrink-0">
                   {uploadingField === "image_vertical" ? <Loader2 size={14} className="animate-spin" /> : "Upload"}
                   <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUpload(e, "image_vertical")} />
                 </label>
               </div>
-            </label>
+
+              {(form.image_vertical || form.image_horizontal) && (
+                <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setCropModalData({
+                        url: form.image_vertical || form.image_horizontal,
+                        field: "image_vertical",
+                      })
+                    }
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold shadow-xs transition-colors"
+                  >
+                    {form.image_vertical ? (
+                      <>
+                        <Crop size={14} /> Crop, Resize &amp; Add Space
+                      </>
+                    ) : (
+                      <>
+                        <Smartphone size={14} /> Convert Desktop to Vertical
+                      </>
+                    )}
+                  </button>
+                  {form.image_vertical && !form.image_vertical.toLowerCase().endsWith(".avif") && (
+                    <button
+                      type="button"
+                      onClick={() => handleConvertToAvif("image_vertical", form.image_vertical)}
+                      className="inline-flex items-center justify-center px-3 py-2 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-700 text-xs font-bold border border-emerald-200 shrink-0 transition-colors"
+                    >
+                      {uploadingField === "image_vertical_converting" ? <Loader2 size={14} className="animate-spin" /> : "To AVIF"}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
             <label className="block sm:col-span-2"><span className="text-xs font-bold text-slate-600">Details (Optional Text)</span><input value={form.details || ""} onChange={(e) => setForm({ ...form, details: e.target.value })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
             <label className="block sm:col-span-1">
               <span className="text-xs font-bold text-slate-600">Background Color (Color Wheel)</span>
@@ -309,13 +391,44 @@ export default function BannersPanel({ supabase }: { supabase: any }) {
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <button onClick={() => startEdit(b)} className="text-[10px] text-slate-500 font-bold hover:text-sky-600"><Pencil size={12} /></button>
-                <button onClick={() => handleDelete(b.id)} className="text-[10px] text-slate-500 font-bold hover:text-rose-500"><Trash2 size={12} /></button>
+                {(b.image_horizontal || b.image_vertical) && (
+                  <button
+                    onClick={() => {
+                      startEdit(b);
+                      setCropModalData({
+                        url: b.image_horizontal || b.image_vertical || "",
+                        field: b.image_horizontal ? "image_horizontal" : "image_vertical",
+                      });
+                    }}
+                    className="flex items-center gap-1 px-2 py-1 rounded bg-sky-50 hover:bg-sky-100 text-sky-700 text-[11px] font-bold border border-sky-200 transition-colors"
+                    title="Crop, resize or convert banner"
+                  >
+                    <Crop size={12} /> Crop
+                  </button>
+                )}
+                <button onClick={() => startEdit(b)} className="p-1.5 rounded hover:bg-slate-100 text-slate-500 font-bold hover:text-sky-600" title="Edit banner">
+                  <Pencil size={13} />
+                </button>
+                <button onClick={() => handleDelete(b.id)} className="p-1.5 rounded hover:bg-rose-50 text-slate-500 font-bold hover:text-rose-500" title="Delete banner">
+                  <Trash2 size={13} />
+                </button>
               </div>
             </div>
           ))}
           {banners.length === 0 && <p className="text-sm text-slate-400 text-center py-8">No banners configured</p>}
         </div>
+      )}
+
+      {cropModalData && (
+        <BannerCropModal
+          initialUrl={cropModalData.url}
+          defaultField={cropModalData.field}
+          supabase={supabase}
+          onClose={() => setCropModalData(null)}
+          onSave={(newUrl, targetField) => {
+            setForm((prev) => ({ ...prev, [targetField]: newUrl }));
+          }}
+        />
       )}
     </div>
   );

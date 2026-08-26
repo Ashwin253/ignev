@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
   Zap,
   CheckCircle2,
@@ -20,12 +21,12 @@ import {
   Info,
   X,
   Play,
+  Search,
 } from "lucide-react";
-import { FaInstagram, FaYoutube } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import type { WPUpdate, EvListing, HeroBanner } from "../lib/wordpress";
 import { isLaunched } from "../lib/wordpress";
-import { getVehiclePhoto } from "../lib/vehicle-images";
+import { getVehiclePhoto, isTwoWheeler } from "../lib/vehicle-images";
 
 interface EcosystemSectionProps {
   updates?: WPUpdate[];
@@ -80,176 +81,589 @@ function VehicleScrollSection({ type, items }: VehicleScrollSectionProps) {
 
   return (
     <section
-      className={`py-10 sm:py-12 px-5 sm:px-8 lg:px-10 max-w-7xl mx-auto my-8 rounded-3xl border transition-all ${
+      className={`relative overflow-hidden p-4 sm:p-5 lg:p-6 max-w-7xl mx-auto my-6 rounded-3xl border backdrop-blur-xl transition-all shadow-lg ${
         isUpcoming
-          ? "bg-[#FFF9EE] dark:bg-[#151006]/90 border-amber-200/80 dark:border-amber-900/40 shadow-[0_10px_30px_rgba(217,119,6,0.06)]"
-          : "bg-[#EDF5EB] dark:bg-[#071E15]/90 border-[#CDE0C9] dark:border-emerald-900/40 shadow-[0_10px_30px_rgba(10,42,30,0.06)]"
+          ? "bg-amber-50/40 dark:bg-[#151006]/40 border-amber-200/50 dark:border-amber-900/30 shadow-amber-500/5"
+          : "bg-emerald-50/30 dark:bg-[#071E15]/40 border-[#D8E3D3]/60 dark:border-emerald-900/30 shadow-emerald-900/5"
       }`}
     >
-      <div className="grid grid-cols-1 lg:grid-cols-10 gap-8 items-center">
-        {/* Left Column (~30% width on desktop): Section Header & Scroll Buttons */}
-        <div className="lg:col-span-2 flex flex-col justify-between h-full space-y-6">
-          <div className="space-y-3">
-            <span
-              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-bold uppercase tracking-wider border ${
-                isUpcoming
-                  ? "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30"
-                  : "bg-[#1F7A4D]/10 text-[#1F7A4D] dark:text-[#8FE24A] border-[#1F7A4D]/30 dark:border-[#8FE24A]/30"
-              }`}
-            >
-              {/* {isUpcoming ? (
-                <>
-                  <Calendar className="w-3 h-3 text-amber-600 dark:text-amber-400" />
-                  Coming Soon
-                </>
-              ) : (
-                <>
-                  <span className="w-2 h-2 rounded-full bg-[#1F7A4D] dark:bg-[#8FE24A] animate-pulse" />
-                  Fresh On Road
-                </>
-              )} */}
-            </span>
+      {/* Background Stylized Typographic Watermark (Behind the vehicle cards) */}
+      <div
+        aria-hidden="true"
+        className={`absolute -top-3 left-3 sm:left-6 text-6xl sm:text-8xl lg:text-9xl font-black tracking-tighter uppercase select-none pointer-events-none leading-none transition-opacity ${
+          isUpcoming
+            ? "text-amber-500/10 dark:text-amber-400/10"
+            : "text-[#1F7A4D]/8 dark:text-[#8FE24A]/8"
+        }`}
+      >
+        {isUpcoming ? "Upcoming" : "Releases"}
+      </div>
 
-            <h2 className="text-2xl sm:text-3xl font-bold text-[#0A2A1E] dark:text-white tracking-tight">
-              {isUpcoming ? "Upcoming Vehicles" : "New Releases"}
-            </h2>
+      {/* Subtle ambient decorative gradient orbs */}
+      <div
+        aria-hidden="true"
+        className={`absolute -bottom-10 -right-10 w-48 h-48 rounded-full blur-3xl pointer-events-none opacity-40 ${
+          isUpcoming ? "bg-amber-400/20 dark:bg-amber-500/10" : "bg-emerald-400/20 dark:bg-emerald-500/10"
+        }`}
+      />
 
-          </div>
-
-          <div className="flex flex-row lg:flex-col items-start justify-between gap-4 pt-2">
-            <Link
-              href={isUpcoming ? "/upcoming" : "/catalog"}
-              className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-xs group ${
-                isUpcoming
-                  ? "bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/20"
-                  : "bg-[#1F7A4D] hover:bg-[#289660] text-white shadow-emerald-900/20"
-              }`}
-            >
-              <span>{isUpcoming ? "View All Upcoming" : "View All Launches"}</span>
-              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-            </Link>
-
-            {/* Navigation Arrow Buttons */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => scroll("left")}
-                disabled={!canScrollLeft}
-                aria-label="Scroll left"
-                className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed shadow-xs active:scale-95 ${
-                  isUpcoming
-                    ? "bg-white dark:bg-[#201809] border-amber-200 dark:border-amber-800/40 text-slate-800 dark:text-amber-100 hover:bg-amber-100/60 dark:hover:bg-amber-900/40"
-                    : "bg-white dark:bg-[#0B2117] border-[#D0E2CC] dark:border-emerald-800/40 text-[#0A2A1E] dark:text-emerald-100 hover:bg-[#E2EEE0] dark:hover:bg-emerald-900/40"
-                }`}
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => scroll("right")}
-                disabled={!canScrollRight}
-                aria-label="Scroll right"
-                className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed shadow-xs active:scale-95 ${
-                  isUpcoming
-                    ? "bg-white dark:bg-[#201809] border-amber-200 dark:border-amber-800/40 text-slate-800 dark:text-amber-100 hover:bg-amber-100/60 dark:hover:bg-amber-900/40"
-                    : "bg-white dark:bg-[#0B2117] border-[#D0E2CC] dark:border-emerald-800/40 text-[#0A2A1E] dark:text-emerald-100 hover:bg-[#E2EEE0] dark:hover:bg-emerald-900/40"
-                }`}
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
+      {/* Top Header: Sleek foreground header & scroll controls */}
+      <div className="relative z-10 flex items-center justify-between gap-4 mb-3 sm:mb-4">
+        <div className="flex items-center gap-2.5">
+          <span
+            className={`w-2.5 h-2.5 rounded-full animate-pulse ${
+              isUpcoming ? "bg-amber-500" : "bg-[#1F7A4D] dark:bg-[#8FE24A]"
+            }`}
+          />
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#0A2A1E] dark:text-white tracking-tight">
+            {isUpcoming ? "Upcoming Vehicles" : "New Releases"}
+          </h2>
+          {/* <span
+            className={`hidden sm:inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${
+              isUpcoming
+                ? "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20"
+                : "bg-[#1F7A4D]/10 text-[#1F7A4D] dark:text-[#8FE24A] border-[#1F7A4D]/20"
+            }`}
+          >
+            {isUpcoming ? "Preview" : "Latest"}
+          </span> */}
         </div>
 
-        {/* Right Column (~70% width on desktop): Scrollable Slider */}
-        <div className="lg:col-span-7 overflow-hidden">
-          <div
-            ref={rowRef}
-            className="overflow-x-auto pb-2 -mx-5 px-5 lg:mx-0 lg:px-0 scrollbar-hide scroll-smooth flex gap-4"
-            style={{ WebkitOverflowScrolling: "touch" }}
+        {/* Navigation Arrow Buttons */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <button
+            onClick={() => scroll("left")}
+            disabled={!canScrollLeft}
+            aria-label="Scroll left"
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center border transition-all cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed shadow-xs active:scale-95 bg-white/80 dark:bg-[#0B2117]/80 backdrop-blur-md border-slate-200/80 dark:border-emerald-800/40 text-[#0A2A1E] dark:text-emerald-100 hover:bg-white dark:hover:bg-[#0F2A1E]"
           >
-            {items.map((l, i) => {
-              const pricing = l.prices?.length ? (
-                parseFloat(String(l.prices[0])) > 100
-                  ? `₹${(parseFloat(String(l.prices[0])) / 100000).toFixed(2)}L`
-                  : `₹${l.prices[0]}L`
-              ) : (l as any).price_bracket || "";
-              const range = l.batteryVariants?.[0]?.range || "";
-              return (
-                <Link
-                  key={l.slug || i}
-                  href={`/product/${l.slug}`}
-                  className={`group flex-shrink-0 w-[240px] sm:w-[260px] rounded-2xl border overflow-hidden transition-all flex flex-col justify-between shadow-xs hover:shadow-xl ${
-                    isUpcoming
-                      ? "bg-white dark:bg-[#1C1608] border-amber-200/80 dark:border-amber-900/40 hover:border-amber-500 dark:hover:border-amber-400"
-                      : "bg-white dark:bg-[#082218] border-[#D0E2CC] dark:border-emerald-900/40 hover:border-[#1F7A4D] dark:hover:border-[#8FE24A]"
-                  }`}
-                >
+            <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+          </button>
+          <button
+            onClick={() => scroll("right")}
+            disabled={!canScrollRight}
+            aria-label="Scroll right"
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center border transition-all cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed shadow-xs active:scale-95 bg-white/80 dark:bg-[#0B2117]/80 backdrop-blur-md border-slate-200/80 dark:border-emerald-800/40 text-[#0A2A1E] dark:text-emerald-100 hover:bg-white dark:hover:bg-[#0F2A1E]"
+          >
+            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Middle: Full-width horizontal scroll of vehicle cards (layered over watermark) */}
+      <div className="relative z-10 overflow-hidden">
+        <div
+          ref={rowRef}
+          className="overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide scroll-smooth flex gap-3.5 sm:gap-4"
+          style={{ WebkitOverflowScrolling: "touch" }}
+        >
+          {items.map((l, i) => {
+            const pricing = l.prices?.length ? (
+              parseFloat(String(l.prices[0])) > 100
+                ? `₹${(parseFloat(String(l.prices[0])) / 100000).toFixed(2)}L`
+                : `₹${l.prices[0]}L`
+            ) : (l as any).price_bracket || "";
+            const range = l.batteryVariants?.[0]?.range || "";
+            return (
+              <Link
+                key={l.slug || i}
+                href={`/product/${l.slug}`}
+                className={`group flex-shrink-0 w-[230px] sm:w-[250px] rounded-2xl border overflow-hidden transition-all flex flex-col justify-between backdrop-blur-lg shadow-xs hover:shadow-xl hover:-translate-y-1 duration-300 ${
+                  isUpcoming
+                    ? "bg-white/50 hover:bg-white/80 dark:bg-[#1A1407]/45 dark:hover:bg-[#1A1407]/65 border-white/70 hover:border-amber-400/80 dark:border-amber-900/40 dark:hover:border-amber-400"
+                    : "bg-white/50 hover:bg-white/80 dark:bg-[#071E15]/45 dark:hover:bg-[#071E15]/65 border-white/70 hover:border-emerald-400/80 dark:border-emerald-900/40 dark:hover:border-[#8FE24A]"
+                }`}
+              >
+                <div className="relative h-32 sm:h-36 overflow-hidden bg-white/30 dark:bg-black/20">
+                  <Image
+                    src={getVehiclePhoto(l.photo, l)}
+                    alt={l.title}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    sizes="250px"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
+                  {/* {isUpcoming ? (
+                    <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-amber-500/90 backdrop-blur-xs text-[10px] font-bold text-zinc-950 shadow-xs flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      Upcoming
+                    </span>
+                  ) : (
+                    <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-[#1F7A4D]/90 backdrop-blur-xs text-[10px] font-bold text-white shadow-xs">
+                      New Release
+                    </span>
+                  )} */}
+                </div>
+                <div className="p-3 sm:p-3.5 flex flex-col justify-between flex-1">
+                  <div>
+                    <p
+                      className={`text-[10px] font-bold uppercase tracking-wider ${
+                        isUpcoming ? "text-amber-600 dark:text-amber-400/80" : "text-[#1F7A4D] dark:text-emerald-400/80"
+                      }`}
+                    >
+                      {l.brand}
+                    </p>
+                    <h3 className="text-xs sm:text-sm font-bold text-[#0A2A1E] dark:text-white mt-0.5 line-clamp-1 group-hover:underline">
+                      {l.title}
+                    </h3>
+                  </div>
                   <div
-                    className={`relative h-36 sm:h-40 overflow-hidden ${
-                      isUpcoming ? "bg-[#FDF6E2] dark:bg-amber-950/40" : "bg-[#F0F7EE] dark:bg-emerald-950/50"
+                    className={`flex items-center justify-between mt-2.5 pt-2 border-t ${
+                      isUpcoming ? "border-amber-200/50 dark:border-amber-900/30" : "border-[#D0E2CC]/60 dark:border-emerald-900/30"
                     }`}
                   >
-                    <Image
-                      src={getVehiclePhoto(l.photo, l)}
-                      alt={l.title}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-500"
-                      sizes="260px"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
-                    {isUpcoming ? (
-                      <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-amber-500 text-[10px] font-bold text-zinc-950 shadow-xs flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        Upcoming
-                      </span>
-                    ) : (
-                      <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-[#1F7A4D] text-[10px] font-bold text-white shadow-xs">
-                        Live
+                    <span
+                      className={`text-xs font-bold ${
+                        isUpcoming ? "text-amber-700 dark:text-amber-400" : "text-[#1F7A4D] dark:text-[#8FE24A]"
+                      }`}
+                    >
+                      {pricing || "TBA"}
+                    </span>
+                    {range && (
+                      <span className="text-[10px] font-mono text-[#6C8377] dark:text-slate-300/60">
+                        {range} km
                       </span>
                     )}
                   </div>
-                  <div className="p-4 flex flex-col justify-between flex-1">
-                    <div>
-                      <p
-                        className={`text-[10px] font-bold uppercase tracking-wider ${
-                          isUpcoming ? "text-amber-600 dark:text-amber-400/80" : "text-[#1F7A4D] dark:text-emerald-400/80"
-                        }`}
-                      >
-                        {l.brand}
-                      </p>
-                      <h3 className="text-sm font-bold text-[#0A2A1E] dark:text-white mt-0.5 line-clamp-1 group-hover:underline">
-                        {l.title}
-                      </h3>
-                    </div>
-                    <div
-                      className={`flex items-center justify-between mt-3 pt-2 border-t ${
-                        isUpcoming ? "border-amber-200/50 dark:border-amber-900/30" : "border-[#D0E2CC]/60 dark:border-emerald-900/30"
-                      }`}
-                    >
-                      <span
-                        className={`text-xs font-bold ${
-                          isUpcoming ? "text-amber-700 dark:text-amber-400" : "text-[#1F7A4D] dark:text-[#8FE24A]"
-                        }`}
-                      >
-                        {pricing || "TBA"}
-                      </span>
-                      {range && (
-                        <span className="text-[10px] font-mono text-[#6C8377] dark:text-slate-300/60">
-                          {range} km
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </Link>
+                </div>
+              </Link>
+            );
+          })}
+
+          {/* End Card */}
+          <Link
+            href={isUpcoming ? "/upcoming" : "/catalog"}
+            className={`group flex-shrink-0 w-[160px] sm:w-[180px] rounded-2xl border border-dashed overflow-hidden transition-all flex flex-col items-center justify-center text-center p-4 sm:p-5 backdrop-blur-md shadow-xs hover:shadow-md hover:-translate-y-1 duration-300 ${
+              isUpcoming
+                ? "border-amber-300/60 bg-white/40 hover:bg-white/70 dark:bg-amber-950/20 hover:dark:bg-amber-900/30"
+                : "border-emerald-300/60 bg-white/40 hover:bg-white/70 dark:bg-emerald-950/20 hover:dark:bg-emerald-900/30"
+            }`}
+          >
+            <div
+              className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-transform group-hover:scale-110 shadow-xs ${
+                isUpcoming ? "bg-amber-500 text-slate-950" : "bg-[#1F7A4D] text-white"
+              }`}
+            >
+              <ArrowRight className="w-4 h-4" />
+            </div>
+            <span className="text-xs font-bold text-[#0A2A1E] dark:text-white">
+              {isUpcoming ? "View All Upcoming" : "View All Launches"}
+            </span>
+            <span className="text-[9px] text-zinc-500 dark:text-zinc-400 mt-0.5">
+              Explore catalog
+            </span>
+          </Link>
+        </div>
+      </div>
+
+      {/* Bottom Footer Row: View All CTA button positioned on bottom-right front */}
+      <div className="relative z-10 flex items-end justify-end mt-3 pt-2.5 border-t border-black/5 dark:border-white/5">
+        {/* <span className="text-[11px] font-semibold text-[#6C8377] dark:text-slate-400">
+          {items.length} {isUpcoming ? "upcoming models" : "models available"}
+        </span> */}
+
+        <Link
+          href={isUpcoming ? "/upcoming" : "/catalog"}
+          className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-xs group ${
+            isUpcoming
+              ? "bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/20"
+              : "bg-[#1F7A4D] hover:bg-[#289660] text-white shadow-emerald-900/20"
+          }`}
+        >
+          <span>{isUpcoming ? "View All Upcoming" : "View All Launches"}</span>
+          <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+        </Link>
+      </div>
+    </section>
+  );
+}
+
+type CategoryTab = "2w-bikes" | "2w-scooty" | "4w" | "truck";
+type CommercialMode = "all" | "personal" | "commercial";
+
+const PERSONAL_TABS: CategoryTab[] = ["2w-bikes", "2w-scooty", "4w"];
+const COMMERCIAL_TABS: CategoryTab[] = ["2w-bikes", "2w-scooty", "4w", "truck"];
+
+const CATEGORY_CONFIG: Record<
+  CategoryTab,
+  {
+    label: string;
+    sublabel: string;
+    watermark: string;
+    icon: React.ElementType;
+    catalogType?: string;
+    forceComm?: boolean;
+  }
+> = {
+  "2w-bikes": {
+    label: "2W Bikes",
+    sublabel: "Electric Motorcycles & Performance Bikes",
+    watermark: "BIKES",
+    icon: Bike,
+    catalogType: "2+Wheeler",
+  },
+  "2w-scooty": {
+    label: "2W Scooty",
+    sublabel: "Electric Scooters & Daily Commuters",
+    watermark: "SCOOTY",
+    icon: Bike,
+    catalogType: "2+Wheeler",
+  },
+  "4w": {
+    label: "4-Wheeler",
+    sublabel: "Cars, SUVs, Sedans & Passenger Vans",
+    watermark: "CARS & SUVS",
+    icon: Car,
+    catalogType: "Electric+Car",
+  },
+  truck: {
+    label: "Truck & Cargo",
+    sublabel: "Commercial Trucks, Pickups, Heavy EVs & 3W Cargo",
+    watermark: "TRUCKS",
+    icon: Truck,
+    forceComm: true,
+  },
+};
+
+function VehicleCategorySelector({ listings = [] }: { listings?: EvListing[] }) {
+  const [activeCategory, setActiveCategory] = useState<CategoryTab>("4w");
+  const [isCommercialOnly, setIsCommercialOnly] = useState(false);
+  const rowRef = useRef<HTMLDivElement | null>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const updateScrollState = () => {
+    const el = rowRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    const maxScroll = scrollWidth - clientWidth;
+    setCanScrollLeft(scrollLeft > 5);
+    setCanScrollRight(maxScroll > 0 && scrollLeft < maxScroll - 5);
+  };
+
+  const scroll = (direction: "left" | "right") => {
+    const el = rowRef.current;
+    if (!el) return;
+    const scrollAmount = Math.max(280, Math.floor(el.clientWidth * 0.75));
+    el.scrollBy({
+      left: direction === "left" ? -scrollAmount : scrollAmount,
+      behavior: "smooth",
+    });
+  };
+
+  // Filter matching vehicles
+  const filteredListings = useMemo(() => {
+    return listings.filter((l) => {
+      // 1. Commercial Toggle filter
+      if (isCommercialOnly && !l.commercial && activeCategory !== "truck") {
+        const isCommercialVehicle =
+          ["tempo", "truck", "auto", "cargo", "loader"].some(
+            (k) =>
+              ((l as any).body_type || "").toLowerCase().includes(k) ||
+              (Array.isArray(l.types) ? l.types.join(" ") : "").toLowerCase().includes(k)
+          );
+        if (!isCommercialVehicle) return false;
+      }
+      if (!isCommercialOnly && l.commercial && activeCategory !== "truck") {
+        return false;
+      }
+
+      const titleLower = (l.title || "").toLowerCase();
+      const brandLower = (l.brand || "").toLowerCase();
+      const typeLower = (Array.isArray(l.types) ? l.types.join(" ") : String((l as any).type || "")).toLowerCase();
+      const bodyType = ((l as any).body_type || "").toLowerCase();
+
+      if (activeCategory === "2w-bikes") {
+        const isBikeKeyword = ["motorcycle", "bike"].some((k) => typeLower.includes(k) || bodyType.includes(k) || titleLower.includes(k));
+        const isBikeBrand = ["revolt", "ultraviolette", "matter", "tork", "oben", "hop", "komaki ranger", "kabira"].some((b) => brandLower.includes(b) || titleLower.includes(b));
+        const isTwoW = (typeof isTwoWheeler === "function" && isTwoWheeler(l)) || typeLower.includes("2 wheel") || typeLower.includes("two");
+        const isScooterKeyword = ["scooter", "scooty", "ather", "ola", "chetak", "rizta", "iqube", "vida", "river"].some((k) => titleLower.includes(k) || brandLower.includes(k) || typeLower.includes(k));
+        
+        return (isBikeKeyword || isBikeBrand) || (isTwoW && !isScooterKeyword);
+      }
+
+      if (activeCategory === "2w-scooty") {
+        const isScooterKeyword = ["scooter", "scooty", "ather", "ola", "chetak", "rizta", "iqube", "vida", "river", "bgauss", "bounce", "simple", "hero electric", "pure ev", "okinawa", "ampere", "quantum", "optima", "magnus"].some((k) => titleLower.includes(k) || brandLower.includes(k) || typeLower.includes(k) || bodyType.includes(k));
+        const isTwoW = (typeof isTwoWheeler === "function" && isTwoWheeler(l)) || typeLower.includes("2 wheel") || typeLower.includes("two");
+        const isBikeBrand = ["revolt", "ultraviolette", "matter", "tork", "oben"].some((b) => brandLower.includes(b) || titleLower.includes(b));
+
+        return (isScooterKeyword || isTwoW) && !isBikeBrand;
+      }
+
+      if (activeCategory === "4w") {
+        const isCar = typeLower.includes("car") || typeLower.includes("4 wheel") || typeLower.includes("four") || ["suv", "sedan", "hatchback", "compact suv", "muv", "car"].some((k) => bodyType.includes(k));
+        const notTwoW = !(typeof isTwoWheeler === "function" && isTwoWheeler(l)) && !typeLower.includes("2 wheel");
+        const notTruck = !typeLower.includes("truck") && !typeLower.includes("tempo") && !bodyType.includes("tempo");
+        return isCar || (notTwoW && notTruck);
+      }
+
+      if (activeCategory === "truck") {
+        const isTruck = typeLower.includes("truck") || typeLower.includes("tempo") || typeLower.includes("auto") || typeLower.includes("3 wheel") || typeLower.includes("three") || typeLower.includes("cargo") || typeLower.includes("loader") || bodyType.includes("tempo") || bodyType.includes("auto");
+        const isTruckBrand = ["euler", "grevol", "altigreen", "piaggio", "zen", "loadking", "treo", "rage"].some((b) => brandLower.includes(b) || titleLower.includes(b));
+        return isTruck || isTruckBrand || l.commercial === true;
+      }
+
+      return true;
+    });
+  }, [listings, activeCategory, isCommercialOnly]);
+
+  useEffect(() => {
+    const el = rowRef.current;
+    if (!el) return;
+    el.scrollTo({ left: 0, behavior: "smooth" });
+    updateScrollState();
+    el.addEventListener("scroll", updateScrollState, { passive: true });
+    window.addEventListener("resize", updateScrollState);
+    return () => {
+      el.removeEventListener("scroll", updateScrollState);
+      window.removeEventListener("resize", updateScrollState);
+    };
+  }, [activeCategory, isCommercialOnly, filteredListings.length]);
+
+  const viewAllHref = useMemo(() => {
+    const isComm = isCommercialOnly || CATEGORY_CONFIG[activeCategory].forceComm;
+    const cat = CATEGORY_CONFIG[activeCategory];
+    if (cat.catalogType) {
+      return `/catalog?type=${cat.catalogType}${isComm ? "&comm=true" : ""}`;
+    }
+    if (activeCategory === "truck") {
+      return `/catalog?comm=true`;
+    }
+    return `/catalog${isComm ? "?comm=true" : ""}`;
+  }, [activeCategory, isCommercialOnly]);
+
+  const currentConfig = CATEGORY_CONFIG[activeCategory];
+
+  return (
+    <section
+      className="relative overflow-hidden p-4 sm:p-5 lg:p-6 max-w-7xl mx-auto my-6 rounded-3xl border backdrop-blur-xl transition-all shadow-lg bg-[#f9f5e8] dark:bg-[#071E15]/40 border-[#D8E3D3]/60 dark:border-emerald-900/30 shadow-emerald-900/5"
+    >
+      {/* Background Typographic Watermark (Behind the vehicle cards) */}
+      <div
+        aria-hidden="true"
+        className="absolute -top-3 left-3 sm:left-6 text-6xl sm:text-8xl lg:text-9xl font-black tracking-tighter uppercase select-none pointer-events-none leading-none transition-opacity text-[#7d817e] dark:text-[#8FE24A]/8"
+      >
+        {currentConfig.watermark}
+      </div>
+
+      {/* Subtle ambient decorative gradient orbs */}
+      <div
+        aria-hidden="true"
+        className="absolute -bottom-10 -right-10 w-48 h-48 rounded-full blur-3xl pointer-events-none opacity-40 bg-emerald-400/20 dark:bg-emerald-500/10"
+      />
+
+      {/* Top Header Row: Section Title, Usage Commercial Toggle, Category Tabs, Navigation Controls */}
+      <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+        {/* Left Side: Title & Commercial Toggle Switch */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            {/* <span className="w-2.5 h-2.5 rounded-full bg-[#1F7A4D] dark:bg-[#8FE24A] animate-pulse" /> */}
+          {/* Category Tabs with smooth spring layoutId */}
+          <div className="flex items-center gap-1 p-1 rounded-2xl bg-white/70 dark:bg-black/30 backdrop-blur-md border border-[#D8E3D3]/60 dark:border-emerald-900/30 overflow-x-auto scrollbar-hide">
+            {(isCommercialOnly ? COMMERCIAL_TABS : PERSONAL_TABS).map((tabKey) => {
+              const tab = CATEGORY_CONFIG[tabKey];
+              const Icon = tab.icon;
+              const isActive = activeCategory === tabKey;
+              return (
+                <button
+                  key={tabKey}
+                  onClick={() => setActiveCategory(tabKey)}
+                  className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer select-none shrink-0 ${
+                    isActive
+                      ? "text-white dark:text-[#07130E]"
+                      : "text-[#3C5347] dark:text-slate-300 hover:text-[#0A2A1E] dark:hover:text-white"
+                  }`}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeCategoryTab"
+                      className="absolute inset-0 rounded-xl bg-[#1F7A4D] dark:bg-[#8FE24A] shadow-xs"
+                      transition={{ type: "spring", stiffness: 450, damping: 35 }}
+                    />
+                  )}
+                  <Icon className="w-3.5 h-3.5 relative z-10" />
+                  <span className="relative z-10">{tab.label}</span>
+                </button>
               );
             })}
           </div>
+  
+          </div>
+
+         </div>
+
+        {/* Right Side: Category Tabs & Scroll Controls */}
+        <div className="flex items-center justify-between md:justify-end gap-2 shrink-0">
+          {/* Commercial Toggle Switch */}
+          <button
+            type="button"
+            onClick={() => {
+              setIsCommercialOnly((prev) => {
+                const next = !prev;
+                // If turning commercial off while on truck tab, fall back to 4w
+                if (!next && activeCategory === "truck") {
+                  setActiveCategory("4w");
+                }
+                return next;
+              });
+            }}
+            aria-pressed={isCommercialOnly}
+            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer select-none border backdrop-blur-md shadow-xs active:scale-95 ${
+              isCommercialOnly
+                ? "bg-amber-500 text-slate-950 border-amber-400 shadow-amber-500/20"
+                : "bg-white/80 dark:bg-[#0B2117]/80 text-[#0A2A1E] dark:text-emerald-100 border-[#D8E3D3] dark:border-emerald-800/40 hover:bg-white dark:hover:bg-[#0F2A1E]"
+            }`}
+          >
+            <div
+              className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors ${
+                isCommercialOnly ? "bg-slate-950" : "bg-slate-300 dark:bg-emerald-950"
+              }`}
+            >
+              <span
+                className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform duration-200 ${
+                  isCommercialOnly ? "translate-x-3.5 bg-amber-400" : "translate-x-0.5"
+                }`}
+              />
+            </div>
+            <span className="flex items-center gap-1">
+              <Truck className="w-3.5 h-3.5" />
+              Commercial
+            </span>
+          </button>
+       
+          
+          {/* Navigation Arrow Buttons */}
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              onClick={() => scroll("left")}
+              disabled={!canScrollLeft}
+              aria-label="Scroll left"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center border transition-all cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed shadow-xs active:scale-95 bg-white/80 dark:bg-[#0B2117]/80 backdrop-blur-md border-slate-200/80 dark:border-emerald-800/40 text-[#0A2A1E] dark:text-emerald-100 hover:bg-white dark:hover:bg-[#0F2A1E]"
+            >
+              <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+            <button
+              onClick={() => scroll("right")}
+              disabled={!canScrollRight}
+              aria-label="Scroll right"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center border transition-all cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed shadow-xs active:scale-95 bg-white/80 dark:bg-[#0B2117]/80 backdrop-blur-md border-slate-200/80 dark:border-emerald-800/40 text-[#0A2A1E] dark:text-emerald-100 hover:bg-white dark:hover:bg-[#0F2A1E]"
+            >
+              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+          </div>
         </div>
+      </div>
+
+      {/* Middle: Full-width Horizontal Scroll of Vehicle Cards */}
+      <div className="relative z-10 overflow-hidden">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`${activeCategory}-${isCommercialOnly}`}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div
+              ref={rowRef}
+              className="overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide scroll-smooth flex gap-3.5 sm:gap-4"
+              style={{ WebkitOverflowScrolling: "touch" }}
+            >
+              {filteredListings.slice(0, 16).map((l, i) => {
+                const pricing = l.prices?.length
+                  ? parseFloat(String(l.prices[0])) > 100
+                    ? `₹${(parseFloat(String(l.prices[0])) / 100000).toFixed(2)}L`
+                    : `₹${l.prices[0]}L`
+                  : (l as any).price_bracket || "";
+                const range = l.batteryVariants?.[0]?.range || "";
+                const topSpeed = l.topSpeed || "";
+
+                return (
+                  <Link
+                    key={l.slug || i}
+                    href={`/product/${l.slug}`}
+                    className="group flex-shrink-0 w-[230px] sm:w-[250px] rounded-2xl border overflow-hidden transition-all flex flex-col justify-between backdrop-blur-lg shadow-xs hover:shadow-xl hover:-translate-y-1 duration-300 bg-white/50 hover:bg-white/80 dark:bg-[#071E15]/45 dark:hover:bg-[#071E15]/65 border-white/70 hover:border-emerald-400/80 dark:border-emerald-900/40 dark:hover:border-[#8FE24A]"
+                  >
+                    <div className="relative h-32 sm:h-36 overflow-hidden bg-white/30 dark:bg-black/20">
+                      <Image
+                        src={getVehiclePhoto(l.photo, l)}
+                        alt={l.title}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        sizes="250px"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
+                    </div>
+
+                    <div className="p-3 sm:p-3.5 flex flex-col justify-between flex-1">
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-[#1F7A4D] dark:text-emerald-400/80">
+                          {l.brand}
+                        </p>
+                        <h3 className="text-xs sm:text-sm font-bold text-[#0A2A1E] dark:text-white mt-0.5 line-clamp-1 group-hover:underline">
+                          {l.title}
+                        </h3>
+                      </div>
+
+                      <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-[#D0E2CC]/60 dark:border-emerald-900/30">
+                        <span className="text-xs font-bold text-[#1F7A4D] dark:text-[#8FE24A]">
+                          {pricing || "TBA"}
+                        </span>
+                        {range ? (
+                          <span className="text-[10px] font-mono text-[#6C8377] dark:text-slate-300/60">
+                            {range} km
+                          </span>
+                        ) : topSpeed ? (
+                          <span className="text-[10px] font-mono text-[#6C8377] dark:text-slate-300/60">
+                            {topSpeed} km/h
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+
+              {/* End Card */}
+              <Link
+                href={viewAllHref}
+                className="group flex-shrink-0 w-[160px] sm:w-[180px] rounded-2xl border border-dashed overflow-hidden transition-all flex flex-col items-center justify-center text-center p-4 sm:p-5 backdrop-blur-md shadow-xs hover:shadow-md hover:-translate-y-1 duration-300 border-emerald-300/60 bg-white/40 hover:bg-white/70 dark:bg-emerald-950/20 hover:dark:bg-emerald-900/30"
+              >
+                <div className="w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-transform group-hover:scale-110 shadow-xs bg-[#1F7A4D] text-white">
+                  <ArrowRight className="w-4 h-4" />
+                </div>
+                <span className="text-xs font-bold text-[#0A2A1E] dark:text-white">
+                  View All {currentConfig.label}
+                </span>
+                <span className="text-[9px] text-zinc-500 dark:text-zinc-400 mt-0.5">
+                  Explore full catalog
+                </span>
+              </Link>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* Bottom Footer Row: Matching count on left, Dynamic CTA button on bottom-right front */}
+      <div className="relative z-10 flex items-end justify-end mt-3 pt-2.5 border-t border-black/5 dark:border-white/5">
+        
+
+        <Link
+          href={viewAllHref}
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-xs group bg-[#2e3230] hover:bg-[#289660] text-white hover:text-black shadow-emerald-900/20"
+        >
+          <span>View All {currentConfig.label} Listings</span>
+          <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+        </Link>
       </div>
     </section>
   );
 }
 
 export default function EcosystemSection({ updates = [], listings = [], banners = [] }: EcosystemSectionProps) {
+  const router = useRouter();
+  const [heroSearchQuery, setHeroSearchQuery] = useState("");
+
   // Banner slider state
   const [currentBannerIdx, setCurrentBannerIdx] = useState(0);
   const [showBannerDetails, setShowBannerDetails] = useState(false);
@@ -304,65 +718,82 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
     <div 
       className="w-full bg-[#F6F8F2] pt-8 dark:bg-[#07130E] text-[#0E1F16] dark:text-slate-100 font-sans overflow-hidden transition-colors duration-1000 relative z-0"
     >
-      {/* 1. HERO / ECOSYSTEM BANNER */}
-      <section
-        className="relative mx-auto mb-8 max-w-7xl overflow-hidden rounded-[2rem] border border-white/60 bg-white/50 px-4 py-10 shadow-[0_20px_60px_rgba(10,42,30,0.08)] backdrop-blur-sm sm:px-6 sm:py-12 lg:px-8 lg:py-16"
-        style={
-          activeBanners[currentBannerIdx]?.background_color
-            ? { backgroundColor: activeBanners[currentBannerIdx].background_color }
-            : undefined
-        }
-      >
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          {/* Hero Left Content */}
+      {/* 1. HERO / ECOSYSTEM BANNER (Natural Webpage Background for Left Panel, Dedicated Card for Right Panel) */}
+      <section className="relative mx-auto mb-8 max-w-7xl px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+          {/* Hero Left Content: Directly on Natural Webpage Background */}
           <div className="lg:col-span-5 space-y-6">
-            
-            <h1 
-              className={`text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.08] transition-colors duration-1000 ${
-                !activeBanners[currentBannerIdx]?.text_color && !activeBanners[currentBannerIdx]?.background_color
-                  ? 'text-[#0A2A1E] dark:text-white'
-                  : ''
-              }`}
-              style={{
-                color: activeBanners[currentBannerIdx]?.text_color || (activeBanners[currentBannerIdx]?.background_color ? '#ffffff' : undefined)
-              }}
-            >
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.08] text-[#0A2A1E] dark:text-white">
               India's <span className="text-[#1F7A4D] dark:text-[#8FE24A]">Trusted</span> Electric Mobility Platform.
             </h1>
 
-            {/* <p className="text-base sm:text-lg text-[#3C5347] dark:text-emerald-100/70 max-w-2xl leading-relaxed">
-              Compare EVs, discover charging solutions, explore commercial fleets, find genuine parts, and make confident electric mobility decisions — all in one place.
-            </p> */}
+            {/* Unified Search Capsule Form */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (heroSearchQuery.trim()) {
+                  router.push(`/catalog?q=${encodeURIComponent(heroSearchQuery.trim())}`);
+                } else {
+                  router.push("/catalog");
+                }
+              }}
+              className="w-full max-w-lg mt-6"
+            >
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center bg-[#0A2A1E] dark:bg-emerald-950/80 border border-[#0A2A1E]/20 dark:border-emerald-700/40 rounded-2xl sm:rounded-full p-1.5 shadow-xl shadow-[#0A2A1E]/10 dark:shadow-emerald-950/40 transition-all duration-300">
+                {/* Search Input Box */}
+                <div className="flex items-center flex-1 px-3 py-1.5">
+                  <Search className="w-4 h-4 text-emerald-300 shrink-0 mr-2" />
+                  <input
+                    type="text"
+                    value={heroSearchQuery}
+                    onChange={(e) => setHeroSearchQuery(e.target.value)}
+                    placeholder="Search EV models, brands, specs..."
+                    className="w-full bg-transparent text-sm text-white placeholder-emerald-200/60 focus:outline-none"
+                  />
+                  {heroSearchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setHeroSearchQuery("")}
+                      className="text-emerald-300/80 hover:text-white p-1 rounded-full transition-colors cursor-pointer mr-1"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
 
-            {/* <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-              {[
-                "Honest comparisons",
-                // "Expert reviews",
-                "Verified specifications",
-                "Commercial & passenger EVs",
-                "Parts & charging ecosystem"
-              ].map((item, i) => (
-                <li key={i} className="flex items-center gap-2.5 text-xs sm:text-sm font-medium text-[#0A2A1E] dark:text-slate-200">
-                  <CheckCircle2 className="w-4 h-4 text-[#1F7A4D] dark:text-[#8FE24A] shrink-0" />
-                  {item}
-                </li>
-              ))}
-            </ul> */}
+                {/* Buttons Container */}
+                <div className="flex items-center gap-1.5 shrink-0 mt-1 sm:mt-0">
+                  <button
+                    type="submit"
+                    className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 bg-[#8FE24A] hover:bg-[#a0f05d] text-[#07130E] font-bold px-4 py-2 rounded-xl sm:rounded-full text-xs transition-all shadow-xs cursor-pointer active:scale-95"
+                  >
+                    <span>Search</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
 
-            <div className="flex flex-wrap gap-4 pt-4">
-              <a
-                href="/catalog"
-                className="inline-flex items-center gap-2 bg-[#0A2A1E] hover:bg-[#1B6642] text-white dark:bg-[#8FE24A] dark:hover:bg-[#a0f05d] dark:text-[#07130E] font-bold px-6 py-3.5 rounded-full text-sm transition-all transform hover:-translate-y-0.5 shadow-lg shadow-[#0A2A1E]/10 dark:shadow-[#8FE24A]/20"
-              >
-                Explore listings
-                <ArrowRight className="w-4 h-4" />
-              </a>
-            </div>
+                  <div className="h-4 w-px bg-white/20 hidden sm:block mx-0.5" />
+
+                  <Link
+                    href="/catalog"
+                    className="flex-1 sm:flex-initial inline-flex items-center justify-center text-emerald-200 hover:text-white font-semibold px-3 py-2 rounded-xl sm:rounded-full text-xs transition-colors hover:bg-white/10"
+                  >
+                    View All
+                  </Link>
+                </div>
+              </div>
+            </form>
           </div>
 
-          {/* Hero Right Panel: Supabase Banner directly on background */}
+          {/* Hero Right Panel: Dedicated Modern Banner Card */}
           <div className="lg:col-span-7">
-            <div className="relative w-full h-[450px] flex flex-col justify-end overflow-hidden">
+            <div
+              className="relative w-full h-[420px] sm:h-[450px] rounded-3xl border border-[#D8E3D3] dark:border-emerald-900/40 shadow-xl overflow-hidden flex flex-col justify-end"
+              style={
+                activeBanners[currentBannerIdx]?.background_color
+                  ? { backgroundColor: activeBanners[currentBannerIdx].background_color }
+                  : undefined
+              }
+            >
               {/* Banner Media Layer */}
               {activeBanners.length > 0 ? (
                 <AnimatePresence mode="wait">
@@ -410,7 +841,7 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
               )}
 
               {/* Bottom Actions Panel with CTA, Info toggle and Pagination */}
-              <div className="relative z-10 p-4 sm:p-6 flex flex-col justify-end">
+              <div className="relative z-10 p-4 sm:p-6 flex flex-col justify-end bg-gradient-to-t from-black/80 via-black/40 to-transparent">
                 {activeBanners.length > 0 && activeBanners[currentBannerIdx] ? (
                   <div className="space-y-3">
                     {/* Animated Details Popover when 'i' is clicked */}
@@ -444,8 +875,8 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
                     </AnimatePresence>
 
                     {/* Bottom Controls Bar */}
-                    <div className="flex items-center justify-between gap-3">
-                      {/* Left: CTA with Arrow + 'i' Info Button */}
+                    <div className="flex items-center justify-between gap-4">
+                      {/* Left: CTA Button + Info Icon */}
                       <div className="flex items-center gap-2">
                         <Link
                           href={activeBanners[currentBannerIdx].href || "/catalog"}
@@ -507,140 +938,22 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
             </div>
           </div>
         </div>
-</section>
-{/* <section>
-        <div className="mt-16 pt-8 border-t border-[#D8E3D3] dark:border-emerald-900/40">
-          <div className="flex flex-col md:flex-row items-center gap-6 text-xs text-[#6C8377] dark:text-emerald-200/60 font-mono">
-            <span className="uppercase tracking-widest text-[#1F7A4D] dark:text-emerald-400 shrink-0 font-bold">Popular Brands</span>
-            <div className="flex flex-wrap items-center gap-6 sm:gap-10 text-sm font-sans font-semibold text-[#0E1F16] dark:text-slate-300/80">
-              <span>Tata Motors</span>
-              <span>Ola Electric</span>
-              <span>Ather Energy</span>
-              <span>Mahindra Last Mile</span>
-              <span>Bajaj Auto</span>
-              <span>TVS Motor</span>
-              <span>Hero Vida</span>
-            </div>
-          </div>
-        </div>
-      </section> */}
-
-      {/* 2. STATS SECTION */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#D8E3D3] dark:border-emerald-900/30">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[
-            { count: 100, label: "Vehicle models compared", width: "88%" },
-            { count: 50, label: "Brands on platform", width: "75%" },
-            { count: 25, label: "Cities covered nationwide", width: "65%" },
-            { count: 500, label: "Verified charging points", width: "95%" }
-          ].map((st, idx) => (
-            <div key={idx} className="p-6 rounded-2xl bg-white dark:bg-[#0B2117] border border-[#D8E3D3] dark:border-emerald-800/30 hover:border-[#2C9A5F] dark:hover:border-emerald-500/40 shadow-xs dark:shadow-none transition-all">
-              <div className="text-3xl sm:text-4xl font-bold text-[#0A2A1E] dark:text-white font-mono">
-                {countProgress > 0 ? `${st.count}+` : "0+"}
-              </div>
-              <div className="text-xs sm:text-sm text-[#3C5347] dark:text-emerald-200/70 mt-2 font-medium">{st.label}</div>
-              <div className="h-1.5 w-full bg-[#EBF1E5] dark:bg-emerald-950 rounded-full mt-4 overflow-hidden">
-                {/* <div
-                  className="h-full bg-gradient-to-r from-[#1F7A4D] to-[#2C9A5F] dark:from-emerald-500 dark:to-[#8FE24A] transition-all duration-1000 ease-out"
-                  style={{ width: countProgress > 0 ? st.width : "0%" }}
-                /> */}
-              </div>
-            </div>
-          ))}
-        </div>
       </section>
 
-      {/* 3. EXPLORE GRID */}
-      <section id="explore" className="relative py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="mb-10 max-w-2xl">
-          <div className="text-xs font-mono text-[#1F7A4D] dark:text-[#8FE24A] tracking-wider uppercase mb-2">Why We Exist</div>
-          <h2 className="text-3xl sm:text-4xl font-bold text-[#0A2A1E] dark:text-white tracking-tight">
-            Buying or running an EV shouldn't take ten open tabs.
-          </h2>
-          <p className="text-[#3C5347] dark:text-slate-300/70 mt-3 text-sm sm:text-base">
-            EVPLSE brings India's electric mobility ecosystem together — so every buyer, business and operator can make one informed decision.
-          </p>
-        </div>
+      {/* 2. INTERACTIVE VEHICLE CATEGORY & COMMERCIAL SELECTOR (Replaces Stats & Explore Grid) */}
+      <VehicleCategorySelector listings={listings} />
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[
-            {
-              title: "Passenger EVs",
-              desc: "Cars for every budget & range",
-              icon: Car,
-              href: "/catalog?type=Electric+Car"
-            },
-            {
-              title: "Commercial EVs",
-              desc: "Vans, trucks & goods carriers",
-              icon: Truck,
-              href: "/catalog?comm=true"
-            },
-            {
-              title: "Scooters",
-              desc: "Daily commute reimagined",
-              icon: Bike,
-              href: "/catalog?type=2+Wheeler"
-            },
-            {
-              title: "Three Wheelers",
-              desc: "Passenger & cargo autos",
-              icon: Compass,
-              href: "/catalog?type=3+Wheeler"
-            },
-            // {
-            //   title: "Charging",
-            //   desc: "Networks, stations & solutions",
-            //   icon: Zap,
-            //   href: "/charging-station"
-            // },
-            // {
-            //   title: "Parts",
-            //   desc: "Genuine, verified components",
-            //   icon: Wrench,
-            //   href: "/shop"
-            // },
-            // {
-            //   title: "Fleet",
-            //   desc: "Manage & scale EV fleets",
-            //   icon: Gauge,
-            //   href: "/catalog"
-            // }
-          ].map((cat, idx) => {
-            const Icon = cat.icon;
-            return (
-              <Link
-                key={idx}
-                href={cat.href}
-                className="group relative p-6 rounded-2xl border transition-all duration-300 flex flex-col justify-between min-h-[160px] bg-white dark:bg-[#0B2117]/80 border-[#D8E3D3] dark:border-emerald-900/40 hover:border-[#2C9A5F] dark:hover:border-emerald-500/50 hover:bg-[#F0F5EC] dark:hover:bg-[#0F2A1E]"
-              >
-                <div className="flex justify-between items-start">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center transition-colors bg-[#EBF1E5] dark:bg-emerald-950 border border-[#D8E3D3] dark:border-emerald-800/40 text-[#1B6642] dark:text-[#8FE24A] group-hover:bg-[#0A2A1E] group-hover:text-white dark:group-hover:bg-[#8FE24A] dark:group-hover:text-[#07130E]">
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <ArrowUpRight className="w-4 h-4 transition-all text-[#6C8377] dark:text-emerald-400/50 group-hover:text-[#1F7A4D] dark:group-hover:text-[#8FE24A] group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                </div>
+      {/* 3. NEW RELEASES SECTION (Vehicle Cards) */}
+      <VehicleScrollSection
+        type="new"
+        items={listings.filter((l) => isLaunched(l.launchdate)).slice(0, 12)}
+      />
 
-                <div>
-                  <h3 className="text-base font-semibold mt-4 text-[#0A2A1E] dark:text-white">{cat.title}</h3>
-                  <p className="text-xs mt-1 text-[#6C8377] dark:text-emerald-200/60">{cat.desc}</p>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-
-        {/* Pinned / Floating "See all categories" at bottom right of section */}
-        <div className="flex justify-end mt-6 sm:mt-0 sm:absolute sm:bottom-6 sm:right-8 z-20">
-          <Link
-            href="/catalog"
-            className="inline-flex items-center gap-2.5 px-6 py-3 rounded-full bg-[#0A2A1E] dark:bg-[#8FE24A] text-white dark:text-[#07130E] font-bold text-xs sm:text-sm shadow-2xl hover:scale-105 transition-all border border-[#8FE24A]/40 backdrop-blur-md group"
-          >
-            <span>See all categories</span>
-            <ArrowRight className="w-4 h-4 text-[#8FE24A] dark:text-[#07130E] group-hover:translate-x-1 transition-transform" />
-          </Link>
-        </div>
-      </section>
+      {/* 4. UPCOMING VEHICLES SECTION */}
+      <VehicleScrollSection
+        type="upcoming"
+        items={listings.filter((l) => !isLaunched(l.launchdate)).slice(0, 12)}
+      />
 
       {/* 4. WHY EVPLSE SECTION */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
@@ -739,7 +1052,7 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
             <div className="text-xs font-mono text-[#1F7A4D] dark:text-[#8FE24A] tracking-wider uppercase mb-2">Fresh From The Road</div>
             <h2 className="text-3xl sm:text-4xl font-bold text-[#0A2A1E] dark:text-white">Reviews, comparisons &amp; insight.</h2>
             <p className="text-[#3C5347] dark:text-emerald-100/70 text-sm mt-1">
-              Editorial deep-dives, Instagram reels, and YouTube video tests — updated regularly.
+              Real testing, honest opinions, and in-depth EV insights — updated regularly.
             </p>
           </div>
           <Link
@@ -751,146 +1064,62 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Box 1: Real Editorial Update (/updates) */}
-          <Link
-            href={(displayUpdates[0] as any)?.href || `/updates/${displayUpdates[0]?.slug || ""}`}
-            className="group rounded-2xl bg-white dark:bg-[#0B2117] border border-[#D8E3D3] dark:border-emerald-900/40 hover:border-[#2C9A5F] dark:hover:border-emerald-500/40 overflow-hidden flex flex-col justify-between shadow-xs dark:shadow-none hover:shadow-xl transition-all min-h-[440px]"
-          >
-            <div>
-              <div className="relative h-56 w-full bg-slate-100 dark:bg-emerald-950 overflow-hidden">
-                {displayUpdates[0]?.photo ? (
-                  <Image
-                    src={displayUpdates[0].photo}
-                    alt={displayUpdates[0].title}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-[#EBF1E5] dark:bg-emerald-900/40 text-[#1F7A4D] dark:text-emerald-500">
-                    <Sparkles className="w-8 h-8" />
+          {displayUpdates.slice(0, 3).map((item: any, idx: number) => {
+            const articleHref = item?.href || `/updates/${item?.slug || ""}`;
+            const categoryTag = idx === 0 ? "Comparison" : idx === 1 ? "Review" : "Guide";
+            return (
+              <Link
+                key={item?.id || idx}
+                href={articleHref}
+                className="group rounded-2xl bg-white dark:bg-[#0B2117] border border-[#D8E3D3] dark:border-emerald-900/40 hover:border-[#2C9A5F] dark:hover:border-emerald-500/40 overflow-hidden flex flex-col justify-between shadow-xs dark:shadow-none hover:shadow-xl transition-all min-h-[440px]"
+              >
+                <div>
+                  <div className="relative h-52 w-full bg-slate-100 dark:bg-emerald-950 overflow-hidden">
+                    {item?.photo ? (
+                      <Image
+                        src={item.photo}
+                        alt={item.title || "Editorial Article"}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-[#EBF1E5] dark:bg-emerald-900/40 text-[#1F7A4D] dark:text-emerald-500">
+                        <Sparkles className="w-8 h-8" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20" />
+                    <span className="absolute top-3 left-3 text-[10px] font-mono font-bold uppercase tracking-wider bg-[#0A2A1E]/85 text-[#8FE24A] px-2.5 py-1 rounded-full border border-emerald-700/40 backdrop-blur-sm">
+                      {categoryTag}
+                    </span>
                   </div>
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20" />
-                <span className="absolute top-3 left-3 text-[10px] font-mono font-bold uppercase tracking-wider bg-[#0A2A1E]/85 text-[#8FE24A] px-2.5 py-1 rounded-full border border-emerald-700/40 backdrop-blur-sm">
-                  Editorial • Web
-                </span>
-              </div>
 
-              <div className="p-5">
-                <h3 className="text-base font-bold text-[#0A2A1E] dark:text-white leading-snug group-hover:text-[#1F7A4D] dark:group-hover:text-[#8FE24A] transition-colors line-clamp-2">
-                  {displayUpdates[0]?.title || "Tata Punch EV vs Mahindra XUV400 — Real-World Range & Efficiency Test"}
-                </h3>
-                <p className="text-xs text-[#6C8377] dark:text-emerald-100/60 mt-2 line-clamp-3 leading-relaxed">
-                  {displayUpdates[0]?.excerpt || "We drove both electric SUVs across city highways and steep climbs to see which vehicle delivers closer to claimed range."}
-                </p>
-              </div>
-            </div>
+                  <div className="p-5">
+                    <h3 className="text-base font-bold text-[#0A2A1E] dark:text-white leading-snug group-hover:text-[#1F7A4D] dark:group-hover:text-[#8FE24A] transition-colors line-clamp-2">
+                      {item?.title}
+                    </h3>
+                    <p className="text-xs text-[#6C8377] dark:text-emerald-100/60 mt-2 line-clamp-3 leading-relaxed">
+                      {item?.excerpt}
+                    </p>
+                  </div>
+                </div>
 
-            <div className="px-5 pb-5 pt-2 flex items-center justify-between text-[11px] font-mono text-[#6C8377] dark:text-emerald-400/60 border-t border-[#D8E3D3] dark:border-emerald-900/30">
-              <span className="flex items-center gap-1">
-                <Calendar className="w-3 h-3" />
-                {displayUpdates[0]?.date ? new Date(displayUpdates[0].date).toLocaleDateString("en-IN", { month: "short", day: "numeric" }) : "Latest"}
-              </span>
-              <span className="flex items-center gap-1 font-semibold text-[#1F7A4D] dark:text-[#8FE24A] group-hover:translate-x-1 transition-transform">
-                READ ARTICLE <ArrowRight className="w-3.5 h-3.5" />
-              </span>
-            </div>
-          </Link>
-
-          {/* Box 2: Live Instagram Embed (@evplseofficial) */}
-          <div className="group rounded-2xl bg-white dark:bg-[#0B2117] border border-[#D8E3D3] dark:border-emerald-900/40 hover:border-pink-500/50 dark:hover:border-pink-500/40 overflow-hidden flex flex-col justify-between shadow-xs dark:shadow-none hover:shadow-xl transition-all min-h-[440px]">
-            <div className="flex flex-col flex-1">
-              <div className="p-3.5 flex items-center justify-between border-b border-[#D8E3D3]/60 dark:border-emerald-900/30 bg-slate-50/50 dark:bg-black/20">
-                <span className="inline-flex items-center gap-1.5 text-[11px] font-mono font-bold uppercase tracking-wider bg-gradient-to-r from-[#833ab4]/90 via-[#fd1d1d]/90 to-[#fcb045]/90 text-white px-2.5 py-1 rounded-full shadow-xs">
-                  <FaInstagram className="w-3 h-3" /> @evplseofficial
-                </span>
-                <span className="text-[10px] font-mono text-[#6C8377] dark:text-slate-400">
-                  Latest Post
-                </span>
-              </div>
-
-              {/* Live Instagram Frame */}
-              <div className="relative flex-1 min-h-[300px] w-full bg-slate-50 dark:bg-[#06120D] overflow-hidden">
-                <iframe
-                  src="https://www.instagram.com/evplseofficial/embed"
-                  title="Latest from @evplseofficial on Instagram"
-                  className="w-full h-full min-h-[320px] border-0"
-                  scrolling="no"
-                  loading="lazy"
-                />
-              </div>
-            </div>
-
-            <div className="px-5 pb-5 pt-3 flex items-center justify-between text-[11px] font-mono border-t border-[#D8E3D3] dark:border-emerald-900/30 bg-white dark:bg-[#0B2117]">
-              <span className="flex items-center gap-1.5 text-pink-600 dark:text-pink-400 font-semibold">
-                <FaInstagram className="w-3.5 h-3.5" /> Instagram
-              </span>
-              <a
-                href="https://www.instagram.com/evplseofficial"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 font-semibold text-pink-600 dark:text-pink-400 hover:underline group-hover:translate-x-0.5 transition-transform"
-              >
-                SEE ON INSTAGRAM <ArrowUpRight className="w-3.5 h-3.5" />
-              </a>
-            </div>
-          </div>
-
-          {/* Box 3: Live YouTube Player (@Evplse) */}
-          <div className="group rounded-2xl bg-white dark:bg-[#0B2117] border border-[#D8E3D3] dark:border-emerald-900/40 hover:border-red-500/50 dark:hover:border-red-500/40 overflow-hidden flex flex-col justify-between shadow-xs dark:shadow-none hover:shadow-xl transition-all min-h-[440px]">
-            <div className="flex flex-col flex-1">
-              <div className="p-3.5 flex items-center justify-between border-b border-[#D8E3D3]/60 dark:border-emerald-900/30 bg-slate-50/50 dark:bg-black/20">
-                <span className="inline-flex items-center gap-1.5 text-[11px] font-mono font-bold uppercase tracking-wider bg-[#FF0000] text-white px-2.5 py-1 rounded-full shadow-xs">
-                  <FaYoutube className="w-3 h-3" /> @Evplse
-                </span>
-                <span className="text-[10px] font-mono text-[#6C8377] dark:text-slate-400">
-                  Latest Video
-                </span>
-              </div>
-
-              {/* Live YouTube Player Frame */}
-              <div className="relative flex-1 min-h-[300px] w-full bg-black overflow-hidden flex items-center justify-center">
-                <iframe
-                  src="https://www.youtube-nocookie.com/embed?listType=user_uploads&list=Evplse"
-                  title="Latest from @Evplse on YouTube"
-                  className="w-full h-full min-h-[320px] border-0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                  loading="lazy"
-                />
-              </div>
-            </div>
-
-            <div className="px-5 pb-5 pt-3 flex items-center justify-between text-[11px] font-mono border-t border-[#D8E3D3] dark:border-emerald-900/30 bg-white dark:bg-[#0B2117]">
-              <span className="flex items-center gap-1.5 text-red-600 dark:text-red-400 font-semibold">
-                <FaYoutube className="w-3.5 h-3.5" /> YouTube
-              </span>
-              <a
-                href="https://www.youtube.com/@Evplse"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 font-semibold text-red-600 dark:text-red-400 hover:underline group-hover:translate-x-0.5 transition-transform"
-              >
-                WATCH ON YOUTUBE <ArrowUpRight className="w-3.5 h-3.5" />
-              </a>
-            </div>
-          </div>
+                <div className="px-5 pb-5 pt-2 flex items-center justify-between text-[11px] font-mono text-[#6C8377] dark:text-emerald-400/60 border-t border-[#D8E3D3] dark:border-emerald-900/30">
+                  <span className="flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    {item?.date ? new Date(item.date).toLocaleDateString("en-IN", { month: "short", day: "numeric" }) : "Latest"}
+                  </span>
+                  <span className="flex items-center gap-1 font-semibold text-[#1F7A4D] dark:text-[#8FE24A] group-hover:translate-x-1 transition-transform">
+                    READ ARTICLE <ArrowRight className="w-3.5 h-3.5" />
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       </section>
 
-      {/* 6. NEW RELEASES SECTION (30% Controls / 70% Slider) */}
-      <VehicleScrollSection
-        type="new"
-        items={listings.filter((l) => isLaunched(l.launchdate)).slice(0, 12)}
-      />
-
-      {/* 7. UPCOMING VEHICLES SECTION (30% Controls / 70% Slider) */}
-      <VehicleScrollSection
-        type="upcoming"
-        items={listings.filter((l) => !isLaunched(l.launchdate)).slice(0, 12)}
-      />
-
-      {/* TOOLS BANNER */}
+      {/* 6. TOOLS BANNER */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#D8E3D3] dark:border-emerald-900/30">
         <div className="mb-8 max-w-2xl">
           <div className="text-xs font-mono text-[#1F7A4D] dark:text-[#8FE24A] tracking-wider uppercase mb-2">Decide With Numbers</div>
@@ -931,7 +1160,6 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
           })}
         </div>
       </section>
-
     </div>
   );
 }

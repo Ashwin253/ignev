@@ -1274,10 +1274,17 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
         cf.label !== "_is_detailed_variant"
       );
 
+      const allSecs = (v as any).extra_sections || [];
+      const drivingModesSec = allSecs.find((s: any) => s.title === "Driving Modes");
+      const extra_modes = (v as any).extra_modes || drivingModesSec?.fields || [];
+      const visibleExtraSecs = allSecs.filter((s: any) => s.title !== "Driving Modes");
+
       return {
         ...v,
         id: v.id,
         features: featuresMap.get(v.id) || undefined,
+        extra_modes,
+        extra_sections: visibleExtraSecs,
         has_exclusive_color,
         exclusive_colors,
         is_detailed_variant,
@@ -1393,63 +1400,69 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
           { label: "_is_detailed_variant", value: (v as any).is_detailed_variant ? "true" : "false" }
         ];
 
-        const varPayload: any = {
-          listing_id: listingId,
-          variant_name: v.variant_name,
-          version_name: v.version_name || null,
-          launch_date: v.launch_date || null,
-          usage_type: v.usage_type || null,
-          continuing_variant_id: v.continuing_variant_id || null,
-          slug: v.slug || getVariantSlug(sanitizedSlug, v),
-          model_year: v.model_year,
-          price: v.price,
-          top_speed: v.top_speed,
-          battery_capacity_kwh: v.battery_capacity_kwh,
-          driving_range_km: v.driving_range_km,
-          charging_time_mins: v.charging_time_mins,
-          max_power_bhp: v.max_power_bhp,
-          max_torque_nm: v.max_torque_nm || null,
-          has_baas: v.has_baas,
-          baas_price_per_km: v.baas_price_per_km,
-          baas_upfront_price: v.baas_upfront_price,
-          baas_model_name: v.baas_model_name,
-          charging_time_ac_hours: v.charging_time_ac_hours,
-          charging_time_dc_mins: v.charging_time_dc_mins,
-          max_dc_charging_rate_kw: v.max_dc_charging_rate_kw,
-          baas_monthly_rental: v.baas_monthly_rental || null,
-          length_mm: (v as any).length_mm || null,
-          width_mm: (v as any).width_mm || null,
-          height_mm: (v as any).height_mm || null,
-          wheelbase_mm: (v as any).wheelbase_mm || null,
-          ground_clearance_mm: (v as any).ground_clearance_mm || null,
-          boot_space_litres: (v as any).boot_space_litres || null,
-          turning_radius_m: (v as any).turning_radius_m || null,
-          acceleration: v.acceleration || null,
-          battery_type: v.battery_type || null,
-          battery_portability: v.battery_portability || null,
-          charger_type: v.charger_type || null,
-          charger_output: v.charger_output || null,
-          charger_cost_included: v.charger_cost_included || null,
-          kerb_weight_kg: v.kerb_weight_kg || null,
-          seat_length_mm: v.seat_length_mm || null,
-          seat_height_mm: v.seat_height_mm || null,
-          braking_system: v.braking_system || null,
-          wheel_type: v.wheel_type || null,
-          front_wheel_size: v.front_wheel_size || null,
-          rear_wheel_size: v.rear_wheel_size || null,
-          front_suspension: v.front_suspension || null,
-          rear_suspension: v.rear_suspension || null,
-          chassis_type: v.chassis_type || null,
-          battery_warranty: v.battery_warranty || null,
-          motor_warranty: v.motor_warranty || null,
-          discontinued: v.discontinued ?? false,
-          discontinued_date: v.discontinued_date || null,
-          custom_fields: finalCustomFields,
-          extra_motor: (v as any).extra_motor || [],
-          extra_charging: (v as any).extra_charging || [],
-          extra_sections: (v as any).extra_sections || [],
-          extra_dimensions: (v as any).extra_dimensions || [],
-        };
+          const baseExtraSecs = ((v as any).extra_sections || []).filter((s: any) => s.title !== "Driving Modes");
+          const modesExtras = normalizeExtras((v as any).extra_modes || []);
+          const finalExtraSections = modesExtras.length > 0
+            ? [...baseExtraSecs, { title: "Driving Modes", fields: modesExtras }]
+            : baseExtraSecs;
+
+          const varPayload: any = {
+            listing_id: listingId,
+            variant_name: v.variant_name,
+            version_name: v.version_name || null,
+            launch_date: v.launch_date || null,
+            usage_type: v.usage_type || null,
+            continuing_variant_id: v.continuing_variant_id || null,
+            slug: v.slug || getVariantSlug(sanitizedSlug, v),
+            model_year: v.model_year,
+            price: v.price,
+            top_speed: v.top_speed,
+            battery_capacity_kwh: v.battery_capacity_kwh,
+            driving_range_km: v.driving_range_km,
+            charging_time_mins: v.charging_time_mins,
+            max_power_bhp: v.max_power_bhp,
+            max_torque_nm: v.max_torque_nm || null,
+            has_baas: v.has_baas,
+            baas_price_per_km: v.baas_price_per_km,
+            baas_upfront_price: v.baas_upfront_price,
+            baas_model_name: v.baas_model_name,
+            charging_time_ac_hours: v.charging_time_ac_hours,
+            charging_time_dc_mins: v.charging_time_dc_mins,
+            max_dc_charging_rate_kw: v.max_dc_charging_rate_kw,
+            baas_monthly_rental: v.baas_monthly_rental || null,
+            length_mm: (v as any).length_mm || null,
+            width_mm: (v as any).width_mm || null,
+            height_mm: (v as any).height_mm || null,
+            wheelbase_mm: (v as any).wheelbase_mm || null,
+            ground_clearance_mm: (v as any).ground_clearance_mm || null,
+            boot_space_litres: (v as any).boot_space_litres || null,
+            turning_radius_m: (v as any).turning_radius_m || null,
+            acceleration: v.acceleration || null,
+            battery_type: v.battery_type || null,
+            battery_portability: v.battery_portability || null,
+            charger_type: v.charger_type || null,
+            charger_output: v.charger_output || null,
+            charger_cost_included: v.charger_cost_included || null,
+            kerb_weight_kg: v.kerb_weight_kg || null,
+            seat_length_mm: v.seat_length_mm || null,
+            seat_height_mm: v.seat_height_mm || null,
+            braking_system: v.braking_system || null,
+            wheel_type: v.wheel_type || null,
+            front_wheel_size: v.front_wheel_size || null,
+            rear_wheel_size: v.rear_wheel_size || null,
+            front_suspension: v.front_suspension || null,
+            rear_suspension: v.rear_suspension || null,
+            chassis_type: v.chassis_type || null,
+            battery_warranty: v.battery_warranty || null,
+            motor_warranty: v.motor_warranty || null,
+            discontinued: v.discontinued ?? false,
+            discontinued_date: v.discontinued_date || null,
+            custom_fields: finalCustomFields,
+            extra_motor: (v as any).extra_motor || [],
+            extra_charging: (v as any).extra_charging || [],
+            extra_sections: finalExtraSections,
+            extra_dimensions: (v as any).extra_dimensions || [],
+          };
 
         let savedVariantId = variantId;
         if (variantId) {
@@ -3876,7 +3889,25 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
 
                   {resolvedSpec === "modes" && (
                     <div className="mt-4 rounded-xl border-2 border-slate-300 bg-slate-200 p-4">
-                      <p className="text-xs font-bold uppercase tracking-wider text-slate-600 mb-3">Driving Modes</p>
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-xs font-bold uppercase tracking-wider text-slate-700">Driving Modes</p>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => pushExtra("checkbox")}
+                            className="rounded-md border border-violet-300 bg-violet-50 px-2.5 py-1 text-[10px] font-bold text-violet-700 hover:bg-violet-100 cursor-pointer shadow-xs"
+                          >
+                            + Add Mode Checkbox
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => pushExtra("field")}
+                            className="rounded-md border border-sky-300 bg-sky-50 px-2.5 py-1 text-[10px] font-bold text-sky-700 hover:bg-sky-100 cursor-pointer shadow-xs"
+                          >
+                            + Add Mode Field
+                          </button>
+                        </div>
+                      </div>
                       <div className="flex flex-wrap gap-x-4 gap-y-2">
                         {([
                           ["has_mode_eco", "Eco"],
@@ -3886,7 +3917,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                           ["has_mode_cruise", "Cruise"],
                           ["has_mode_reverse", "Reverse"],
                         ] as [string,string][]).map(([key, label]) => (
-                          <label key={key} className="flex items-center gap-1.5 text-sm text-slate-600">
+                          <label key={key} className="flex items-center gap-1.5 text-sm text-slate-700 font-medium">
                             <input type="checkbox" checked={!!(v.features as any)?.[key]} onChange={(e) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, [key]: e.target.checked } }; setVariants(arr); }} />
                             {label}
                           </label>

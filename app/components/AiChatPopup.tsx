@@ -133,6 +133,15 @@ export default function AiChatPopup({ vehicleContext }: { vehicleContext?: strin
     } catch {}
   }, [open, minimized]);
 
+  useEffect(() => {
+    const handleOpenChat = () => {
+      setOpen(true);
+      setMinimized(false);
+    };
+    window.addEventListener("open-ai-chat", handleOpenChat);
+    return () => window.removeEventListener("open-ai-chat", handleOpenChat);
+  }, []);
+
   const sendMessage = async () => {
     if (!input.trim() || loading) return;
     doClick();
@@ -230,12 +239,13 @@ export default function AiChatPopup({ vehicleContext }: { vehicleContext?: strin
 
   // Compare page: show which vehicles are being compared
   const isComparePage = pathname === "/compare" && compareSlugs.length >= 2;
+  const isHome = pathname === "/";
 
   return (
     <>
       {/* Floating button */}
       <AnimatePresence>
-        {!open && (
+        {!open && !isHome && (
           <motion.button
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}

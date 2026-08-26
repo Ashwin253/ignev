@@ -83,3 +83,13 @@ body {
   animation: loader-slide 1.5s infinite ease-in-out;
 }
 
+/* Prevent minimized tawk.to chat widget from blocking page clicks on mobile */
+@media (max-width: 767px) {
+  html:not(.tawk-maximized) iframe[title="chat widget"] {
+    max-width: 80px !important;
+    max-height: 80px !important;
+    bottom: 0 !important;
+    right: 0 !important;
+  }
+}
+

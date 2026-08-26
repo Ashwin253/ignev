@@ -81,7 +81,7 @@ function VehicleScrollSection({ type, items }: VehicleScrollSectionProps) {
 
   return (
     <section
-      className={`relative overflow-hidden p-4 sm:p-5 lg:p-6 max-w-7xl mx-auto my-6 rounded-3xl border backdrop-blur-xl transition-all shadow-lg ${
+      className={`relative overflow-hidden p-5 sm:p-6 lg:p-8 max-w-7xl mx-auto my-10 sm:my-16 rounded-3xl border backdrop-blur-xl transition-all shadow-lg ${
         isUpcoming
           ? "bg-amber-50/40 dark:bg-[#151006]/40 border-amber-200/50 dark:border-amber-900/30 shadow-amber-500/5"
           : "bg-emerald-50/30 dark:bg-[#071E15]/40 border-[#D8E3D3]/60 dark:border-emerald-900/30 shadow-emerald-900/5"
@@ -436,12 +436,12 @@ function VehicleCategorySelector({ listings = [] }: { listings?: EvListing[] }) 
 
   return (
     <section
-      className="relative overflow-hidden p-4 sm:p-5 lg:p-6 max-w-7xl mx-auto my-6 rounded-3xl border backdrop-blur-xl transition-all shadow-lg bg-[#f9f5e8] dark:bg-[#071E15]/40 border-[#D8E3D3]/60 dark:border-emerald-900/30 shadow-emerald-900/5"
+      className="relative overflow-hidden p-5 sm:p-6 lg:p-8 max-w-7xl mx-auto my-10 sm:my-16 rounded-3xl border backdrop-blur-xl transition-all shadow-lg bg-[#f9f5e8] dark:bg-[#071E15]/40 border-[#D8E3D3]/60 dark:border-emerald-900/30 shadow-emerald-900/5"
     >
       {/* Background Typographic Watermark (Behind the vehicle cards) */}
       <div
         aria-hidden="true"
-        className="absolute -top-3 left-3 sm:left-6 text-6xl sm:text-8xl lg:text-9xl font-black tracking-tighter uppercase select-none pointer-events-none leading-none transition-opacity text-[#7d817e] dark:text-[#8FE24A]/8"
+        className="absolute -top-3 left-3 sm:left-6 text-5xl sm:text-8xl lg:text-9xl font-black tracking-tighter uppercase select-none pointer-events-none leading-none opacity-30 sm:opacity-100 text-[#7d817e]/30 dark:text-[#8FE24A]/8"
       >
         {currentConfig.watermark}
       </div>
@@ -452,14 +452,31 @@ function VehicleCategorySelector({ listings = [] }: { listings?: EvListing[] }) 
         className="absolute -bottom-10 -right-10 w-48 h-48 rounded-full blur-3xl pointer-events-none opacity-40 bg-emerald-400/20 dark:bg-emerald-500/10"
       />
 
-      {/* Top Header Row: Section Title, Usage Commercial Toggle, Category Tabs, Navigation Controls */}
-      <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-        {/* Left Side: Title & Commercial Toggle Switch */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2">
-            {/* <span className="w-2.5 h-2.5 rounded-full bg-[#1F7A4D] dark:bg-[#8FE24A] animate-pulse" /> */}
-          {/* Category Tabs with smooth spring layoutId */}
-          <div className="flex items-center gap-1 p-1 rounded-2xl bg-white/70 dark:bg-black/30 backdrop-blur-md border border-[#D8E3D3]/60 dark:border-emerald-900/30 overflow-x-auto scrollbar-hide">
+      {/* Top Header Row: Category Selector, Commercial Toggle, Navigation Controls */}
+      <div className="relative z-10 flex items-center justify-between gap-2 mb-4">
+
+        {/* Left Side: Mobile dropdown OR desktop pill tabs */}
+        <div className="flex items-center gap-2 min-w-0">
+
+          {/* MOBILE: native select dropdown (hidden on sm+) */}
+          <div className="relative sm:hidden">
+            <select
+              value={activeCategory}
+              onChange={(e) => setActiveCategory(e.target.value as CategoryTab)}
+              className="appearance-none pl-3 pr-8 py-2 rounded-xl text-xs font-bold bg-white/80 dark:bg-[#0B2117]/80 text-[#0A2A1E] dark:text-emerald-100 border border-[#D8E3D3] dark:border-emerald-800/40 backdrop-blur-md shadow-xs focus:outline-none focus:ring-2 focus:ring-[#1F7A4D]/40 cursor-pointer"
+            >
+              {(isCommercialOnly ? COMMERCIAL_TABS : PERSONAL_TABS).map((tabKey) => (
+                <option key={tabKey} value={tabKey}>
+                  {CATEGORY_CONFIG[tabKey].label}
+                </option>
+              ))}
+            </select>
+            {/* chevron icon overlay */}
+            <ChevronRight className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 rotate-90 text-[#1F7A4D] dark:text-[#8FE24A]" />
+          </div>
+
+          {/* DESKTOP: pill tab bar (hidden on mobile) */}
+          <div className="hidden sm:flex items-center gap-1 p-1 rounded-2xl bg-white/70 dark:bg-black/30 backdrop-blur-md border border-[#D8E3D3]/60 dark:border-emerald-900/30">
             {(isCommercialOnly ? COMMERCIAL_TABS : PERSONAL_TABS).map((tabKey) => {
               const tab = CATEGORY_CONFIG[tabKey];
               const Icon = tab.icon;
@@ -487,13 +504,10 @@ function VehicleCategorySelector({ listings = [] }: { listings?: EvListing[] }) 
               );
             })}
           </div>
-  
-          </div>
+        </div>
 
-         </div>
-
-        {/* Right Side: Category Tabs & Scroll Controls */}
-        <div className="flex items-center justify-between md:justify-end gap-2 shrink-0">
+        {/* Right Side: Commercial Toggle & Scroll Controls — always in one row */}
+        <div className="flex items-center gap-2 shrink-0">
           {/* Commercial Toggle Switch */}
           <button
             type="button"
@@ -530,8 +544,7 @@ function VehicleCategorySelector({ listings = [] }: { listings?: EvListing[] }) 
               Commercial
             </span>
           </button>
-       
-          
+
           {/* Navigation Arrow Buttons */}
           <div className="flex items-center gap-1 shrink-0">
             <button
@@ -716,14 +729,14 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
 
   return (
     <div 
-      className="w-full bg-[#F6F8F2] pt-8 dark:bg-[#07130E] text-[#0E1F16] dark:text-slate-100 font-sans overflow-hidden transition-colors duration-1000 relative z-0"
+      className="w-full bg-[#F6F8F2] pt-24 sm:pt-28 dark:bg-[#07130E] text-[#0E1F16] dark:text-slate-100 font-sans overflow-hidden transition-colors duration-1000 relative z-0"
     >
       {/* 1. HERO / ECOSYSTEM BANNER (Natural Webpage Background for Left Panel, Dedicated Card for Right Panel) */}
-      <section className="relative mx-auto mb-8 max-w-7xl px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+      <section className="relative mx-auto mb-12 sm:mb-16 max-w-7xl px-5 sm:px-6 lg:px-8 pt-6 sm:pt-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-12 items-center">
           {/* Hero Left Content: Directly on Natural Webpage Background */}
-          <div className="lg:col-span-5 space-y-6">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.08] text-[#0A2A1E] dark:text-white">
+          <div className="lg:col-span-5 space-y-4 sm:space-y-6">
+            <h1 className="text-2xl sm:text-4xl lg:text-6xl font-bold tracking-tight leading-[1.08] text-[#0A2A1E] dark:text-white">
               India's <span className="text-[#1F7A4D] dark:text-[#8FE24A]">Trusted</span> Electric Mobility Platform.
             </h1>
 
@@ -739,16 +752,16 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
               }}
               className="w-full max-w-lg mt-6"
             >
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center bg-[#0A2A1E] dark:bg-emerald-950/80 border border-[#0A2A1E]/20 dark:border-emerald-700/40 rounded-2xl sm:rounded-full p-1.5 shadow-xl shadow-[#0A2A1E]/10 dark:shadow-emerald-950/40 transition-all duration-300">
-                {/* Search Input Box */}
-                <div className="flex items-center flex-1 px-3 py-1.5">
+              <div className="flex flex-col bg-[#0A2A1E] dark:bg-emerald-950/80 border border-[#0A2A1E]/20 dark:border-emerald-700/40 rounded-2xl p-1.5 shadow-xl shadow-[#0A2A1E]/10 dark:shadow-emerald-950/40 transition-all duration-300">
+                {/* Row 1: Search Input Box + Search Button */}
+                <div className="flex items-center w-full px-3 py-2 min-w-0">
                   <Search className="w-4 h-4 text-emerald-300 shrink-0 mr-2" />
                   <input
                     type="text"
                     value={heroSearchQuery}
                     onChange={(e) => setHeroSearchQuery(e.target.value)}
-                    placeholder="Search EV models, brands, specs..."
-                    className="w-full bg-transparent text-sm text-white placeholder-emerald-200/60 focus:outline-none"
+                    placeholder="Search EV models, specs..."
+                    className="w-full bg-transparent text-sm text-white placeholder-emerald-200/60 focus:outline-none min-w-0"
                   />
                   {heroSearchQuery && (
                     <button
@@ -759,26 +772,35 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
                       <X className="w-3.5 h-3.5" />
                     </button>
                   )}
-                </div>
-
-                {/* Buttons Container */}
-                <div className="flex items-center gap-1.5 shrink-0 mt-1 sm:mt-0">
+                  {/* Search Button */}
                   <button
                     type="submit"
-                    className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 bg-[#8FE24A] hover:bg-[#a0f05d] text-[#07130E] font-bold px-4 py-2 rounded-xl sm:rounded-full text-xs transition-all shadow-xs cursor-pointer active:scale-95"
+                    className="shrink-0 inline-flex items-center justify-center gap-1 bg-[#8FE24A] hover:bg-[#a0f05d] text-[#07130E] font-bold px-4 py-2 rounded-xl text-xs transition-all shadow-xs cursor-pointer active:scale-95 ml-2"
                   >
                     <span>Search</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
+                </div>
 
-                  <div className="h-4 w-px bg-white/20 hidden sm:block mx-0.5" />
+                <div className="h-px bg-white/10 w-full my-1.5" />
 
+                {/* Row 2: View All Button + Ask Plse Button */}
+                <div className="flex items-center gap-2.5 w-full px-3 pb-1.5">
                   <Link
                     href="/catalog"
-                    className="flex-1 sm:flex-initial inline-flex items-center justify-center text-emerald-200 hover:text-white font-semibold px-3 py-2 rounded-xl sm:rounded-full text-xs transition-colors hover:bg-white/10"
+                    className="flex-1 inline-flex items-center justify-center text-white font-semibold px-3 py-2 rounded-xl text-xs transition-all border border-white/10 bg-white/5 hover:bg-white/20"
                   >
                     View All
                   </Link>
+
+                  <button
+                    type="button"
+                    onClick={() => window.dispatchEvent(new CustomEvent("open-ai-chat"))}
+                    className="flex-1 inline-flex items-center justify-center gap-1 bg-[#34ebb1] hover:bg-[#2bd49e] text-slate-900 font-bold px-3 py-2 rounded-xl text-xs transition-all shadow-xs cursor-pointer active:scale-95"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Ask Plse</span>
+                  </button>
                 </div>
               </div>
             </form>
@@ -787,7 +809,7 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
           {/* Hero Right Panel: Dedicated Modern Banner Card */}
           <div className="lg:col-span-7">
             <div
-              className="relative w-full h-[420px] sm:h-[450px] rounded-3xl border border-[#D8E3D3] dark:border-emerald-900/40 shadow-xl overflow-hidden flex flex-col justify-end"
+              className="relative w-full h-[200px] sm:h-[360px] lg:h-[450px] rounded-3xl border border-[#D8E3D3] dark:border-emerald-900/40 shadow-xl overflow-hidden flex flex-col justify-end"
               style={
                 activeBanners[currentBannerIdx]?.background_color
                   ? { backgroundColor: activeBanners[currentBannerIdx].background_color }
@@ -956,97 +978,100 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
       />
 
       {/* 4. WHY EVPLSE SECTION */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="p-8 sm:p-12 rounded-3xl bg-[#0A2A1E] dark:bg-[#071912] border border-[#184834] dark:border-emerald-800/40 text-white relative overflow-hidden shadow-xl">
+      <section className="py-12 sm:py-20 px-5 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="p-6 sm:p-8 md:p-12 rounded-3xl bg-[#0A2A1E] dark:bg-[#071912] border border-[#184834] dark:border-emerald-800/40 text-white relative overflow-hidden shadow-xl">
           {/* Ambient radial glow for contrast and depth */}
           <div className="absolute top-0 right-0 w-96 h-96 bg-[#1F7A4D]/25 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#8FE24A]/15 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="max-w-2xl mb-10 relative z-10">
+          <div className="max-w-2xl mb-6 sm:mb-10 relative z-10">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold tracking-wider uppercase bg-[#8FE24A]/20 text-[#8FE24A] border border-[#8FE24A]/30 mb-3">
               The Difference
             </div>
-            <h2 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">Why EVPLSE?</h2>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight">Why EVPLSE?</h2>
             <p className="text-slate-200 dark:text-emerald-100/90 text-sm sm:text-base mt-2 font-normal leading-relaxed">
               Trust isn't claimed — it's built into how the platform works.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
-            {/* Card 1: Trust */}
-            <div className="p-6 sm:p-7 rounded-2xl bg-white/10 dark:bg-[#0C241B] border border-white/15 dark:border-emerald-700/40 hover:border-[#8FE24A]/60 transition-all backdrop-blur-md">
-              <div className="text-xs font-mono font-bold text-[#8FE24A] mb-3 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#8FE24A]" />
-                01 — TRUST
+          {/* Mobile: horizontal drag-scroll. md+: 3-column grid */}
+          <div className="relative z-10 -mx-6 px-6 sm:-mx-8 sm:px-8 md:mx-0 md:px-0 overflow-x-auto md:overflow-visible scrollbar-hide">
+            <div className="flex gap-4 md:grid md:grid-cols-3 md:gap-6 pb-4 md:pb-0">
+              {/* Card 1: Trust */}
+              <div className="flex-shrink-0 w-[78vw] sm:w-[55vw] md:w-auto p-5 sm:p-6 md:p-7 rounded-2xl bg-white/10 dark:bg-[#0C241B] border border-white/15 dark:border-emerald-700/40 hover:border-[#8FE24A]/60 transition-all backdrop-blur-md">
+                <div className="text-xs font-mono font-bold text-[#8FE24A] mb-3 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-[#8FE24A]" />
+                  01 — TRUST
+                </div>
+                <h3 className="text-lg sm:text-xl font-bold text-white mb-3">Trust</h3>
+                <ul className="space-y-3 text-sm text-slate-100 dark:text-emerald-100 font-medium">
+                  <li className="flex items-start gap-2.5">
+                    <CheckCircle2 className="w-4 h-4 text-[#8FE24A] shrink-0 mt-0.5" />
+                    <span>Verified information, not marketing copy</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <CheckCircle2 className="w-4 h-4 text-[#8FE24A] shrink-0 mt-0.5" />
+                    <span>No paid rankings, ever</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <CheckCircle2 className="w-4 h-4 text-[#8FE24A] shrink-0 mt-0.5" />
+                    <span>Transparent, side-by-side comparisons</span>
+                  </li>
+                </ul>
               </div>
-              <h3 className="text-xl font-bold text-white mb-3">Trust</h3>
-              <ul className="space-y-3 text-sm text-slate-100 dark:text-emerald-100 font-medium">
-                <li className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-[#8FE24A] shrink-0 mt-0.5" />
-                  <span>Verified information, not marketing copy</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-[#8FE24A] shrink-0 mt-0.5" />
-                  <span>No paid rankings, ever</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-[#8FE24A] shrink-0 mt-0.5" />
-                  <span>Transparent, side-by-side comparisons</span>
-                </li>
-              </ul>
-            </div>
 
-            {/* Card 2: Expertise */}
-            <div className="p-6 sm:p-7 rounded-2xl bg-white/10 dark:bg-[#0C241B] border border-white/15 dark:border-emerald-700/40 hover:border-[#8FE24A]/60 transition-all backdrop-blur-md">
-              <div className="text-xs font-mono font-bold text-[#8FE24A] mb-3 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#8FE24A]" />
-                02 — EXPERTISE
+              {/* Card 2: Expertise */}
+              <div className="flex-shrink-0 w-[78vw] sm:w-[55vw] md:w-auto p-5 sm:p-6 md:p-7 rounded-2xl bg-white/10 dark:bg-[#0C241B] border border-white/15 dark:border-emerald-700/40 hover:border-[#8FE24A]/60 transition-all backdrop-blur-md">
+                <div className="text-xs font-mono font-bold text-[#8FE24A] mb-3 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-[#8FE24A]" />
+                  02 — EXPERTISE
+                </div>
+                <h3 className="text-lg sm:text-xl font-bold text-white mb-3">Expertise</h3>
+                <ul className="space-y-3 text-sm text-slate-100 dark:text-emerald-100 font-medium">
+                  <li className="flex items-start gap-2.5">
+                    <CheckCircle2 className="w-4 h-4 text-[#8FE24A] shrink-0 mt-0.5" />
+                    <span>Backed by industry experts</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <CheckCircle2 className="w-4 h-4 text-[#8FE24A] shrink-0 mt-0.5" />
+                    <span>Real-world, on-road testing</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <CheckCircle2 className="w-4 h-4 text-[#8FE24A] shrink-0 mt-0.5" />
+                    <span>The latest EV insights, explained simply</span>
+                  </li>
+                </ul>
               </div>
-              <h3 className="text-xl font-bold text-white mb-3">Expertise</h3>
-              <ul className="space-y-3 text-sm text-slate-100 dark:text-emerald-100 font-medium">
-                <li className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-[#8FE24A] shrink-0 mt-0.5" />
-                  <span>Backed by industry experts</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-[#8FE24A] shrink-0 mt-0.5" />
-                  <span>Real-world, on-road testing</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-[#8FE24A] shrink-0 mt-0.5" />
-                  <span>The latest EV insights, explained simply</span>
-                </li>
-              </ul>
-            </div>
 
-            {/* Card 3: Ecosystem */}
-            <div className="p-6 sm:p-7 rounded-2xl bg-white/10 dark:bg-[#0C241B] border border-white/15 dark:border-emerald-700/40 hover:border-[#8FE24A]/60 transition-all backdrop-blur-md">
-              <div className="text-xs font-mono font-bold text-[#8FE24A] mb-3 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#8FE24A]" />
-                03 — ECOSYSTEM
+              {/* Card 3: Ecosystem */}
+              <div className="flex-shrink-0 w-[78vw] sm:w-[55vw] md:w-auto p-5 sm:p-6 md:p-7 rounded-2xl bg-white/10 dark:bg-[#0C241B] border border-white/15 dark:border-emerald-700/40 hover:border-[#8FE24A]/60 transition-all backdrop-blur-md">
+                <div className="text-xs font-mono font-bold text-[#8FE24A] mb-3 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-[#8FE24A]" />
+                  03 — ECOSYSTEM
+                </div>
+                <h3 className="text-lg sm:text-xl font-bold text-white mb-3">Ecosystem</h3>
+                <ul className="space-y-3 text-sm text-slate-100 dark:text-emerald-100 font-medium">
+                  <li className="flex items-start gap-2.5">
+                    <CheckCircle2 className="w-4 h-4 text-[#8FE24A] shrink-0 mt-0.5" />
+                    <span>Vehicles, charging &amp; finance</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <CheckCircle2 className="w-4 h-4 text-[#8FE24A] shrink-0 mt-0.5" />
+                    <span>Insurance &amp; genuine parts</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <CheckCircle2 className="w-4 h-4 text-[#8FE24A] shrink-0 mt-0.5" />
+                    <span>Fleet management — everything connected</span>
+                  </li>
+                </ul>
               </div>
-              <h3 className="text-xl font-bold text-white mb-3">Ecosystem</h3>
-              <ul className="space-y-3 text-sm text-slate-100 dark:text-emerald-100 font-medium">
-                <li className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-[#8FE24A] shrink-0 mt-0.5" />
-                  <span>Vehicles, charging &amp; finance</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-[#8FE24A] shrink-0 mt-0.5" />
-                  <span>Insurance &amp; genuine parts</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-[#8FE24A] shrink-0 mt-0.5" />
-                  <span>Fleet management — everything connected</span>
-                </li>
-              </ul>
-            </div>
+            </div>{/* end scroll/grid wrapper */}
           </div>
         </div>
       </section>
 
       {/* 5. REVIEWS, COMPARISONS & INSIGHT */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <section className="py-12 sm:py-20 px-5 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-10 gap-4">
           <div>
             <div className="text-xs font-mono text-[#1F7A4D] dark:text-[#8FE24A] tracking-wider uppercase mb-2">Fresh From The Road</div>
@@ -1120,7 +1145,7 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
       </section>
 
       {/* 6. TOOLS BANNER */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#D8E3D3] dark:border-emerald-900/30">
+      <section className="py-12 sm:py-20 px-5 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#D8E3D3] dark:border-emerald-900/30">
         <div className="mb-8 max-w-2xl">
           <div className="text-xs font-mono text-[#1F7A4D] dark:text-[#8FE24A] tracking-wider uppercase mb-2">Decide With Numbers</div>
           <h2 className="text-3xl sm:text-4xl font-bold text-[#0A2A1E] dark:text-white tracking-tight">

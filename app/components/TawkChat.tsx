@@ -15,6 +15,14 @@ export default function TawkChat() {
         mobile: { position: 'br', xOffset: 10, yOffset: 10 },
       }
     };
+
+    (window as any).Tawk_API.onChatMaximized = function() {
+      document.documentElement.classList.add("tawk-maximized");
+    };
+    (window as any).Tawk_API.onChatMinimized = function() {
+      document.documentElement.classList.remove("tawk-maximized");
+    };
+
     // Hide Tawk widget when Ask Plse chat is open (to avoid overlap)
     (window as any).Tawk_API.onLoad = function() {
       (window as any).Tawk_API.showWidget();
@@ -34,6 +42,10 @@ export default function TawkChat() {
     } else {
       document.head.appendChild(s1);
     }
+
+    return () => {
+      document.documentElement.classList.remove("tawk-maximized");
+    };
   }, []);
 
   return null;

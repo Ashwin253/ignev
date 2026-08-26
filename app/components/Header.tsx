@@ -109,7 +109,7 @@ export default function Header() {
 
   return (
     <>
-      <header className={`fixed top-0 left-0 right-0 z-[60] transition-all duration-300 border-b pointer-events-auto ${headerBg}`}>
+      <header className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 border-b pointer-events-auto ${headerBg}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-[72px]">
           <Link href="/" className="flex items-center gap-2">
@@ -343,7 +343,7 @@ export default function Header() {
       {/* Mobile */}
       <AnimatePresence>
         {mobileMenuOpen && (
-          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="md:hidden absolute top-full left-0 right-0 bg-white backdrop-blur-xl border-b border-zinc-200 shadow-2xl max-h-[85vh] overflow-y-auto z-[60]">
+          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="md:hidden absolute top-full left-0 right-0 bg-white backdrop-blur-xl border-b border-zinc-200 shadow-2xl max-h-[85vh] overflow-y-auto z-[100]">
             <div className="p-4 space-y-2">
               {/* Buy/Sell Accordion */}
               <div className="border border-zinc-100 rounded-xl overflow-hidden bg-zinc-50/50">

@@ -85,7 +85,7 @@ export default function Hero({
       }
     >
       {/* Hero */}
-      <div className="relative min-h-[750px] sm:h-screen sm:min-h-[640px] w-full overflow-hidden">
+      <div className="relative min-h-[100svh] w-full overflow-hidden">
         {/* Animated Banner Slider connected to Supabase */}
         <AnimatePresence mode="wait">
           {activeBanners.length > 0 ? (
@@ -119,14 +119,20 @@ export default function Hero({
                       sizes="(max-width: 640px) 100vw"
                     />
                   )}
-                  <Image
-                    src={activeBanners[currentBannerIdx].image_horizontal || activeBanners[currentBannerIdx].imageHorizontal}
-                    alt={activeBanners[currentBannerIdx].cta || "Banner Horizontal"}
-                    fill
-                    priority={currentBannerIdx === 0}
-                    className={`object-cover ${(activeBanners[currentBannerIdx].image_vertical || activeBanners[currentBannerIdx].imageVertical) ? 'hidden sm:block' : ''}`}
-                    sizes="100vw"
-                  />
+                  {(activeBanners[currentBannerIdx].image_horizontal || activeBanners[currentBannerIdx].imageHorizontal) && (
+                    <Image
+                      src={activeBanners[currentBannerIdx].image_horizontal || activeBanners[currentBannerIdx].imageHorizontal}
+                      alt={activeBanners[currentBannerIdx].cta || "Banner Horizontal"}
+                      fill
+                      priority={currentBannerIdx === 0}
+                      className={`object-cover ${(activeBanners[currentBannerIdx].image_vertical || activeBanners[currentBannerIdx].imageVertical) ? "hidden sm:block" : ""}`}
+                      sizes="100vw"
+                    />
+                  )}
+                  {/* Fallback: no images at all — show gradient placeholder */}
+                  {!(activeBanners[currentBannerIdx].image_horizontal || activeBanners[currentBannerIdx].imageHorizontal || activeBanners[currentBannerIdx].image_vertical || activeBanners[currentBannerIdx].imageVertical) && (
+                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-900 to-slate-900" />
+                  )}
                 </>
               )}
             </motion.div>
@@ -135,7 +141,7 @@ export default function Hero({
           )}
         </AnimatePresence>
 
-        <div className="relative z-20 md:z-10 mx-auto flex min-h-[750px] sm:h-screen sm:min-h-[640px] max-w-7xl flex-col items-center justify-between px-6 pt-24 pb-8 sm:pt-32 sm:pb-12 text-center">
+        <div className="relative z-20 md:z-10 mx-auto flex min-h-[100svh] max-w-7xl flex-col items-center justify-between px-4 sm:px-6 pt-20 pb-6 sm:pt-28 sm:pb-10 text-center">
           
           {/* Top Heading */}
           <div className="mt-8 sm:mt-12">
@@ -163,9 +169,9 @@ export default function Hero({
               </div>
               <button onClick={handleSearch} className="rounded-2xl bg-[#34ebb1] px-5 text-sm font-medium text-zinc-900 hover:bg-[#2bd49e] active:scale-[0.98]">Search</button>
             </div>
-            <div className="mt-4 border-t border-white/10 pt-4">
-              <p className="mb-2.5 text-left text-[11px] font-medium uppercase tracking-wider text-zinc-400">Popular brands</p>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+            <div className="mt-3 border-t border-white/10 pt-3">
+              <p className="mb-2 text-left text-[11px] font-medium uppercase tracking-wider text-zinc-400">Popular brands</p>
+              <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-4 lg:grid-cols-6">
                 {POPULAR_BRANDS.map((brand) => {
                   const active = selectedBrand === brand;
                   return (

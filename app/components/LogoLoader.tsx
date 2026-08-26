@@ -25,8 +25,8 @@ export default function LogoLoader({ fullscreen = true, message = "Loading..." }
   }, []);
 
   const containerClasses = fullscreen
-    ? "fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#F6F8F2] dark:bg-[#0f1115] transition-colors duration-300"
-    : "w-full min-h-[300px] flex flex-col items-center justify-center bg-[#F6F8F2] dark:bg-[#0f1115] rounded-3xl p-8 border border-[#D8E3D3] dark:border-white/5 transition-colors duration-300";
+    ? "fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#d4d4d4] dark:bg-[#d4d4d4] transition-colors duration-300"
+    : "w-full min-h-[300px] flex flex-col items-center justify-center bg-[#d4d4d4] dark:bg-[#d4d4d4] rounded-3xl p-8 border border-[#D8E3D3] dark:border-white/5 transition-colors duration-300";
 
   const videoSizeClasses = fullscreen
     ? "w-64 h-64 md:w-[420px] md:h-[420px] lg:w-[500px] lg:h-[500px] max-w-[90vw] aspect-square"
@@ -36,7 +36,7 @@ export default function LogoLoader({ fullscreen = true, message = "Loading..." }
     <div className={containerClasses}>
       <div className={`relative ${videoSizeClasses} flex items-center justify-center`}>
         {/* Glow effect behind logo */}
-        <div className="absolute inset-0 bg-[#007BFF]/20 rounded-full blur-[100px] animate-pulse" />
+        <div className="absolute inset-0 bg-[#d4d4d4]/20 rounded-full blur-[100px] animate-pulse" />
         
         <video
           ref={videoRef}

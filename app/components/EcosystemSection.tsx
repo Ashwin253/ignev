@@ -761,68 +761,19 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
             </h1>
 
             {/* Unified Search Capsule - V1 Clean White - RECOMMENDED */}
-<form
-  onSubmit={(e) => {
-    e.preventDefault();
-    if (heroSearchQuery.trim()) {
-      router.push(`/catalog?q=${encodeURIComponent(heroSearchQuery.trim())}`);
-    } else {
-      router.push("/catalog");
-    }
-  }}
-  className="w-full max-w- mt-6"
->
-  <div className="w-full bg-white dark:bg-zinc-900 border border-[#bfe3e1] dark:border-white/10 rounded- p-2 shadow-[0_16px_40px_-12px_rgba(47,143,34,0.18)] backdrop-blur-xl transition-all">
-
-    {/* Row 1: Search */}
-    <div className="flex items-center gap-2 w-full bg-[#bfe3e1]/25 dark:bg-white/[0.04] rounded- px-4 min-h- focus-within:ring-2 focus-within:ring-[#2f8f22]/20 focus-within:border-[#2f8f22]/30 transition-all">
-      <Search className="w-5 h-5 text-[#2f8f22] shrink-0" />
-      <input
-        type="text"
-        value={heroSearchQuery}
-        onChange={(e) => setHeroSearchQuery(e.target.value)}
-        placeholder="Search EV models, specs, range..."
-        className="w-full bg-transparent text- font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none min-w-0"
-      />
-      {heroSearchQuery && (
-        <button
-          type="button"
-          onClick={() => setHeroSearchQuery("")}
-          className="shrink-0 w-8 h-8 grid place-items-center rounded-full bg-zinc-900/5 dark:bg-white/10 hover:bg-zinc-900/10 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors"
-        >
-          <X className="w-4 h-4" />
-        </button>
-      )}
-      <button
-        type="submit"
-        className="shrink-0 inline-flex items-center justify-center gap-1.5 bg-[#2f8f22] hover:bg-[#256f1b] active:bg-[#1d5a15] text-white font-bold px-5 py-2.5 rounded- text- min-h- shadow-[0_4px_12px_rgba(47,143,34,0.3)] active:scale-[0.97] transition-all ml-1"
-      >
-        <span>Search</span>
-        <ArrowRight className="w-3.5 h-3.5" />
-      </button>
-    </div>
-
-    <div className="h-px bg-[#bfe3e1]/70 dark:bg-white/10 w-full my-2" />
-
-    {/* Row 2: Actions - 44px+ tap targets for mobile */}
-    <div className="flex items-center gap-2.5 w-full px-1 pb-1">
-      <Link
-        href="/catalog"
-        className="flex-1 inline-flex items-center justify-center bg-white dark:bg-white/[0.06] hover:bg-zinc-50 dark:hover:bg-white/[0.1] text-zinc-700 dark:text-zinc-200 font-semibold min-h- px-3 py-2 rounded- text- border border-zinc-200 dark:border-white/10 transition-colors"
-      >
-        View All
-      </Link>
-      <button
-        type="button"
-        onClick={() => window.dispatchEvent(new CustomEvent("open-ai-chat"))}
-        className="flex-1 inline-flex items-center justify-center gap-1.5 bg-[#bfe3e1] hover:bg-[#a8d6d3] active:bg-[#9acbc8] text-[#0a2a1e] font-bold min-h- px-3 py-2 rounded- text- shadow-sm active:scale-[0.97] transition-all"
-      >
-        <Sparkles className="w-3.5 h-3.5" />
-        <span>Ask Plse</span>
-      </button>
-    </div>
+<div className="w-full bg-white border border-[#bfe3e1]/55 rounded- p-2 sm:p- shadow-[0_20px_50px_-18px_rgba(47,143,34,0.12)] max-w-">
+  <div className="flex items-center gap-2 bg-[#f5faf9] border border-[#bfe3e1]/65 rounded-full px-4 sm:px-5 min-h- sm:min-h-">
+    <Search className="w- h- sm:w-5 sm:h-5 text-[#2f8f22]/90" />
+    <input className="w-full bg-transparent text- font-medium placeholder:text-zinc-400 focus:outline-none" placeholder="Search EV models, specs, range..." />
+    <button className="bg-[#2f8f22] hover:bg-[#256f1b] text-white h-9 sm:h-10 px-4 sm:px-5 rounded-full text- sm:text- font-semibold">Search</button>
   </div>
-</form> </div>
+  <div className="h-px bg-[#bfe3e1]/40 mx-3 my-2" />
+  <div className="flex gap-2 px-1 pb-1">
+    <Link href="/catalog" className="flex-1 h-10 sm:h- rounded-full text- sm:text- font-medium bg-white border border-zinc-100 grid place-items-center">View All</Link>
+    <button className="flex-1 h-10 sm:h- rounded-full text- sm:text- font-semibold bg-[#bfe3e1]/70 text-[#0a2a1e] flex items-center justify-center gap-1"><Sparkles className="w-3 h-3" /> Ask Plse</button>
+  </div>
+</div>
+</div>
 
           {/* Hero Right Panel: Dedicated Modern Banner Card */}
           <div className="lg:col-span-7">

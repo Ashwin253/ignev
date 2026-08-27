@@ -66,6 +66,14 @@ function getEmbedUrl(url: string) {
   return null;
 }
 
+const VEHICLE_BACKGROUNDS = [
+  "/listingbackground.jpg",
+  "/listingbackgroundsecond.jpg",
+  "/listingbackgroundthird.jpg",
+  "/listingbackgroundforth.jpg",
+  "/listingbackgroundfifth.jpg",
+];
+
 function CatalogCard({ item, index, isInCompare, addToCompare, removeFromCompare }: { 
   item: CatalogItem, index: number, isInCompare: (s:string)=>boolean, addToCompare: (s:string)=>void, removeFromCompare: (s:string)=>void 
 }) {
@@ -82,19 +90,21 @@ function CatalogCard({ item, index, isInCompare, addToCompare, removeFromCompare
   );
   const isDirectVideo = videoUrl && !isYoutubeOrVimeo;
 
+  const bgImage = VEHICLE_BACKGROUNDS[index % VEHICLE_BACKGROUNDS.length];
+
   return (
     <motion.article
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.04 }}
       className="group relative flex h-full flex-col overflow-hidden rounded-md ring-1 ring-zinc-200/60 dark:ring-zinc-800/60 shadow-sm hover:shadow-md transition-all"
-      style={{ backgroundImage: "url('/listingbackground.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}
+      style={{ backgroundImage: `url('${bgImage}')`, backgroundSize: "cover", backgroundPosition: "center" }}
     >
       <div className="absolute inset-0 bg-[#f0fdf9]/85 dark:bg-zinc-900/85 backdrop-blur-[1px]" />
       <Link href={`/product/${slug}`} className="relative flex flex-1 flex-col">
         <div
           className="relative aspect-[4/3] overflow-hidden"
-          style={{ backgroundImage: "url('/listingbackground.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}
+          style={{ backgroundImage: `url('${bgImage}')`, backgroundSize: "cover", backgroundPosition: "center" }}
         >
           <Image
             src={getVehiclePhoto(item.photo, item)}

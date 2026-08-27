@@ -159,6 +159,12 @@ export type EvListingRow = {
   created_by_email?: string;
   editors_emails?: string[];
   featured?: boolean;
+  deleted?: boolean;
+  deleted_at?: string | null;
+  coming_soon?: boolean;
+  announced?: boolean;
+  concept?: boolean;
+  facelift?: boolean;
 };
 
 export type EvVariantRow = {
@@ -167,7 +173,7 @@ export type EvVariantRow = {
   variant_name: string;
   slug: string;
   model_year: number;
-  price: number;
+  price: number | null;
   top_speed: string | null;
   battery_capacity_kwh: string | null;
   driving_range_km: string | null;
@@ -211,6 +217,7 @@ export type EvVariantRow = {
   discontinued_date?: string | null;
   usage_type?: string | null;
   continuing_variant_id?: string | null;
+  launch_date?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -300,6 +307,7 @@ function mapToEvListing(row: EvListingRow, variants: EvVariantRow[], features?: 
       usage_type: v.usage_type,
       continuing_variant_id: v.continuing_variant_id,
       baas_monthly_rental: v.baas_monthly_rental ? String(v.baas_monthly_rental) : "",
+      launch_date: v.launch_date || null,
     };
   });
 
@@ -329,6 +337,7 @@ function mapToEvListing(row: EvListingRow, variants: EvVariantRow[], features?: 
         usage_type: v.usage_type,
         continuing_variant_id: v.continuing_variant_id,
         baas_monthly_rental: v.baas_monthly_rental ? String(v.baas_monthly_rental) : "",
+        launch_date: v.launch_date || null,
       };
     });
 
@@ -400,6 +409,12 @@ function mapToEvListing(row: EvListingRow, variants: EvVariantRow[], features?: 
     discontinued: row.discontinued ?? false,
     discontinued_date: row.discontinued_date,
     featured: row.featured ?? false,
+    deleted: row.deleted ?? false,
+    deleted_at: row.deleted_at ?? null,
+    coming_soon: row.coming_soon ?? false,
+    announced: row.announced ?? false,
+    concept: row.concept ?? false,
+    facelift: row.facelift ?? false,
     video_links: (() => {
       const parsed = typeof row.video_links === "string" ? (() => { try { return JSON.parse(row.video_links); } catch { return []; } })() : row.video_links;
       return Array.isArray(parsed) ? parsed : [];
@@ -502,6 +517,7 @@ export async function fetchEvListingsFromSupabase(limit = 50): Promise<EvListing
   const { data: listings, error } = await supabase
     .from("evlistings")
     .select("*")
+    .or("deleted.is.null,deleted.eq.false")
     .order("created_at", { ascending: false })
     .limit(limit);
 
@@ -538,6 +554,7 @@ export async function fetchEvListingBySlugFromSupabase(slug: string): Promise<Ev
     .from("evlistings")
     .select("*")
     .or(`slug.eq."${slug}",slug.eq."${decodedSlug}",slug.eq."${spacedSlug}",slug.eq."${hyphenatedSlug}"`)
+    .or("deleted.is.null,deleted.eq.false")
     .single();
 
   if (error || !listing) return null;

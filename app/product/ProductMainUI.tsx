@@ -162,9 +162,31 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
 
   const cleanPrice = (val?: string | null) => val? val.replace(/[₹,a-zA-Z\s]/g, "") : "";
   const activeVariant = activeVariants?.[selectedIndex];
+  const isPriceBlank = activeVariant ? (activeVariant.price === "" || activeVariant.price === null || activeVariant.price === undefined) : false;
+  const isFuture = useMemo(() => {
+    if (!activeVariant) return false;
+    if (activeVariant.usage_type && ["Coming Soon", "Announced", "Concept", "Facelift"].includes(activeVariant.usage_type)) {
+      return true;
+    }
+    const launch_date = (activeVariant as any).launch_date;
+    if (!launch_date) return false;
+    const clean = launch_date.trim().toLowerCase();
+    if (["tba", "coming soon", "concept", "announced", "facelift"].some((k: string) => clean.includes(k))) return true;
+    const d = new Date(launch_date);
+    if (isNaN(d.getTime())) {
+      const matches = launch_date.match(/\d{4}/);
+      if (matches) {
+        const year = parseInt(matches[0]);
+        return year > new Date().getFullYear();
+      }
+      return false;
+    }
+    return d > new Date();
+  }, [activeVariant]);
+
   const selectedVariantName = activeVariant?.modelName || (activeVariant?.capacity? `${activeVariant.capacity} kWh` : "");
   const activeBatterySpec = item.batterySpecs.find(s => s.variantName === selectedVariantName) || item.batterySpecs[selectedIndex];
-  const displayPriceRaw = activeVariant?.price || item.prices?.[selectedIndex] || item.prices?.[0] || "10";
+  const displayPriceRaw = isPriceBlank ? "" : (activeVariant?.price || item.prices?.[selectedIndex] || item.prices?.[0] || "");
   const priceVal = parseFloat(cleanPrice(displayPriceRaw)) || 10;
   const currentPrice = priceVal > 1000? priceVal : priceVal * 100000;
   const specificPriceStr = useMemo(() => {
@@ -346,25 +368,31 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
               <div className="flex items-center justify-between rounded-2xl bg-gradient-to-br from-zinc-50 to-white p-5 border border-zinc-200/60 dark:from-zinc-800/50 dark:to-zinc-900/50 dark:border-zinc-800">
                 <div>
                   <p className="text-xs uppercase tracking-wide text-zinc-500 font-medium mb-1">{showBaas? "BaaS Starting" : "Ex-Showroom"}</p>
-                  <p className="text-[32px] font-semibold tracking-tight leading-none">₹{specificPriceStr}<span className="text-lg font-medium text-zinc-500 ml-1">Lakh</span></p>
+                  {specificPriceStr ? (
+                    <p className="text-[32px] font-semibold tracking-tight leading-none">₹{specificPriceStr}<span className="text-lg font-medium text-zinc-500 ml-1">Lakh</span></p>
+                  ) : (
+                    <p className="text-2xl font-semibold tracking-tight leading-none text-zinc-700 dark:text-zinc-300">{isFuture ? "Coming Soon" : "TBA"}</p>
+                  )}
                 </div>
                 <button onClick={() => triggerEnquiryModal(`Offers: ${item.brand} ${item.title}`)} className="flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2.5 text-sm font-medium text-white shadow-lg shadow-emerald-500/20 hover:-translate-y-0.5 transition">
                   <DotLottieReact src="/Giftpremiumanimation.lottie" loop autoplay className="h-5 w-5" />Offers
                 </button>
               </div>
 
-              <div className="rounded-2xl border border-zinc-200/60 bg-white p-5 dark:bg-zinc-900/50 dark:border-zinc-800 flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-emerald-600 mb-1">EMI Starting at</p>
-                  <p className="text-3xl font-semibold">₹{rupees(emiMonthly)}<span className="text-base font-normal text-zinc-500">/mo</span></p>
+              {specificPriceStr && (
+                <div className="rounded-2xl border border-zinc-200/60 bg-white p-5 dark:bg-zinc-900/50 dark:border-zinc-800 flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wide text-emerald-600 mb-1">EMI Starting at</p>
+                    <p className="text-3xl font-semibold">₹{rupees(emiMonthly)}<span className="text-base font-normal text-zinc-500">/mo</span></p>
+                  </div>
+                  <button
+                    onClick={() => setShowEmiCalculator(true)}
+                    className="rounded-full bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100 px-4.5 py-2.5 text-xs font-bold transition shadow-md active:scale-95 shrink-0"
+                  >
+                    EMI Calculator
+                  </button>
                 </div>
-                <button
-                  onClick={() => setShowEmiCalculator(true)}
-                  className="rounded-full bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100 px-4.5 py-2.5 text-xs font-bold transition shadow-md active:scale-95 shrink-0"
-                >
-                  EMI Calculator
-                </button>
-              </div>
+              )}
 
               {/* Brand Offers */}
               {offers && offers.length > 0 && (

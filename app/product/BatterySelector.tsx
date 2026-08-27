@@ -16,6 +16,7 @@ interface BatteryVariant {
   usage_type?: string | null;
   continuing_variant_id?: string | null;
   baas_monthly_rental?: string;
+  launch_date?: string | null;
 }
 
 interface BatterySelectorProps {
@@ -62,6 +63,25 @@ function formatPrice(price: string | undefined): { value: string; unit: string }
   return { value: price, unit: "L" };
 }
 
+function isFutureVariant(v: BatteryVariant): boolean {
+  if (v.usage_type && ["Coming Soon", "Announced", "Concept", "Facelift"].includes(v.usage_type)) {
+    return true;
+  }
+  if (!v.launch_date) return false;
+  const clean = v.launch_date.trim().toLowerCase();
+  if (["tba", "coming soon", "concept", "announced", "facelift"].some(k => clean.includes(k))) return true;
+  const d = new Date(v.launch_date);
+  if (isNaN(d.getTime())) {
+    const matches = v.launch_date.match(/\d{4}/);
+    if (matches) {
+      const year = parseInt(matches[0]);
+      return year > new Date().getFullYear();
+    }
+    return false;
+  }
+  return d > new Date();
+}
+
 function rupees(v: number) {
   return new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(Math.round(v));
 }
@@ -85,6 +105,7 @@ export default function BatterySelector({
   const canToggle = hasBaas && baasVariants.length > 0 && standardVariants.length > 0;
   const chargeTime = formatChargeTime(active.charge);
   const priceDisplay = formatPrice(active.price);
+  const isFuture = isFutureVariant(active);
 
   // Filter city pricing for active variant
   const activeVarName = active.modelName || "";
@@ -217,8 +238,16 @@ export default function BatterySelector({
                     <IndianRupee size={11} />
                     <span className="text-[9px] font-bold uppercase tracking-wider">Price</span>
                   </div>
-                  <p className="text-lg font-black text-slate-955 leading-tight tabular-nums">
-                    {priceDisplay ? priceDisplay.value : "—"}<span className="text-[10px] font-bold text-slate-850 ml-0.5">{priceDisplay ? priceDisplay.unit : "L"}</span>
+                  <p className={`font-black text-slate-955 leading-tight tabular-nums ${priceDisplay ? "text-lg" : "text-xs"}`}>
+                    {priceDisplay ? (
+                      <>
+                        {priceDisplay.value}<span className="text-[10px] font-bold text-slate-850 ml-0.5">{priceDisplay.unit}</span>
+                      </>
+                    ) : isFuture ? (
+                      "Coming Soon"
+                    ) : (
+                      "—"
+                    )}
                   </p>
                 </div>
               ) : (
@@ -227,8 +256,16 @@ export default function BatterySelector({
                     <IndianRupee size={11} />
                     <span className="text-[9px] font-bold uppercase tracking-wider">Upfront</span>
                   </div>
-                  <p className="text-lg font-black text-slate-955 leading-tight tabular-nums">
-                    {active.baseprice ? formatPrice(active.baseprice)?.value : "—"}<span className="text-[10px] font-bold text-slate-850 ml-0.5">{active.baseprice ? formatPrice(active.baseprice)?.unit : "L"}</span>
+                  <p className={`font-black text-slate-955 leading-tight tabular-nums ${active.baseprice ? "text-lg" : "text-xs"}`}>
+                    {active.baseprice ? (
+                      <>
+                        {formatPrice(active.baseprice)?.value}<span className="text-[10px] font-bold text-slate-850 ml-0.5">{formatPrice(active.baseprice)?.unit || "L"}</span>
+                      </>
+                    ) : isFuture ? (
+                      "Coming Soon"
+                    ) : (
+                      "—"
+                    )}
                   </p>
                 </div>
               )}

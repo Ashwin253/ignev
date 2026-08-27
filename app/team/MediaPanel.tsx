@@ -90,6 +90,7 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
       const { data, error } = await supabase
         .from("evlistings")
         .select("id, title, brand, photo, featured_photos, gallery_images")
+        .or("deleted.is.null,deleted.eq.false")
         .order("title");
 
       if (error) {

@@ -198,6 +198,12 @@ export type EvListing = {
   brand: string;
   body_type?: string;
   usage_type?: string | null;
+  deleted?: boolean;
+  deleted_at?: string | null;
+  coming_soon?: boolean;
+  announced?: boolean;
+  concept?: boolean;
+  facelift?: boolean;
   types: string[];
   price_bracket?: string;
   prices: string[];
@@ -268,6 +274,7 @@ export type BatteryVariant = {
   usage_type?: string | null;
   continuing_variant_id?: string | null;
   baas_monthly_rental?: string;
+  launch_date?: string | null;
 };
 
 export type EnergyCompareEntry = {

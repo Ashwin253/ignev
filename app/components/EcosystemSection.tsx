@@ -28,6 +28,14 @@ import type { WPUpdate, EvListing, HeroBanner } from "../lib/wordpress";
 import { isLaunched } from "../lib/wordpress";
 import { getVehiclePhoto, isTwoWheeler } from "../lib/vehicle-images";
 
+const VEHICLE_BACKGROUNDS = [
+  "/listingbackground.jpg",
+  "/listingbackgroundsecond.jpg",
+  "/listingbackgroundthird.jpg",
+  "/listingbackgroundforth.jpg",
+  "/listingbackgroundfifth.jpg",
+];
+
 interface EcosystemSectionProps {
   updates?: WPUpdate[];
   listings?: EvListing[];
@@ -164,6 +172,7 @@ function VehicleScrollSection({ type, items }: VehicleScrollSectionProps) {
                 : `₹${l.prices[0]}L`
             ) : (l as any).price_bracket || "";
             const range = l.batteryVariants?.[0]?.range || "";
+            const bgImage = VEHICLE_BACKGROUNDS[i % VEHICLE_BACKGROUNDS.length];
             return (
               <Link
                 key={l.slug || i}
@@ -174,7 +183,10 @@ function VehicleScrollSection({ type, items }: VehicleScrollSectionProps) {
                     : "bg-white/50 hover:bg-white/80 dark:bg-[#071E15]/45 dark:hover:bg-[#071E15]/65 border-white/70 hover:border-emerald-400/80 dark:border-emerald-900/40 dark:hover:border-[#8FE24A]"
                 }`}
               >
-                <div className="relative h-32 sm:h-36 overflow-hidden bg-white/30 dark:bg-black/20">
+                <div 
+                  className="relative h-32 sm:h-36 overflow-hidden bg-white/30 dark:bg-black/20"
+                  style={{ backgroundImage: `url('${bgImage}')`, backgroundSize: "cover", backgroundPosition: "center" }}
+                >
                   <Image
                     src={getVehiclePhoto(l.photo, l)}
                     alt={l.title}
@@ -462,10 +474,14 @@ function VehicleCategorySelector({ listings = [] }: { listings?: EvListing[] }) 
           <div className="relative sm:hidden">
             <select
               value={activeCategory}
-              onChange={(e) => setActiveCategory(e.target.value as CategoryTab)}
+              onChange={(e) => {
+                const val = e.target.value as CategoryTab;
+                setActiveCategory(val);
+                setIsCommercialOnly(val === "truck");
+              }}
               className="appearance-none pl-3 pr-8 py-2 rounded-xl text-xs font-bold bg-white/80 dark:bg-[#0B2117]/80 text-[#0A2A1E] dark:text-emerald-100 border border-[#D8E3D3] dark:border-emerald-800/40 backdrop-blur-md shadow-xs focus:outline-none focus:ring-2 focus:ring-[#1F7A4D]/40 cursor-pointer"
             >
-              {(isCommercialOnly ? COMMERCIAL_TABS : PERSONAL_TABS).map((tabKey) => (
+              {COMMERCIAL_TABS.map((tabKey) => (
                 <option key={tabKey} value={tabKey}>
                   {CATEGORY_CONFIG[tabKey].label}
                 </option>
@@ -522,7 +538,7 @@ function VehicleCategorySelector({ listings = [] }: { listings?: EvListing[] }) 
               });
             }}
             aria-pressed={isCommercialOnly}
-            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer select-none border backdrop-blur-md shadow-xs active:scale-95 ${
+            className={`hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer select-none border backdrop-blur-md shadow-xs active:scale-95 ${
               isCommercialOnly
                 ? "bg-amber-500 text-slate-950 border-amber-400 shadow-amber-500/20"
                 : "bg-white/80 dark:bg-[#0B2117]/80 text-[#0A2A1E] dark:text-emerald-100 border-[#D8E3D3] dark:border-emerald-800/40 hover:bg-white dark:hover:bg-[#0F2A1E]"
@@ -590,6 +606,7 @@ function VehicleCategorySelector({ listings = [] }: { listings?: EvListing[] }) 
                   : (l as any).price_bracket || "";
                 const range = l.batteryVariants?.[0]?.range || "";
                 const topSpeed = l.topSpeed || "";
+                const bgImage = VEHICLE_BACKGROUNDS[i % VEHICLE_BACKGROUNDS.length];
 
                 return (
                   <Link
@@ -597,7 +614,10 @@ function VehicleCategorySelector({ listings = [] }: { listings?: EvListing[] }) 
                     href={`/product/${l.slug}`}
                     className="group flex-shrink-0 w-[230px] sm:w-[250px] rounded-2xl border overflow-hidden transition-all flex flex-col justify-between backdrop-blur-lg shadow-xs hover:shadow-xl hover:-translate-y-1 duration-300 bg-white/50 hover:bg-white/80 dark:bg-[#071E15]/45 dark:hover:bg-[#071E15]/65 border-white/70 hover:border-emerald-400/80 dark:border-emerald-900/40 dark:hover:border-[#8FE24A]"
                   >
-                    <div className="relative h-32 sm:h-36 overflow-hidden bg-white/30 dark:bg-black/20">
+                    <div 
+                      className="relative h-32 sm:h-36 overflow-hidden bg-white/30 dark:bg-black/20"
+                      style={{ backgroundImage: `url('${bgImage}')`, backgroundSize: "cover", backgroundPosition: "center" }}
+                    >
                       <Image
                         src={getVehiclePhoto(l.photo, l)}
                         alt={l.title}
@@ -646,7 +666,7 @@ function VehicleCategorySelector({ listings = [] }: { listings?: EvListing[] }) 
                   <ArrowRight className="w-4 h-4" />
                 </div>
                 <span className="text-xs font-bold text-[#0A2A1E] dark:text-white">
-                  View All {currentConfig.label}
+                  View All 
                 </span>
                 <span className="text-[9px] text-zinc-500 dark:text-zinc-400 mt-0.5">
                   Explore full catalog
@@ -665,7 +685,7 @@ function VehicleCategorySelector({ listings = [] }: { listings?: EvListing[] }) 
           href={viewAllHref}
           className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-xs group bg-[#2e3230] hover:bg-[#289660] text-white hover:text-black shadow-emerald-900/20"
         >
-          <span>View All {currentConfig.label} Listings</span>
+          <span>View All  Listings</span>
           <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
         </Link>
       </div>
@@ -752,7 +772,7 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
               }}
               className="w-full max-w-lg mt-6"
             >
-              <div className="flex flex-col bg-[#0A2A1E] dark:bg-emerald-950/80 border border-[#0A2A1E]/20 dark:border-emerald-700/40 rounded-2xl p-1.5 shadow-xl shadow-[#0A2A1E]/10 dark:shadow-emerald-950/40 transition-all duration-300">
+              <div className="flex flex-col bg-[#34ca7f] dark:bg-emerald-950/80 border border-[#0A2A1E]/20 dark:border-emerald-700/40 rounded-2xl p-1.5 shadow-xl shadow-[#0A2A1E]/10 dark:shadow-emerald-950/40 transition-all duration-300">
                 {/* Row 1: Search Input Box + Search Button */}
                 <div className="flex items-center w-full px-3 py-2 min-w-0">
                   <Search className="w-4 h-4 text-emerald-300 shrink-0 mr-2" />
@@ -761,7 +781,7 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
                     value={heroSearchQuery}
                     onChange={(e) => setHeroSearchQuery(e.target.value)}
                     placeholder="Search EV models, specs..."
-                    className="w-full bg-transparent text-sm text-white placeholder-emerald-200/60 focus:outline-none min-w-0"
+                    className="w-full bg-transparent text-sm font-extrabold text-black placeholder-black focus:outline-none min-w-0"
                   />
                   {heroSearchQuery && (
                     <button
@@ -788,7 +808,7 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
                 <div className="flex items-center gap-2.5 w-full px-3 pb-1.5">
                   <Link
                     href="/catalog"
-                    className="flex-1 inline-flex items-center justify-center text-white font-semibold px-3 py-2 rounded-xl text-xs transition-all border border-white/10 bg-white/5 hover:bg-white/20"
+                    className="flex-1 inline-flex items-center justify-center text-white font-bold px-3 py-2 rounded-xl text-xs transition-all border border-white bg-white/5 hover:bg-white/20"
                   >
                     View All
                   </Link>
@@ -796,7 +816,7 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
                   <button
                     type="button"
                     onClick={() => window.dispatchEvent(new CustomEvent("open-ai-chat"))}
-                    className="flex-1 inline-flex items-center justify-center gap-1 bg-[#34ebb1] hover:bg-[#2bd49e] text-slate-900 font-bold px-3 py-2 rounded-xl text-xs transition-all shadow-xs cursor-pointer active:scale-95"
+                    className="flex-1 inline-flex items-center justify-center gap-1 bg-[#3aeab2d8] hover:bg-[#2bd49e] text-slate-900 font-bold px-3 py-2 rounded-xl text-xs transition-all shadow-xs cursor-pointer active:scale-95"
                   >
                     <Sparkles className="w-3.5 h-3.5" />
                     <span>Ask Plse</span>
@@ -902,10 +922,10 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
                       <div className="flex items-center gap-2">
                         <Link
                           href={activeBanners[currentBannerIdx].href || "/catalog"}
-                          className="inline-flex items-center gap-2 bg-[#8FE24A] hover:bg-[#a0f05d] text-[#07130E] font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all transform hover:scale-105 shadow-lg shadow-[#8FE24A]/20 group"
+                          className="inline-flex items-center gap-0 sm:gap-2 bg-[#8FE24A] hover:bg-[#a0f05d] text-[#07130E] font-bold px-3 sm:px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all transform hover:scale-105 shadow-lg shadow-[#8FE24A]/20 group"
                         >
-                          <span>{activeBanners[currentBannerIdx].cta || "Explore Now"}</span>
-                          <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                          <span className="hidden sm:inline">{activeBanners[currentBannerIdx].cta || "Explore Now"}</span>
+                          <ArrowRight className="w-4 h-4 sm:w-3.5 sm:h-3.5 group-hover:translate-x-0.5 transition-transform" />
                         </Link>
 
                         {(activeBanners[currentBannerIdx].details || activeBanners[currentBannerIdx].label) && (

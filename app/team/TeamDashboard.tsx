@@ -63,6 +63,10 @@ type ListingForm = {
   discontinued: boolean;
   discontinued_date: string | null;
   featured: boolean;
+  coming_soon: boolean;
+  announced: boolean;
+  concept: boolean;
+  facelift: boolean;
   video_links: Array<{ url: string; title?: string; variantId?: string | null; variantName?: string | null }>;
   featured_photos: Array<{ url: string; variantId?: string | null; variantName?: string | null }>;
   city_pricing: Array<{
@@ -82,7 +86,7 @@ export type VariantForm = {
   launch_date?: string | null;
   usage_type?: string | null;
   continuing_variant_id?: string | null;
-  slug: string; model_year: number; price: number;
+  slug: string; model_year: number; price: number | null;
   top_speed: string | null; battery_capacity_kwh: string | null;
   driving_range_km: string | null; charging_time_mins: string | null;
   max_power_bhp: string | null; max_torque_nm: string | null;
@@ -139,13 +143,17 @@ const emptyListing: ListingForm = {
   discontinued: false,
   discontinued_date: null,
   featured: false,
+  coming_soon: false,
+  announced: false,
+  concept: false,
+  facelift: false,
   video_links: [],
   featured_photos: [],
   city_pricing: [],
 };
 
 const emptyVariant: VariantForm = {
-  variant_name: "", version_name: "", launch_date: "", slug: "", model_year: 2026, price: 0,
+  variant_name: "", version_name: "", launch_date: "", slug: "", model_year: 2026, price: null,
   usage_type: null, continuing_variant_id: null,
   top_speed: null, battery_capacity_kwh: null, driving_range_km: null,
   charging_time_mins: null, max_power_bhp: null, max_torque_nm: null,
@@ -427,13 +435,18 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
   const [selectedBrand, setSelectedBrand] = useState<string>("");
   const [tableBrandFilter, setTableBrandFilter] = useState<string>("");
   const [visibleAllListingsCount, setVisibleAllListingsCount] = useState(10);
+  const [showDeletedOnly, setShowDeletedOnly] = useState(false);
+
+  const activeListings = useMemo(() => listings.filter((l) => !(l as any).deleted), [listings]);
+  const deletedListings = useMemo(() => listings.filter((l) => !!(l as any).deleted), [listings]);
+
   const uniqueBrands = useMemo(() => {
-    return [...new Set(listings.map((l) => l.brand).filter(Boolean))].sort();
-  }, [listings]);
+    return [...new Set(activeListings.map((l) => l.brand).filter(Boolean))].sort();
+  }, [activeListings]);
   const filteredListings = useMemo(() => {
     if (!selectedBrand) return [];
-    return listings.filter((l) => l.brand === selectedBrand);
-  }, [listings, selectedBrand]);
+    return activeListings.filter((l) => l.brand === selectedBrand);
+  }, [activeListings, selectedBrand]);
   const [editingVariantId, setEditingVariantId] = useState<string | null>(null);
   const [energyComps, setEnergyComps] = useState<Array<{ id?: string; category: string; name: string; fuel_type: string; mileage: string; fuel_price: string; model_used: string; brand: string }>>([]);
   const [variantSpecSection, setVariantSpecSection] = useState<Record<number, string>>({});
@@ -486,6 +499,10 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
       launchdate: form.launchdate || null,
       discontinued: form.discontinued ?? false,
       discontinued_date: form.discontinued_date || null,
+      coming_soon: form.coming_soon ?? false,
+      announced: form.announced ?? false,
+      concept: form.concept ?? false,
+      facelift: form.facelift ?? false,
       types: form.types || [],
       pros: form.pros || [],
       cons: form.cons || [],
@@ -537,7 +554,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
         variant_name: variant_name || "",
         version_name: version_name || "",
         model_year: model_year || 2026,
-        price: rest.price || 0,
+        price: rest.price === null || rest.price === undefined ? null : rest.price,
         is_detailed_variant: v.is_detailed_variant ?? false,
         baas_monthly_rental: v.baas_monthly_rental ?? null,
         top_speed: rest.top_speed || "",
@@ -596,6 +613,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
 
         usage_type: rest.usage_type || null,
         continuing_variant_id: rest.continuing_variant_id || null,
+        launch_date: rest.launch_date || null,
 
         ...rest,
         features: rest.features ? {
@@ -653,7 +671,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
       _hints: {
         types_options: ["2 Wheeler", "3 Wheeler", "4 Wheeler"],
         price_bracket_options: ["under-2L", "5-10", "5-15", "10-25", "15-30", "30+", "50+"],
-        body_type_options: ["Scooter", "Sedan", "SUV", "Hatchback", "Compact SUV", "MUV", "Bike", "Tempo", "Autos", "Other"], usage_type_options: ["Both", "Goods", "Passenger"]
+        body_type_options: ["Scooter", "Sedan", "SUV", "Hatchback", "Compact SUV", "MUV", "Bike", "Tempo", "Autos", "Other"], usage_type_options: ["Both", "Goods", "Passenger", "Coming Soon", "Announced", "Concept", "Facelift"]
       },
       form: templateForm,
       variants: templateVariants.length > 0 ? templateVariants : [emptyVariant],
@@ -743,11 +761,12 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
       variant_name: variant_name || "",
       version_name: version_name || "",
       model_year: model_year || 2026,
-      price: rest.price || 0,
+      price: rest.price === null || rest.price === undefined ? null : rest.price,
       is_detailed_variant: current.is_detailed_variant ?? false,
       baas_monthly_rental: current.baas_monthly_rental ?? null,
       usage_type: rest.usage_type || null,
       continuing_variant_id: rest.continuing_variant_id || null,
+      launch_date: rest.launch_date || null,
       top_speed: rest.top_speed || "",
       battery_capacity_kwh: rest.battery_capacity_kwh || "",
       driving_range_km: rest.driving_range_km || "",
@@ -1151,8 +1170,78 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
     }));
   };
 
+  const hardDeleteListing = async (id: string, variantsList: any[]) => {
+    if (variantsList && variantsList.length > 0) {
+      const variantIds = variantsList.map((v) => v.id);
+      await supabase.from("ev_variant_features").delete().in("variant_id", variantIds);
+      await supabase.from("ev_variants").delete().eq("listing_id", id);
+    }
+    await supabase.from("ev_energy_comparisons").delete().eq("listing_id", id);
+    await supabase.from("evlistings").delete().eq("id", id);
+  };
+
+  const handleSoftDelete = async (id: string) => {
+    const { error } = await supabase
+      .from("evlistings")
+      .update({
+        deleted: true,
+        deleted_at: new Date().toISOString()
+      })
+      .eq("id", id);
+
+    if (error) {
+      alert(`Failed to delete: ${error.message}`);
+    } else {
+      fetch("/api/build-summary").catch((e) => console.error("Error rebuilding summary:", e));
+      setEditing(null);
+      setSelectedModelId("");
+      fetchListings();
+    }
+  };
+
+  const handleRestore = async (id: string) => {
+    const { error } = await supabase
+      .from("evlistings")
+      .update({
+        deleted: false,
+        deleted_at: null
+      })
+      .eq("id", id);
+
+    if (error) {
+      alert(`Failed to restore: ${error.message}`);
+    } else {
+      fetch("/api/build-summary").catch((e) => console.error("Error rebuilding summary:", e));
+      fetchListings();
+    }
+  };
+
   const fetchListings = async () => {
     setLoading(true);
+    try {
+      const fiveDaysAgo = new Date();
+      fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
+      
+      const { data: expired } = await supabase
+        .from("evlistings")
+        .select("id")
+        .eq("deleted", true)
+        .lt("deleted_at", fiveDaysAgo.toISOString());
+        
+      if (expired && expired.length > 0) {
+        for (const item of expired) {
+          const { data: vars } = await supabase
+            .from("ev_variants")
+            .select("id")
+            .eq("listing_id", item.id);
+          await hardDeleteListing(item.id, vars || []);
+        }
+        fetch("/api/build-summary").catch((e) => console.error("Error rebuilding summary:", e));
+      }
+    } catch (e) {
+      console.error("Error cleaning up expired listings:", e);
+    }
+
     const { data: ls } = await supabase.from("evlistings").select("*").order("created_at", { ascending: false });
     if (!ls) { setLoading(false); return; }
     const ids = ls.map((l: any) => l.id);
@@ -1245,6 +1334,10 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
       discontinued: l.discontinued || false,
       discontinued_date: l.discontinued_date || null,
       featured: (l as any).featured || false,
+      coming_soon: (l as any).coming_soon || false,
+      announced: (l as any).announced || false,
+      concept: (l as any).concept || false,
+      facelift: (l as any).facelift || false,
       video_links: rawVideoLinks,
       featured_photos: rawFeaturedPhotos.length > 0
         ? rawFeaturedPhotos
@@ -1415,7 +1508,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             continuing_variant_id: v.continuing_variant_id || null,
             slug: v.slug || getVariantSlug(sanitizedSlug, v),
             model_year: v.model_year,
-            price: v.price,
+            price: (v.price === 0 || v.price === null || v.price === undefined) ? null : v.price,
             top_speed: v.top_speed,
             battery_capacity_kwh: v.battery_capacity_kwh,
             driving_range_km: v.driving_range_km,
@@ -1760,15 +1853,40 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
         {activeSection === "media" && <MediaPanel supabase={supabase} />}
         {activeSection === "all_listings" && (
           <div className="mb-6 rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
-              <h3 className="font-bold text-slate-800">{tableBrandFilter ? `${tableBrandFilter} Models` : `All EV Listings`} ({listings.filter((l) => tableBrandFilter ? l.brand === tableBrandFilter : true).length})</h3>
+            <div className="px-6 py-4 border-b border-slate-100 bg-slate-50 flex flex-wrap justify-between items-center gap-3">
+              <div className="flex items-center gap-4">
+                <h3 className="font-bold text-slate-800">
+                  {showDeletedOnly ? "Deleted EV Listings" : (tableBrandFilter ? `${tableBrandFilter} Models` : "All EV Listings")} ({
+                    listings.filter((l) => {
+                      const matchesBrand = tableBrandFilter ? l.brand === tableBrandFilter : true;
+                      const matchesDeleted = showDeletedOnly ? !!(l as any).deleted : !(l as any).deleted;
+                      return matchesBrand && matchesDeleted;
+                    }).length
+                  })
+                </h3>
+
+                <label className="relative inline-flex items-center cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={showDeletedOnly}
+                    onChange={(e) => {
+                      setShowDeletedOnly(e.target.checked);
+                      setVisibleAllListingsCount(10);
+                    }}
+                    className="sr-only peer"
+                  />
+                  <div className="relative w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-rose-500"></div>
+                  <span className="ml-2 text-xs font-bold text-slate-600">Show Deleted</span>
+                </label>
+              </div>
+
               <select
                 value={tableBrandFilter}
                 onChange={(e) => { setTableBrandFilter(e.target.value); setVisibleAllListingsCount(10); }}
                 className="rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-sm font-bold text-slate-800 outline-none cursor-pointer"
               >
                 <option value="">All Brands</option>
-                {uniqueBrands.map((ub) => (
+                {(showDeletedOnly ? [...new Set(deletedListings.map(l => l.brand).filter(Boolean))].sort() : uniqueBrands).map((ub) => (
                   <option key={ub} value={ub}>{ub}</option>
                 ))}
               </select>
@@ -1785,42 +1903,95 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {listings.filter((l) => tableBrandFilter ? l.brand === tableBrandFilter : true).slice(0, visibleAllListingsCount).map((l) => (
-                    <tr key={l.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-6 py-3 font-bold text-slate-900">{l.brand}</td>
-                      <td className="px-6 py-3 font-bold text-sky-700">{l.title} {(l as any).discontinued ? <span className="ml-2 text-[10px] bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded border border-rose-200 uppercase tracking-wider font-bold">Discontinued</span> : null}</td>
-                      <td className="px-6 py-3 text-slate-500">{l.variants?.length || 0} variants</td>
-                      <td className="px-6 py-3">
-                        <input
-                          type="checkbox"
-                          checked={!!(l as any).featured}
-                          onChange={async () => {
-                            const newFeatured = !(l as any).featured;
-                            const { error } = await supabase
-                              .from("evlistings")
-                              .update({ featured: newFeatured })
-                              .eq("id", l.id);
-                            if (!error) {
-                              setListings(prev => prev.map(item => item.id === l.id ? { ...item, featured: newFeatured } : item));
-                            }
-                          }}
-                          className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer"
-                        />
-                      </td>
-                      <td className="px-6 py-3 text-right">
-                        <button 
-                          onClick={() => { setActiveSection("listings"); setSelectedBrand(l.brand); setSelectedModelId(l.id); }}
-                          className="inline-flex items-center gap-1 text-xs font-bold text-sky-600 hover:text-sky-700 bg-sky-50 hover:bg-sky-100 px-2.5 py-1.5 rounded transition-colors cursor-pointer"
-                        >
-                          Manage
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {listings.filter((l) => {
+                    const matchesBrand = tableBrandFilter ? l.brand === tableBrandFilter : true;
+                    const matchesDeleted = showDeletedOnly ? !!(l as any).deleted : !(l as any).deleted;
+                    return matchesBrand && matchesDeleted;
+                  }).slice(0, visibleAllListingsCount).map((l) => {
+                    let daysLeftStr = "";
+                    if (l.deleted && l.deleted_at) {
+                      const delDate = new Date(l.deleted_at);
+                      const expiryDate = new Date(delDate.getTime() + 5 * 24 * 60 * 60 * 1000);
+                      const diffTime = expiryDate.getTime() - Date.now();
+                      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                      if (diffDays <= 0) {
+                        daysLeftStr = "Expiring soon";
+                      } else {
+                        daysLeftStr = `${diffDays} days left`;
+                      }
+                    }
+
+                    return (
+                      <tr key={l.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-6 py-3 font-bold text-slate-900">{l.brand}</td>
+                        <td className="px-6 py-3 font-bold text-sky-700">
+                          {l.title} 
+                          {l.deleted ? (
+                            <span className="ml-2 text-[10px] bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded border border-rose-200 uppercase tracking-wider font-bold">
+                              {daysLeftStr}
+                            </span>
+                          ) : (l as any).discontinued ? (
+                            <span className="ml-2 text-[10px] bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded border border-rose-200 uppercase tracking-wider font-bold">
+                              Discontinued
+                            </span>
+                          ) : null}
+                        </td>
+                        <td className="px-6 py-3 text-slate-500">{l.variants?.length || 0} variants</td>
+                        <td className="px-6 py-3">
+                          {!l.deleted && (
+                            <input
+                              type="checkbox"
+                              checked={!!(l as any).featured}
+                              onChange={async () => {
+                                const newFeatured = !(l as any).featured;
+                                const { error } = await supabase
+                                  .from("evlistings")
+                                  .update({ featured: newFeatured })
+                                  .eq("id", l.id);
+                                if (!error) {
+                                  setListings(prev => prev.map(item => item.id === l.id ? { ...item, featured: newFeatured } : item));
+                                }
+                              }}
+                              className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer"
+                            />
+                          )}
+                        </td>
+                        <td className="px-6 py-3 text-right">
+                          {l.deleted ? (
+                            <div className="flex justify-end gap-2">
+                              <button 
+                                onClick={() => { if (confirm(`Are you sure you want to restore "${l.brand} ${l.title}"?`)) { handleRestore(l.id); } }}
+                                className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1.5 rounded transition-colors cursor-pointer"
+                              >
+                                Restore
+                              </button>
+                              <button 
+                                onClick={() => handleDelete(l.id)}
+                                className="inline-flex items-center gap-1 text-xs font-bold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 px-2.5 py-1.5 rounded transition-colors cursor-pointer"
+                              >
+                                Delete Permanently
+                              </button>
+                            </div>
+                          ) : (
+                            <button 
+                              onClick={() => { setActiveSection("listings"); setSelectedBrand(l.brand); setSelectedModelId(l.id); }}
+                              className="inline-flex items-center gap-1 text-xs font-bold text-sky-600 hover:text-sky-700 bg-sky-50 hover:bg-sky-100 px-2.5 py-1.5 rounded transition-colors cursor-pointer"
+                            >
+                              Manage
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
-            {listings.filter((l) => tableBrandFilter ? l.brand === tableBrandFilter : true).length > visibleAllListingsCount && (
+            {listings.filter((l) => {
+              const matchesBrand = tableBrandFilter ? l.brand === tableBrandFilter : true;
+              const matchesDeleted = showDeletedOnly ? !!(l as any).deleted : !(l as any).deleted;
+              return matchesBrand && matchesDeleted;
+            }).length > visibleAllListingsCount && (
               <div className="p-4 border-t border-slate-100 flex justify-center bg-slate-50">
                 <button 
                   onClick={() => setVisibleAllListingsCount(prev => prev + 10)}
@@ -1927,7 +2098,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   <div className="flex items-center gap-1.5 mb-3">
                     {selectedModel && (
                       <button 
-                        onClick={() => { if (confirm(`Delete "${selectedModel.brand} ${selectedModel.title}" and all its variants?`)) { handleDelete(selectedModel.id); setSelectedModelId(""); } }}
+                        onClick={() => { if (confirm(`Are you sure you want to delete "${selectedModel.brand} ${selectedModel.title}"? It will be marked as deleted and permanently removed after 5 days.`)) { handleSoftDelete(selectedModel.id); setSelectedModelId(""); } }}
                         className="p-1 rounded text-rose-500 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
                         title={`Delete ${selectedModel.title}`}
                       >
@@ -2335,6 +2506,10 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
               <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.has_baas} onChange={(e) => setForm({ ...form, has_baas: e.target.checked })} /> Has BAAS (Battery as a Service)</label>
               <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.discontinued} onChange={(e) => setForm({ ...form, discontinued: e.target.checked })} /> Discontinued</label>
               <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })} /> Featured</label>
+              <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={!!form.coming_soon} onChange={(e) => setForm({ ...form, coming_soon: e.target.checked })} /> Coming Soon</label>
+              <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={!!form.announced} onChange={(e) => setForm({ ...form, announced: e.target.checked })} /> Announced</label>
+              <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={!!form.concept} onChange={(e) => setForm({ ...form, concept: e.target.checked })} /> Concept</label>
+              <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={!!form.facelift} onChange={(e) => setForm({ ...form, facelift: e.target.checked })} /> Facelift</label>
             </div>
 
             {form.discontinued && (
@@ -3084,6 +3259,10 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                           <option value="Both">Both</option>
                           <option value="Goods">Goods</option>
                           <option value="Passenger">Passenger</option>
+                          <option value="Coming Soon">Coming Soon</option>
+                          <option value="Announced">Announced</option>
+                          <option value="Concept">Concept</option>
+                          <option value="Facelift">Facelift</option>
                         </select>
                       </label>
 
@@ -4591,6 +4770,20 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t-2 border-slate-300 pt-4">
               <p className="text-[10px] text-slate-500">Changes apply to all tabs when you save.</p>
               <div className="flex items-center gap-3">
+                {editing && editing !== "new" && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (confirm("Are you sure you want to delete this listing? It will be marked as deleted and permanently removed after 5 days.")) {
+                        await handleSoftDelete(editing);
+                      }
+                    }}
+                    className="inline-flex items-center gap-2 rounded-xl border-2 border-red-200 bg-red-50 px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-100 transition-colors"
+                  >
+                    <Trash2 size={16} />
+                    Delete Listing
+                  </button>
+                )}
                 {initialSnapshot && (
                   <button type="button" onClick={() => {
                     if (confirm("Are you sure you want to undo all unsaved changes?")) {

@@ -24,6 +24,7 @@ const lightBgRoutes = ["/catalog", "/product", "/updates", "/map", "/own", "/ser
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileBuySellOpen, setMobileBuySellOpen] = useState(false);
   const [mobileServiceOpen, setMobileServiceOpen] = useState(false);
@@ -45,12 +46,20 @@ export default function Header() {
 
   const isHome = pathname === "/";
   const isLightPage = !isHome && lightBgRoutes.some(r => pathname.startsWith(r));
-  const isTransparent = isHome && !isScrolled;
+  const isTransparent = isHome && !isScrolled && !isMobile;
 
   useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    
+    return () => {
+      window.removeEventListener("resize", checkMobile);
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, []);
 
   // PWA install
@@ -78,8 +87,8 @@ export default function Header() {
   const isLight = theme === "light";
 
   const headerBg = isTransparent
-    ? "bg-transparent border-transparent"
-    : "bg-white dark:bg-zinc-950/85 dark:backdrop-blur-xl border-zinc-200 dark:border-zinc-800/60 shadow-sm dark:shadow-none";
+    ? "bg-white dark:bg-zinc-955 dark:backdrop-blur-xl border-zinc-200 dark:border-zinc-800/60 shadow-sm md:bg-transparent md:border-transparent md:shadow-none"
+    : "bg-white dark:bg-zinc-955 dark:backdrop-blur-xl border-zinc-200 dark:border-zinc-800/60 shadow-sm dark:shadow-none";
 
   const linkBase = "text-sm font-medium px-3 py-2 rounded-full transition-all";
   
@@ -103,8 +112,8 @@ export default function Header() {
 
   const iconBtnClass = isTransparent
     ? isLight
-      ? "bg-emerald-950/5 hover:bg-emerald-950/10 text-zinc-800 border-zinc-300/80"
-      : "bg-white/12 hover:bg-white/20 text-white border-white/25"
+      ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 md:bg-emerald-950/5 md:hover:bg-emerald-950/10 md:text-zinc-800 md:border-zinc-300/80"
+      : "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 md:bg-white/12 md:hover:bg-white/20 md:text-white md:border-white/25"
     : "bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700";
 
   return (
@@ -333,7 +342,7 @@ export default function Header() {
               </AnimatePresence>
             </div>
 
-            <button className={`md:hidden p-2 rounded-full ${isTransparent ? (isLight ? "text-zinc-800 hover:bg-black/5" : "text-white hover:bg-white/10") : "text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800"}`} onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}>
+            <button className="md:hidden p-2 rounded-full text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}>
               {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
           </div>
@@ -343,18 +352,23 @@ export default function Header() {
       {/* Mobile */}
       <AnimatePresence>
         {mobileMenuOpen && (
-          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="md:hidden absolute top-full left-0 right-0 bg-white backdrop-blur-xl border-b border-zinc-200 shadow-2xl max-h-[85vh] overflow-y-auto z-[100]">
+          <motion.div 
+            initial={{ opacity: 0, y: -8 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            exit={{ opacity: 0, y: -8 }} 
+            className="md:hidden absolute top-full left-0 right-0 bg-white dark:bg-zinc-950 backdrop-blur-xl border-b border-zinc-200 dark:border-zinc-800 shadow-2xl max-h-[85vh] overflow-y-auto z-[100]"
+          >
             <div className="p-4 space-y-2">
               {/* Buy/Sell Accordion */}
-              <div className="border border-zinc-100 rounded-xl overflow-hidden bg-zinc-50/50">
+              <div className="border border-zinc-100 dark:border-zinc-800 rounded-xl overflow-hidden bg-zinc-50/50 dark:bg-zinc-900/50">
                 <button
                   onClick={() => setMobileBuySellOpen(!mobileBuySellOpen)}
-                  className="flex items-center justify-between w-full px-4 py-3 font-semibold text-zinc-700 hover:bg-zinc-100 transition-all"
+                  className="flex items-center justify-between w-full px-4 py-3 font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all"
                 >
                   <span className="flex items-center gap-2 text-sm">
-                    <LayoutGrid size={16} className="text-emerald-600" /> Buy/Sell
+                    <LayoutGrid size={16} className="text-emerald-600 dark:text-emerald-400" /> Buy/Sell
                   </span>
-                  <ChevronDown size={15} className={`transition-transform duration-200 text-zinc-400 ${mobileBuySellOpen ? "rotate-180" : ""}`} />
+                  <ChevronDown size={15} className={`transition-transform duration-200 text-zinc-400 dark:text-zinc-500 ${mobileBuySellOpen ? "rotate-180" : ""}`} />
                 </button>
                 <AnimatePresence>
                   {mobileBuySellOpen && (
@@ -362,18 +376,18 @@ export default function Header() {
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      className="overflow-hidden bg-white border-t border-zinc-100 px-6 py-2 space-y-1.5"
+                      className="overflow-hidden bg-white dark:bg-zinc-900 border-t border-zinc-100 dark:border-zinc-800 px-6 py-2 space-y-1.5"
                     >
-                      <Link href="/buy-ev" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-medium text-zinc-600 hover:text-emerald-700">
+                      <Link href="/buy-ev" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-400">
                         Buy EV
                       </Link>
-                      <Link href="/sell-ev" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-medium text-zinc-600 hover:text-emerald-700">
+                      <Link href="/sell-ev" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-400">
                         Sell EV
                       </Link>
-                      <Link href="/upcoming" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-medium text-zinc-600 hover:text-emerald-700">
+                      <Link href="/upcoming" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-400">
                         Upcoming
                       </Link>
-                      <Link href="/new-launches" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-medium text-zinc-600 hover:text-emerald-700">
+                      <Link href="/new-launches" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-400">
                         New Launches
                       </Link>
                     </motion.div>
@@ -382,15 +396,15 @@ export default function Header() {
               </div>
 
               {/* Service Accordion */}
-              <div className="border border-zinc-100 rounded-xl overflow-hidden bg-zinc-50/50">
+              <div className="border border-zinc-100 dark:border-zinc-800 rounded-xl overflow-hidden bg-zinc-50/50 dark:bg-zinc-900/50">
                 <button
                   onClick={() => setMobileServiceOpen(!mobileServiceOpen)}
-                  className="flex items-center justify-between w-full px-4 py-3 font-semibold text-zinc-700 hover:bg-zinc-100 transition-all"
+                  className="flex items-center justify-between w-full px-4 py-3 font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all"
                 >
                   <span className="flex items-center gap-2 text-sm">
-                    <SlidersHorizontal size={16} className="text-emerald-600" /> Service
+                    <SlidersHorizontal size={16} className="text-emerald-600 dark:text-emerald-400" /> Service
                   </span>
-                  <ChevronDown size={15} className={`transition-transform duration-200 text-zinc-400 ${mobileServiceOpen ? "rotate-180" : ""}`} />
+                  <ChevronDown size={15} className={`transition-transform duration-200 text-zinc-400 dark:text-zinc-500 ${mobileServiceOpen ? "rotate-180" : ""}`} />
                 </button>
                 <AnimatePresence>
                   {mobileServiceOpen && (
@@ -398,15 +412,15 @@ export default function Header() {
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      className="overflow-hidden bg-white border-t border-zinc-100 px-6 py-2 space-y-1.5"
+                      className="overflow-hidden bg-white dark:bg-zinc-900 border-t border-zinc-100 dark:border-zinc-800 px-6 py-2 space-y-1.5"
                     >
-                      <Link href="/service/insurance" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-medium text-zinc-600 hover:text-emerald-700">
+                      <Link href="/service/insurance" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-400">
                         Insurance
                       </Link>
-                      <Link href="/service/scrap" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-medium text-zinc-600 hover:text-emerald-700">
+                      <Link href="/service/scrap" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-400">
                         Scrap
                       </Link>
-                      <Link href="/service/product" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-medium text-zinc-600 hover:text-emerald-700">
+                      <Link href="/service/product" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-400">
                         Product
                       </Link>
                     </motion.div>
@@ -415,15 +429,15 @@ export default function Header() {
               </div>
 
               {/* Locator Accordion */}
-              <div className="border border-zinc-100 rounded-xl overflow-hidden bg-zinc-50/50">
+              <div className="border border-zinc-100 dark:border-zinc-800 rounded-xl overflow-hidden bg-zinc-50/50 dark:bg-zinc-900/50">
                 <button
                   onClick={() => setMobileLocatorOpen(!mobileLocatorOpen)}
-                  className="flex items-center justify-between w-full px-4 py-3 font-semibold text-zinc-700 hover:bg-zinc-100 transition-all"
+                  className="flex items-center justify-between w-full px-4 py-3 font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all"
                 >
                   <span className="flex items-center gap-2 text-sm">
-                    <MapPin size={16} className="text-emerald-600" /> Locator
+                    <MapPin size={16} className="text-emerald-600 dark:text-emerald-400" /> Locator
                   </span>
-                  <ChevronDown size={15} className={`transition-transform duration-200 text-zinc-400 ${mobileLocatorOpen ? "rotate-180" : ""}`} />
+                  <ChevronDown size={15} className={`transition-transform duration-200 text-zinc-400 dark:text-zinc-500 ${mobileLocatorOpen ? "rotate-180" : ""}`} />
                 </button>
                 <AnimatePresence>
                   {mobileLocatorOpen && (
@@ -431,13 +445,13 @@ export default function Header() {
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      className="overflow-hidden bg-white border-t border-zinc-100 px-6 py-2 space-y-1.5"
+                      className="overflow-hidden bg-white dark:bg-zinc-900 border-t border-zinc-100 dark:border-zinc-800 px-6 py-2 space-y-1.5"
                     >
-                      <Link href="/charging-station" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2.5 py-2 text-sm font-medium text-zinc-600 hover:text-emerald-700">
+                      <Link href="/charging-station" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2.5 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-400">
                         <Zap size={15} className="text-amber-500" /> Charging Station
                       </Link>
-                      <Link href="/nearme" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2.5 py-2 text-sm font-medium text-zinc-600 hover:text-emerald-700">
-                        <Navigation size={15} className="text-emerald-600" /> Near Me
+                      <Link href="/nearme" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2.5 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-400">
+                        <Navigation size={15} className="text-emerald-600 dark:text-emerald-400" /> Near Me
                       </Link>
                     </motion.div>
                   )}
@@ -451,7 +465,7 @@ export default function Header() {
                 className={`flex items-center justify-between px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
                   pathname.startsWith("/foryou")
                     ? "bg-violet-600 text-white font-bold"
-                    : "bg-violet-50 hover:bg-violet-100/80 text-violet-700 border border-violet-100"
+                    : "bg-violet-50 dark:bg-violet-950/30 hover:bg-violet-100/80 dark:hover:bg-violet-900/40 text-violet-700 dark:text-violet-300 border border-violet-100 dark:border-violet-900/50"
                 }`}
               >
                 <span className="flex items-center gap-2">
@@ -470,8 +484,8 @@ export default function Header() {
                 onClick={() => setMobileMenuOpen(false)}
                 className={`mt-2 flex items-center justify-center gap-2 w-full py-3 rounded-xl font-semibold text-sm shadow-md border ${
                   user
-                    ? "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100"
-                    : "bg-zinc-900 text-white hover:bg-zinc-800"
+                    ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/40"
+                    : "bg-zinc-900 dark:bg-zinc-800 text-white hover:bg-zinc-800 dark:hover:bg-zinc-700 border-zinc-200 dark:border-zinc-700"
                 }`}
               >
                 <User size={16} />

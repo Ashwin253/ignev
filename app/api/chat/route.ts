@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     let vehicleList = "";
     let vehicles: VehicleInfo[] = [];
     if (supabaseEnabled()) {
-      const { data } = await supabase.from("evlistings").select("brand, title, slug, types, body_type, price_bracket");
+      const { data } = await supabase.from("evlistings").select("brand, title, slug, types, body_type, price_bracket").or("deleted.is.null,deleted.eq.false");
       if (data?.length) {
         vehicles = data.map((v: any) => ({
           brand: (v.brand || "").trim(),

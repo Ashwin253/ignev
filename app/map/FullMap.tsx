@@ -784,7 +784,7 @@ export default function FullMap() {
     async function loadVehicles() {
       if (!supabaseEnabled()) return;
       try {
-        const { data } = await supabase.from("evlistings").select("brand, title, slug, types");
+        const { data } = await supabase.from("evlistings").select("brand, title, slug, types").or("deleted.is.null,deleted.eq.false");
         if (data) setVehicles(data);
       } catch (e) {
         console.warn("Could not fetch vehicles for map filter:", e);

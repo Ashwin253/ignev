@@ -217,12 +217,15 @@ function CatalogCard({ item, index, isInCompare, addToCompare, removeFromCompare
   );
 }
 
-// ── Price filter ──────────────────────────────────────────────────────────────
+// // ── Price filter ──────────────────────────────────────────────────────────────
 
 function parsePriceLow(item: CatalogItem): number {
   if (item.prices?.length) {
-    const low = parseFloat(item.prices[0].split("-")[0]);
-    if (!isNaN(low)) return low;
+    const raw = String(item.prices[0]).replace(/[₹,a-zA-Z\s]/g, "");
+    const low = parseFloat(raw.split(/[-–]/)[0]);
+    if (!isNaN(low) && low > 0) {
+      return low > 1000 ? low / 100000 : low;
+    }
   }
   const match = item.pricing.replace(/[₹,]/g, "").match(/[\d.]+/);
   return match ? parseFloat(match[0]) : 0;
@@ -236,6 +239,109 @@ function matchesPrice(item: CatalogItem, bucket: string): boolean {
   if (bucket === "15-30") return low >= 15 && low < 30;
   if (bucket === "30+") return low >= 30;
   return true;
+}
+
+function matchesSearchQuery(item: CatalogItem, query: string): boolean {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+
+  const brand = (item.brand || "").toLowerCase();
+  const name = (item.name || "").toLowerCase();
+  const type = (item.type || "").toLowerCase();
+  const slug = (item.slug || "").toLowerCase();
+  const usage = (item.usageType || "").toLowerCase();
+  const pricing = (item.pricing || "").toLowerCase();
+
+  const fullText = `${brand} ${name} ${type} ${usage} ${slug} ${pricing} ${
+    item.commercial
+      ? "commercial fleet cargo truck 3w loader tempo auto"
+      : "personal passenger 4w 4-wheeler car suv sedan hatchback scooter bike motorcycle"
+  }`;
+
+  // Direct substring match
+  if (fullText.includes(q)) return true;
+
+  // Split query into tokens
+  const words = q.split(/[\s,+/_-]+/).filter(Boolean);
+  if (words.length === 0) return true;
+
+  return words.every((word) => {
+    if (fullText.includes(word)) return true;
+
+    // Aliases & Vehicle category terms
+    if (
+      word === "car" ||
+      word === "cars" ||
+      word === "4w" ||
+      word === "4-wheeler" ||
+      word === "4-wheelers" ||
+      word === "suv" ||
+      word === "sedan" ||
+      word === "hatchback"
+    ) {
+      return (
+        type.includes("car") ||
+        type.includes("4") ||
+        fullText.includes("car") ||
+        fullText.includes("suv") ||
+        fullText.includes("sedan")
+      );
+    }
+    if (
+      word === "bike" ||
+      word === "bikes" ||
+      word === "motorcycle" ||
+      word === "motorcycles" ||
+      word === "2w"
+    ) {
+      return (
+        type.includes("motorcycle") ||
+        type.includes("bike") ||
+        fullText.includes("bike") ||
+        fullText.includes("motorcycle") ||
+        ["revolt", "ultraviolette", "matter", "tork", "oben", "hop", "kabira", "orxa", "raptee"].some(
+          (b) => brand.includes(b) || name.includes(b)
+        )
+      );
+    }
+    if (word === "scooter" || word === "scooters" || word === "scooty" || word === "moped") {
+      return (
+        type.includes("scooter") ||
+        fullText.includes("scooter") ||
+        fullText.includes("scooty") ||
+        ["ather", "ola", "tvs", "chetak", "rizta", "iqube", "vida", "river", "bgauss", "bounce", "simple", "okinawa", "ampere", "quantum", "pure"].some(
+          (b) => brand.includes(b) || name.includes(b)
+        )
+      );
+    }
+    if (word === "ev" || word === "electric" || word === "vehicle" || word === "vehicles") {
+      return true; // All items in the catalog are EVs
+    }
+    if (
+      word === "commercial" ||
+      word === "cargo" ||
+      word === "truck" ||
+      word === "tempo" ||
+      word === "auto" ||
+      word === "3w" ||
+      word === "3-wheeler" ||
+      word === "3-wheelers" ||
+      word === "loader" ||
+      word === "rickshaw" ||
+      word === "fleet"
+    ) {
+      return (
+        item.commercial === true ||
+        type.includes("auto") ||
+        type.includes("cargo") ||
+        type.includes("3") ||
+        type.includes("truck") ||
+        usage.includes("commercial")
+      );
+    }
+
+    return false;
+  });
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -259,24 +365,46 @@ export default function CatalogBrowser({
   const { isInCompare, addToCompare, removeFromCompare } = useCompare();
 
   // Read initial state from URL or defaults
-  const query = searchParams.get("q") ?? "";
-  const category = normalizeCatalogCategory(searchParams.get("type"));
-  const brand = searchParams.get("brand") ?? "all";
-  const price = searchParams.get("price") ?? "all";
-  const commercialOnly = searchParams.get("comm") === "true";
-  const launchedOnly = searchParams.get("avail") === "true";
-  const comingSoonOnly = searchParams.get("upcoming") === "true";
-  const baasOnly = searchParams.get("baas") === "true";
-  const usage = searchParams.get("usage") ?? "all";
+  const [query, setQuery] = useState(searchParams.get("q") ?? "");
+  const [category, setCategory] = useState<CatalogCategoryValue>(
+    normalizeCatalogCategory(searchParams.get("type"))
+  );
+  const [brand, setBrand] = useState(searchParams.get("brand") ?? "all");
+  const [price, setPrice] = useState(searchParams.get("price") ?? "all");
+  const [commercialOnly, setCommercialOnly] = useState(searchParams.get("comm") === "true");
+  const [launchedOnly, setLaunchedOnly] = useState(searchParams.get("avail") === "true");
+  const [comingSoonOnly, setComingSoonOnly] = useState(searchParams.get("upcoming") === "true");
+  const [baasOnly, setBaasOnly] = useState(searchParams.get("baas") === "true");
+  const [usage, setUsage] = useState(searchParams.get("usage") ?? "all");
 
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [shared, setShared] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(4);
+  const [visibleCount, setVisibleCount] = useState(12);
   const [allItems, setAllItems] = useState<CatalogItem[]>(items);
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadingSkeleton, setLoadingSkeleton] = useState(false);
   const [hasFetchedAll, setHasFetchedAll] = useState(false);
   const observerTarget = useRef<HTMLDivElement>(null);
+
+  // Sync state if searchParams change
+  useEffect(() => {
+    setQuery(searchParams.get("q") ?? "");
+    setCategory(normalizeCatalogCategory(searchParams.get("type")));
+    setBrand(searchParams.get("brand") ?? "all");
+    setPrice(searchParams.get("price") ?? "all");
+    setCommercialOnly(searchParams.get("comm") === "true");
+    setLaunchedOnly(searchParams.get("avail") === "true");
+    setComingSoonOnly(searchParams.get("upcoming") === "true");
+    setBaasOnly(searchParams.get("baas") === "true");
+    setUsage(searchParams.get("usage") ?? "all");
+  }, [searchParams]);
+
+  // Keep items updated when props change
+  useEffect(() => {
+    if (items.length > 0) {
+      setAllItems((prev) => (prev.length >= items.length ? prev : items));
+    }
+  }, [items]);
 
   const fetchAllItems = async () => {
     if (hasFetchedAll) return;
@@ -285,7 +413,7 @@ export default function CatalogBrowser({
       const res = await fetch("/api/catalog-all");
       if (res.ok) {
         const data = await res.json();
-        if (data.items?.length > allItems.length) {
+        if (data.items?.length > 0) {
           setAllItems(data.items);
         }
       }
@@ -293,6 +421,13 @@ export default function CatalogBrowser({
     setHasFetchedAll(true);
     setLoadingMore(false);
   };
+
+  // If query is present, eagerly fetch full catalog in background
+  useEffect(() => {
+    if (query.trim() && !hasFetchedAll) {
+      fetchAllItems();
+    }
+  }, [query, hasFetchedAll]);
 
   const getShareButtonText = () => {
     if (shared) return "Link copied";
@@ -306,7 +441,7 @@ export default function CatalogBrowser({
     if (category !== "all") {
       if (category === "2 Wheeler") parts.push("2 Wheelers");
       else if (category === "3 Wheeler") parts.push("3 Wheelers");
-      else if (category === "Electric Car") parts.push("Cars");
+      else if (category === "Electric Car") parts.push("4 Wheelers");
       else parts.push(`${category}s`);
     } else if (brand !== "all") {
       parts.push("Vehicles");
@@ -329,7 +464,7 @@ export default function CatalogBrowser({
     if (navigator.share) {
       await navigator.share({ 
         title: shareTitle, 
-        text: shareText,
+        text: shareText, 
         url 
       }).catch(() => { });
     } else {
@@ -340,6 +475,18 @@ export default function CatalogBrowser({
   };
 
   const updateFilters = (updates: Record<string, string | boolean | null>) => {
+    // 1. Immediately update reactive state
+    if ("q" in updates) setQuery(updates.q ? String(updates.q) : "");
+    if ("type" in updates) setCategory(normalizeCatalogCategory(updates.type as string));
+    if ("brand" in updates) setBrand(updates.brand ? String(updates.brand) : "all");
+    if ("price" in updates) setPrice(updates.price ? String(updates.price) : "all");
+    if ("comm" in updates) setCommercialOnly(updates.comm === true || updates.comm === "true");
+    if ("avail" in updates) setLaunchedOnly(updates.avail === true || updates.avail === "true");
+    if ("upcoming" in updates) setComingSoonOnly(updates.upcoming === true || updates.upcoming === "true");
+    if ("baas" in updates) setBaasOnly(updates.baas === true || updates.baas === "true");
+    if ("usage" in updates) setUsage(updates.usage ? String(updates.usage) : "all");
+
+    // 2. Silently update URL query params
     const params = new URLSearchParams(searchParams.toString());
     Object.entries(updates).forEach(([key, value]) => {
       if (value === null || value === "all" || value === "" || value === false) {
@@ -356,30 +503,32 @@ export default function CatalogBrowser({
   const categoryOptions = useMemo(() => [...CATALOG_CATEGORIES], []);
 
   const brandOptions = useMemo(() => {
-    const brands = [...new Set(items.map((i) => i.brand).filter(Boolean))].sort();
+    const brands = [...new Set(allItems.map((i) => i.brand).filter(Boolean))].sort();
     return ["all", ...brands];
-  }, [items]);
+  }, [allItems]);
 
   const filteredItems = useMemo(() => {
-    const q = query.trim().toLowerCase();
     const twoMonthsAgo = new Date();
     twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
 
     return allItems.filter((item) => {
-      if (q && !item.name.toLowerCase().includes(q) &&
-        !item.brand.toLowerCase().includes(q) &&
-        !item.type.toLowerCase().includes(q)) return false;
+      // 1. General search query matcher
+      if (!matchesSearchQuery(item, query)) return false;
 
+      // 2. Category matching
       if (!matchesCatalogCategory(item.type, category as CatalogCategoryValue)) return false;
 
-      if (brand !== "all" && item.brand !== brand) return false;
+      // 3. Brand filter
+      if (brand !== "all" && item.brand.toLowerCase() !== brand.toLowerCase()) return false;
+
+      // 4. Price filter
       if (!matchesPrice(item, price)) return false;
       
-      // Hide commercial vehicles by default. Show ONLY commercial when toggled.
+      // 5. Commercial vehicle filter:
       if (commercialOnly && !item.commercial) return false;
-      if (!commercialOnly && item.commercial) return false;
+      if (!commercialOnly && item.commercial && !query.trim()) return false;
 
-      // Forced filters
+      // 6. Forced filters
       if (forceUpcoming) {
         if (isLaunched(item.launchdate)) return false;
       } else if (forceLaunched) {
@@ -430,13 +579,22 @@ export default function CatalogBrowser({
   const filterKey = `${query}-${category}-${brand}-${price}-${commercialOnly}-${launchedOnly}-${comingSoonOnly}-${baasOnly}-${usage}`;
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setVisibleCount(4);
+    setVisibleCount(12);
   }, [filterKey]);
 
-  const hasActiveFilters = category !== "all" || brand !== "all" || price !== "all" || usage !== "all" || commercialOnly || launchedOnly || comingSoonOnly || baasOnly || !!query;
-  const activeFilterCount = [category !== "all", brand !== "all", price !== "all", usage !== "all", commercialOnly, launchedOnly, comingSoonOnly, baasOnly, !!query].filter(Boolean).length;
+  const hasActiveFilters = category !== "all" || brand !== "all" || price !== "all" || usage !== "all" || commercialOnly || launchedOnly || comingSoonOnly || baasOnly || !!query.trim();
+  const activeFilterCount = [category !== "all", brand !== "all", price !== "all", usage !== "all", commercialOnly, launchedOnly, comingSoonOnly, baasOnly, !!query.trim()].filter(Boolean).length;
 
   const clearAll = () => {
+    setQuery("");
+    setCategory("all");
+    setBrand("all");
+    setPrice("all");
+    setCommercialOnly(false);
+    setLaunchedOnly(false);
+    setComingSoonOnly(false);
+    setBaasOnly(false);
+    setUsage("all");
     window.history.replaceState(null, "", pathname);
   };
 
@@ -456,7 +614,7 @@ export default function CatalogBrowser({
           </div>
           <div className="flex-1">
             <div className="text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-2">
-              {category !== "all" ? category : "All Vehicles"}
+              {category !== "all" ? (categoryOptions.find((o) => o.value === category)?.label || category) : "All Vehicles"}
               {activeFilterCount > 0 && (
                 <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#34ebb1] text-[10px] font-bold text-zinc-900">
                   {activeFilterCount}

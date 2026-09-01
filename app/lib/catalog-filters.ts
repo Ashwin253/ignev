@@ -2,7 +2,7 @@ export const CATALOG_CATEGORIES = [
   { value: "all", label: "All" },
   { value: "2 Wheeler", label: "2-Wheeler" },
   { value: "3 Wheeler", label: "3-Wheeler" },
-  { value: "Electric Car", label: "Cars" },
+  { value: "Electric Car", label: "4-Wheelers" },
 ] as const;
 
 export type CatalogCategoryValue = (typeof CATALOG_CATEGORIES)[number]["value"];
@@ -34,7 +34,16 @@ export function normalizeCatalogCategory(raw: string | null | undefined): Catalo
     return "3 Wheeler";
   }
 
-  if (normalized === "electric car" || normalized === "cars" || normalized === "4 wheeler") {
+  if (
+    normalized === "electric car" ||
+    normalized === "cars" ||
+    normalized === "car" ||
+    normalized === "4 wheeler" ||
+    normalized === "4-wheeler" ||
+    normalized === "4 wheelers" ||
+    normalized === "4-wheelers" ||
+    normalized === "4w"
+  ) {
     return "Electric Car";
   }
 
@@ -51,7 +60,13 @@ export function matchesCatalogCategory(itemType: string, category: CatalogCatego
     return itemType === "3 Wheeler" || THREE_WHEELER_TYPES.has(itemType);
   }
   if (category === "Electric Car") {
-    return itemType === "Electric Car" || itemType === "4 Wheeler";
+    return (
+      itemType === "Electric Car" ||
+      itemType === "4 Wheeler" ||
+      itemType === "4-Wheeler" ||
+      itemType === "4 Wheelers" ||
+      itemType === "4-Wheelers"
+    );
   }
   return itemType === category;
 }

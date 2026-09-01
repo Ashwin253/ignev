@@ -11,7 +11,7 @@ export const revalidate = 300;
 
 export const metadata = {
   title: "Buy Electric Vehicles | EVPULSE",
-  description: "Browse and buy premium electric vehicles. Filter by Cars, Two Wheelers, and Commercial EVs.",
+  description: "Browse and buy premium electric vehicles. Filter by 4-Wheelers, Two Wheelers, and Commercial EVs.",
 };
 
 export default async function BuyEvPage() {

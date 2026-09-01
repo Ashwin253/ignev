@@ -16,6 +16,7 @@ export async function GET() {
       photo: l.photo,
       slug: l.slug,
       topSpeed: l.topSpeed,
+      drivingRange: l.batteryVariants?.[0]?.range || "",
       commercial: l.commercial,
       usageType: (l as any).usage_type || "",
       launchdate: l.launchdate,

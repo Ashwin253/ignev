@@ -65,39 +65,39 @@ export default function EnquiryForm({
         animate={{ opacity: 1, scale: 1 }}
         className={`flex flex-col items-center justify-center text-center py-10 px-4 ${className}`}
       >
-        <div className="h-16 w-16 rounded-full bg-emerald-50 flex items-center justify-center mb-4">
-          <CheckCircle2 className="w-8 h-8 text-emerald-500" />
+        <div className="h-16 w-16 rounded-full bg-[#EBF5EE] border border-[#C5E5D0] flex items-center justify-center mb-4">
+          <CheckCircle2 className="w-8 h-8 text-[#1F7A4D]" />
         </div>
-        <h3 className="text-xl font-bold text-slate-900 mb-2">Thank you!</h3>
-        <p className="text-slate-500 text-sm max-w-xs">
-          Your enquiry about <strong className="text-slate-700">{source}</strong> has been received. We'll be in touch shortly.
+        <h3 className="text-xl font-bold text-[#0A2A1E] mb-2">Thank you!</h3>
+        <p className="text-[#526B60] text-sm max-w-xs leading-relaxed">
+          Your enquiry about <strong className="text-[#0A2A1E] font-semibold">{source}</strong> has been received. We'll be in touch shortly.
         </p>
       </motion.div>
     );
   }
 
   const inputClass =
-    "w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 pl-10 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all";
+    "w-full rounded-2xl border border-[#D0E2CC] bg-[#F8FAF7] px-4 py-3.5 pl-10 text-sm text-[#0A2A1E] font-medium placeholder:text-[#8CA094] focus:outline-none focus:border-[#1F7A4D] focus:ring-2 focus:ring-[#1F7A4D]/20 focus:bg-white transition-all";
 
-  const labelClass = "text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5 block";
+  const labelClass = "text-xs font-bold text-[#3C5347] uppercase tracking-wider mb-1.5 block";
 
   return (
     <div className={`relative ${className}`}>
       {!compact && (
         <div className="mb-6">
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900 mb-1">{title}</h2>
-          <p className="text-slate-500 text-sm">{subtitle}</p>
+          <h2 className="text-2xl font-black tracking-tight text-[#0A2A1E] mb-1">{title}</h2>
+          <p className="text-[#526B60] text-sm">{subtitle}</p>
         </div>
       )}
 
-      <form onSubmit={onSubmit} className="space-y-3">
+      <form onSubmit={onSubmit} className="space-y-3.5">
         <input type="hidden" name="source" value={source} />
 
         {/* Name */}
         <div>
           <label htmlFor="enq-name" className={labelClass}>Full name</label>
           <div className="relative">
-            <User size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6C8377] pointer-events-none" />
             <input
               id="enq-name" type="text" name="name" required
               placeholder="Enter your full name"
@@ -110,7 +110,7 @@ export default function EnquiryForm({
         <div>
           <label htmlFor="enq-phone" className={labelClass}>Phone number</label>
           <div className="relative">
-            <Phone size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <Phone size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6C8377] pointer-events-none" />
             <input
               id="enq-phone" type="tel" name="phone" required
               placeholder="Enter your phone number"
@@ -123,7 +123,7 @@ export default function EnquiryForm({
         <div>
           <label htmlFor="enq-pincode" className={labelClass}>Pincode</label>
           <div className="relative">
-            <MapPin size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <MapPin size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6C8377] pointer-events-none" />
             <input
               id="enq-pincode" type="text" name="pincode" required
               placeholder="Enter 6-digit PIN" pattern="[0-9]{6}"
@@ -138,7 +138,7 @@ export default function EnquiryForm({
             <label htmlFor="enq-interest" className={labelClass}>Interested in</label>
             <select
               id="enq-interest" name="interest" required defaultValue=""
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm text-slate-800 focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all appearance-none"
+              className="w-full rounded-2xl border border-[#D0E2CC] bg-[#F8FAF7] px-4 py-3.5 text-sm text-[#0A2A1E] font-medium focus:outline-none focus:border-[#1F7A4D] focus:ring-2 focus:ring-[#1F7A4D]/20 focus:bg-white transition-all appearance-none"
             >
               <option value="" disabled>Select an option</option>
               <option value="Buy">Buy an EV</option>
@@ -151,8 +151,8 @@ export default function EnquiryForm({
         )}
 
         {/* Disclaimer */}
-        <p className="flex items-start gap-1.5 text-[11px] text-slate-400 leading-relaxed pt-1">
-          <Info size={12} className="shrink-0 mt-0.5" />
+        <p className="flex items-start gap-1.5 text-[11px] text-[#526B60] leading-relaxed pt-1 font-medium">
+          <Info size={13} className="shrink-0 mt-0.5 text-[#1F7A4D]" />
           By submitting, you agree to be contacted by our EV experts about {source}.
         </p>
 
@@ -160,7 +160,7 @@ export default function EnquiryForm({
         <button
           type="submit"
           disabled={state.submitting}
-          className="w-full bg-sky-600 hover:bg-sky-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 rounded-2xl transition-all shadow-sm flex items-center justify-center gap-2 active:scale-[0.98] group"
+          className="w-full bg-[#1F7A4D] hover:bg-[#18633e] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3.5 sm:py-4 rounded-2xl transition-all shadow-md shadow-[#1F7A4D]/20 flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer group mt-2"
         >
           {state.submitting ? (
             <><Loader2 size={18} className="animate-spin" /> Sending…</>
@@ -170,7 +170,7 @@ export default function EnquiryForm({
         </button>
 
         {state.errors && Array.isArray(state.errors) && state.errors.length > 0 && (
-          <p className="text-rose-500 text-xs text-center">
+          <p className="text-rose-500 text-xs text-center font-medium">
             Something went wrong. Please check the fields and try again.
           </p>
         )}

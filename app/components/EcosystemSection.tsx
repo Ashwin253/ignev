@@ -27,6 +27,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { WPUpdate, EvListing, HeroBanner } from "../lib/wordpress";
 import { isLaunched } from "../lib/wordpress";
 import { getVehiclePhoto, isTwoWheeler } from "../lib/vehicle-images";
+import { matchesVehicleCategory } from "../lib/catalog-filters";
+import { sortVehiclesByBrandRank } from "../lib/brand-rankings";
 
 const VEHICLE_BACKGROUNDS = [
   "/listingbackground.jpg",
@@ -290,9 +292,9 @@ function VehicleScrollSection({ type, items }: VehicleScrollSectionProps) {
   );
 }
 
-type CategoryTab = "2w-bikes" | "2w-scooty" | "4w" | "commercial";
+type CategoryTab = "bike" | "scooter" | "cars" | "commercial";
 
-const CATEGORY_TABS: CategoryTab[] = ["2w-bikes", "2w-scooty", "4w", "commercial"];
+const CATEGORY_TABS: CategoryTab[] = ["bike", "scooter", "cars", "commercial"];
 
 const CATEGORY_CONFIG: Record<
   CategoryTab,
@@ -304,128 +306,38 @@ const CATEGORY_CONFIG: Record<
     catalogHref: string;
   }
 > = {
-  "2w-bikes": {
-    label: "2W Bikes",
+  bike: {
+    label: "Bike",
     sublabel: "Electric Motorcycles & Performance Bikes",
     watermark: "BIKES",
     icon: Bike,
-    catalogHref: "/catalog?type=2+Wheeler",
+    catalogHref: "/buy-ev?type=bike",
   },
-  "2w-scooty": {
-    label: "2W Scooty",
+  scooter: {
+    label: "Scooter",
     sublabel: "Electric Scooters & Daily Commuters",
-    watermark: "SCOOTY",
+    watermark: "SCOOTER",
     icon: Bike,
-    catalogHref: "/catalog?type=2+Wheeler",
+    catalogHref: "/buy-ev?type=scooter",
   },
-  "4w": {
-    label: "4-Wheeler",
+  cars: {
+    label: "Cars",
     sublabel: "Cars, SUVs, Sedans & Passenger Vans",
-    watermark: "CARS & SUVS",
+    watermark: "CARS",
     icon: Car,
-    catalogHref: "/catalog?type=Electric+Car",
+    catalogHref: "/buy-ev?type=cars",
   },
   commercial: {
     label: "Commercial",
     sublabel: "Commercial Fleet, Trucks, Cargo & 3-Wheelers",
     watermark: "COMMERCIAL",
     icon: Truck,
-    catalogHref: "/catalog?comm=true",
+    catalogHref: "/buy-ev?type=commercial",
   },
 };
 
-function isCommercialListing(l: EvListing): boolean {
-  if (l.commercial === true) return true;
-  const usage = ((l as any).usage_type || (l as any).usageType || "").toLowerCase();
-  if (usage.includes("commercial")) return true;
-
-  const titleLower = (l.title || "").toLowerCase();
-  const brandLower = (l.brand || "").toLowerCase();
-  const typeLower = (Array.isArray(l.types) ? l.types.join(" ") : String((l as any).type || "")).toLowerCase();
-  const bodyType = ((l as any).body_type || "").toLowerCase();
-
-  const commercialKeywords = [
-    "cargo", "loader", "tempo", "truck", "commercial", "delivery",
-    "tipper", "carrier", "rickshaw", "auto", "3-wheeler", "3 wheeler", "3w", "fleet"
-  ];
-  if (commercialKeywords.some((k) => typeLower.includes(k) || bodyType.includes(k) || titleLower.includes(k))) {
-    return true;
-  }
-
-  const commercialBrands = [
-    "euler", "grevol", "altigreen", "piaggio", "zen mobility", "zen",
-    "loadking", "treo", "rage", "omega seiki", "osm", "montra",
-    "switch mobility", "ve commercial", "eicher", "olectra", "jbm"
-  ];
-  if (commercialBrands.some((b) => brandLower.includes(b) || titleLower.includes(b))) {
-    return true;
-  }
-
-  return false;
-}
-
-function isElectricBikeListing(l: EvListing): boolean {
-  const titleLower = (l.title || "").toLowerCase();
-  const brandLower = (l.brand || "").toLowerCase();
-  const typeLower = (Array.isArray(l.types) ? l.types.join(" ") : String((l as any).type || "")).toLowerCase();
-  const bodyType = ((l as any).body_type || "").toLowerCase();
-
-  // Explicit motorcycle / bike keywords in type / bodyType
-  const bikeTypeKeywords = [
-    "motorcycle", "motor cycle", "sports bike", "cruiser", "dirt bike",
-    "commuter bike", "cafe racer", "electric motorcycle", "superbike"
-  ];
-  if (bikeTypeKeywords.some((k) => typeLower.includes(k) || bodyType.includes(k))) {
-    return true;
-  }
-
-  // Known electric motorcycle brands
-  const bikeBrands = [
-    "revolt", "ultraviolette", "matter", "tork", "oben",
-    "hop electric", "kabira", "orxa", "raptee", "emflux", "svitch", "cyborg"
-  ];
-  if (bikeBrands.some((b) => brandLower === b || brandLower.includes(b))) {
-    return true;
-  }
-
-  // Known electric bike models
-  const bikeModels = [
-    "rv400", "rv300", "rv1", "f77", "f99", "kratos", "rorr", "aera",
-    "mantis", "t30", "km3000", "km4000", "km5000", "etryst", "ecodryft",
-    "ranger", "csr762", "yoda", "bob-e", "oxo", "ox-o", "beast",
-    "thunderbolt", "hurricane", "monster"
-  ];
-  if (bikeModels.some((k) => titleLower.includes(k))) {
-    return true;
-  }
-
-  // Check standalone "bike" in title if not an obvious scooter brand
-  const titleWords = titleLower.split(/[\s-]+/);
-  if (
-    titleWords.includes("bike") &&
-    !["scooter", "scooty", "ather", "ola", "chetak", "rizta", "iqube", "vida", "river"].some((s) => titleLower.includes(s))
-  ) {
-    return true;
-  }
-
-  return false;
-}
-
-function isElectricScooterListing(l: EvListing): boolean {
-  // If it's a bike, it cannot be a scooter
-  if (isElectricBikeListing(l)) return false;
-
-  const is2W =
-    (typeof isTwoWheeler === "function" && isTwoWheeler(l)) ||
-    (Array.isArray(l.types) ? l.types.join(" ") : "").toLowerCase().includes("2") ||
-    ((l as any).body_type || "").toLowerCase().includes("scooter") ||
-    ((l as any).body_type || "").toLowerCase().includes("scooty");
-
-  return is2W;
-}
-
 function VehicleCategorySelector({ listings = [] }: { listings?: EvListing[] }) {
-  const [activeCategory, setActiveCategory] = useState<CategoryTab>("4w");
+  const [activeCategory, setActiveCategory] = useState<CategoryTab>("bike");
   const rowRef = useRef<HTMLDivElement | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
@@ -449,56 +361,10 @@ function VehicleCategorySelector({ listings = [] }: { listings?: EvListing[] }) 
     });
   };
 
-  // Filter matching vehicles based on active category tab
+  // Filter matching vehicles based on active category tab using shared matcher & sort by brand rank
   const filteredListings = useMemo(() => {
-    return listings.filter((l) => {
-      // 1. Commercial Tab
-      if (activeCategory === "commercial") {
-        return isCommercialListing(l);
-      }
-
-      // For personal vehicle tabs, exclude commercial vehicles
-      if (isCommercialListing(l)) {
-        return false;
-      }
-
-      // 2. 2W Bikes
-      if (activeCategory === "2w-bikes") {
-        return isElectricBikeListing(l);
-      }
-
-      // 3. 2W Scooty
-      if (activeCategory === "2w-scooty") {
-        return isElectricScooterListing(l);
-      }
-
-      // 4. 4-Wheeler (Passenger Cars / SUVs)
-      if (activeCategory === "4w") {
-        if (typeof isTwoWheeler === "function" && isTwoWheeler(l)) return false;
-        const typeLower = (Array.isArray(l.types) ? l.types.join(" ") : String((l as any).type || "")).toLowerCase();
-        const bodyType = ((l as any).body_type || "").toLowerCase();
-        if (
-          typeLower.includes("2 wheel") ||
-          typeLower.includes("motorcycle") ||
-          typeLower.includes("scooter") ||
-          bodyType.includes("motorcycle") ||
-          bodyType.includes("scooter")
-        ) {
-          return false;
-        }
-
-        const isCar =
-          typeLower.includes("car") ||
-          typeLower.includes("4 wheel") ||
-          typeLower.includes("four") ||
-          ["suv", "sedan", "hatchback", "compact suv", "muv", "mpv", "crossover", "coupe", "car"].some((k) =>
-            bodyType.includes(k)
-          );
-        return isCar || (!typeLower.includes("truck") && !typeLower.includes("tempo") && !bodyType.includes("tempo"));
-      }
-
-      return true;
-    });
+    const matched = listings.filter((l) => matchesVehicleCategory(l, activeCategory));
+    return sortVehiclesByBrandRank(matched, activeCategory);
   }, [listings, activeCategory]);
 
   useEffect(() => {
@@ -536,7 +402,7 @@ function VehicleCategorySelector({ listings = [] }: { listings?: EvListing[] }) 
       />
 
       {/* Top Header Row: Category Selector Tabs and Navigation Controls */}
-      <div className="relative z-10 flex items-center justify-between gap-2 mb-4">
+      <div className="relative z-10 flex items-center justify-between gap-3 mb-6">
         {/* Left Side: Mobile dropdown OR desktop pill tabs */}
         <div className="flex items-center gap-2 min-w-0">
           {/* MOBILE: native select dropdown (hidden on sm+) */}
@@ -544,7 +410,7 @@ function VehicleCategorySelector({ listings = [] }: { listings?: EvListing[] }) 
             <select
               value={activeCategory}
               onChange={(e) => setActiveCategory(e.target.value as CategoryTab)}
-              className="appearance-none pl-3 pr-8 py-2 rounded-xl text-xs font-bold bg-white/80 dark:bg-[#0B2117]/80 text-[#0A2A1E] dark:text-emerald-100 border border-[#D8E3D3] dark:border-emerald-800/40 backdrop-blur-md shadow-xs focus:outline-none focus:ring-2 focus:ring-[#1F7A4D]/40 cursor-pointer"
+              className="appearance-none pl-3.5 pr-8 py-2.5 rounded-xl text-sm font-bold bg-white/90 dark:bg-[#0B2117]/90 text-[#0A2A1E] dark:text-emerald-100 border border-[#D8E3D3] dark:border-emerald-800/40 backdrop-blur-md shadow-xs focus:outline-none focus:ring-2 focus:ring-[#1F7A4D]/40 cursor-pointer"
             >
               {CATEGORY_TABS.map((tabKey) => (
                 <option key={tabKey} value={tabKey}>
@@ -553,11 +419,11 @@ function VehicleCategorySelector({ listings = [] }: { listings?: EvListing[] }) 
               ))}
             </select>
             {/* chevron icon overlay */}
-            <ChevronRight className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 rotate-90 text-[#1F7A4D] dark:text-[#8FE24A]" />
+            <ChevronRight className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 rotate-90 text-[#1F7A4D] dark:text-[#8FE24A]" />
           </div>
 
-          {/* DESKTOP: pill tab bar (hidden on mobile) */}
-          <div className="hidden sm:flex items-center gap-1 p-1 rounded-2xl bg-white/70 dark:bg-black/30 backdrop-blur-md border border-[#D8E3D3]/60 dark:border-emerald-900/30">
+          {/* DESKTOP: pill tab bar (hidden on mobile) - bigger and prominent */}
+          <div className="hidden sm:flex items-center gap-1.5 p-1.5 rounded-2xl md:rounded-3xl bg-white/80 dark:bg-black/40 backdrop-blur-md border border-[#D8E3D3]/80 dark:border-emerald-900/40 shadow-xs">
             {CATEGORY_TABS.map((tabKey) => {
               const tab = CATEGORY_CONFIG[tabKey];
               const Icon = tab.icon;
@@ -566,7 +432,7 @@ function VehicleCategorySelector({ listings = [] }: { listings?: EvListing[] }) 
                 <button
                   key={tabKey}
                   onClick={() => setActiveCategory(tabKey)}
-                  className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer select-none shrink-0 ${
+                  className={`relative flex items-center gap-2 px-4 py-2.5 lg:px-5 lg:py-3 rounded-xl md:rounded-2xl text-sm lg:text-base font-extrabold transition-all cursor-pointer select-none shrink-0 ${
                     isActive
                       ? "text-white dark:text-[#07130E]"
                       : "text-[#3C5347] dark:text-slate-300 hover:text-[#0A2A1E] dark:hover:text-white"
@@ -575,11 +441,11 @@ function VehicleCategorySelector({ listings = [] }: { listings?: EvListing[] }) 
                   {isActive && (
                     <motion.div
                       layoutId="activeCategoryTab"
-                      className="absolute inset-0 rounded-xl bg-[#1F7A4D] dark:bg-[#8FE24A] shadow-xs"
+                      className="absolute inset-0 rounded-xl md:rounded-2xl bg-[#1F7A4D] dark:bg-[#8FE24A] shadow-md"
                       transition={{ type: "spring", stiffness: 450, damping: 35 }}
                     />
                   )}
-                  <Icon className="w-3.5 h-3.5 relative z-10" />
+                  <Icon className="w-4 h-4 lg:w-5 lg:h-5 relative z-10" />
                   <span className="relative z-10">{tab.label}</span>
                 </button>
               );
@@ -588,12 +454,12 @@ function VehicleCategorySelector({ listings = [] }: { listings?: EvListing[] }) 
         </div>
 
         {/* Right Side: Scroll Navigation Buttons */}
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-1.5 shrink-0">
           <button
             onClick={() => scroll("left")}
             disabled={!canScrollLeft}
             aria-label="Scroll left"
-            className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center border transition-all cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed shadow-xs active:scale-95 bg-white/80 dark:bg-[#0B2117]/80 backdrop-blur-md border-slate-200/80 dark:border-emerald-800/40 text-[#0A2A1E] dark:text-emerald-100 hover:bg-white dark:hover:bg-[#0F2A1E]"
+            className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl flex items-center justify-center border transition-all cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed shadow-xs active:scale-95 bg-white/80 dark:bg-[#0B2117]/80 backdrop-blur-md border-slate-200/80 dark:border-emerald-800/40 text-[#0A2A1E] dark:text-emerald-100 hover:bg-white dark:hover:bg-[#0F2A1E]"
           >
             <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
@@ -601,7 +467,7 @@ function VehicleCategorySelector({ listings = [] }: { listings?: EvListing[] }) 
             onClick={() => scroll("right")}
             disabled={!canScrollRight}
             aria-label="Scroll right"
-            className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center border transition-all cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed shadow-xs active:scale-95 bg-white/80 dark:bg-[#0B2117]/80 backdrop-blur-md border-slate-200/80 dark:border-emerald-800/40 text-[#0A2A1E] dark:text-emerald-100 hover:bg-white dark:hover:bg-[#0F2A1E]"
+            className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl flex items-center justify-center border transition-all cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed shadow-xs active:scale-95 bg-white/80 dark:bg-[#0B2117]/80 backdrop-blur-md border-slate-200/80 dark:border-emerald-800/40 text-[#0A2A1E] dark:text-emerald-100 hover:bg-white dark:hover:bg-[#0F2A1E]"
           >
             <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>

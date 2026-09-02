@@ -6,12 +6,12 @@ import {
   BarChart2, Users, Globe, Zap, Eye, MousePointerClick, Clock,
   TrendingUp, Smartphone, Monitor, AlertTriangle, Shield, Activity,
   ChevronRight, ArrowUpRight, Layers, Map, FileText, ImageIcon,
-  Download, ZoomIn, X, ChevronLeft
+  Download, ZoomIn, X, ChevronLeft, RefreshCw
 } from "lucide-react";
 
 // ─── DATA ────────────────────────────────────────────────────────────────────
 
-const clarityData = {
+const defaultClarityData = {
   period: "05/02/2026 – 05/31/2026",
   sessions: { total: 125, bot: 40, human: 85 },
   pagesPerSession: 5.584,
@@ -328,7 +328,7 @@ function Dot({ color }: { color: string }) {
 }
 
 // ─── CLARITY TAB ─────────────────────────────────────────────────────────────
-function ClarityTab() {
+function ClarityTab({ clarityData }: { clarityData: typeof defaultClarityData }) {
   const d = clarityData;
   const humanPct  = Math.round((d.sessions.human / d.sessions.total) * 100);
   const activePct = Math.round((d.activeTime / d.totalTime) * 100);
@@ -690,7 +690,7 @@ function VercelTab() {
 }
 
 // ─── COMBINED TAB ─────────────────────────────────────────────────────────────
-function CombinedTab() {
+function CombinedTab({ clarityData }: { clarityData: typeof defaultClarityData }) {
   const clarityMap: Record<string,number> = {};
   clarityData.topPages.forEach(p => { clarityMap[shortUrl(p.url)] = p.sessions; });
 
@@ -1019,66 +1019,140 @@ function PDFsTab() {
   );
 }
 
-// ─── TABS ────────────────────────────────────────────────────────────────────
-const TABS = [
-  { id:"combined", label:"Combined",          icon:<BarChart2 size={14}/> },
-  { id:"clarity",  label:"Microsoft Clarity", icon:<Eye size={14}/>       },
-  { id:"vercel",   label:"Vercel Insights",   icon:<Activity size={14}/>  },
-  { id:"photos",   label:"Photos",            icon:<ImageIcon size={14}/> },
-  { id:"pdfs",     label:"PDFs",              icon:<FileText size={14}/>  },
-];
-
 // ─── MAIN ────────────────────────────────────────────────────────────────────
 export default function AnalyticsDashboard() {
-  const [tab, setTab] = useState<"combined"|"clarity"|"vercel"|"photos"|"pdfs">("combined");
+  const [clarityData, setClarityData] = useState(defaultClarityData);
+  const [meta, setMeta] = useState<{
+    source?: string;
+    lastUpdated?: string;
+    cacheMinutesAgo?: number;
+    note?: string;
+    error?: string;
+  }>({});
+  const [numOfDays, setNumOfDays] = useState<1 | 2 | 3>(3);
+  const [loading, setLoading] = useState(true);
+
+  const fetchClarity = async (days: 1 | 2 | 3 = numOfDays, refresh = false) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/clarity?numOfDays=${days}${refresh ? "&refresh=true" : ""}`);
+      const json = await res.json();
+      if (json?.data) {
+        setClarityData(json.data);
+        setMeta({
+          source: json.source,
+          lastUpdated: json.lastUpdated,
+          cacheMinutesAgo: json.cacheMinutesAgo,
+          note: json.note,
+          error: json.error,
+        });
+      }
+    } catch (e) {
+      console.warn("Could not fetch Clarity API data:", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchClarity(numOfDays, false);
+  }, [numOfDays]);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-10">
       {/* Page header */}
-      <motion.div initial={{ opacity:0, y:-10 }} animate={{ opacity:1, y:0 }} className="mb-8">
+      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div>
             <h1 className="text-3xl font-extrabold tracking-tight" style={{ color: T.text1 }}>
-              Site <span className="text-gradient">Analytics</span>
+              Microsoft <span className="text-gradient">Clarity Analytics</span>
             </h1>
-            <p className="text-sm mt-1" style={{ color: T.text3 }}>EVPLSE · May 2026 · Clarity + Vercel Insights</p>
+            <p className="text-sm mt-1" style={{ color: T.text3 }}>
+              EVPLSE · {clarityData.period || "Live Clarity Insights"} · Live Data Export
+            </p>
           </div>
-          <div className="flex items-center gap-2 text-xs px-3 py-2 rounded-xl border shadow-sm"
-            style={{ background: T.cardBg, borderColor: T.cardBdr, color: T.text3 }}>
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
-            Last updated: 31 May 2026
+
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Timeframe Selector (1, 2, or 3 days supported by Clarity Data Export API) */}
+            <div className="flex items-center p-1 rounded-xl bg-white border border-slate-200 shadow-xs">
+              {([1, 2, 3] as const).map((d) => (
+                <button
+                  key={d}
+                  onClick={() => setNumOfDays(d)}
+                  disabled={loading}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                    numOfDays === d
+                      ? "bg-slate-900 text-white shadow-xs"
+                      : "text-slate-500 hover:text-slate-900"
+                  }`}
+                >
+                  {d === 1 ? "Last 24h" : d === 2 ? "Last 48h" : "Last 72h"}
+                </button>
+              ))}
+            </div>
+
+            {/* Status Badge */}
+            <div
+              className={`flex items-center gap-2 text-xs px-3 py-1.5 rounded-xl border shadow-xs font-bold ${
+                meta.source === "live"
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                  : meta.source === "cached"
+                  ? "bg-sky-50 text-sky-700 border-sky-200"
+                  : "bg-amber-50 text-amber-700 border-amber-200"
+              }`}
+            >
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  meta.source === "live"
+                    ? "bg-emerald-500 animate-pulse"
+                    : meta.source === "cached"
+                    ? "bg-sky-500"
+                    : "bg-amber-500"
+                }`}
+              />
+              <span>
+                {meta.source === "live"
+                  ? "Live Clarity API"
+                  : meta.source === "cached"
+                  ? `Cached (${meta.cacheMinutesAgo ?? 0}m ago)`
+                  : "Snapshot"}
+              </span>
+            </div>
+
+            {/* Refresh Button */}
+            <button
+              onClick={() => fetchClarity(numOfDays, true)}
+              disabled={loading}
+              title="Refresh Clarity Data (Subject to 10 calls/day project limit)"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 shadow-xs transition cursor-pointer disabled:opacity-50"
+            >
+              <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
+              <span>Refresh</span>
+            </button>
           </div>
+        </div>
+
+        {/* Quota & Info Subtitle */}
+        <div className="mt-3 flex items-center justify-between text-[11px] text-slate-400">
+          <span>
+            {meta.note || "Connected to Microsoft Clarity Data Export API (10 requests/project/day quota limit)."}
+          </span>
+          {meta.lastUpdated && (
+            <span>Updated: {new Date(meta.lastUpdated).toLocaleTimeString()}</span>
+          )}
         </div>
       </motion.div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 p-1 rounded-2xl mb-8 border shadow-sm w-fit"
-        style={{ background:"#ffffff", borderColor: T.cardBdr }}>
-        {TABS.map(t => (
-          <button key={t.id} onClick={() => setTab(t.id as typeof tab)}
-            className="relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all"
-            style={{ color: tab===t.id ? T.text1 : T.text3 }}>
-            {tab===t.id && (
-              <motion.div layoutId="tab-indicator"
-                className="absolute inset-0 rounded-xl shadow-sm"
-                style={{ background: "#f1f5f9", border:`1px solid ${T.cardBdr}` }}
-                transition={{ type:"spring", bounce:0.2, duration:0.35 }} />
-            )}
-            <span className="relative z-10 flex items-center gap-1.5">{t.icon}{t.label}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* Content */}
+      {/* Direct Microsoft Clarity View without Tabs */}
       <AnimatePresence mode="wait">
-        <motion.div key={tab}
-          initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }}
-          exit={{ opacity:0, y:-5 }} transition={{ duration:0.18 }}>
-          {tab==="combined" && <CombinedTab />}
-          {tab==="clarity"  && <ClarityTab  />}
-          {tab==="vercel"   && <VercelTab   />}
-          {tab==="photos"   && <PhotosTab   />}
-          {tab==="pdfs"     && <PDFsTab     />}
+        <motion.div
+          key={numOfDays}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -5 }}
+          transition={{ duration: 0.18 }}
+        >
+          <ClarityTab clarityData={clarityData} />
         </motion.div>
       </AnimatePresence>
     </div>

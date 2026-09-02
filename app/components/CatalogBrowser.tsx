@@ -20,6 +20,7 @@ import {
   type CatalogCategoryValue,
 } from "../lib/catalog-filters";
 import { getVehiclePhoto } from "../lib/vehicle-images";
+import { sortVehiclesByBrandRank, sortBrandsByRank } from "../lib/brand-rankings";
 
 function toSlug(brand: string, name: string) {
   return `${brand}-${name}`
@@ -32,6 +33,9 @@ export type CatalogItem = {
   name: string;
   brand: string;
   type: string;
+  types?: string[];
+  body_type?: string;
+  bodyType?: string;
   pricing: string;
   photo: string;
   slug?: string;
@@ -438,11 +442,9 @@ export default function CatalogBrowser({
       parts.push(brand.charAt(0).toUpperCase() + brand.slice(1));
     }
     
-    if (category !== "all") {
-      if (category === "2 Wheeler") parts.push("2 Wheelers");
-      else if (category === "3 Wheeler") parts.push("3 Wheelers");
-      else if (category === "Electric Car") parts.push("4 Wheelers");
-      else parts.push(`${category}s`);
+    if (category) {
+      const catLabel = categoryOptions.find((o) => o.value === category)?.label;
+      if (catLabel) parts.push(catLabel);
     } else if (brand !== "all") {
       parts.push("Vehicles");
     }
@@ -503,30 +505,26 @@ export default function CatalogBrowser({
   const categoryOptions = useMemo(() => [...CATALOG_CATEGORIES], []);
 
   const brandOptions = useMemo(() => {
-    const brands = [...new Set(allItems.map((i) => i.brand).filter(Boolean))].sort();
-    return ["all", ...brands];
-  }, [allItems]);
+    const rawBrands = [...new Set(allItems.map((i) => i.brand).filter(Boolean))];
+    return ["all", ...sortBrandsByRank(rawBrands, category)];
+  }, [allItems, category]);
 
   const filteredItems = useMemo(() => {
     const twoMonthsAgo = new Date();
     twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
 
-    return allItems.filter((item) => {
+    const matched = allItems.filter((item) => {
       // 1. General search query matcher
       if (!matchesSearchQuery(item, query)) return false;
 
       // 2. Category matching
-      if (!matchesCatalogCategory(item.type, category as CatalogCategoryValue)) return false;
+      if (!matchesCatalogCategory(item, category as CatalogCategoryValue)) return false;
 
       // 3. Brand filter
       if (brand !== "all" && item.brand.toLowerCase() !== brand.toLowerCase()) return false;
 
       // 4. Price filter
       if (!matchesPrice(item, price)) return false;
-      
-      // 5. Commercial vehicle filter:
-      if (commercialOnly && !item.commercial) return false;
-      if (!commercialOnly && item.commercial && !query.trim()) return false;
 
       // 6. Forced filters
       if (forceUpcoming) {
@@ -548,6 +546,8 @@ export default function CatalogBrowser({
       if (usage !== "all" && item.usageType !== usage) return false;
       return true;
     });
+
+    return sortVehiclesByBrandRank(matched, category);
   }, [brand, category, commercialOnly, allItems, launchedOnly, comingSoonOnly, price, query, baasOnly, usage, forceUpcoming, forceNewLaunches, forceLaunched]);
 
   useEffect(() => {
@@ -582,12 +582,12 @@ export default function CatalogBrowser({
     setVisibleCount(12);
   }, [filterKey]);
 
-  const hasActiveFilters = category !== "all" || brand !== "all" || price !== "all" || usage !== "all" || commercialOnly || launchedOnly || comingSoonOnly || baasOnly || !!query.trim();
-  const activeFilterCount = [category !== "all", brand !== "all", price !== "all", usage !== "all", commercialOnly, launchedOnly, comingSoonOnly, baasOnly, !!query.trim()].filter(Boolean).length;
+  const hasActiveFilters = category !== "cars" || brand !== "all" || price !== "all" || usage !== "all" || launchedOnly || comingSoonOnly || baasOnly || !!query.trim();
+  const activeFilterCount = [category !== "cars", brand !== "all", price !== "all", usage !== "all", launchedOnly, comingSoonOnly, baasOnly, !!query.trim()].filter(Boolean).length;
 
   const clearAll = () => {
     setQuery("");
-    setCategory("all");
+    setCategory("cars");
     setBrand("all");
     setPrice("all");
     setCommercialOnly(false);
@@ -614,7 +614,7 @@ export default function CatalogBrowser({
           </div>
           <div className="flex-1">
             <div className="text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-2">
-              {category !== "all" ? (categoryOptions.find((o) => o.value === category)?.label || category) : "All Vehicles"}
+              {categoryOptions.find((o) => o.value === category)?.label || "Vehicles"}
               {activeFilterCount > 0 && (
                 <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#34ebb1] text-[10px] font-bold text-zinc-900">
                   {activeFilterCount}
@@ -734,20 +734,6 @@ export default function CatalogBrowser({
           {/* Toggles + Count */}
           <div className="px-5 pb-5 flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => updateFilters({ comm: !commercialOnly })}
-                className={`inline-flex items-center gap-2.5 rounded-2xl border px-3 py-1.5 text-sm font-bold transition-all ${
-                  commercialOnly
-                    ? "border-emerald-500/30 bg-emerald-50/50 text-emerald-700 dark:border-[#34ebb1]/30 dark:bg-[#34ebb1]/10 dark:text-[#34ebb1]"
-                    : "border-zinc-200 dark:border-white/10 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-white/5 hover:border-zinc-300 dark:hover:border-white/20"
-                }`}
-              >
-                <div className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${commercialOnly ? 'bg-emerald-500 dark:bg-[#34ebb1]' : 'bg-zinc-300 dark:bg-zinc-600'}`}>
-                  <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform duration-200 ${commercialOnly ? 'translate-x-[18px] dark:bg-zinc-900' : 'translate-x-1'}`} />
-                </div>
-                <span className="flex items-center gap-1.5"><Truck size={15} /> Commercial</span>
-              </button>
-
               {!hideComingSoonToggle && (
                 <button
                   onClick={() => updateFilters({ upcoming: !comingSoonOnly })}

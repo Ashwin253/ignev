@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import Clarity from "@microsoft/clarity";
 
 const PROJECT_ID =
-  process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID ?? "wpuxsm04uu";
+  process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID ?? "wn79e9rkpe";
 
 /**
  * Initialises Microsoft Clarity using the official @microsoft/clarity package.

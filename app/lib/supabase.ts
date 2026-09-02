@@ -613,3 +613,22 @@ export async function fetchCityPrices(variantIds: string[]) {
     .order("city");
   return data ?? [];
 }
+
+export async function fetchBrandRankings(): Promise<import("./brand-rankings").BrandRankItem[]> {
+  const { DEFAULT_BRAND_RANKS } = await import("./brand-rankings");
+  if (!supabaseEnabled()) return DEFAULT_BRAND_RANKS;
+  try {
+    const { data, error } = await supabase
+      .from("brand_rankings")
+      .select("*")
+      .eq("is_active", true)
+      .order("rank", { ascending: true });
+
+    if (error || !data || !data.length) {
+      return DEFAULT_BRAND_RANKS;
+    }
+    return data as import("./brand-rankings").BrandRankItem[];
+  } catch {
+    return DEFAULT_BRAND_RANKS;
+  }
+}

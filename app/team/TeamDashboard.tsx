@@ -17,6 +17,7 @@ import MediaPanel from "./MediaPanel";
 import ForYouLeadsPanel from "./ForYouLeadsPanel";
 import ApprovalsPanel from "./ApprovalsPanel";
 import VehicleApprovalsPanel from "./VehicleApprovalsPanel";
+import BrandsPanel from "./BrandsPanel";
 
 import { requestFcmToken } from "../lib/firebase";
 import { useVoiceDictation, MicButton } from "./VoiceInput";
@@ -430,7 +431,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
     }
   };
 
-  const [activeSection, setActiveSection] = useState<"listings" | "all_listings" | "leads" | "foryou_leads" | "prices" | "analytics" | "map" | "banners" | "content" | "offers" | "media" | "chargers" | "approvals" | "vehicle_approvals" | "protest">("listings");
+  const [activeSection, setActiveSection] = useState<"listings" | "all_listings" | "brands" | "leads" | "foryou_leads" | "prices" | "analytics" | "map" | "banners" | "content" | "offers" | "media" | "chargers" | "approvals" | "vehicle_approvals" | "protest">("listings");
   const [selectedModelId, setSelectedModelId] = useState<string>("");
   const [selectedBrand, setSelectedBrand] = useState<string>("");
   const [tableBrandFilter, setTableBrandFilter] = useState<string>("");
@@ -1742,13 +1743,16 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
           </div>
           <div className="flex gap-1.5 sm:gap-2 shrink-0">
             <button onClick={() => { setActiveSection("all_listings"); setEditing(null); setSelectedBrand(""); setSelectedModelId(""); setTableBrandFilter(""); }} className="inline-flex items-center gap-1 sm:gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
-              View All Listings
+              All Listings
+            </button>
+            <button onClick={() => { setActiveSection("brands"); setEditing(null); setSelectedBrand(""); setSelectedModelId(""); setTableBrandFilter(""); }} className="inline-flex items-center gap-1 sm:gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
+              All Brands
             </button>
             <button onClick={() => { setActiveSection("media"); }} className="inline-flex items-center gap-1 sm:gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
-              View All Media
+              All Media
             </button>
             <button onClick={() => { setActiveSection("chargers"); }} className="inline-flex items-center gap-1 sm:gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
-              View All Chargers
+              All Chargers
             </button>
           </div>
         </div>
@@ -1777,6 +1781,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             <option value="content">📄 Content</option>
             <option value="offers">🏷️ Offers</option>
             <option value="chargers">🔌 Chargers Compatibility</option>
+            <option value="brands">🏷️ All Brands (Rankings)</option>
           </select>
         </div>
 
@@ -1851,6 +1856,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
         {activeSection === "content" && <ContentPanel supabase={supabase} />}
         {activeSection === "offers" && <OffersPanel supabase={supabase} uniqueBrands={uniqueBrands} />}
         {activeSection === "media" && <MediaPanel supabase={supabase} />}
+        {activeSection === "brands" && <BrandsPanel supabase={supabase} userEmail={user.email || ""} listings={listings} />}
         {activeSection === "all_listings" && (
           <div className="mb-6 rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-100 bg-slate-50 flex flex-wrap justify-between items-center gap-3">

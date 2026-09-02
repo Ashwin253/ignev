@@ -88,23 +88,30 @@ export default function HeaderSearch({ isScrolled }: { isScrolled: boolean }) {
                   {/* Upper Tabs */}
                   <div className="mb-4">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Filter by Type</span>
-                    <div className="grid grid-cols-3 gap-1.5">
+                    <div className="grid grid-cols-4 gap-1.5">
                       <button
-                        onClick={() => handleTabClick({ type: "2 Wheeler" })}
+                        onClick={() => handleTabClick({ type: "bike" })}
                         className="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-slate-50 hover:bg-sky-50 hover:text-sky-600 border border-slate-100 text-[10px] font-bold transition-colors cursor-pointer"
                       >
                         <Bike size={14} className="text-sky-600" />
-                        2-Wheeler
+                        Bike
                       </button>
                       <button
-                        onClick={() => handleTabClick({ type: "3 Wheeler" })}
+                        onClick={() => handleTabClick({ type: "scooter" })}
+                        className="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-slate-50 hover:bg-sky-50 hover:text-sky-600 border border-slate-100 text-[10px] font-bold transition-colors cursor-pointer"
+                      >
+                        <Bike size={14} className="text-sky-600" />
+                        Scooter
+                      </button>
+                      <button
+                        onClick={() => handleTabClick({ type: "cars" })}
                         className="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-slate-50 hover:bg-sky-50 hover:text-sky-600 border border-slate-100 text-[10px] font-bold transition-colors cursor-pointer"
                       >
                         <CarFront size={14} className="text-sky-600" />
-                        3-Wheeler
+                        Cars
                       </button>
                       <button
-                        onClick={() => handleTabClick({ comm: true })}
+                        onClick={() => handleTabClick({ type: "commercial" })}
                         className="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-slate-50 hover:bg-sky-50 hover:text-sky-600 border border-slate-100 text-[10px] font-bold transition-colors cursor-pointer"
                       >
                         <Truck size={14} className="text-sky-600" />
@@ -196,23 +203,30 @@ export default function HeaderSearch({ isScrolled }: { isScrolled: boolean }) {
                 {/* Upper Tabs */}
                 <div className="mb-5">
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2.5">Filter by Type</span>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-4 gap-2">
                     <button
-                      onClick={() => handleTabClick({ type: "2 Wheeler" })}
+                      onClick={() => handleTabClick({ type: "bike" })}
                       className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl bg-slate-50 active:bg-sky-50 border border-slate-100 text-xs font-bold text-slate-800 cursor-pointer"
                     >
                       <Bike size={16} className="text-sky-600" />
-                      2-Wheeler
+                      Bike
                     </button>
                     <button
-                      onClick={() => handleTabClick({ type: "3 Wheeler" })}
+                      onClick={() => handleTabClick({ type: "scooter" })}
+                      className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl bg-slate-50 active:bg-sky-50 border border-slate-100 text-xs font-bold text-slate-800 cursor-pointer"
+                    >
+                      <Bike size={16} className="text-sky-600" />
+                      Scooter
+                    </button>
+                    <button
+                      onClick={() => handleTabClick({ type: "cars" })}
                       className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl bg-slate-50 active:bg-sky-50 border border-slate-100 text-xs font-bold text-slate-800 cursor-pointer"
                     >
                       <CarFront size={16} className="text-sky-600" />
-                      3-Wheeler
+                      Cars
                     </button>
                     <button
-                      onClick={() => handleTabClick({ comm: true })}
+                      onClick={() => handleTabClick({ type: "commercial" })}
                       className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl bg-slate-50 active:bg-sky-50 border border-slate-100 text-xs font-bold text-slate-800 cursor-pointer"
                     >
                       <Truck size={16} className="text-sky-600" />

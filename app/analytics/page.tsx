@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import AnalyticsDashboard from "../components/AnalyticsDashboard";
 
 export const metadata: Metadata = {
-  title: "Analytics | EVPLSE",
-  description: "Site analytics dashboard combining Microsoft Clarity and Vercel Insights for EVPLSE.",
+  title: "Clarity Analytics | EVPLSE",
+  description: "Live site analytics powered by Microsoft Clarity Data Export API.",
 };
 
 export default function AnalyticsPage() {

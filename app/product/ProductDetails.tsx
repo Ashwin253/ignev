@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import {
   BatteryCharging, Zap, Gauge, CheckCircle2, CircleMinus, ChevronDown, ChevronUp, LayoutList, Lightbulb, Activity, Disc, PlayCircle, MapPin,
 } from "lucide-react";
@@ -363,12 +363,71 @@ export default function ProductDetails({ item }: { item: EvListing }) {
   ].filter(s => s.condition);
 
   const [activeTabId, setActiveTabId] = useState(sections[0]?.id);
+  const leftListRef = useRef<HTMLDivElement>(null);
+  const rightContentRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeftDown, setCanScrollLeftDown] = useState(false);
+  const [canScrollRightDown, setCanScrollRightDown] = useState(false);
+
+  const checkLeftScroll = () => {
+    const el = leftListRef.current;
+    if (!el) return;
+    const hasMore = el.scrollHeight - el.scrollTop - el.clientHeight > 10;
+    setCanScrollLeftDown(hasMore);
+  };
+
+  const checkRightScroll = () => {
+    const el = rightContentRef.current;
+    if (!el) return;
+    const hasMore = el.scrollHeight - el.scrollTop - el.clientHeight > 10;
+    setCanScrollRightDown(hasMore);
+  };
 
   useEffect(() => {
     if (sections.length > 0 && !sections.find(s => s.id === activeTabId)) {
       setActiveTabId(sections[0].id);
     }
   }, [sections, activeTabId]);
+
+  useEffect(() => {
+    if (rightContentRef.current) {
+      rightContentRef.current.scrollTop = 0;
+    }
+    const t = setTimeout(() => {
+      checkRightScroll();
+    }, 50);
+    return () => clearTimeout(t);
+  }, [activeTabId]);
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      checkLeftScroll();
+      checkRightScroll();
+    }, 50);
+    return () => clearTimeout(t);
+  }, [sections, selectedVariant]);
+
+  useEffect(() => {
+    checkLeftScroll();
+    checkRightScroll();
+    window.addEventListener("resize", checkLeftScroll);
+    window.addEventListener("resize", checkRightScroll);
+    return () => {
+      window.removeEventListener("resize", checkLeftScroll);
+      window.removeEventListener("resize", checkRightScroll);
+    };
+  }, []);
+
+  const scrollLeftDown = () => {
+    if (leftListRef.current) {
+      leftListRef.current.scrollBy({ top: 160, behavior: "smooth" });
+    }
+  };
+
+  const scrollRightDown = () => {
+    if (rightContentRef.current) {
+      rightContentRef.current.scrollBy({ top: 200, behavior: "smooth" });
+    }
+  };
 
   return (
     <div className="mt-12 rounded-[28px] border-2 border-black dark:border-zinc-800 bg-white/70 backdrop-blur-xl shadow-[4px_4px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_rgba(255,255,255,0.05)] dark:bg-zinc-900/60 p-6 md:p-8">
@@ -397,7 +456,7 @@ export default function ProductDetails({ item }: { item: EvListing }) {
         )}
       </div>
 
-      <div className="flex flex-col md:flex-row gap-8">
+      <div className="flex flex-col md:flex-row gap-6 md:h-[520px]">
         {/* Mobile Dropdown / Horizontal Tabs */}
         <div className="md:hidden relative">
           <select 
@@ -410,32 +469,86 @@ export default function ProductDetails({ item }: { item: EvListing }) {
           <ChevronDown size={16} className="text-zinc-900 dark:text-white absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
 
-        {/* Desktop Vertical Tabs */}
-        <div className="hidden md:flex flex-col gap-2 w-64 shrink-0">
-          {sections.map(s => (
-            <button
-              key={s.id}
-              onClick={() => setActiveTabId(s.id)}
-              className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl border-2 transition-all ${
-                activeTabId === s.id 
-                ? 'border-black dark:border-zinc-750 bg-white dark:bg-zinc-800 shadow-[2px_2px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_rgba(255,255,255,0.05)]' 
-                : 'border-transparent hover:border-black/20 dark:hover:border-white/20 hover:bg-white/50 dark:hover:bg-zinc-800/50 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
-              }`}
-            >
-              <div className={activeTabId === s.id ? "text-emerald-600" : "text-zinc-500"}>{s.icon}</div>
-              <span className={`font-bold text-[13px] text-left flex-1 ${activeTabId === s.id ? "text-zinc-900 dark:text-white" : ""}`}>{s.title}</span>
-            </button>
-          ))}
+        {/* Desktop Vertical Tabs Card */}
+        <div className="hidden md:flex flex-col w-72 shrink-0 h-full rounded-2xl border-2 border-black dark:border-zinc-800 bg-white dark:bg-zinc-900/40 p-3.5 shadow-[4px_4px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_rgba(255,255,255,0.05)] relative overflow-hidden">
+          <div className="flex items-center justify-between pb-3 mb-2 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
+            <span className="text-xs font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Sections</span>
+            <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">
+              {sections.length}
+            </span>
+          </div>
+
+          <div 
+            ref={leftListRef}
+            onScroll={checkLeftScroll}
+            className="flex-1 min-h-0 overflow-y-auto space-y-1.5 p-1 pr-1.5 pb-8 scroll-smooth [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-zinc-300 dark:[&::-webkit-scrollbar-thumb]:bg-zinc-700 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-zinc-400 dark:hover:[&::-webkit-scrollbar-thumb]:bg-zinc-600"
+          >
+            {sections.map(s => (
+              <button
+                key={s.id}
+                onClick={() => setActiveTabId(s.id)}
+                className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl border-2 transition-all shrink-0 text-left cursor-pointer ${
+                  activeTabId === s.id 
+                  ? 'border-black dark:border-zinc-750 bg-white dark:bg-zinc-800 shadow-[2px_2px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_rgba(255,255,255,0.05)]' 
+                  : 'border-transparent hover:border-black/20 dark:hover:border-white/20 hover:bg-white/50 dark:hover:bg-zinc-800/50 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                }`}
+              >
+                <div className={activeTabId === s.id ? "text-emerald-600 dark:text-emerald-400 shrink-0" : "text-zinc-400 dark:text-zinc-500 shrink-0"}>{s.icon}</div>
+                <span className={`font-bold text-[13px] truncate flex-1 ${activeTabId === s.id ? "text-zinc-900 dark:text-white" : ""}`}>{s.title}</span>
+              </button>
+            ))}
+          </div>
+
+          {canScrollLeftDown && (
+            <>
+              <div className="pointer-events-none absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-white via-white/80 to-transparent dark:from-zinc-900 dark:via-zinc-900/80 rounded-b-2xl z-10" />
+              <div className="absolute bottom-2.5 inset-x-0 flex justify-center pointer-events-none z-20">
+                <button
+                  onClick={scrollLeftDown}
+                  type="button"
+                  aria-label="Scroll down for more sections"
+                  className="pointer-events-auto flex items-center gap-1.5 px-3 py-1 rounded-full bg-white dark:bg-zinc-800 border-2 border-black dark:border-zinc-700 shadow-[2px_2px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_rgba(255,255,255,0.08)] text-[11px] font-bold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all cursor-pointer animate-bounce"
+                >
+                  <span>More</span>
+                  <ChevronDown size={13} className="text-emerald-600 dark:text-emerald-400" />
+                </button>
+              </div>
+            </>
+          )}
         </div>
 
-        {/* Tab Content */}
-        <div className="flex-1 min-w-0">
-          <div className="rounded-2xl border-2 border-black dark:border-zinc-800 bg-white dark:bg-zinc-900/40 p-5 md:p-7 shadow-[4px_4px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_rgba(255,255,255,0.05)]">
-            <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-5 flex items-center gap-2 border-b border-zinc-100 dark:border-zinc-850 pb-4">
-               <span className="text-emerald-600">{sections.find(s => s.id === activeTabId)?.icon}</span>
+        {/* Tab Content Card */}
+        <div className="flex-1 min-w-0 h-[480px] md:h-full">
+          <div className="h-full flex flex-col rounded-2xl border-2 border-black dark:border-zinc-800 bg-white dark:bg-zinc-900/40 p-5 md:p-7 shadow-[4px_4px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_rgba(255,255,255,0.05)] relative overflow-hidden">
+            <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-5 flex items-center gap-2 border-b border-zinc-100 dark:border-zinc-850 pb-4 shrink-0">
+               <span className="text-emerald-600 dark:text-emerald-400">{sections.find(s => s.id === activeTabId)?.icon}</span>
                {sections.find(s => s.id === activeTabId)?.title}
             </h3>
-            {sections.find(s => s.id === activeTabId)?.content}
+            
+            <div 
+              ref={rightContentRef}
+              onScroll={checkRightScroll}
+              className="flex-1 min-h-0 overflow-y-auto pr-2 pb-8 [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-zinc-300 dark:[&::-webkit-scrollbar-thumb]:bg-zinc-700 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-zinc-400 dark:hover:[&::-webkit-scrollbar-thumb]:bg-zinc-600"
+            >
+              {sections.find(s => s.id === activeTabId)?.content}
+            </div>
+
+            {canScrollRightDown && (
+              <>
+                <div className="pointer-events-none absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-white via-white/80 to-transparent dark:from-zinc-900 dark:via-zinc-900/80 rounded-b-2xl z-10" />
+                <div className="absolute bottom-3 inset-x-0 flex justify-center pointer-events-none z-20">
+                  <button
+                    onClick={scrollRightDown}
+                    type="button"
+                    aria-label="Scroll down for more details"
+                    className="pointer-events-auto flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white dark:bg-zinc-800 border-2 border-black dark:border-zinc-700 shadow-[2px_2px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_rgba(255,255,255,0.08)] text-xs font-bold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all cursor-pointer animate-bounce"
+                  >
+                    <span>More details below</span>
+                    <ChevronDown size={14} className="text-emerald-600 dark:text-emerald-400" />
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

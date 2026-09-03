@@ -11,6 +11,11 @@ import {
   formatLaunchDate, isLaunched, formatPricing,
 } from "../../lib/wordpress";
 import { getVehicleFallbackImage, getVehiclePhoto } from "../../lib/vehicle-images";
+import {
+  isCommercialListing,
+  isElectricBikeListing,
+  isElectricScooterListing,
+} from "../../lib/catalog-filters";
 import { fetchEvListingBySlugFromSupabase, fetchEvListingsFromSupabase, fetchProductContent, fetchProductOffers, supabase } from "../../lib/supabase";
 import ProductGallery from "../../components/ProductGallery";
 import ProductMainUI from "../ProductMainUI";
@@ -211,25 +216,129 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   );
 }
 
+function getListingCategory(item: any): "commercial" | "bike" | "scooter" | "cars" {
+  if (isCommercialListing(item)) return "commercial";
+  if (isElectricBikeListing(item)) return "bike";
+  if (isElectricScooterListing(item)) return "scooter";
+  return "cars";
+}
+
+function normalizeBrandName(brand?: string | null): string {
+  if (!brand) return "";
+  const b = brand.trim().toLowerCase();
+  if (b === "tata" || b === "tata motors") return "tata";
+  if (b === "ola" || b === "ola electric") return "ola";
+  if (b === "hero" || b === "hero electric" || b === "vida" || b === "hero vida") return "hero";
+  if (b === "bajaj" || b === "chetak" || b === "bajaj auto") return "bajaj";
+  if (b === "tvs" || b === "tvs motor") return "tvs";
+  if (b === "mg" || b === "mg motor") return "mg";
+  if (b === "mahindra" || b === "mahindra & mahindra") return "mahindra";
+  return b;
+}
+
+function checkSameVehicleType(a: any, b: any): boolean {
+  const catA = getListingCategory(a);
+  const catB = getListingCategory(b);
+  if (catA === catB) return true;
+
+  // Direct types array overlap
+  const typesA = (Array.isArray(a.types) ? a.types : [a.types]).filter(Boolean).map((t: any) => String(t).toLowerCase().trim());
+  const typesB = (Array.isArray(b.types) ? b.types : [b.types]).filter(Boolean).map((t: any) => String(t).toLowerCase().trim());
+  if (typesA.length > 0 && typesB.length > 0 && typesA.some((t: string) => typesB.includes(t))) {
+    return true;
+  }
+
+  // Matching body type
+  const bodyA = (a.body_type || a.bodyType || "").toLowerCase().trim();
+  const bodyB = (b.body_type || b.bodyType || "").toLowerCase().trim();
+  if (bodyA && bodyB && bodyA === bodyB) {
+    return true;
+  }
+
+  // 2-wheelers match (bike or scooter)
+  const is2WA = catA === "bike" || catA === "scooter";
+  const is2WB = catB === "bike" || catB === "scooter";
+  if (is2WA && is2WB) {
+    return true;
+  }
+
+  return false;
+}
+
+function checkSameBrand(a: any, b: any): boolean {
+  const brandA = normalizeBrandName(a.brand);
+  const brandB = normalizeBrandName(b.brand);
+  return !!brandA && brandA === brandB;
+}
+
 async function RelatedListings({ slug, currentItem }: { slug: string; currentItem: any }) {
   let related: any[] = [];
   try {
-    const allSupabase = await fetchEvListingsFromSupabase(50);
+    const allSupabase = await fetchEvListingsFromSupabase(100);
     
-    const targetPrice = currentItem.prices[0] ? parseFloat(currentItem.prices[0].replace(/[^\d.]/g, "")) : null;
+    const targetPrice = currentItem.prices?.[0] ? parseFloat(currentItem.prices[0].replace(/[^\d.]/g, "")) : null;
+    const currentCategory = getListingCategory(currentItem);
+    const currentBody = (currentItem.body_type || currentItem.bodyType || "").toLowerCase().trim();
 
-    related = allSupabase
-      .filter((l) => {
-        if (l.slug === slug) return false;
-        if (l.types[0] === currentItem.types[0] && currentItem.types[0]) return true;
-        if (l.brand === currentItem.brand && currentItem.brand) return true;
-        if (targetPrice && l.prices[0]) {
-          const p = parseFloat(l.prices[0].replace(/[^\d.]/g, ""));
-          if (!isNaN(p) && Math.abs(p - targetPrice) / targetPrice <= 0.2) return true;
+    // Filter strictly to same vehicle type OR same brand, excluding current listing
+    const candidates = allSupabase.filter((l) => {
+      if (l.slug === slug || l.id === currentItem.id) return false;
+      if (l.deleted) return false;
+
+      const sameType = checkSameVehicleType(l, currentItem);
+      const sameBrand = checkSameBrand(l, currentItem);
+
+      return sameType || sameBrand;
+    });
+
+    // Score candidates to prioritize the most relevant recommendations
+    const scored = candidates.map((l) => {
+      let score = 0;
+      const sameType = checkSameVehicleType(l, currentItem);
+      const sameBrand = checkSameBrand(l, currentItem);
+      const exactCategory = getListingCategory(l) === currentCategory;
+      const lBody = (l.body_type || "").toLowerCase().trim();
+
+      // Highest priority: Same brand AND same vehicle type
+      if (sameBrand && sameType) {
+        score += 100;
+      } else if (sameBrand) {
+        score += 60;
+      } else if (sameType) {
+        score += 50;
+      }
+
+      // Exact vehicle category match bonus (both cars, both scooters, etc.)
+      if (exactCategory) {
+        score += 30;
+      }
+
+      // Matching body type bonus (e.g. SUV to SUV, Hatchback to Hatchback)
+      if (currentBody && lBody && currentBody === lBody) {
+        score += 20;
+      }
+
+      // Price proximity bonus: closer prices are more relevant
+      if (targetPrice && l.prices?.[0]) {
+        const p = parseFloat(l.prices[0].replace(/[^\d.]/g, ""));
+        if (!isNaN(p) && p > 0 && targetPrice > 0) {
+          const diffRatio = Math.abs(p - targetPrice) / targetPrice;
+          if (diffRatio <= 0.15) score += 20;
+          else if (diffRatio <= 0.3) score += 15;
+          else if (diffRatio <= 0.5) score += 10;
         }
-        return false;
-      })
-      .slice(0, 4);
+      }
+
+      // Slightly prefer launched models over concepts
+      if (!l.concept) {
+        score += 5;
+      }
+
+      return { listing: l, score };
+    });
+
+    scored.sort((a, b) => b.score - a.score);
+    related = scored.slice(0, 4).map((s) => s.listing);
   } catch { /* skip related if DB is down */ }
 
   if (related.length === 0) {

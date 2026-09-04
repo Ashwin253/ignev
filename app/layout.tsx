@@ -32,6 +32,7 @@ import AiChatPopup from "./components/AiChatPopup";
 import FloatingMobileNav from "./components/FloatingMobileNav";
 import { CompareProvider } from "./context/CompareContext";
 import { FeedbackProvider } from "./context/FeedbackContext";
+import { LocationProvider } from "./context/LocationContext";
 import CompareWidget from "./components/CompareWidget";
 import { Analytics } from "@vercel/analytics/next";
 import TidioChat from "./components/TidioChat";
@@ -68,23 +69,25 @@ export default function RootLayout({
         <PageTracker />
         <FeedbackProvider>
           <CompareProvider>
-            <Header />
-            <SpeedInsights/>
-            <Analytics />
-            <main className="flex-grow relative">
-              {children}
-            </main>
-            <Footer />
-            <CompareWidget />
-            {/* <AssistPopup /> */}
-            <EnquiryModal />
-            <AddToHomescreen />
-            <FloatingMobileNav />
-            {/* <TidioChat /> */}
-            <TawkChat />
-            <Suspense fallback={null}>
-              <AiChatPopup />
-            </Suspense>
+            <LocationProvider>
+              <Header />
+              <SpeedInsights/>
+              <Analytics />
+              <main className="flex-grow relative">
+                {children}
+              </main>
+              <Footer />
+              <CompareWidget />
+              {/* <AssistPopup /> */}
+              <EnquiryModal />
+              <AddToHomescreen />
+              <FloatingMobileNav />
+              {/* <TidioChat /> */}
+              <TawkChat />
+              <Suspense fallback={null}>
+                <AiChatPopup />
+              </Suspense>
+            </LocationProvider>
           </CompareProvider>
         </FeedbackProvider>
       </body>

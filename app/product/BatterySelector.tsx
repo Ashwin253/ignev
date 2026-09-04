@@ -28,6 +28,8 @@ interface BatterySelectorProps {
   showBaas: boolean;
   onToggleBaas: (value: boolean) => void;
   hideVariantSelector?: boolean;
+  hideCityDropdown?: boolean;
+  hideOnRoad?: boolean;
   cityPricing?: Array<{
     id?: string;
     location_name: string;
@@ -95,6 +97,8 @@ export default function BatterySelector({
   showBaas,
   onToggleBaas,
   hideVariantSelector = false,
+  hideCityDropdown = false,
+  hideOnRoad = false,
   cityPricing = [],
 }: BatterySelectorProps) {
   const [showHelp, setShowHelp] = useState(false);
@@ -223,7 +227,7 @@ export default function BatterySelector({
 
       {/* Specs grid */}
       {(() => {
-        const hasOnRoad = availableCities.length > 0;
+        const hasOnRoad = !hideOnRoad && availableCities.length > 0;
         const totalCardsRow1 = 4 + (hasOnRoad ? 1 : 0);
         const gridColsRow1 = totalCardsRow1 === 5 ? "grid-cols-2 sm:grid-cols-5" : "grid-cols-2 sm:grid-cols-4";
 
@@ -311,7 +315,7 @@ export default function BatterySelector({
                       <MapPin size={11} className="text-[#10855f]" />
                       <span className="text-[9px] font-bold uppercase tracking-wider">On-Road</span>
                     </div>
-                    {availableCities.length > 1 && (
+                    {!hideCityDropdown && availableCities.length > 1 ? (
                       <select
                         value={activeCity}
                         onChange={(e) => setSelectedCity(e.target.value)}
@@ -321,6 +325,12 @@ export default function BatterySelector({
                           <option key={city} value={city} className="bg-white text-slate-900">{city}</option>
                         ))}
                       </select>
+                    ) : (
+                      activeCity && (
+                        <span className="text-[9px] font-bold text-[#10855f] truncate max-w-[80px] text-right">
+                          {activeCity}
+                        </span>
+                      )
                     )}
                   </div>
                   <p className="text-lg font-black text-slate-900 leading-tight tabular-nums mt-1">
@@ -331,9 +341,6 @@ export default function BatterySelector({
                     })()}
                     <span className="text-[10px] font-bold text-slate-500 ml-0.5">L</span>
                   </p>
-                  {availableCities.length <= 1 && activeCity && (
-                    <span className="text-[8px] font-bold text-slate-500 leading-none mt-0.5 truncate">{activeCity}</span>
-                  )}
                 </div>
               )}
             </div>

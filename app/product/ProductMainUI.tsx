@@ -16,6 +16,7 @@ import type { EvListing } from "../lib/wordpress";
 import { useProductSelection } from "./ProductSelectionProvider";
 import LoanCalculator from "../components/LoanCalculator";
 import { supabase } from "../lib/supabase";
+import { useLocation } from "../context/LocationContext";
 
 const DotLottieReact = dynamic(
   () => import("@lottiefiles/dotlottie-react").then((m) => m.DotLottieReact),
@@ -444,7 +445,7 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
 
           {activeTab === "battery" && (
             <div className="space-y-5">
-              <BatterySelector standardVariants={item.batteryVariants} baasVariants={item.baasVariants} hasBaas={item.baas} selectedIndex={selectedIndex} onSelect={onSelect} showBaas={showBaas} onToggleBaas={onToggleBaas} hideVariantSelector cityPricing={item.city_pricing} />
+              <BatterySelector standardVariants={item.batteryVariants} baasVariants={item.baasVariants} hasBaas={item.baas} selectedIndex={selectedIndex} onSelect={onSelect} showBaas={showBaas} onToggleBaas={onToggleBaas} hideVariantSelector hideOnRoad cityPricing={item.city_pricing} />
               
               <div className="rounded-2xl border border-zinc-200/60 bg-white p-5 dark:bg-zinc-900/50 dark:border-zinc-800 flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
@@ -520,11 +521,25 @@ type EnergySubTab = "fuel" | "models";
 const MAJOR_CITIES = ["Delhi","Mumbai","Bangalore","Chennai","Hyderabad","Pune","Kolkata","Ahmedabad","Jaipur","Kochi"];
 
 function EnergyTabContent({ item, evEfficiency, dbFuelPrices = [] }: { item: EvListing; evEfficiency: number; dbFuelPrices?: any[] }) {
+  const { location } = useLocation();
   const [subTab, setSubTab] = useState<EnergySubTab>("fuel");
   const [selectedCity, setSelectedCity] = useState("");
   const [localPrices, setLocalPrices] = useState<any[]>(dbFuelPrices);
   const { selectedIndex, activeVariants } = useProductSelection();
   const activeVariant = activeVariants?.[selectedIndex];
+
+  // Auto-sync city with global location
+  useEffect(() => {
+    if (location) {
+      const match = MAJOR_CITIES.find(c => 
+        c.toLowerCase() === location.name.toLowerCase() || 
+        location.aliases?.some(a => a.toLowerCase() === c.toLowerCase())
+      );
+      if (match) {
+        setSelectedCity(match);
+      }
+    }
+  }, [location]);
 
   const cityPrice = localPrices.find(p => p.city.toLowerCase() === selectedCity.toLowerCase());
   const petrolPrice = cityPrice?.petrol_per_litre?? 104;

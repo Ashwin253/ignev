@@ -11,6 +11,7 @@ import { playClickSound, playHaptic } from "../lib/feedback";
 import { supabaseClient } from "../lib/supabase-client";
 import { auth } from "../lib/firebaseClient";
 import { onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
+import LocationSelector from "./LocationSelector";
 
 const navLinks = [
   { name: "Home", href: "/", icon: Home },
@@ -280,6 +281,13 @@ export default function Header() {
           </nav>
 
           <div className="flex items-center gap-2.5">
+            {/* State / Location Selector */}
+            <LocationSelector
+              isTransparent={isTransparent}
+              isLight={isLight}
+              className="hidden md:block"
+            />
+
             {/* User Profile / Auth Button (Icon Only) */}
             <Link
               href={user ? "/profile" : "/login"}
@@ -477,6 +485,11 @@ export default function Header() {
                   </span>
                 )}
               </Link>
+
+              {/* State / Location Selector */}
+              <div className="mt-3">
+                <LocationSelector isMobile />
+              </div>
 
               {/* User Profile / Auth Button */}
               <Link

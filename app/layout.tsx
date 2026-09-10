@@ -83,9 +83,9 @@ export default function RootLayout({
               <AddToHomescreen />
               <FloatingMobileNav />
               {/* <TidioChat /> */}
-              <TawkChat />
+              {/* <TawkChat /> */}
               <Suspense fallback={null}>
-                <AiChatPopup />
+                {/* <AiChatPopup /> */}
               </Suspense>
             </LocationProvider>
           </CompareProvider>

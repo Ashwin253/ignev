@@ -26,6 +26,8 @@ export async function GET() {
       prices: l.prices,
       baas: l.baas,
       video_links: l.video_links,
+      batterySpecs: l.batterySpecs,
+      batteryVariants: l.batteryVariants,
     }));
 
     return NextResponse.json({ items });

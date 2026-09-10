@@ -257,6 +257,23 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
     fetchChargers();
   }, []);
 
+  // Automatically trigger "For Latest Offers" modal after 10 seconds
+  useEffect(() => {
+    const sessionKey = `offers_popup_shown_${item.slug}`;
+    if (typeof window !== "undefined" && sessionStorage.getItem(sessionKey)) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      triggerEnquiryModal(`Offers: ${item.brand} ${item.title}`);
+      try {
+        sessionStorage.setItem(sessionKey, "true");
+      } catch (_) {}
+    }, 10000);
+
+    return () => clearTimeout(timer);
+  }, [item.brand, item.title, item.slug]);
+
   const vehicleType = item.types?.[0] || "";
   const supportedNetworkKeys = useMemo(() => {
     return getProductSupportedNetworks(item.brand, vehicleType);
@@ -366,34 +383,44 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
         <div className="pt-6">
           {activeTab === "pricing" && (
             <div className="space-y-5">
-              <div className="flex items-center justify-between rounded-2xl bg-gradient-to-br from-zinc-50 to-white p-5 border border-zinc-200/60 dark:from-zinc-800/50 dark:to-zinc-900/50 dark:border-zinc-800">
-                <div>
-                  <p className="text-xs uppercase tracking-wide text-zinc-500 font-medium mb-1">{showBaas? "BaaS Starting" : "Ex-Showroom"}</p>
-                  {specificPriceStr ? (
-                    <p className="text-[32px] font-semibold tracking-tight leading-none">₹{specificPriceStr}<span className="text-lg font-medium text-zinc-500 ml-1">Lakh</span></p>
-                  ) : (
-                    <p className="text-2xl font-semibold tracking-tight leading-none text-zinc-700 dark:text-zinc-300">{isFuture ? "Coming Soon" : "TBA"}</p>
-                  )}
-                </div>
-                <button onClick={() => triggerEnquiryModal(`Offers: ${item.brand} ${item.title}`)} className="flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2.5 text-sm font-medium text-white shadow-lg shadow-emerald-500/20 hover:-translate-y-0.5 transition">
-                  <DotLottieReact src="/Giftpremiumanimation.lottie" loop autoplay className="h-5 w-5" />Offers
-                </button>
-              </div>
-
-              {specificPriceStr && (
-                <div className="rounded-2xl border border-zinc-200/60 bg-white p-5 dark:bg-zinc-900/50 dark:border-zinc-800 flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-emerald-600 mb-1">EMI Starting at</p>
-                    <p className="text-3xl font-semibold">₹{rupees(emiMonthly)}<span className="text-base font-normal text-zinc-500">/mo</span></p>
+              <div className="rounded-2xl bg-gradient-to-br from-zinc-50 to-white p-5 border border-zinc-200/60 dark:from-zinc-800/50 dark:to-zinc-900/50 dark:border-zinc-800 space-y-3.5">
+                {/* 40% width Price : 60% width CTA button */}
+                <div className="flex items-center justify-between gap-3">
+                  <div className="w-[40%] shrink-0">
+                    <p className="text-xs uppercase tracking-wide text-zinc-500 font-medium mb-1 truncate">
+                      {showBaas ? "BaaS Starting" : "Ex-Showroom"}
+                    </p>
+                    {specificPriceStr ? (
+                      <p className="text-2xl sm:text-[32px] font-semibold tracking-tight leading-none truncate">
+                        ₹{specificPriceStr}<span className="text-base sm:text-lg font-medium text-zinc-500 ml-1">Lakh</span>
+                      </p>
+                    ) : (
+                      <p className="text-xl sm:text-2xl font-semibold tracking-tight leading-none text-zinc-700 dark:text-zinc-300">
+                        {isFuture ? "Coming Soon" : "TBA"}
+                      </p>
+                    )}
                   </div>
-                  <button
-                    onClick={() => setShowEmiCalculator(true)}
-                    className="rounded-full bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100 px-4.5 py-2.5 text-xs font-bold transition shadow-md active:scale-95 shrink-0"
-                  >
-                    EMI Calculator
-                  </button>
+
+                  <div className="w-[60%] flex justify-end">
+                    <button
+                      onClick={() => triggerEnquiryModal(`Offers: ${item.brand} ${item.title}`)}
+                      className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 px-3.5 py-3 sm:py-3.5 text-xs sm:text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:-translate-y-0.5 active:translate-y-0 transition cursor-pointer"
+                    >
+                      <DotLottieReact src="/Giftpremiumanimation.lottie" loop autoplay className="h-6 w-6 shrink-0" />
+                      <span className="truncate">For Latest Offers</span>
+                    </button>
+                  </div>
                 </div>
-              )}
+
+                {/* 80% width small text center : EMI start */}
+                {specificPriceStr && emiMonthly > 0 && (
+                  <div className="w-[80%] mx-auto pt-2.5 border-t border-zinc-200/60 dark:border-zinc-800/80 text-center">
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                      EMI Starts at <span className="font-semibold text-zinc-800 dark:text-zinc-200">₹{rupees(emiMonthly)}/mo</span>
+                    </p>
+                  </div>
+                )}
+              </div>
 
               {/* Brand Offers */}
               {offers && offers.length > 0 && (
@@ -479,7 +506,6 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3">
-        <EnquiryTrigger vehicle={`${item.brand} ${item.title}`} />
         <CompareButton slug={slug} name={`${item.brand} ${item.title}`} />
         <button
           onClick={handleShare}
@@ -524,6 +550,7 @@ function EnergyTabContent({ item, evEfficiency, dbFuelPrices = [] }: { item: EvL
   const { location } = useLocation();
   const [subTab, setSubTab] = useState<EnergySubTab>("fuel");
   const [selectedCity, setSelectedCity] = useState("");
+  const [selectedFuel, setSelectedFuel] = useState<"petrol" | "diesel" | "cng">("petrol");
   const [localPrices, setLocalPrices] = useState<any[]>(dbFuelPrices);
   const { selectedIndex, activeVariants } = useProductSelection();
   const activeVariant = activeVariants?.[selectedIndex];
@@ -551,35 +578,86 @@ function EnergyTabContent({ item, evEfficiency, dbFuelPrices = [] }: { item: EvL
   const selfEntry = item.energyComparison.find(c => c.fuelType?.toLowerCase() === "self");
   const selfCostPerKm = selfEntry? parseFloat(selfEntry.fuelPrice) || evCostPerKm : evCostPerKm;
 
+  const cycleFuel = () => {
+    const fuels: Array<"petrol" | "diesel" | "cng"> = ["petrol", "diesel", "cng"];
+    const nextIdx = (fuels.indexOf(selectedFuel) + 1) % fuels.length;
+    setSelectedFuel(fuels[nextIdx]);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 rounded-2xl border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 dark:bg-zinc-800 dark:border-zinc-700">
         <span className="text-xs">⚡</span>
-        <select value={selectedCity} onChange={e => setSelectedCity(e.target.value)} className="flex-1 bg-transparent text-sm font-medium outline-none">
+        <select value={selectedCity} onChange={e => setSelectedCity(e.target.value)} className="flex-1 bg-transparent text-sm font-medium outline-none cursor-pointer">
           <option value="">National Average</option>
           {MAJOR_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
       </div>
 
       <div className="flex rounded-xl bg-zinc-100 p-1 dark:bg-zinc-800">
-        <button onClick={() => setSubTab("fuel")} className={`flex-1 rounded-lg py-2 text-xs font-medium ${subTab==="fuel"?"bg-white shadow-sm dark:bg-zinc-700":"text-zinc-600 dark:text-zinc-400"}`}>Fuel Type</button>
-        <button onClick={() => setSubTab("models")} className={`flex-1 rounded-lg py-2 text-xs font-medium ${subTab==="models"?"bg-white shadow-sm dark:bg-zinc-700":"text-zinc-600 dark:text-zinc-400"}`}>Models</button>
+        <button onClick={() => setSubTab("fuel")} className={`flex-1 rounded-lg py-2 text-xs font-medium transition cursor-pointer ${subTab==="fuel"?"bg-white shadow-sm text-zinc-900 dark:bg-zinc-700 dark:text-white":"text-zinc-600 dark:text-zinc-400"}`}>Fuel Type</button>
+        <button onClick={() => setSubTab("models")} className={`flex-1 rounded-lg py-2 text-xs font-medium transition cursor-pointer ${subTab==="models"?"bg-white shadow-sm text-zinc-900 dark:bg-zinc-700 dark:text-white":"text-zinc-600 dark:text-zinc-400"}`}>Models</button>
       </div>
 
       {subTab === "fuel" && (
-        <>
+        <div className="space-y-3">
+          {/* Current Vehicle */}
           <CurrentVehicleCostCard name={item.title} costPerKm={selfCostPerKm} subtitle={`${activeVariant?.range || 300} km range`} />
-          <CompareCard name="Petrol" subtitle={`₹${petrolPrice}/L · 18 km/L`} costPerKm={petrolPrice/18} isEv={false} />
-          <CompareCard name="Diesel" subtitle={`₹${dieselPrice}/L · 22 km/L`} costPerKm={dieselPrice/22} isEv={false} />
-          <CompareCard name="CNG" subtitle={`₹${cngPrice}/kg · 28 km/kg`} costPerKm={cngPrice/28} isEv={false} />
-        </>
+
+          {/* Toggle below the current with button for "Change fuel type" */}
+          <div className="flex items-center justify-between gap-2 px-1 pt-1">
+            <button
+              type="button"
+              onClick={cycleFuel}
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition cursor-pointer"
+            >
+              <Fuel size={14} className="text-emerald-600 dark:text-emerald-400" />
+              <span>Change fuel type</span>
+              <ChevronDown size={13} className="text-zinc-400" />
+            </button>
+
+            {/* Toggle Pills */}
+            <div className="flex rounded-xl bg-zinc-100 p-1 dark:bg-zinc-800 border border-zinc-200/60 dark:border-zinc-700/60">
+              {(["petrol", "diesel", "cng"] as const).map((f) => (
+                <button
+                  key={f}
+                  type="button"
+                  onClick={() => setSelectedFuel(f)}
+                  className={`px-3 py-1 text-xs font-bold rounded-lg capitalize transition cursor-pointer ${
+                    selectedFuel === f
+                      ? "bg-white text-emerald-600 shadow-xs dark:bg-zinc-700 dark:text-emerald-400"
+                      : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300"
+                  }`}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Selected fuel card only */}
+          {selectedFuel === "petrol" && (
+            <CompareCard name="Petrol" subtitle={`₹${petrolPrice}/L · 18 km/L`} costPerKm={petrolPrice/18} isEv={false} currentCostPerKm={selfCostPerKm} />
+          )}
+          {selectedFuel === "diesel" && (
+            <CompareCard name="Diesel" subtitle={`₹${dieselPrice}/L · 22 km/L`} costPerKm={dieselPrice/22} isEv={false} currentCostPerKm={selfCostPerKm} />
+          )}
+          {selectedFuel === "cng" && (
+            <CompareCard name="CNG" subtitle={`₹${cngPrice}/kg · 28 km/kg`} costPerKm={cngPrice/28} isEv={false} currentCostPerKm={selfCostPerKm} />
+          )}
+        </div>
       )}
 
-      {subTab === "models" && item.energyComparison.filter(c=>c.fuelType?.toLowerCase()!=="self").map((comp,i) => {
-        const isEv = comp.fuelType?.toLowerCase()==="ev";
-        const cost = isEv? evCostPerKm : (parseFloat(comp.fuelPrice)||0) / (parseFloat(comp.mileage)||1);
-        return <CompareCard key={i} name={comp.name} subtitle={`${comp.fuelType} · ${comp.mileage} km`} costPerKm={cost} isEv={isEv} />
-      })}
+      {subTab === "models" && (
+        <div className="space-y-3">
+          <CurrentVehicleCostCard name={item.title} costPerKm={selfCostPerKm} subtitle={`${activeVariant?.range || 300} km range`} />
+          {item.energyComparison.filter(c=>c.fuelType?.toLowerCase()!=="self").map((comp,i) => {
+            const isEv = comp.fuelType?.toLowerCase()==="ev";
+            const cost = isEv? evCostPerKm : (parseFloat(comp.fuelPrice)||0) / (parseFloat(comp.mileage)||1);
+            return <CompareCard key={i} name={comp.name} subtitle={`${comp.fuelType} · ${comp.mileage} km`} costPerKm={cost} isEv={isEv} currentCostPerKm={selfCostPerKm} />
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -598,7 +676,8 @@ function CurrentVehicleCostCard({ name, subtitle, costPerKm }: { name: string; s
   );
 }
 
-function CompareCard({ name, subtitle, costPerKm, isEv }: { name: string; subtitle: string; costPerKm: number; isEv: boolean }) {
+function CompareCard({ name, subtitle, costPerKm, isEv, currentCostPerKm }: { name: string; subtitle: string; costPerKm: number; isEv: boolean; currentCostPerKm?: number }) {
+  const savings = currentCostPerKm !== undefined && costPerKm > currentCostPerKm ? costPerKm - currentCostPerKm : 0;
   return (
     <div className="rounded-2xl border border-zinc-200 bg-white p-4 dark:bg-zinc-900/50 dark:border-zinc-800">
       <div className="flex items-center justify-between">
@@ -606,9 +685,20 @@ function CompareCard({ name, subtitle, costPerKm, isEv }: { name: string; subtit
           <div className="h-10 w-10 rounded-xl bg-zinc-100 flex items-center justify-center dark:bg-zinc-800">
             {isEv? <Zap size={18} className="text-emerald-600" /> : <Fuel size={18} className="text-zinc-500" />}
           </div>
-          <div><p className="text-sm font-medium">{name}</p><p className="text-xs text-zinc-500">{subtitle}</p></div>
+          <div>
+            <p className="text-sm font-medium">{name}</p>
+            <p className="text-xs text-zinc-500">{subtitle}</p>
+            {savings > 0 && (
+              <p className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 mt-0.5">
+                Save ₹{savings.toFixed(1)}/km with EV
+              </p>
+            )}
+          </div>
         </div>
-        <p className="text-xl font-semibold">₹{costPerKm.toFixed(1)}</p>
+        <div className="text-right">
+          <p className="text-[10px] uppercase text-zinc-400">Cost/km</p>
+          <p className="text-xl font-semibold">₹{costPerKm.toFixed(1)}</p>
+        </div>
       </div>
     </div>
   );

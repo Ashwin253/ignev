@@ -1,5 +1,5 @@
 import React, { Suspense } from "react";
-import { fetchEvListingsFromSupabase } from "../lib/supabase";
+import { fetchEvListingsFromSupabase, fetchBrandRankings } from "../lib/supabase";
 import { fetchHomepageData, formatPricing } from "../lib/wordpress";
 import CatalogBrowser from "../components/CatalogBrowser";
 import LogoLoader from "../components/LogoLoader";
@@ -16,9 +16,14 @@ export const metadata = {
 
 export default async function UpcomingPage() {
   let listings: any[] = [];
+  let brandRankings: import("../lib/brand-rankings").BrandRankItem[] = [];
 
   try {
-    const sbListings = await fetchEvListingsFromSupabase(100);
+    const [sbListings, liveRankings] = await Promise.all([
+      fetchEvListingsFromSupabase(100),
+      fetchBrandRankings(),
+    ]);
+    if (liveRankings && liveRankings.length) brandRankings = liveRankings;
     if (sbListings.length) listings = sbListings;
   } catch { /* ignore and fallback */ }
 
@@ -45,6 +50,8 @@ export default async function UpcomingPage() {
     prices: l.prices,
     baas: l.baas,
     video_links: l.video_links,
+    batterySpecs: l.batterySpecs,
+    batteryVariants: l.batteryVariants,
   }));
 
   return (
@@ -72,6 +79,7 @@ export default async function UpcomingPage() {
             items={items}
             hideComingSoonToggle={true}
             forceUpcoming={true}
+            brandRankings={brandRankings}
           />
         </Suspense>
       </div>

@@ -14,13 +14,16 @@ export function normalizeBrand(raw: string | null | undefined): string {
   if (cleaned === "ATHER ENERGY") return "ATHER";
   if (cleaned === "TVS MOTOR" || cleaned === "TVS MOTORS") return "TVS";
   if (cleaned === "BAJAJ AUTO") return "BAJAJ";
-  if (cleaned === "HERO VIDA") return "VIDA";
+  if (cleaned === "HERO VIDA" || cleaned === "VIDA POWERED BY HERO") return "VIDA";
   if (cleaned === "SIMPLE ENERGY") return "SIMPLE";
   if (cleaned === "TATA") return "TATA MOTORS";
   if (cleaned === "EULER") return "EULER MOTORS";
   if (cleaned === "ULTRAVIOLET") return "ULTRAVIOLETTE";
-  if (cleaned === "MARUTI") return "MARUTI SUZUKI";
+  if (cleaned === "MARUTI" || cleaned === "SUZUKI" || cleaned === "MARUTI SUZUKI INDIA") return "MARUTI SUZUKI";
   if (cleaned === "ASHOK") return "ASHOK LEYLAND";
+  if (cleaned === "MAHINDRA LAST MILE MOBILITY" || cleaned === "MAHINDRA ELECTRIC") return "MAHINDRA";
+  if (cleaned === "HERO ELECTRIC") return "HERO";
+  if (cleaned === "OMEGA SEIKI MOBILITY") return "OMEGA SEIKI";
   return cleaned;
 }
 

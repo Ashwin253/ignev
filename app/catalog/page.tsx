@@ -2,7 +2,7 @@ import React, { Suspense } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import CatalogBrowser from "../components/CatalogBrowser";
-import { fetchEvListingsFromSupabase } from "../lib/supabase";
+import { fetchEvListingsFromSupabase, fetchBrandRankings } from "../lib/supabase";
 import { formatPricing } from "../lib/wordpress";
 import LogoLoader from "../components/LogoLoader";
 
@@ -17,10 +17,17 @@ export const metadata = {
 
 export default async function CatalogPage() {
   let items: import("../components/CatalogBrowser").CatalogItem[] = [];
+  let brandRankings: import("../lib/brand-rankings").BrandRankItem[] = [];
 
   // 1. Fetch from Supabase (fastest, most reliable)
   try {
-    const sbListings = await fetchEvListingsFromSupabase(50);
+    const [sbListings, liveRankings] = await Promise.all([
+      fetchEvListingsFromSupabase(100),
+      fetchBrandRankings(),
+    ]);
+    if (liveRankings && liveRankings.length) {
+      brandRankings = liveRankings;
+    }
     if (sbListings.length) {
       items = sbListings.map((l) => ({
         name: l.title,
@@ -40,15 +47,19 @@ export default async function CatalogPage() {
         prices: l.prices,
         baas: l.baas,
         video_links: l.video_links,
+        batterySpecs: l.batterySpecs,
+        batteryVariants: l.batteryVariants,
       }));
     }
   } catch { /* Supabase failed or not configured */ }
 
   return (
-    <section className="min-h-screen bg-white dark:bg-[#0f1115] text-zinc-900 dark:text-white py-28 relative overflow-hidden transition-colors duration-300">
+    <section className="min-h-screen bg-white dark:bg-[#0f1115] text-zinc-900 dark:text-white py-28 relative transition-colors duration-300">
       {/* Decorative Ambient Glowing Blurs */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#34ebb1]/15 dark:bg-[#34ebb1]/5 rounded-full blur-[130px] pointer-events-none"></div>
-      <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-[#34ebb1]/10 dark:bg-[#34ebb1]/5 rounded-full blur-[130px] pointer-events-none"></div>
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#34ebb1]/15 dark:bg-[#34ebb1]/5 rounded-full blur-[130px]"></div>
+        <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-[#34ebb1]/10 dark:bg-[#34ebb1]/5 rounded-full blur-[130px]"></div>
+      </div>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
@@ -72,7 +83,7 @@ export default async function CatalogPage() {
         </div>
 
         <Suspense fallback={<LogoLoader fullscreen={false} message="Loading catalog..." />}>
-          <CatalogBrowser items={items} />
+          <CatalogBrowser items={items} brandRankings={brandRankings} />
         </Suspense>
       </div>
     </section>

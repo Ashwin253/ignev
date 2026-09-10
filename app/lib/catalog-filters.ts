@@ -1,6 +1,7 @@
 import { isTwoWheeler } from "./vehicle-images";
 
 export const VEHICLE_CATEGORIES = [
+  { value: "all", label: "All" },
   { value: "bike", label: "Bike" },
   { value: "scooter", label: "Scooter" },
   { value: "cars", label: "Cars" },
@@ -163,11 +164,15 @@ export function isElectricCarListing(l: VehicleLike): boolean {
   return isCar || (!typeLower.includes("truck") && !typeLower.includes("tempo") && !bodyType.includes("tempo"));
 }
 
-/** Map any type query param to a canonical vehicle category value: bike | scooter | cars | commercial */
+/** Map any type query param to a canonical vehicle category value: all | bike | scooter | cars | commercial */
 export function normalizeCatalogCategory(raw: string | null | undefined): VehicleCategoryValue {
-  if (!raw) return "cars";
+  if (!raw) return "all";
 
   const normalized = raw.toLowerCase().replace(/\+/g, " ").trim();
+
+  if (normalized === "all" || normalized === "any" || normalized === "") {
+    return "all";
+  }
 
   if (
     normalized === "bike" ||
@@ -218,11 +223,12 @@ export function normalizeCatalogCategory(raw: string | null | undefined): Vehicl
     return "scooter";
   }
 
-  return "cars";
+  return "all";
 }
 
 export function matchesVehicleCategory(item: VehicleLike, category: VehicleCategoryValue | string): boolean {
   const norm = normalizeCatalogCategory(category);
+  if (norm === "all") return true;
   if (norm === "bike") return isElectricBikeListing(item);
   if (norm === "scooter") return isElectricScooterListing(item);
   if (norm === "cars") return isElectricCarListing(item);

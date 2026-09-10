@@ -20,6 +20,7 @@ import { fetchEvListingBySlugFromSupabase, fetchEvListingsFromSupabase, fetchPro
 import ProductGallery from "../../components/ProductGallery";
 import ProductMainUI from "../ProductMainUI";
 import { ProductSelectionProvider } from "../ProductSelectionProvider";
+import MoreLikeThisSection from "../MoreLikeThisSection";
 import dynamic from "next/dynamic";
 
 const ProductDetailsSkeleton = () => (
@@ -199,13 +200,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
         {/* Related */}
         <Suspense fallback={
-          <div className="mt-32">
-            <h2 className="mb-8 text-2xl font-black text-black">More like this</h2>
+          <div className="mt-20 sm:mt-32">
+            <h2 className="mb-6 text-2xl font-black text-zinc-900 dark:text-white">More like this</h2>
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
               <ProductSkeleton />
-              <ProductSkeleton />
-              <ProductSkeleton />
-              <ProductSkeleton />
+              <div className="hidden sm:block"><ProductSkeleton /></div>
+              <div className="hidden sm:block"><ProductSkeleton /></div>
+              <div className="hidden sm:block"><ProductSkeleton /></div>
             </div>
           </div>
         }>
@@ -344,53 +345,18 @@ async function RelatedListings({ slug, currentItem }: { slug: string; currentIte
   if (related.length === 0) {
     return (
       <SmoothCollapseEmptyState>
-        <div className="mt-32">
-          <h2 className="mb-8 text-2xl font-black text-zinc-900 dark:text-white">More like this</h2>
+        <div className="mt-20 sm:mt-32">
+          <h2 className="mb-6 text-2xl font-black text-zinc-900 dark:text-white">More like this</h2>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             <ProductSkeleton />
-            <ProductSkeleton />
-            <ProductSkeleton />
-            <ProductSkeleton />
+            <div className="hidden sm:block"><ProductSkeleton /></div>
+            <div className="hidden sm:block"><ProductSkeleton /></div>
+            <div className="hidden sm:block"><ProductSkeleton /></div>
           </div>
         </div>
       </SmoothCollapseEmptyState>
     );
   }
 
-  return (
-    <div className="mt-32">
-      <h2 className="mb-8 text-2xl font-black text-zinc-900 dark:text-white">More like this</h2>
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {related.map((rel) => (
-          <Link key={rel.id} href={`/product/${rel.slug}`}
-            className="group flex flex-col h-full overflow-hidden rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-md hover:border-[#a5e6d1]/60 hover:shadow-xl transition-all duration-350 hover:-translate-y-1">
-            <div className="relative aspect-4/3 overflow-hidden bg-transparent shrink-0">
-              <Image
-                src={getVehiclePhoto(rel.photo, rel)}
-                alt={rel.title}
-                fill
-                sizes="33vw"
-                className="object-contain group-hover:scale-105 transition-transform duration-500"
-              />
-            </div>
-            <div className="p-5 flex flex-col grow">
-              <div>
-                <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#10855f] dark:text-[#34ebb1]">{rel.brand}</p>
-                <h3 className="mt-1 text-lg font-black text-zinc-900 dark:text-white">{rel.title}</h3>
-                {rel.prices.length > 0 && <p className="mt-1 text-sm text-zinc-550 dark:text-zinc-350 font-bold">{formatPricing(rel.prices)}</p>}
-                <p className={`mt-1.5 text-xs font-medium ${isLaunched(rel.launchdate) ? "text-emerald-600" : "text-amber-600"}`}>
-                  {formatLaunchDate(rel.launchdate)}
-                </p>
-              </div>
-              <div className="mt-auto pt-5">
-                <span className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-50 dark:bg-zinc-800 border border-slate-250 dark:border-zinc-700 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-zinc-300 transition-all duration-300 group-hover:bg-[#a5e6d1] group-hover:border-[#a5e6d1] group-hover:text-slate-950 group-hover:font-extrabold shadow-inner group-hover:shadow-[0_0_15px_rgba(165,230,209,0.3)]">
-                  View Details <ArrowRight size={16} />
-                </span>
-              </div>
-            </div>
-          </Link>
-        ))}
-      </div>
-    </div>
-  );
+  return <MoreLikeThisSection related={related} />;
 }

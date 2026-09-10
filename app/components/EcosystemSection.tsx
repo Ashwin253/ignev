@@ -3,7 +3,13 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
+
+const DotLottieReact = dynamic(
+  () => import("@lottiefiles/dotlottie-react").then((m) => m.DotLottieReact),
+  { ssr: false }
+);
 import {
   Zap,
   CheckCircle2,
@@ -33,7 +39,7 @@ import type { WPUpdate, EvListing, HeroBanner } from "../lib/wordpress";
 import { isLaunched } from "../lib/wordpress";
 import { getVehiclePhoto, isTwoWheeler } from "../lib/vehicle-images";
 import { matchesVehicleCategory } from "../lib/catalog-filters";
-import { sortVehiclesByBrandRank } from "../lib/brand-rankings";
+import { sortVehiclesByBrandRank, type BrandRankItem } from "../lib/brand-rankings";
 
 const VEHICLE_BACKGROUNDS = [
   "/listingbackground.jpg",
@@ -47,6 +53,7 @@ interface EcosystemSectionProps {
   updates?: WPUpdate[];
   listings?: EvListing[];
   banners?: HeroBanner[];
+  brandRankings?: BrandRankItem[];
 }
 
 type CategoryTab = "bike" | "scooter" | "cars" | "commercial";
@@ -165,55 +172,8 @@ export function isUpcomingVehicle(l: EvListing): boolean {
   return false;
 }
 
-// Helper to extract Power, Torque, and Battery capacity for vehicle cards
-export function getVehicleCardSpecs(l: EvListing) {
-  // 1. Power (max power in bhp, kW, or PS)
-  const specWithPower = l.batterySpecs?.find((s) => s.maxPower && String(s.maxPower).trim() !== "");
-  const rawPower = specWithPower?.maxPower || (l as any).max_power_bhp || (l as any).power || "";
-  let power = "";
-  if (rawPower && rawPower !== "0" && rawPower !== "null") {
-    const pStr = String(rawPower).trim();
-    if (/bhp|kw|ps|hp/i.test(pStr)) {
-      power = pStr;
-    } else if (!isNaN(Number(pStr))) {
-      power = `${pStr} bhp`;
-    } else {
-      power = pStr;
-    }
-  }
-
-  // 2. Torque (max torque in Nm)
-  const specWithTorque = l.batterySpecs?.find((s) => s.maxTorque && String(s.maxTorque).trim() !== "");
-  const rawTorque = specWithTorque?.maxTorque || (l as any).max_torque_nm || (l as any).torque || "";
-  let torque = "";
-  if (rawTorque && rawTorque !== "0" && rawTorque !== "null") {
-    const tStr = String(rawTorque).trim();
-    if (/nm|kgm/i.test(tStr)) {
-      torque = tStr;
-    } else if (!isNaN(Number(tStr))) {
-      torque = `${tStr} Nm`;
-    } else {
-      torque = tStr;
-    }
-  }
-
-  // 3. Battery Capacity (in kWh)
-  const variantWithCap = l.batteryVariants?.find((v) => v.capacity && String(v.capacity).trim() !== "");
-  const rawBattery = variantWithCap?.capacity || (l as any).battery_capacity_kwh || (l as any).battery_capacity || l.batteryCapacity || "";
-  let battery = "";
-  if (rawBattery && rawBattery !== "0" && rawBattery !== "null") {
-    const bStr = String(rawBattery).trim();
-    if (/kwh|ah/i.test(bStr)) {
-      battery = bStr;
-    } else if (!isNaN(Number(bStr))) {
-      battery = `${bStr} kWh`;
-    } else {
-      battery = bStr;
-    }
-  }
-
-  return { power, torque, battery };
-}
+import { getVehicleCardSpecs } from "../lib/listing-specs";
+export { getVehicleCardSpecs };
 
 interface VehicleScrollSectionProps {
   type: "new" | "upcoming";
@@ -246,6 +206,7 @@ function VehicleScrollSection({
   useEffect(() => {
     const el = rowRef.current;
     if (!el) return;
+    el.scrollLeft = 0;
     updateScrollState();
     el.addEventListener("scroll", updateScrollState, { passive: true });
     window.addEventListener("resize", updateScrollState);
@@ -253,7 +214,7 @@ function VehicleScrollSection({
       el.removeEventListener("scroll", updateScrollState);
       window.removeEventListener("resize", updateScrollState);
     };
-  }, [items.length]);
+  }, [categoryTab, items.length]);
 
   const scroll = (direction: "left" | "right") => {
     const el = rowRef.current;
@@ -285,20 +246,17 @@ function VehicleScrollSection({
 
   return (
     <motion.section
-      key={`${categoryTab || type}-${items.length}`}
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, margin: "-40px" }}
       variants={{
-        hidden: { opacity: 0, y: 60 },
+        hidden: { opacity: 0, y: 30 },
         visible: {
           opacity: 1,
           y: 0,
           transition: {
-            duration: 2.0,
+            duration: 0.5,
             ease: [0.16, 1, 0.3, 1],
-            delayChildren: 2.0,
-            staggerChildren: 0.12,
           },
         },
       }}
@@ -372,16 +330,12 @@ function VehicleScrollSection({
             return (
               <motion.div
                 key={`${categoryTab || type}-${l.slug || i}`}
-                variants={{
-                  hidden: { opacity: 0, x: 80 },
-                  visible: {
-                    opacity: 1,
-                    x: 0,
-                    transition: {
-                      duration: 2.0,
-                      ease: [0.16, 1, 0.3, 1],
-                    },
-                  },
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{
+                  duration: 1.0,
+                  delay: Math.min(i * 0.08, 0.4),
+                  ease: [0.16, 1, 0.3, 1],
                 }}
                 className="flex-shrink-0 flex snap-start w-[calc(100vw-3.5rem)] max-w-[360px] sm:w-[calc((100%-1rem)/2)] md:w-[calc((100%-2rem)/3)] lg:w-[calc((100%-3rem)/4)]"
               >
@@ -521,11 +475,13 @@ function VehicleScrollSection({
 interface VehicleCategorySelectorProps {
   listings?: EvListing[];
   activeCategory: CategoryTab;
+  brandRankings?: BrandRankItem[];
 }
 
 function VehicleCategorySelector({
   listings = [],
   activeCategory,
+  brandRankings = [],
 }: VehicleCategorySelectorProps) {
   const rowRef = useRef<HTMLDivElement | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -556,16 +512,16 @@ function VehicleCategorySelector({
     const matched = listings.filter(
       (l) => matchesVehicleCategory(l, activeCategory) && !isUpcomingVehicle(l)
     );
-    if (matched.length > 0) return sortVehiclesByBrandRank(matched, activeCategory);
+    if (matched.length > 0) return sortVehiclesByBrandRank(matched, activeCategory, brandRankings);
     // Fallback if category has no launched models
     const fallback = listings.filter((l) => matchesVehicleCategory(l, activeCategory));
-    return sortVehiclesByBrandRank(fallback, activeCategory);
-  }, [listings, activeCategory]);
+    return sortVehiclesByBrandRank(fallback, activeCategory, brandRankings);
+  }, [listings, activeCategory, brandRankings]);
 
   useEffect(() => {
     const el = rowRef.current;
     if (!el) return;
-    el.scrollTo({ left: 0, behavior: "smooth" });
+    el.scrollLeft = 0;
     updateScrollState();
     el.addEventListener("scroll", updateScrollState, { passive: true });
     window.addEventListener("resize", updateScrollState);
@@ -581,20 +537,17 @@ function VehicleCategorySelector({
 
   return (
     <motion.section
-      key={`${activeCategory}-showcase-section`}
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, margin: "-40px" }}
       variants={{
-        hidden: { opacity: 0, y: 60 },
+        hidden: { opacity: 0, y: 30 },
         visible: {
           opacity: 1,
           y: 0,
           transition: {
-            duration: 2.0,
+            duration: 0.5,
             ease: [0.16, 1, 0.3, 1],
-            delayChildren: 2.0,
-            staggerChildren: 0.12,
           },
         },
       }}
@@ -678,16 +631,12 @@ function VehicleCategorySelector({
             return (
               <motion.div
                 key={`${activeCategory}-${l.slug || i}`}
-                variants={{
-                  hidden: { opacity: 0, x: 80 },
-                  visible: {
-                    opacity: 1,
-                    x: 0,
-                    transition: {
-                      duration: 2.0,
-                      ease: [0.16, 1, 0.3, 1],
-                    },
-                  },
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{
+                  duration: 1.0,
+                  delay: Math.min(i * 0.08, 0.4),
+                  ease: [0.16, 1, 0.3, 1],
                 }}
                 className="flex-shrink-0 flex snap-start w-[calc(100vw-3.5rem)] max-w-[360px] sm:w-[calc((100%-1rem)/2)] md:w-[calc((100%-2rem)/3)] lg:w-[calc((100%-3rem)/4)]"
               >
@@ -942,10 +891,32 @@ function HeroBannerCardMedia({
   );
 }
 
-export default function EcosystemSection({ updates = [], listings = [], banners = [] }: EcosystemSectionProps) {
+export default function EcosystemSection({
+  updates = [],
+  listings = [],
+  banners = [],
+  brandRankings = [],
+}: EcosystemSectionProps) {
   const router = useRouter();
   const [heroSearchQuery, setHeroSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<CategoryTab>("bike");
+
+  const [liveBrandRankings, setLiveBrandRankings] = useState<BrandRankItem[]>(brandRankings || []);
+
+  useEffect(() => {
+    if (brandRankings && brandRankings.length > 0) {
+      setLiveBrandRankings(brandRankings);
+    } else {
+      fetch("/api/brand-rankings")
+        .then((res) => res.json())
+        .then((data) => {
+          if (Array.isArray(data.rankings) && data.rankings.length > 0) {
+            setLiveBrandRankings(data.rankings);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [brandRankings]);
 
   // Reveal state: initially false (shows "Explore Listing" pill), switches to true (revealing 4 tabs & listings)
   const [hasRevealed, setHasRevealed] = useState(false);
@@ -1028,8 +999,8 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
   // Filter listings by active category for the 3 ecosystem sections
   const categoryListings = useMemo(() => {
     const matched = listings.filter((l) => matchesVehicleCategory(l, activeCategory));
-    return sortVehiclesByBrandRank(matched, activeCategory);
-  }, [listings, activeCategory]);
+    return sortVehiclesByBrandRank(matched, activeCategory, liveBrandRankings);
+  }, [listings, activeCategory, liveBrandRankings]);
 
   const categoryNewListings = useMemo(() => {
     // Only launched models, sorted descending by launchdate (newest / most recent releases first)
@@ -1476,7 +1447,7 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
                       }}
                       className="inline-flex items-center gap-2 font-extrabold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow-lg group"
                     >
-                      <span>Explore Catalog</span>
+                      <span>Explore </span>
                       <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                     </Link>
                   </div>
@@ -1519,7 +1490,9 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
                     onClick={handleRevealListing}
                     className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-full bg-[#1F7A4D] dark:bg-[#8FE24A] text-white dark:text-[#07130E] text-xs font-black shadow-xs transition-transform active:scale-95 cursor-pointer group"
                   >
-                    <Sparkles className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform shrink-0" />
+                    <div className="w-6 h-6 flex items-center justify-center shrink-0 -my-1 bg-transparent">
+                      <DotLottieReact src="/lottie/S6eIGuvPMW.lottie" loop autoplay backgroundColor="transparent" className="w-6 h-6 bg-transparent" />
+                    </div>
                     <span>Explore</span>
                     <ChevronDown className="w-3 h-3 group-hover:translate-y-0.5 transition-transform shrink-0 opacity-80" strokeWidth={2.6} />
                   </button>
@@ -1553,8 +1526,8 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
                   onClick={handleRevealListing}
                   className="group hidden sm:inline-flex items-center gap-3 px-8 py-3.5 rounded-full bg-white/95 dark:bg-[#092218]/95 backdrop-blur-2xl border-2 border-[#1F7A4D]/40 dark:border-emerald-500/50 shadow-xl hover:shadow-2xl shadow-emerald-950/15 hover:border-[#1F7A4D] dark:hover:border-[#8FE24A] transition-all duration-300 cursor-pointer active:scale-95"
                 >
-                  <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/60 flex items-center justify-center text-[#1F7A4D] dark:text-[#8FE24A] group-hover:rotate-12 transition-transform shrink-0">
-                    <Sparkles className="w-4.5 h-4.5" />
+                  <div className="w-10 h-10 flex items-center justify-center text-[#1F7A4D] dark:text-[#8FE24A] shrink-0 overflow-hidden bg-transparent">
+                    <DotLottieReact src="/lottie/S6eIGuvPMW.lottie" loop autoplay backgroundColor="transparent" className="w-9 h-9 bg-transparent" />
                   </div>
                   <div className="flex flex-col text-left">
                     <span className="text-base font-black text-[#0A2A1E] dark:text-white tracking-tight flex items-center gap-2">
@@ -1585,7 +1558,7 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
               >
                 {/* Centered Pill Bar (Bikes, Scooter, Cars, Commercial) - 2 rows on mobile (grid grid-cols-2), 1 row on desktop (sm:flex) */}
                 <div
-                  className={`grid grid-cols-2 sm:flex sm:items-center sm:justify-center gap-2 sm:gap-2.5 p-2 sm:p-2 rounded-2xl sm:rounded-full bg-white/95 dark:bg-[#092218]/95 backdrop-blur-2xl border-2 transition-all duration-300 w-full max-w-sm sm:w-auto sm:max-w-none mx-auto ${
+                  className={`grid grid-cols-2 sm:flex sm:items-center sm:justify-center gap-2 sm:gap-2.5 p-2 sm:p-2 rounded-2xl sm:rounded-full bg-white/95 dark:bg-[#092218]/95 backdrop-blur-2xl border-2 transition-[border-color,box-shadow,ring] duration-200 w-full max-w-sm sm:w-auto sm:max-w-none mx-auto ${
                     isFloating
                       ? "border-[#1F7A4D]/40 dark:border-emerald-500/50 shadow-2xl shadow-emerald-950/20 dark:shadow-black/70 ring-2 ring-emerald-500/20"
                       : "border-[#D8E3D3] dark:border-emerald-900/50 shadow-xl dark:shadow-2xl"
@@ -1604,9 +1577,9 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
                         initial={{ opacity: 0, y: 15 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.4, delay: idx * 0.06, ease: [0.16, 1, 0.3, 1] }}
-                        whileHover={{ scale: 1.03 }}
-                        whileTap={{ scale: 0.97 }}
-                        className={`relative flex items-center justify-center sm:justify-start gap-2 sm:gap-2.5 w-full sm:w-auto px-3.5 sm:px-6 py-2.5 sm:py-3.5 rounded-xl sm:rounded-full text-xs sm:text-sm md:text-base font-extrabold transition-all cursor-pointer select-none ${
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className={`relative flex items-center justify-center sm:justify-start gap-2 sm:gap-2.5 w-full sm:w-auto px-3.5 sm:px-6 py-2.5 sm:py-3.5 rounded-xl sm:rounded-full text-xs sm:text-sm md:text-base font-extrabold transition-colors cursor-pointer select-none ${
                           isActive
                             ? "text-white dark:text-[#07130E]"
                             : "text-[#3C5347] dark:text-slate-300 hover:text-[#0A2A1E] dark:hover:text-white hover:bg-zinc-100/70 dark:hover:bg-zinc-800/40"
@@ -1616,7 +1589,7 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
                           <motion.div
                             layoutId="centeredActiveEcosystemTab"
                             className="absolute inset-0 rounded-xl sm:rounded-full bg-[#1F7A4D] dark:bg-[#8FE24A] shadow-md shadow-emerald-950/20"
-                            transition={{ type: "spring", stiffness: 420, damping: 32 }}
+                            transition={{ type: "spring", stiffness: 500, damping: 38 }}
                           />
                         )}
                         <Icon className="w-4 h-4 sm:w-5 sm:h-5 relative z-10 shrink-0" strokeWidth={2.4} />
@@ -1643,7 +1616,7 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
 
         {/* ── 3. DYNAMIC CONTENT: Separate sections that each reveals up when in screen, then cards animate from right ── */}
         <div
-          className={`transition-all duration-700 space-y-4 sm:space-y-8 ${
+          className={`transition-[opacity,filter] duration-500 space-y-4 sm:space-y-8 ${
             hasRevealed ? "pointer-events-auto opacity-100" : "pointer-events-none select-none opacity-40 blur-[0.5px]"
           }`}
         >
@@ -1652,11 +1625,12 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
             key={`showcase`}
             activeCategory={activeCategory}
             listings={listings}
+            brandRankings={liveBrandRankings}
           />
 
           {/* Section 2: Releases - Arises when scrolled into view, then cards animate from right */}
           <VehicleScrollSection
-            key={`${activeCategory}-releases`}
+            key="releases"
             type="new"
             categoryTab={activeCategory}
             categoryLabel={CATEGORY_CONFIG[activeCategory].label}
@@ -1665,7 +1639,7 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
 
           {/* Section 3: Upcoming - Arises when scrolled into view, then cards animate from right */}
           <VehicleScrollSection
-            key={`${activeCategory}-upcoming`}
+            key="upcoming"
             type="upcoming"
             categoryTab={activeCategory}
             categoryLabel={CATEGORY_CONFIG[activeCategory].label}
@@ -1676,17 +1650,30 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
 
       {/* 4. WHY EVPLSE SECTION */}
       <section className="py-12 sm:py-20 px-5 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="p-6 sm:p-8 md:p-12 rounded-3xl bg-[#0A2A1E] dark:bg-[#071912] border border-[#184834] dark:border-emerald-800/40 text-white relative overflow-hidden shadow-xl">
+        <div className="p-6 sm:p-8 md:p-12 rounded-3xl bg-[#edfcf2] dark:bg-[#071912] border border-[#184834]/20 dark:border-emerald-800/40 relative overflow-hidden shadow-xl">
           {/* Ambient radial glow for contrast and depth */}
-          <div className="absolute top-0 right-0 w-96 h-96 bg-[#1F7A4D]/25 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-0 right-0 w-96 h-96 bg-[#1F7A4D]/20 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#8FE24A]/15 rounded-full blur-3xl pointer-events-none" />
 
+          {/* Ambient Lottie illustration in back-right (desktop only, hidden on mobile) */}
+          <div className="hidden sm:block absolute -right-6 sm:-right-2 md:right-2 top-0 md:-top-4 w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 pointer-events-none select-none z-0 opacity-85 dark:opacity-60">
+            <DotLottieReact
+              src="/lottie/qU4m93idOL.lottie"
+              loop
+              autoplay
+              backgroundColor="transparent"
+              className="w-full h-full object-contain"
+            />
+          </div>
+
           <div className="max-w-2xl mb-6 sm:mb-10 relative z-10">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold tracking-wider uppercase bg-[#8FE24A]/20 text-[#8FE24A] border border-[#8FE24A]/30 mb-3">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold tracking-wider uppercase bg-[#1F7A4D]/15 text-[#1F7A4D] border border-[#1F7A4D]/25 dark:bg-[#8FE24A]/20 dark:text-[#8FE24A] dark:border-[#8FE24A]/30 mb-3">
               The Difference
             </div>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight">Why EVPLSE?</h2>
-            <p className="text-slate-200 dark:text-emerald-100/90 text-sm sm:text-base mt-2 font-normal leading-relaxed">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#0A2A1E] dark:text-white tracking-tight">
+              Why EVPLSE?
+            </h2>
+            <p className="text-[#2C4A3E] dark:text-emerald-100/90 text-sm sm:text-base mt-2 font-medium leading-relaxed max-w-xl">
               Trust isn't claimed — it's built into how the platform works.
             </p>
           </div>
@@ -1695,69 +1682,69 @@ export default function EcosystemSection({ updates = [], listings = [], banners 
           <div className="relative z-10 -mx-6 px-6 sm:-mx-8 sm:px-8 md:mx-0 md:px-0 overflow-x-auto md:overflow-visible scrollbar-hide">
             <div className="flex gap-4 md:grid md:grid-cols-3 md:gap-6 pb-4 md:pb-0">
               {/* Card 1: Trust */}
-              <div className="flex-shrink-0 w-[78vw] sm:w-[55vw] md:w-auto p-5 sm:p-6 md:p-7 rounded-2xl bg-white/10 dark:bg-[#0C241B] border border-white/15 dark:border-emerald-700/40 hover:border-[#8FE24A]/60 transition-all backdrop-blur-md">
-                <div className="text-xs font-mono font-bold text-[#8FE24A] mb-3 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-[#8FE24A]" />
+              <div className="flex-shrink-0 w-[78vw] sm:w-[55vw] md:w-auto p-5 sm:p-6 md:p-7 rounded-2xl bg-white/90 dark:bg-[#0C241B]/95 border border-emerald-200/80 dark:border-emerald-700/40 hover:border-[#1F7A4D]/60 dark:hover:border-[#8FE24A]/60 transition-all backdrop-blur-md shadow-sm">
+                <div className="text-xs font-mono font-bold text-[#1F7A4D] dark:text-[#8FE24A] mb-3 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-[#1F7A4D] dark:bg-[#8FE24A]" />
                   01 — TRUST
                 </div>
-                <h3 className="text-lg sm:text-xl font-bold text-white mb-3">Trust</h3>
-                <ul className="space-y-3 text-sm text-slate-100 dark:text-emerald-100 font-medium">
+                <h3 className="text-lg sm:text-xl font-bold text-[#0A2A1E] dark:text-white mb-3">Trust</h3>
+                <ul className="space-y-3 text-sm text-[#2C4A3E] dark:text-emerald-100 font-medium">
                   <li className="flex items-start gap-2.5">
-                    <CheckCircle2 className="w-4 h-4 text-[#8FE24A] shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4 h-4 text-[#1F7A4D] dark:text-[#8FE24A] shrink-0 mt-0.5" />
                     <span>Verified information, not marketing copy</span>
                   </li>
                   <li className="flex items-start gap-2.5">
-                    <CheckCircle2 className="w-4 h-4 text-[#8FE24A] shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4 h-4 text-[#1F7A4D] dark:text-[#8FE24A] shrink-0 mt-0.5" />
                     <span>No paid rankings, ever</span>
                   </li>
                   <li className="flex items-start gap-2.5">
-                    <CheckCircle2 className="w-4 h-4 text-[#8FE24A] shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4 h-4 text-[#1F7A4D] dark:text-[#8FE24A] shrink-0 mt-0.5" />
                     <span>Transparent, side-by-side comparisons</span>
                   </li>
                 </ul>
               </div>
 
               {/* Card 2: Expertise */}
-              <div className="flex-shrink-0 w-[78vw] sm:w-[55vw] md:w-auto p-5 sm:p-6 md:p-7 rounded-2xl bg-white/10 dark:bg-[#0C241B] border border-white/15 dark:border-emerald-700/40 hover:border-[#8FE24A]/60 transition-all backdrop-blur-md">
-                <div className="text-xs font-mono font-bold text-[#8FE24A] mb-3 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-[#8FE24A]" />
+              <div className="flex-shrink-0 w-[78vw] sm:w-[55vw] md:w-auto p-5 sm:p-6 md:p-7 rounded-2xl bg-white/90 dark:bg-[#0C241B]/95 border border-emerald-200/80 dark:border-emerald-700/40 hover:border-[#1F7A4D]/60 dark:hover:border-[#8FE24A]/60 transition-all backdrop-blur-md shadow-sm">
+                <div className="text-xs font-mono font-bold text-[#1F7A4D] dark:text-[#8FE24A] mb-3 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-[#1F7A4D] dark:bg-[#8FE24A]" />
                   02 — EXPERTISE
                 </div>
-                <h3 className="text-lg sm:text-xl font-bold text-white mb-3">Expertise</h3>
-                <ul className="space-y-3 text-sm text-slate-100 dark:text-emerald-100 font-medium">
+                <h3 className="text-lg sm:text-xl font-bold text-[#0A2A1E] dark:text-white mb-3">Expertise</h3>
+                <ul className="space-y-3 text-sm text-[#2C4A3E] dark:text-emerald-100 font-medium">
                   <li className="flex items-start gap-2.5">
-                    <CheckCircle2 className="w-4 h-4 text-[#8FE24A] shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4 h-4 text-[#1F7A4D] dark:text-[#8FE24A] shrink-0 mt-0.5" />
                     <span>Backed by industry experts</span>
                   </li>
                   <li className="flex items-start gap-2.5">
-                    <CheckCircle2 className="w-4 h-4 text-[#8FE24A] shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4 h-4 text-[#1F7A4D] dark:text-[#8FE24A] shrink-0 mt-0.5" />
                     <span>Real-world, on-road testing</span>
                   </li>
                   <li className="flex items-start gap-2.5">
-                    <CheckCircle2 className="w-4 h-4 text-[#8FE24A] shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4 h-4 text-[#1F7A4D] dark:text-[#8FE24A] shrink-0 mt-0.5" />
                     <span>The latest EV insights, explained simply</span>
                   </li>
                 </ul>
               </div>
 
               {/* Card 3: Ecosystem */}
-              <div className="flex-shrink-0 w-[78vw] sm:w-[55vw] md:w-auto p-5 sm:p-6 md:p-7 rounded-2xl bg-white/10 dark:bg-[#0C241B] border border-white/15 dark:border-emerald-700/40 hover:border-[#8FE24A]/60 transition-all backdrop-blur-md">
-                <div className="text-xs font-mono font-bold text-[#8FE24A] mb-3 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-[#8FE24A]" />
+              <div className="flex-shrink-0 w-[78vw] sm:w-[55vw] md:w-auto p-5 sm:p-6 md:p-7 rounded-2xl bg-white/90 dark:bg-[#0C241B]/95 border border-emerald-200/80 dark:border-emerald-700/40 hover:border-[#1F7A4D]/60 dark:hover:border-[#8FE24A]/60 transition-all backdrop-blur-md shadow-sm">
+                <div className="text-xs font-mono font-bold text-[#1F7A4D] dark:text-[#8FE24A] mb-3 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-[#1F7A4D] dark:bg-[#8FE24A]" />
                   03 — ECOSYSTEM
                 </div>
-                <h3 className="text-lg sm:text-xl font-bold text-white mb-3">Ecosystem</h3>
-                <ul className="space-y-3 text-sm text-slate-100 dark:text-emerald-100 font-medium">
+                <h3 className="text-lg sm:text-xl font-bold text-[#0A2A1E] dark:text-white mb-3">Ecosystem</h3>
+                <ul className="space-y-3 text-sm text-[#2C4A3E] dark:text-emerald-100 font-medium">
                   <li className="flex items-start gap-2.5">
-                    <CheckCircle2 className="w-4 h-4 text-[#8FE24A] shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4 h-4 text-[#1F7A4D] dark:text-[#8FE24A] shrink-0 mt-0.5" />
                     <span>Vehicles, charging &amp; finance</span>
                   </li>
                   <li className="flex items-start gap-2.5">
-                    <CheckCircle2 className="w-4 h-4 text-[#8FE24A] shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4 h-4 text-[#1F7A4D] dark:text-[#8FE24A] shrink-0 mt-0.5" />
                     <span>Insurance &amp; genuine parts</span>
                   </li>
                   <li className="flex items-start gap-2.5">
-                    <CheckCircle2 className="w-4 h-4 text-[#8FE24A] shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4 h-4 text-[#1F7A4D] dark:text-[#8FE24A] shrink-0 mt-0.5" />
                     <span>Fleet management — everything connected</span>
                   </li>
                 </ul>

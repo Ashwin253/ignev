@@ -313,9 +313,9 @@ export default function CheckoutDrawer({
                     className={`flex items-center justify-center gap-2 rounded-xl border px-3 py-3 text-xs font-bold transition ${paymentMethod === "cod" ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-slate-200 text-slate-500 hover:bg-slate-50"}`}>
                     <Banknote size={15} /> Cash on delivery
                   </button>
-                  <button type="button" onClick={() => setPaymentMethod("online")}
-                    className={`flex items-center justify-center gap-2 rounded-xl border px-3 py-3 text-xs font-bold transition ${paymentMethod === "online" ? "border-sky-500 bg-sky-50 text-sky-700" : "border-slate-200 text-slate-500 hover:bg-slate-50"}`}>
-                    <WalletCards size={15} /> Online payment
+                  <button type="button" disabled
+                    className="flex cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-xs font-bold text-slate-400 opacity-70">
+                    <WalletCards size={15} /> Prepaid unavailable
                   </button>
                 </div>
 

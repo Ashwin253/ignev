@@ -5,7 +5,7 @@ import {
   formatPricing,
   type EvListing,
 } from "./lib/wordpress";
-import { fetchEvListingsFromSupabase, fetchHeroBanners, fetchLatestUpdates } from "./lib/supabase";
+import { fetchEvListingsFromSupabase, fetchHeroBanners, fetchLatestUpdates, fetchBrandRankings } from "./lib/supabase";
 import { getVehiclePhoto } from "./lib/vehicle-images";
 import { Suspense } from "react";
 import dynamic from "next/dynamic";
@@ -63,6 +63,7 @@ async function HomeContent() {
   let listings: EvListing[] = [];
   let banners: any[] = [];
   let updates: any[] = [];
+  let brandRankings: any[] = [];
 
   try {
     const sbListings = await fetchEvListingsFromSupabase(100);
@@ -83,6 +84,9 @@ async function HomeContent() {
         photo: u.thumbnail || "https://images.unsplash.com/photo-1563720223185-11003d516935?w=800&auto=format&fit=crop&q=80"
       }));
     }
+
+    const sbRankings = await fetchBrandRankings();
+    if (sbRankings.length) brandRankings = sbRankings;
   } catch { /* Supabase not configured or failed */ }
 
   // Fall back to WP if Supabase returned nothing
@@ -140,7 +144,7 @@ async function HomeContent() {
     <>
       {/* <Hero products={content.products} listings={listings} freshReleases={freshReleases} upcoming={upcoming} banners={banners} /> */}
 
-       <EcosystemSection updates={updates} listings={listings} banners={banners} />
+       <EcosystemSection updates={updates} listings={listings} banners={banners} brandRankings={brandRankings} />
 {/*       
       <LazyViewport fallback={<div className="h-48" />}>
         <PopularBrands />

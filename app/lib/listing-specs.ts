@@ -165,3 +165,55 @@ export function listingHasSpecifications(item: EvListing): boolean {
   if (item.variantFeatures?.some((f) => hasFeatureContent(f))) return true;
   return false;
 }
+
+// Helper to extract Power, Torque, and Battery capacity for vehicle cards
+export function getVehicleCardSpecs(l: any) {
+  if (!l) return { power: "", torque: "", battery: "" };
+
+  // 1. Power (max power in bhp, kW, or PS)
+  const specWithPower = l.batterySpecs?.find((s: any) => s?.maxPower && String(s.maxPower).trim() !== "");
+  const rawPower = specWithPower?.maxPower || l.max_power_bhp || l.power || "";
+  let power = "";
+  if (rawPower && rawPower !== "0" && rawPower !== "null") {
+    const pStr = String(rawPower).trim();
+    if (/bhp|kw|ps|hp/i.test(pStr)) {
+      power = pStr;
+    } else if (!isNaN(Number(pStr))) {
+      power = `${pStr} bhp`;
+    } else {
+      power = pStr;
+    }
+  }
+
+  // 2. Torque (max torque in Nm)
+  const specWithTorque = l.batterySpecs?.find((s: any) => s?.maxTorque && String(s.maxTorque).trim() !== "");
+  const rawTorque = specWithTorque?.maxTorque || l.max_torque_nm || l.torque || "";
+  let torque = "";
+  if (rawTorque && rawTorque !== "0" && rawTorque !== "null") {
+    const tStr = String(rawTorque).trim();
+    if (/nm|kgm/i.test(tStr)) {
+      torque = tStr;
+    } else if (!isNaN(Number(tStr))) {
+      torque = `${tStr} Nm`;
+    } else {
+      torque = tStr;
+    }
+  }
+
+  // 3. Battery Capacity (in kWh)
+  const variantWithCap = l.batteryVariants?.find((v: any) => v?.capacity && String(v.capacity).trim() !== "");
+  const rawBattery = variantWithCap?.capacity || l.battery_capacity_kwh || l.battery_capacity || l.batteryCapacity || l.battery || "";
+  let battery = "";
+  if (rawBattery && rawBattery !== "0" && rawBattery !== "null") {
+    const bStr = String(rawBattery).trim();
+    if (/kwh|ah/i.test(bStr)) {
+      battery = bStr;
+    } else if (!isNaN(Number(bStr))) {
+      battery = `${bStr} kWh`;
+    } else {
+      battery = bStr;
+    }
+  }
+
+  return { power, torque, battery };
+}

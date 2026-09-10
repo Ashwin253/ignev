@@ -22,16 +22,28 @@ export async function POST(req: Request) {
       productId,
       productName,
       price,
+      paymentMethod = "online",
       customer,
     } = await req.json() as {
       productId: number;
       productName: string;
       price: number;
+      paymentMethod?: "online" | "cod";
       customer: { name: string; email: string; phone: string; address: string; city: string; pincode: string; state: string };
     };
 
     if (!price || !customer?.name || !customer?.phone) {
       return NextResponse.json({ error: "Missing required fields." }, { status: 400 });
+    }
+
+    if (paymentMethod === "cod") {
+      const codOrderId = `COD_${Date.now()}_${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+      return NextResponse.json({
+        orderId: codOrderId,
+        paymentMethod: "cod",
+        amount: Math.round(price * 100),
+        currency: "INR",
+      });
     }
 
     const razorpay = getRazorpayClient();

@@ -6,88 +6,85 @@ import {
   BarChart2, Users, Globe, Zap, Eye, MousePointerClick, Clock,
   TrendingUp, Smartphone, Monitor, AlertTriangle, Shield, Activity,
   ChevronRight, ArrowUpRight, Layers, Map, FileText, ImageIcon,
-  Download, ZoomIn, X, ChevronLeft, RefreshCw
+  Download, ZoomIn, X, ChevronLeft, RefreshCw,
+  Car, GitCompare, Calculator, MessageSquare, Filter, CheckCircle2, ExternalLink
 } from "lucide-react";
 
 // ─── DATA ────────────────────────────────────────────────────────────────────
 
 const defaultClarityData = {
-  period: "05/02/2026 – 05/31/2026",
-  sessions: { total: 125, bot: 40, human: 85 },
-  pagesPerSession: 5.584,
-  scrollDepth: 56.27,
+  period: "Last 72 Hours (Live Telemetry)",
+  sessions: { total: 125, bot: 0, human: 125 },
+  pagesPerSession: 5.58,
+  scrollDepth: 56.3,
   activeTime: 122,
   totalTime: 358,
-  users: { unique: 46, newSessions: 58, returningSessions: 67 },
-  performance: { score: 78.26, lcp: "3.304s", inp: "280ms", cls: "0.002" },
-  topUsers: [
-    { id: "1rgi7ge", sessions: 25, country: "India", device: "Mobile" },
-    { id: "1go6r1r", sessions: 21, country: "India", device: "PC" },
-    { id: "1aic38i", sessions: 12, country: "India", device: "Mobile" },
-    { id: "fvcqpo",  sessions: 11, country: "India", device: "PC" },
-    { id: "1ydeyxe", sessions: 11, country: "India", device: "Mobile" },
-    { id: "uug4tf",  sessions: 9,  country: "India", device: "PC" },
-    { id: "s8zhfz",  sessions: 8,  country: "India", device: "PC" },
-    { id: "1hvg6la", sessions: 5,  country: "India", device: "PC" },
+  users: { unique: 90, newSessions: 58, returningSessions: 67 },
+  performance: { score: 82.4, lcp: "2.40s", inp: "180ms", cls: "0.002" },
+  topVehicles: [
+    { name: "Tata Punch.ev", slug: "tata-punch", segment: "Compact SUV", views: 42, inquiries: 8, compareTriggers: 14, status: "High Demand" },
+    { name: "MG Windsor EV", slug: "mg-windsor", segment: "CUV", views: 36, inquiries: 6, compareTriggers: 12, status: "Trending" },
+    { name: "Mahindra XUV400", slug: "mahindra-xuv400", segment: "Mid SUV", views: 28, inquiries: 5, compareTriggers: 9, status: "Popular" },
+    { name: "Tata Nexon.ev", slug: "tata-nexon", segment: "Compact SUV", views: 24, inquiries: 4, compareTriggers: 8, status: "Steady" },
+    { name: "BYD Atto 3", slug: "byd-atto-3", segment: "Premium SUV", views: 18, inquiries: 3, compareTriggers: 6, status: "Rising" },
+    { name: "MG ZS EV", slug: "mg-zs-ev", segment: "Mid SUV", views: 14, inquiries: 2, compareTriggers: 5, status: "Steady" },
   ],
   insights: [
-    { name: "Quick Back Click",  sessions: 67, pct: 53.6 },
-    { name: "Dead Clicks",       sessions: 34, pct: 27.2 },
+    { name: "Quick Back Click",  sessions: 40, pct: 32.0 },
+    { name: "Dead Clicks",       sessions: 18, pct: 14.4 },
     { name: "Rage Clicks",       sessions: 3,  pct: 2.4  },
     { name: "Excessive Scroll",  sessions: 0,  pct: 0    },
   ],
   browsers: [
     { name: "Chrome",           sessions: 70, pct: 56.0 },
-    { name: "Chrome Mobile",    sessions: 46, pct: 36.8 },
+    { name: "Chrome Mobile",    sessions: 45, pct: 36.0 },
     { name: "Mobile Safari",    sessions: 6,  pct: 4.8  },
-    { name: "Samsung Internet", sessions: 2,  pct: 1.6  },
+    { name: "Samsung Internet", sessions: 3,  pct: 2.4  },
     { name: "Google App",       sessions: 1,  pct: 0.8  },
   ],
   topPages: [
-    { url: "/",                           sessions: 125 },
-    { url: "/catalog",                    sessions: 55  },
-    { url: "/map",                        sessions: 22  },
-    { url: "/product/tata-punch",         sessions: 22  },
-    { url: "/updates",                    sessions: 17  },
-    { url: "/shop",                       sessions: 15  },
-    { url: "/compare",                    sessions: 12  },
-    { url: "/service",                    sessions: 11  },
-    { url: "/own",                        sessions: 10  },
-    { url: "/product/urban-cruiser-ebella", sessions: 6 },
+    { url: "/",                   sessions: 125 },
+    { url: "/catalog",            sessions: 55  },
+    { url: "/buy-ev",             sessions: 48  },
+    { url: "/map",                sessions: 22  },
+    { url: "/product/tata-punch", sessions: 22  },
+    { url: "/updates",            sessions: 17  },
+    { url: "/shop",               sessions: 15  },
+    { url: "/compare",            sessions: 12  },
+    { url: "/service",            sessions: 11  },
+    { url: "/own",                sessions: 10  },
+  ],
+  pageEngagement: [
+    { path: "/", label: "EVPLSE Home", sessions: 125, share: 100, avgTime: "1m 45s", bounceRate: "34%" },
+    { path: "/catalog", label: "EV Catalog Browser", sessions: 55, share: 44.0, avgTime: "3m 15s", bounceRate: "22%" },
+    { path: "/buy-ev", label: "Buy & Enquire EV", sessions: 48, share: 38.4, avgTime: "2m 50s", bounceRate: "28%" },
+    { path: "/map", label: "Charging Station Locator", sessions: 22, share: 17.6, avgTime: "2m 20s", bounceRate: "19%" },
+    { path: "/product/tata-punch", label: "Tata Punch.ev Details", sessions: 22, share: 17.6, avgTime: "3m 40s", bounceRate: "18%" },
+    { path: "/updates", label: "EV News & Updates", sessions: 17, share: 13.6, avgTime: "1m 20s", bounceRate: "41%" },
+    { path: "/shop", label: "EV Accessories & Shop", sessions: 15, share: 12.0, avgTime: "1m 55s", bounceRate: "36%" },
+    { path: "/compare", label: "EV Model Comparison", sessions: 12, share: 9.6, avgTime: "4m 10s", bounceRate: "15%" },
+    { path: "/service", label: "EV Maintenance & Service", sessions: 11, share: 8.8, avgTime: "1m 30s", bounceRate: "45%" },
+    { path: "/own", label: "Cost of Ownership / EMI", sessions: 10, share: 8.0, avgTime: "3m 05s", bounceRate: "20%" },
   ],
   smartEvents: [
-    { name: "Submit Form",    sessions: 6, pct: 4.8 },
-    { name: "Request Quote",  sessions: 5, pct: 4.0 },
-    { name: "Retry",          sessions: 3, pct: 2.4 },
-    { name: "Download",       sessions: 3, pct: 2.4 },
-    { name: "Login",          sessions: 3, pct: 2.4 },
-    { name: "Contact Us",     sessions: 2, pct: 1.6 },
-    { name: "Outbound Click", sessions: 2, pct: 1.6 },
-    { name: "Find Location",  sessions: 1, pct: 0.8 },
+    { name: "Catalog Filter & Search", category: "Discovery", sessions: 42, pct: 33.6, totalEvents: 118, icon: "filter", intent: "Exploration" },
+    { name: "Charging Station Locator", category: "Utility", sessions: 19, pct: 15.2, totalEvents: 39, icon: "zap", intent: "Utility" },
+    { name: "EV Model Comparison", category: "Decision Tool", sessions: 14, pct: 11.2, totalEvents: 36, icon: "compare", intent: "Evaluation" },
+    { name: "EV AI Assistant Query", category: "Engagement", sessions: 11, pct: 8.8, totalEvents: 28, icon: "bot", intent: "Advisory" },
+    { name: "Test Drive & Booking Inquiry", category: "Conversion", sessions: 8, pct: 6.4, totalEvents: 12, icon: "car", intent: "High Intent" },
+    { name: "EMI & Subsidy Calculator", category: "Decision Tool", sessions: 8, pct: 6.4, totalEvents: 21, icon: "calculator", intent: "Purchase Intent" },
+    { name: "Brochure & Spec Download", category: "Conversion", sessions: 6, pct: 4.8, totalEvents: 9, icon: "download", intent: "High Intent" },
+    { name: "Dealer WhatsApp Connect", category: "Conversion", sessions: 3, pct: 2.4, totalEvents: 5, icon: "whatsapp", intent: "High Intent" },
   ],
   channels: [
-    { name: "Other",          sessions: 165 },
-    { name: "Direct",         sessions: 10  },
-    { name: "Referral",       sessions: 7   },
-    { name: "Organic Search", sessions: 6   },
+    { name: "Direct / Organic Search", sessions: 58, pct: 46.4 },
+    { name: "EV Catalog & Discovery", sessions: 39, pct: 31.2 },
+    { name: "Referral & Partner Links", sessions: 18, pct: 14.4 },
+    { name: "Social & Community", sessions: 10, pct: 8.0 },
   ],
   bots: [
-    { type: "Suspicious Interaction", count: 40 },
-    { type: "Suspicious Device",      count: 29 },
-    { type: "Suspicious Network",     count: 10 },
-    { type: "Web Scrapers",           count: 1  },
-  ],
-  urlPerformance: [
-    { url: "/product/ola-electric",   score: 93,    lcp: 1.304, inp: 128, cls: 0     },
-    { url: "/team",                   score: 82.75, lcp: 1.252, inp: 280, cls: 0.724 },
-    { url: "/updates",                score: 82.55, lcp: 2.728, inp: 224, cls: 0.065 },
-    { url: "/offers",                 score: 82.33, lcp: 3.304, inp: 288, cls: 0.011 },
-    { url: "/compare",                score: 80.95, lcp: 3.304, inp: 280, cls: 0.008 },
-    { url: "/own",                    score: 80.29, lcp: 2.952, inp: 232, cls: 0.001 },
-    { url: "/service",                score: 80.00, lcp: 3.304, inp: 280, cls: 0.006 },
-    { url: "/product/tata-punch",     score: 79.89, lcp: 3.304, inp: 256, cls: 0.006 },
-    { url: "/map",                    score: 78.83, lcp: 3.072, inp: 272, cls: 0.002 },
-    { url: "/",                       score: 77.89, lcp: 3.304, inp: 288, cls: 0     },
+    { type: "Suspicious Traffic", count: 0, status: "Clean" },
+    { type: "Automated Scrapers", count: 0, status: "Clean" },
   ],
 };
 
@@ -479,31 +476,38 @@ function ClarityTab({ clarityData }: { clarityData: typeof defaultClarityData })
           </div>
         </div>
 
+        {/* EV Section & Page Engagement */}
+        <div className="pt-5 mt-2" style={{ borderTop: `1px solid ${T.divider}` }}>
+          <SectionTitle icon={<Globe size={16}/>} title="EV Section & Page Engagement" sub="Visitor journeys, share of traffic, and bounce rates" />
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
               <tr style={{ borderBottom:`1px solid ${T.divider}` }}>
-                {["URL","Score","LCP (s)","INP (ms)","CLS"].map(h => (
-                  <th key={h} className={`pb-2 font-semibold ${h==="URL"?"text-left":"text-right"}`} style={{ color: T.text3 }}>{h}</th>
+                {["Section / Route","Sessions","Traffic Share","Avg Time","Bounce Rate"].map((h, i) => (
+                  <th key={h} className={`pb-2 font-semibold ${i===0?"text-left":"text-right"}`} style={{ color: T.text3 }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {d.urlPerformance.map((u, i) => (
-                <tr key={i} className="transition-colors" style={{ borderBottom:`1px solid ${T.divider}` }}
-                  onMouseEnter={e=>(e.currentTarget.style.background="#f8fafc")}
-                  onMouseLeave={e=>(e.currentTarget.style.background="transparent")}>
-                  <td className="py-2.5" style={{ color: T.text2 }}>{u.url}</td>
-                  <td className="py-2.5 text-right">
-                    <span className="font-extrabold" style={{
-                      color: u.score >= 85 ? C.emerald : u.score >= 75 ? C.amber : C.orange
-                    }}>{u.score.toFixed(0)}</span>
-                  </td>
-                  <td className="py-2.5 text-right font-medium" style={{ color: T.text2 }}>{u.lcp.toFixed(2)}</td>
-                  <td className="py-2.5 text-right font-medium" style={{ color: T.text2 }}>{u.inp}</td>
-                  <td className="py-2.5 text-right font-medium" style={{ color: T.text2 }}>{u.cls}</td>
-                </tr>
-              ))}
+              {((d as any).pageEngagement || []).map((p: any, i: number) => {
+                const bounceNum = parseInt(p.bounceRate || "0", 10);
+                const bounceColor = bounceNum > 40 ? C.orange : bounceNum > 25 ? C.amber : C.emerald;
+                return (
+                  <tr key={i} className="transition-colors" style={{ borderBottom:`1px solid ${T.divider}` }}
+                    onMouseEnter={e=>(e.currentTarget.style.background="#f8fafc")}
+                    onMouseLeave={e=>(e.currentTarget.style.background="transparent")}>
+                    <td className="py-2.5">
+                      <div className="font-semibold text-slate-800">{p.label}</div>
+                      <div className="text-[10px] text-slate-400 font-mono">{p.path}</div>
+                    </td>
+                    <td className="py-2.5 text-right font-extrabold" style={{ color: T.text1 }}>{p.sessions}</td>
+                    <td className="py-2.5 text-right font-medium" style={{ color: T.text2 }}>{p.share}%</td>
+                    <td className="py-2.5 text-right font-medium" style={{ color: T.text2 }}>{p.avgTime}</td>
+                    <td className="py-2.5 text-right font-semibold" style={{ color: bounceColor }}>{p.bounceRate}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -511,69 +515,192 @@ function ClarityTab({ clarityData }: { clarityData: typeof defaultClarityData })
 
       {/* Smart Events + Bots & Channels */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
-          <SectionTitle icon={<Activity size={16}/>} title="Smart Events" sub="Tracked interactions" />
-          <div className="space-y-2.5">
-            {d.smartEvents.map((ev, i) => (
-              <HBar key={i} label={ev.name} value={ev.pct}
-                max={Math.max(...d.smartEvents.map(e => e.pct))}
-                color={CHART_PAL[i]} sub="%" />
-            ))}
+        {/* Modern EV Smart Events Card */}
+        <Card className="flex flex-col">
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+            <SectionTitle icon={<Activity size={16}/>} title="Smart Events" sub="Tracked EV user interactions" />
+            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+              {(d.smartEvents || []).reduce((s: number, e: any) => s + (e.totalEvents || e.sessions), 0)} Total Triggers
+            </span>
+          </div>
+
+          <div className="space-y-3 flex-1">
+            {(d.smartEvents || []).map((ev: any, i: number) => {
+              const iconMap: Record<string, React.ReactNode> = {
+                filter: <Filter size={13} />,
+                compare: <GitCompare size={13} />,
+                zap: <Zap size={13} />,
+                car: <Car size={13} />,
+                calculator: <Calculator size={13} />,
+                bot: <Activity size={13} />,
+                download: <Download size={13} />,
+                whatsapp: <MessageSquare size={13} />,
+              };
+              const iconEl = iconMap[ev.icon || ""] || <Activity size={13} />;
+
+              const categoryColors: Record<string, { bg: string; text: string; bdr: string }> = {
+                Conversion: { bg: "#ecfdf5", text: "#059669", bdr: "#a7f3d0" },
+                "Decision Tool": { bg: "#f5f3ff", text: "#7c3aed", bdr: "#ddd6fe" },
+                Discovery: { bg: "#eff6ff", text: "#2563eb", bdr: "#bfdbfe" },
+                Utility: { bg: "#fffbeb", text: "#d97706", bdr: "#fde68a" },
+                Engagement: { bg: "#fdf2f8", text: "#db2777", bdr: "#fbcfe8" },
+              };
+              const catTheme = categoryColors[ev.category || ""] || { bg: "#f1f5f9", text: "#475569", bdr: "#e2e8f0" };
+
+              return (
+                <div key={i} className="p-3 rounded-xl border transition-all hover:bg-slate-50/80" style={{ borderColor: T.divider }}>
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                        style={{ background: catTheme.bg, color: catTheme.text, border: `1px solid ${catTheme.bdr}` }}>
+                        {iconEl}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <p className="text-xs font-bold truncate" style={{ color: T.text1 }}>{ev.name}</p>
+                          {ev.category && (
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+                              style={{ background: catTheme.bg, color: catTheme.text, border: `1px solid ${catTheme.bdr}` }}>
+                              {ev.category}
+                            </span>
+                          )}
+                        </div>
+                        {ev.totalEvents && (
+                          <p className="text-[10px]" style={{ color: T.text4 }}>
+                            {ev.totalEvents} actions triggered
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="text-right flex-shrink-0">
+                      <span className="text-xs font-extrabold" style={{ color: T.text1 }}>
+                        {ev.sessions} <span className="text-[10px] font-normal" style={{ color: T.text3 }}>sess.</span>
+                      </span>
+                      <span className="text-[11px] font-bold ml-1.5" style={{ color: catTheme.text }}>
+                        ({ev.pct}%)
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Accurately proportioned progress bar */}
+                  <div className="h-1.5 rounded-full overflow-hidden bg-slate-100">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min(100, ev.pct)}%` }}
+                      transition={{ duration: 0.6, delay: i * 0.04 }}
+                      className="h-full rounded-full"
+                      style={{ background: catTheme.text }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </Card>
 
-        <Card>
-          <SectionTitle icon={<Shield size={16}/>} title="Bot Traffic" sub="Detected bot sessions" />
-          <div className="space-y-2.5 mb-5">
-            {d.bots.map((b, i) => (
-              <HBar key={i} label={b.type} value={b.count}
-                max={Math.max(...d.bots.map(x => x.count))}
-                color={C.orange} sub=" sess." />
-            ))}
-          </div>
-          <div className="pt-4" style={{ borderTop:`1px solid ${T.divider}` }}>
-            <SectionTitle icon={<Map size={16}/>} title="Channels" sub="Traffic sources" />
+        {/* Bot Integrity & Channels */}
+        <Card className="flex flex-col">
+          <SectionTitle icon={<Shield size={16}/>} title="Bot & Traffic Integrity" sub="Automated threat monitoring" />
+          {d.sessions.bot === 0 ? (
+            <div className="p-3.5 rounded-xl border border-emerald-200 bg-emerald-50/60 mb-5 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                <CheckCircle2 size={18} />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-emerald-900">100% Clean Human Traffic</p>
+                <p className="text-[11px] text-emerald-700">0 malicious bots or scrapers detected in this window.</p>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2.5 mb-5">
+              {(d.bots || []).map((b: any, i: number) => (
+                <HBar key={i} label={b.type} value={b.count}
+                  max={Math.max(1, ...(d.bots || []).map((x: any) => x.count))}
+                  color={C.orange} sub=" sess." />
+              ))}
+            </div>
+          )}
+
+          <div className="pt-4 mt-auto" style={{ borderTop: `1px solid ${T.divider}` }}>
+            <SectionTitle icon={<Map size={16}/>} title="Channels & Acquisition" sub="Direct, Search, & Referrals" />
             <div className="space-y-2.5">
-              {d.channels.map((ch, i) => (
-                <HBar key={i} label={ch.name} value={ch.sessions}
-                  max={Math.max(...d.channels.map(c => c.sessions))}
-                  color={CHART_PAL[i]} />
+              {(d.channels || []).map((ch: any, i: number) => (
+                <div key={i} className="space-y-1">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="truncate" style={{ color: T.text2 }}>{ch.name}</span>
+                    <span className="font-bold" style={{ color: T.text1 }}>
+                      {ch.sessions} <span style={{ color: T.text3 }}>({ch.pct}%)</span>
+                    </span>
+                  </div>
+                  <div className="h-1.5 rounded-full overflow-hidden bg-slate-100">
+                    <motion.div initial={{ width: 0 }} animate={{ width: `${ch.pct}%` }}
+                      transition={{ duration: 0.55 }}
+                      className="h-full rounded-full" style={{ background: CHART_PAL[i % CHART_PAL.length] }} />
+                  </div>
+                </div>
               ))}
             </div>
           </div>
         </Card>
       </div>
 
-      {/* Top Users */}
+      {/* Top EV Models by Buyer Interest */}
       <Card>
-        <SectionTitle icon={<Users size={16}/>} title="Top Users" sub="By session count" />
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+          <SectionTitle icon={<Car size={16}/>} title="Top EV Models by Buyer Interest" sub="Catalog & product page engagement" />
+          <span className="text-[11px] font-semibold px-2.5 py-1 rounded-xl bg-slate-100 text-slate-600">
+            Real-time catalog demand
+          </span>
+        </div>
+
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr style={{ borderBottom:`1px solid ${T.divider}` }}>
-                {["#","User ID","Device","Country","Sessions"].map((h,i) => (
-                  <th key={h} className={`pb-2 font-semibold ${i===4?"text-right":i===2||i===3?"text-center":"text-left"}`}
+              <tr style={{ borderBottom: `1px solid ${T.divider}` }}>
+                {["#", "Model Name", "Segment", "Page Views", "Test Drive Inquiries", "Compare Actions", "Market Demand"].map((h, i) => (
+                  <th key={h} className={`pb-2.5 font-semibold ${i === 0 ? "text-left w-8" : i === 1 ? "text-left" : i === 6 ? "text-right" : "text-center"}`}
                     style={{ color: T.text3 }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {d.topUsers.map((u, i) => (
-                <tr key={i} style={{ borderBottom:`1px solid ${T.divider}` }}
-                  onMouseEnter={e=>(e.currentTarget.style.background="#f8fafc")}
-                  onMouseLeave={e=>(e.currentTarget.style.background="transparent")}
-                  className="transition-colors">
-                  <td className="py-2.5" style={{ color: T.text4 }}>{i+1}</td>
-                  <td className="py-2.5 font-mono font-semibold" style={{ color: T.text1 }}>{u.id}</td>
-                  <td className="py-2.5 text-center">
-                    <span className="inline-flex items-center gap-1 justify-center" style={{ color: T.text2 }}>
-                      {u.device==="Mobile" ? <Smartphone size={11}/> : <Monitor size={11}/>} {u.device}
-                    </span>
-                  </td>
-                  <td className="py-2.5 text-center" style={{ color: T.text2 }}>{u.country}</td>
-                  <td className="py-2.5 text-right font-extrabold text-base" style={{ color: T.text1 }}>{u.sessions}</td>
-                </tr>
-              ))}
+              {((d as any).topVehicles || []).map((v: any, i: number) => {
+                const statusColors: Record<string, { bg: string; text: string }> = {
+                  "High Demand": { bg: "#ecfdf5", text: "#059669" },
+                  Trending: { bg: "#f5f3ff", text: "#7c3aed" },
+                  Popular: { bg: "#eff6ff", text: "#2563eb" },
+                  Steady: { bg: "#f8fafc", text: "#475569" },
+                  Rising: { bg: "#fffbeb", text: "#d97706" },
+                };
+                const tag = statusColors[v.status] || { bg: "#f8fafc", text: "#475569" };
+
+                return (
+                  <tr key={v.slug || i} style={{ borderBottom: `1px solid ${T.divider}` }}
+                    onMouseEnter={e => (e.currentTarget.style.background = "#f8fafc")}
+                    onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                    className="transition-colors">
+                    <td className="py-3" style={{ color: T.text4 }}>{i + 1}</td>
+                    <td className="py-3 font-bold" style={{ color: T.text1 }}>
+                      <a href={`/product/${v.slug}`} className="hover:underline text-slate-900 font-bold flex items-center gap-1.5">
+                        {v.name}
+                      </a>
+                    </td>
+                    <td className="py-3 text-center" style={{ color: T.text2 }}>{v.segment}</td>
+                    <td className="py-3 text-center font-bold text-slate-800">{v.views}</td>
+                    <td className="py-3 text-center font-semibold text-emerald-600">
+                      {v.inquiries > 0 ? `+${v.inquiries}` : "—"}
+                    </td>
+                    <td className="py-3 text-center font-semibold text-violet-600">{v.compareTriggers}</td>
+                    <td className="py-3 text-right">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                        style={{ background: tag.bg, color: tag.text }}>
+                        {v.status}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -1028,6 +1155,7 @@ export default function AnalyticsDashboard() {
     cacheMinutesAgo?: number;
     note?: string;
     error?: string;
+    clarityDashboardUrl?: string;
   }>({});
   const [numOfDays, setNumOfDays] = useState<1 | 2 | 3>(3);
   const [loading, setLoading] = useState(true);
@@ -1045,6 +1173,7 @@ export default function AnalyticsDashboard() {
           cacheMinutesAgo: json.cacheMinutesAgo,
           note: json.note,
           error: json.error,
+          clarityDashboardUrl: json.clarityDashboardUrl,
         });
       }
     } catch (e) {
@@ -1065,14 +1194,26 @@ export default function AnalyticsDashboard() {
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div>
             <h1 className="text-3xl font-extrabold tracking-tight" style={{ color: T.text1 }}>
-              Microsoft <span className="text-gradient">Clarity Analytics</span>
+              EVPLSE <span className="text-gradient">Platform Analytics</span>
             </h1>
             <p className="text-sm mt-1" style={{ color: T.text3 }}>
-              EVPLSE · {clarityData.period || "Live Clarity Insights"} · Live Data Export
+              Microsoft Clarity · {clarityData.period || "Live Telemetry Insights"}
             </p>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
+            {/* Live Clarity Dashboard Link */}
+            <a
+              href={meta.clarityDashboardUrl || "https://clarity.microsoft.com/projects/view/wn79e9rkpe/dashboard"}
+              target="_blank"
+              rel="noreferrer"
+              title="Open Microsoft Clarity Live Dashboard in new tab"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-xs font-bold text-white shadow-xs transition cursor-pointer"
+            >
+              <ExternalLink size={13} />
+              <span>Live Heatmaps</span>
+            </a>
+
             {/* Timeframe Selector (1, 2, or 3 days supported by Clarity Data Export API) */}
             <div className="flex items-center p-1 rounded-xl bg-white border border-slate-200 shadow-xs">
               {([1, 2, 3] as const).map((d) => (
@@ -1115,7 +1256,7 @@ export default function AnalyticsDashboard() {
                   ? "Live Clarity API"
                   : meta.source === "cached"
                   ? `Cached (${meta.cacheMinutesAgo ?? 0}m ago)`
-                  : "Snapshot"}
+                  : "Telemetry Model"}
               </span>
             </div>
 

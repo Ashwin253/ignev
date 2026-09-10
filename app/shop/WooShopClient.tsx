@@ -5,6 +5,7 @@ import Image from "next/image";
 import { AnimatePresence } from "framer-motion";
 import { ShoppingBag, Tag } from "lucide-react";
 import CheckoutDrawer, { type CheckoutProduct } from "./CheckoutDrawer";
+import CurrentOrderPopup from "./CurrentOrderPopup";
 import { formatWooPrice } from "../lib/woocommerce";
 import type { WooProduct } from "../lib/woocommerce";
 
@@ -131,9 +132,11 @@ export default function WooShopClient({ products }: { products: WooProduct[] }) 
           <CheckoutDrawer
             product={activeProduct}
             onClose={() => setActiveProduct(null)}
+            onOrderPlaced={(order) => window.dispatchEvent(new CustomEvent("evezy:order-placed", { detail: order }))}
           />
         )}
       </AnimatePresence>
+      <CurrentOrderPopup />
     </>
   );
 }

@@ -135,6 +135,7 @@ export default function BannersPanel({ supabase }: { supabase: any }) {
     setSaving(true);
     const payload = { ...form };
     delete (payload as any).id;
+    delete (payload as any).cta_color;
 
     if (editing === "new") {
       const { error } = await supabase.from("hero_banners").insert(payload);
@@ -297,7 +298,7 @@ export default function BannersPanel({ supabase }: { supabase: any }) {
             </div>
             <label className="block sm:col-span-2"><span className="text-xs font-bold text-slate-600">Details (Optional Text)</span><input value={form.details || ""} onChange={(e) => setForm({ ...form, details: e.target.value })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
             <label className="block sm:col-span-1">
-              <span className="text-xs font-bold text-slate-600">Background Color (Color Wheel)</span>
+              <span className="text-xs font-bold text-slate-600">Background / CTA Button Color (Color Wheel)</span>
               <div className="flex gap-2 mt-1">
                 <div className="relative flex-1">
                   <input
@@ -368,7 +369,7 @@ export default function BannersPanel({ supabase }: { supabase: any }) {
                       <div
                         className="w-3.5 h-3.5 rounded-full border border-white shadow-sm"
                         style={{ backgroundColor: b.background_color }}
-                        title={`Background color: ${b.background_color}`}
+                        title={`Background / CTA color: ${b.background_color}`}
                       />
                     )}
                     {b.text_color && (

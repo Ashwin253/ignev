@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingCart, AlertTriangle } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
 import Image from "next/image";
 import CheckoutDrawer, { type CheckoutProduct } from "./CheckoutDrawer";
+import CurrentOrderPopup from "./CurrentOrderPopup";
 
 type LocalProduct = {
   id: string;
@@ -30,20 +31,7 @@ export default function ShopClient({ products }: { products: LocalProduct[] }) {
 
   return (
     <>
-      {!hasCashfree && (
-        <div className="mb-10 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-5 max-w-2xl">
-          <AlertTriangle size={18} className="text-amber-500 mt-0.5 shrink-0" />
-          <div className="text-sm">
-            <p className="font-semibold text-amber-800 mb-1">Cashfree not configured</p>
-            <p className="text-amber-700">
-              Add <code className="bg-amber-100 px-1 rounded text-xs">NEXT_PUBLIC_CASHFREE_ENV</code>,{" "}
-              <code className="bg-amber-100 px-1 rounded text-xs">CASHFREE_APP_ID</code>, and{" "}
-              <code className="bg-amber-100 px-1 rounded text-xs">CASHFREE_SECRET_KEY</code>{" "}
-              to <code className="bg-amber-100 px-1 rounded text-xs">.env.local</code> to enable checkout.
-            </p>
-          </div>
-        </div>
-      )}
+      {!hasCashfree && <p className="mb-8 max-w-2xl text-sm text-emerald-700">Online payments are temporarily delayed. Cash on delivery is available now.</p>}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {products.map((product, index) => (
@@ -88,9 +76,10 @@ export default function ShopClient({ products }: { products: LocalProduct[] }) {
 
       <AnimatePresence>
         {activeProduct && (
-          <CheckoutDrawer product={activeProduct} onClose={() => setActiveProduct(null)} />
+          <CheckoutDrawer product={activeProduct} onClose={() => setActiveProduct(null)} onOrderPlaced={(order) => window.dispatchEvent(new CustomEvent("evezy:order-placed", { detail: order }))} />
         )}
       </AnimatePresence>
+      <CurrentOrderPopup />
     </>
   );
 }

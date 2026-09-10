@@ -99,14 +99,34 @@ export default function Hero({
               style={{ backgroundColor: activeBanners[currentBannerIdx]?.background_color || 'transparent' }}
             >
               {activeBanners[currentBannerIdx].video_url ? (
-                <video
-                  src={activeBanners[currentBannerIdx].video_url}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
+                (() => {
+                  const vUrl = activeBanners[currentBannerIdx].video_url || "";
+                  const ytMatch = vUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|shorts)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+                  const ytId = ytMatch ? ytMatch[1] : null;
+                  if (ytId) {
+                    return (
+                      <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
+                        <iframe
+                          src={`https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&mute=1&loop=1&playlist=${ytId}&controls=0&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1&disablekb=1&playsinline=1`}
+                          title={activeBanners[currentBannerIdx].cta || "Hero Video"}
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140%] h-[140%] object-cover border-0"
+                        />
+                      </div>
+                    );
+                  }
+                  return (
+                    <video
+                      src={vUrl}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                  );
+                })()
               ) : (
                 <>
                   {(activeBanners[currentBannerIdx].image_vertical || activeBanners[currentBannerIdx].imageVertical) && (

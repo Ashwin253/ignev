@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import {
   Send, CheckCircle2, User, Phone, MapPin, Info, Loader2,
 } from "lucide-react";
+import { trackSmartEvent, SMART_EVENTS } from "../lib/clarity-events";
 
 interface EnquiryFormProps {
   source: string;
@@ -50,8 +51,10 @@ export default function EnquiryForm({
         }),
       });
     } catch {}
-    // Also send to Formspree (non-blocking)
+    // Send to Formspree (non-blocking)
     handleSubmit(e);
+    // Track Smart Event in Microsoft Clarity
+    trackSmartEvent(SMART_EVENTS.TEST_DRIVE_INQUIRY, { source });
     // Show success immediately (Supabase saved)
     setSubmitted(true);
   };

@@ -10,7 +10,7 @@ interface LogoLoaderProps {
 
 export default function LogoLoader({ fullscreen = true, message = "Loading..." }: LogoLoaderProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [fact, setFact] = useState<string>("");
+  const [fact] = useState<string>(() => facts[Math.floor(Math.random() * facts.length)].fact);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -19,14 +19,11 @@ export default function LogoLoader({ fullscreen = true, message = "Loading..." }
       });
     }
 
-    // Pick a random fact on mount
-    const randomFact = facts[Math.floor(Math.random() * facts.length)].fact;
-    setFact(randomFact);
   }, []);
 
   const containerClasses = fullscreen
-    ? "fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#d4d4d4] dark:bg-[#d4d4d4] transition-colors duration-300"
-    : "w-full min-h-[300px] flex flex-col items-center justify-center bg-[#d4d4d4] dark:bg-[#d4d4d4] rounded-3xl p-8 border border-[#D8E3D3] dark:border-white/5 transition-colors duration-300";
+    ? "fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-white dark:bg-white transition-colors duration-300"
+    : "w-full min-h-[300px] flex flex-col items-center justify-center bg-white dark:bg-white rounded-3xl p-8 border border-[#D8E3D3] dark:border-white/5 transition-colors duration-300";
 
   const videoSizeClasses = fullscreen
     ? "w-64 h-64 md:w-[420px] md:h-[420px] lg:w-[500px] lg:h-[500px] max-w-[90vw] aspect-square"
@@ -36,12 +33,12 @@ export default function LogoLoader({ fullscreen = true, message = "Loading..." }
     <div className={containerClasses}>
       <div className={`relative ${videoSizeClasses} flex items-center justify-center`}>
         {/* Glow effect behind logo */}
-        <div className="absolute inset-0 bg-[#d4d4d4]/20 rounded-full blur-[100px] animate-pulse" />
+        <div className="absolute inset-0 bg-white/20 rounded-full blur-[100px] animate-pulse" />
         
         <video
           ref={videoRef}
           src="/evplsenextconcept.mp4"
-          className="w-full h-full object-contain rounded-full relative z-10"
+          className="w-full h-full object-contain rounded-full relative z-10 mix-blend-screen"
           autoPlay
           loop
           muted

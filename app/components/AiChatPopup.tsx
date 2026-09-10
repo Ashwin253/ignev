@@ -243,23 +243,7 @@ export default function AiChatPopup({ vehicleContext }: { vehicleContext?: strin
 
   return (
     <>
-      {/* Floating button */}
-      <AnimatePresence>
-        {!open && !isHome && (
-          <motion.button
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            onClick={() => { setOpen(true); doClick(); }}
-            className="fixed bottom-6 left-6 z-[55] flex items-center gap-2 rounded-full bg-[#34ebb1] text-slate-900 shadow-lg shadow-[#34ebb1]/30 hover:scale-105 active:scale-95 transition-transform px-4 py-3 pointer-events-auto"
-            aria-label="Ask Plse"
-          >
-            <Sparkles size={20} />
-            <span className="text-xs font-bold tracking-wide">Ask Plse</span>
-          </motion.button>
-        )}
-      </AnimatePresence>
+      {/* Floating Ask Plse widget is hidden as requested; Chat opens via 'open-ai-chat' events from page buttons */}
 
       {/* Chat popup */}
       <AnimatePresence>

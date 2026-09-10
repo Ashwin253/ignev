@@ -63,9 +63,9 @@ export default function LocationSelector({
 
   const buttonStyle = isTransparent
     ? isLight
-      ? "bg-white/80 hover:bg-white text-zinc-900 border-zinc-200/80 shadow-xs backdrop-blur-md"
-      : "bg-white/10 hover:bg-white/20 text-white border-white/15 backdrop-blur-md"
-    : "bg-zinc-100 hover:bg-zinc-200/80 text-zinc-700 border-zinc-200/80 dark:bg-zinc-800 dark:hover:bg-zinc-750 dark:text-zinc-300 dark:border-zinc-700";
+      ? "bg-white/90 hover:bg-white text-zinc-900 border-2 border-zinc-300 shadow-xs backdrop-blur-md font-bold"
+      : "bg-white/15 hover:bg-white/25 text-white border-2 border-white/30 backdrop-blur-md font-bold"
+    : "bg-zinc-100 hover:bg-zinc-200 text-zinc-900 border-2 border-zinc-300/90 dark:bg-zinc-800 dark:hover:bg-zinc-750 dark:text-zinc-100 dark:border-zinc-700 shadow-xs font-bold";
 
   if (isMobile) {
     return (
@@ -75,11 +75,11 @@ export default function LocationSelector({
           onClick={() => setIsOpen(!isOpen)}
           aria-expanded={isOpen}
           aria-label="Select your state or city"
-          className="flex items-center justify-between w-full px-3.5 py-2.5 rounded-xl border border-zinc-200/80 dark:border-zinc-750 bg-zinc-50 dark:bg-zinc-850 text-zinc-800 dark:text-zinc-200 font-bold text-xs shadow-xs transition"
+          className="flex items-center justify-between w-full px-3.5 py-2.5 rounded-xl border-2 border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-850 text-zinc-900 dark:text-zinc-100 font-bold text-xs shadow-xs transition"
         >
           <div className="flex items-center gap-2 min-w-0">
             <span className="flex items-center justify-center h-6 w-6 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 shrink-0">
-              <MapPin size={13} />
+              <MapPin size={13} strokeWidth={2.4} />
             </span>
             <div className="flex flex-col text-left min-w-0">
               <span className="text-[10px] text-zinc-400 uppercase tracking-wider font-semibold leading-none mb-0.5">Location</span>
@@ -166,13 +166,14 @@ export default function LocationSelector({
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
         aria-label={`Current location: ${location.name}. Click to change.`}
-        className={`flex items-center gap-1.5 px-3 py-2 rounded-full border transition-all shadow-xs active:scale-95 cursor-pointer text-xs font-bold ${buttonStyle}`}
+        className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full border-2 transition-all shadow-xs active:scale-95 cursor-pointer text-[13px] font-bold ${buttonStyle}`}
       >
-        <MapPin size={14} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+        <MapPin size={14} strokeWidth={2.4} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
         <span className="tracking-tight">{location.name}</span>
         <ChevronDown
-          size={12}
-          className={`text-zinc-400 transition-transform duration-200 shrink-0 ${isOpen ? "rotate-180" : ""}`}
+          size={13}
+          strokeWidth={2.5}
+          className={`text-zinc-500 dark:text-zinc-400 transition-transform duration-200 shrink-0 ${isOpen ? "rotate-180" : ""}`}
         />
       </button>
 

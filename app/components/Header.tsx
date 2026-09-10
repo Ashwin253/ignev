@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Menu, X, Home, LayoutGrid, MapPin, IndianRupee, Download, SlidersHorizontal, Volume2, VolumeX, Smartphone, Sparkles, ChevronDown, User, Sun, Moon, Zap, Navigation } from "lucide-react";
+import { Menu, X, Home, LayoutGrid, MapPin, IndianRupee, Download, SlidersHorizontal, Volume2, VolumeX, Smartphone, Sparkles, ChevronDown, ChevronUp, User, Sun, Moon, Zap, Navigation } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useFeedback } from "../context/FeedbackContext";
 import { playClickSound, playHaptic } from "../lib/feedback";
@@ -27,15 +27,28 @@ export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [mobileBuySellOpen, setMobileBuySellOpen] = useState(false);
   const [mobileServiceOpen, setMobileServiceOpen] = useState(false);
-  const [mobileLocatorOpen, setMobileLocatorOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [prefOpen, setPrefOpen] = useState(false);
   const { soundEnabled, setSoundEnabled, hapticsEnabled, setHapticsEnabled, theme, setTheme } = useFeedback();
   const pathname = usePathname();
 
   const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [isTabsSticky, setIsTabsSticky] = useState(false);
+  const [isManuallyMinimized, setIsManuallyMinimized] = useState(false);
+  const [temporarilyExpanded, setTemporarilyExpanded] = useState(false);
+
+  useEffect(() => {
+    const handler = (e: any) => {
+      const sticky = Boolean(e.detail?.isSticky);
+      setIsTabsSticky(sticky);
+      if (!sticky) {
+        setTemporarilyExpanded(false);
+      }
+    };
+    window.addEventListener("ecosystem-tabs-sticky", handler);
+    return () => window.removeEventListener("ecosystem-tabs-sticky", handler);
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
@@ -47,7 +60,7 @@ export default function Header() {
 
   const isHome = pathname === "/";
   const isLightPage = !isHome && lightBgRoutes.some(r => pathname.startsWith(r));
-  const isTransparent = isHome && !isScrolled && !isMobile;
+  const isTransparent = isHome && !isScrolled && !mobileMenuOpen;
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -88,38 +101,46 @@ export default function Header() {
   const isLight = theme === "light";
 
   const headerBg = isTransparent
-    ? "bg-white dark:bg-zinc-955 dark:backdrop-blur-xl border-zinc-200 dark:border-zinc-800/60 shadow-sm md:bg-transparent md:border-transparent md:shadow-none"
-    : "bg-white dark:bg-zinc-955 dark:backdrop-blur-xl border-zinc-200 dark:border-zinc-800/60 shadow-sm dark:shadow-none";
+    ? "bg-transparent border-transparent shadow-none"
+    : "bg-white/95 dark:bg-zinc-955/95 backdrop-blur-xl border-b-2 border-zinc-300/90 dark:border-zinc-800 shadow-sm dark:shadow-md";
 
-  const linkBase = "text-sm font-medium px-3 py-2 rounded-full transition-all";
+  const linkBase = "text-[14px] font-bold tracking-tight px-3.5 py-2 rounded-full transition-all duration-150 select-none";
   
   const linkColor = isTransparent
     ? isLight
-      ? "text-zinc-800 hover:text-emerald-800 hover:bg-emerald-950/5 font-semibold"
-      : "text-white/85 hover:text-white hover:bg-white/10"
-    : "text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100/70 dark:hover:bg-zinc-800/70";
+      ? "text-zinc-900 hover:text-emerald-800 hover:bg-emerald-950/10 font-bold"
+      : "text-white hover:text-white hover:bg-white/20 font-bold drop-shadow-xs"
+    : "text-zinc-900 dark:text-zinc-100 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/80 font-bold";
 
   const activeLinkColor = isTransparent
     ? isLight
-      ? "text-emerald-900 bg-emerald-100/80 font-bold"
-      : "text-white bg-white/15 backdrop-blur-sm"
-    : "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30";
+      ? "text-emerald-950 bg-emerald-100/90 font-black shadow-xs ring-1 ring-emerald-300/80"
+      : "text-white bg-white/25 backdrop-blur-md font-black shadow-xs ring-1 ring-white/30"
+    : "text-emerald-950 dark:text-emerald-300 bg-emerald-100/90 dark:bg-emerald-950/70 font-black shadow-xs ring-1 ring-emerald-400/40 dark:ring-emerald-600/40";
 
   const ctaClass = isTransparent
     ? isLight
-      ? "bg-[#0A2A1E] hover:bg-[#1B6642] text-white font-medium border border-[#0A2A1E]/20 shadow-xs"
-      : "bg-white/12 hover:bg-white/20 text-white border border-white/25 backdrop-blur-md"
-    : "bg-emerald-600 dark:bg-emerald-600 hover:bg-emerald-700 dark:hover:bg-emerald-700 text-white";
+      ? "bg-[#0A2A1E] hover:bg-[#1B6642] text-white font-bold border-2 border-[#0A2A1E]/30 shadow-xs"
+      : "bg-white/15 hover:bg-white/25 text-white font-bold border-2 border-white/30 backdrop-blur-md"
+    : "bg-emerald-600 dark:bg-emerald-600 hover:bg-emerald-700 dark:hover:bg-emerald-700 text-white font-bold";
 
   const iconBtnClass = isTransparent
     ? isLight
-      ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 md:bg-emerald-950/5 md:hover:bg-emerald-950/10 md:text-zinc-800 md:border-zinc-300/80"
-      : "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 md:bg-white/12 md:hover:bg-white/20 md:text-white md:border-white/25"
-    : "bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700";
+      ? "bg-emerald-950/5 hover:bg-emerald-950/15 text-zinc-900 dark:text-zinc-100 border-2 border-zinc-300/80 dark:border-zinc-700 font-bold shadow-xs active:scale-95"
+      : "bg-white/15 hover:bg-white/25 text-white border-2 border-white/30 font-bold shadow-xs active:scale-95"
+    : "bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 border-2 border-zinc-300/90 dark:border-zinc-700 font-bold shadow-xs active:scale-95";
+
+  const isMinimized = ((isTabsSticky && !temporarilyExpanded) || isManuallyMinimized) && !mobileMenuOpen;
 
   return (
     <>
-      <header className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 border-b pointer-events-auto ${headerBg}`}>
+      <header
+        className={`fixed top-0 left-0 right-0 z-[130] transition-all duration-300 ease-out border-b ${headerBg} ${
+          isMinimized
+            ? "-translate-y-full opacity-0 pointer-events-none shadow-none"
+            : "translate-y-0 opacity-100 pointer-events-auto"
+        }`}
+      >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-[72px]">
           <Link href="/" className="flex items-center gap-2">
@@ -135,45 +156,41 @@ export default function Header() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-2">
-            {/* Buy/Sell Dropdown */}
-            <div
-              className="relative"
-              onMouseEnter={() => setActiveDropdown("buysell")}
-              onMouseLeave={() => setActiveDropdown(null)}
+            {/* Home */}
+            <Link
+              href="/"
+              className={`${linkBase} ${
+                pathname === "/"
+                  ? activeLinkColor
+                  : linkColor
+              }`}
             >
-              <button
-                className={`${linkBase} ${
-                  pathname.startsWith("/buy-ev") || pathname.startsWith("/sell-ev") || pathname.startsWith("/upcoming") || pathname.startsWith("/new-launches")
-                    ? activeLinkColor
-                    : linkColor
-                } flex items-center gap-1.5 cursor-pointer font-medium text-sm`}
-              >
-                Buy/Sell <ChevronDown size={14} className={`transition-transform duration-200 ${activeDropdown === "buysell" ? "rotate-180" : ""}`} />
-              </button>
-              <AnimatePresence>
-                {activeDropdown === "buysell" && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 8 }}
-                    className="absolute left-0 mt-1 w-48 rounded-xl bg-white p-1.5 shadow-xl ring-1 ring-zinc-200/60 z-50 border border-zinc-100 text-zinc-800"
-                  >
-                    <Link href="/buy-ev" className="flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium hover:bg-zinc-100/70 transition-colors">
-                      Buy EV
-                    </Link>
-                    <Link href="/sell-ev" className="flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium hover:bg-zinc-100/70 transition-colors">
-                      Sell EV
-                    </Link>
-                    <Link href="/upcoming" className="flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium hover:bg-zinc-100/70 transition-colors">
-                      Upcoming
-                    </Link>
-                    <Link href="/new-launches" className="flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium hover:bg-zinc-100/70 transition-colors">
-                      New Launches
-                    </Link>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+              Home
+            </Link>
+
+            {/* Find */}
+            <Link
+              href="/catalog"
+              className={`${linkBase} ${
+                pathname.startsWith("/catalog")
+                  ? activeLinkColor
+                  : linkColor
+              }`}
+            >
+              Find
+            </Link>
+
+            {/* Sell */}
+            <Link
+              href="/sell-ev"
+              className={`${linkBase} ${
+                pathname.startsWith("/sell-ev")
+                  ? activeLinkColor
+                  : linkColor
+              }`}
+            >
+              Sell
+            </Link>
 
             {/* Service Dropdown */}
             <div
@@ -183,12 +200,12 @@ export default function Header() {
             >
               <button
                 className={`${linkBase} ${
-                  pathname.startsWith("/service/")
+                  pathname.startsWith("/service")
                     ? activeLinkColor
                     : linkColor
-                } flex items-center gap-1.5 cursor-pointer font-medium text-sm`}
+                } flex items-center gap-1.5 cursor-pointer`}
               >
-                Service <ChevronDown size={14} className={`transition-transform duration-200 ${activeDropdown === "service" ? "rotate-180" : ""}`} />
+                Service <ChevronDown size={14} strokeWidth={2.5} className={`transition-transform duration-200 ${activeDropdown === "service" ? "rotate-180" : ""}`} />
               </button>
               <AnimatePresence>
                 {activeDropdown === "service" && (
@@ -196,15 +213,15 @@ export default function Header() {
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 8 }}
-                    className="absolute left-0 mt-1 w-48 rounded-xl bg-white p-1.5 shadow-xl ring-1 ring-zinc-200/60 z-50 border border-zinc-100 text-zinc-800"
+                    className="absolute left-0 mt-1 w-48 rounded-2xl bg-white dark:bg-zinc-900 p-2 shadow-2xl ring-2 ring-zinc-200/80 dark:ring-zinc-800 z-50 border border-zinc-100 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100"
                   >
-                    <Link href="/service/insurance" className="flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium hover:bg-zinc-100/70 transition-colors">
+                    <Link href="/service/insurance" className="flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-[13.5px] font-bold hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors">
                       Insurance
                     </Link>
-                    <Link href="/service/scrap" className="flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium hover:bg-zinc-100/70 transition-colors">
+                    <Link href="/service/scrap" className="flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-[13.5px] font-bold hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors">
                       Scrap
                     </Link>
-                    <Link href="/service/product" className="flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium hover:bg-zinc-100/70 transition-colors">
+                    <Link href="/service/product" className="flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-[13.5px] font-bold hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors">
                       Product
                     </Link>
                   </motion.div>
@@ -212,68 +229,40 @@ export default function Header() {
               </AnimatePresence>
             </div>
 
-            {/* Locator Dropdown */}
-            <div
-              className="relative"
-              onMouseEnter={() => setActiveDropdown("locator")}
-              onMouseLeave={() => setActiveDropdown(null)}
+            {/* Charging Station (in 2 lines) */}
+            <Link
+              href="/charging-station"
+              className={`${linkBase} ${
+                pathname.startsWith("/charging-station")
+                  ? activeLinkColor
+                  : linkColor
+              } flex flex-col justify-center text-left leading-tight py-1`}
             >
-              <button
-                className={`${linkBase} ${
-                  pathname.startsWith("/charging-station") || pathname.startsWith("/nearme")
-                    ? activeLinkColor
-                    : linkColor
-                } flex items-center gap-1.5 cursor-pointer font-medium text-sm`}
-              >
-                Locator <ChevronDown size={14} className={`transition-transform duration-200 ${activeDropdown === "locator" ? "rotate-180" : ""}`} />
-              </button>
-              <AnimatePresence>
-                {activeDropdown === "locator" && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 8 }}
-                    className="absolute left-0 mt-1 w-52 rounded-xl bg-white p-1.5 shadow-xl ring-1 ring-zinc-200/60 z-50 border border-zinc-100 text-zinc-800"
-                  >
-                    <Link href="/charging-station" className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium hover:bg-zinc-100/70 transition-colors">
-                      <Zap size={16} className="text-amber-500 shrink-0" />
-                      <div>
-                        <div className="font-semibold text-zinc-900 leading-tight">Charging Station</div>
-                        <div className="text-[11px] text-zinc-500 font-normal">Find EV charging points</div>
-                      </div>
-                    </Link>
-                    <Link href="/nearme" className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium hover:bg-zinc-100/70 transition-colors">
-                      <Navigation size={16} className="text-emerald-600 shrink-0" />
-                      <div>
-                        <div className="font-semibold text-zinc-900 leading-tight">Near Me</div>
-                        <div className="text-[11px] text-zinc-500 font-normal">Dealers, pumps & chargers</div>
-                      </div>
-                    </Link>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+              <span className="text-[12.5px] font-black leading-[1.12]">
+                Charging<br />Station
+              </span>
+            </Link>
 
             {/* For You */}
             <Link
               href="/foryou"
               className={`${linkBase} ${
                 pathname.startsWith("/foryou")
-                  ? "bg-violet-600 text-white font-bold shadow-md shadow-violet-500/15"
+                  ? "bg-violet-600 text-white font-black shadow-md shadow-violet-500/25 ring-2 ring-violet-400/40"
                   : isTransparent
                   ? isLight
-                    ? "bg-violet-100 text-violet-800 border border-violet-300 hover:bg-violet-200 font-bold"
-                    : "bg-violet-500/20 text-violet-200 border border-violet-400/20 hover:bg-violet-500/30 hover:text-white font-bold"
-                  : "bg-violet-50 hover:bg-violet-100 text-violet-700 border border-violet-200/50 font-bold"
+                    ? "bg-violet-100 text-violet-950 border-2 border-violet-300 hover:bg-violet-200 font-black"
+                    : "bg-violet-500/30 text-violet-100 border-2 border-violet-400/30 hover:bg-violet-500/40 hover:text-white font-black"
+                  : "bg-violet-100 hover:bg-violet-200 text-violet-950 dark:bg-violet-950/60 dark:text-violet-200 border-2 border-violet-300/80 dark:border-violet-700/60 font-black shadow-xs"
               }`}
             >
-              <span className="inline-flex items-center gap-1.5">
-                <Sparkles size={15} />
+              <span className="inline-flex items-center gap-1.5 font-black">
+                <Sparkles size={15} strokeWidth={2.4} />
                 For You
                 {!pathname.startsWith("/foryou") && (
-                  <span className="relative flex h-1.5 w-1.5">
+                  <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-violet-600"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-violet-600"></span>
                   </span>
                 )}
               </span>
@@ -293,19 +282,19 @@ export default function Header() {
               href={user ? "/profile" : "/login"}
               title={user ? (user.displayName || "My Profile") : "Login / Register"}
               aria-label={user ? (user.displayName || "My Profile") : "Login or Register"}
-              className={`hidden md:flex items-center justify-center p-2.5 rounded-full border transition-all shadow-sm active:scale-95 cursor-pointer ${
+              className={`hidden md:flex items-center justify-center p-2.5 rounded-full border-2 transition-all shadow-xs active:scale-95 cursor-pointer ${
                 user
-                  ? "bg-emerald-50 border-emerald-300 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/50 dark:border-emerald-800 dark:text-emerald-300"
+                  ? "bg-emerald-50 border-emerald-400 text-emerald-800 hover:bg-emerald-100 dark:bg-emerald-950/50 dark:border-emerald-700 dark:text-emerald-300 font-bold"
                   : iconBtnClass
               }`}
             >
-              <User size={17} />
+              <User size={17} strokeWidth={2.3} />
             </Link>
 
             {/* Preferences */}
             <div className="relative">
-              <button onClick={() => setPrefOpen(!prefOpen)} aria-label="Open page preferences" className={`p-2.5 rounded-full border transition-all shadow-sm active:scale-95 cursor-pointer ${iconBtnClass}`}>
-                <SlidersHorizontal size={17} />
+              <button onClick={() => setPrefOpen(!prefOpen)} aria-label="Open page preferences" className={`p-2.5 rounded-full border-2 transition-all shadow-xs active:scale-95 cursor-pointer ${iconBtnClass}`}>
+                <SlidersHorizontal size={17} strokeWidth={2.3} />
               </button>
               <AnimatePresence>
                 {prefOpen && (
@@ -350,8 +339,28 @@ export default function Header() {
               </AnimatePresence>
             </div>
 
-            <button className="md:hidden p-2 rounded-full text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}>
-              {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+            {/* Minimize Header Button */}
+            <button
+              onClick={() => {
+                if (isTabsSticky) {
+                  setTemporarilyExpanded(false);
+                } else {
+                  setIsManuallyMinimized(true);
+                }
+              }}
+              title="Minimize Header"
+              aria-label="Minimize header"
+              className={`p-2.5 rounded-full border-2 transition-all shadow-xs active:scale-95 cursor-pointer ${iconBtnClass}`}
+            >
+              <ChevronUp size={17} strokeWidth={2.4} />
+            </button>
+
+            <button
+              className={`md:hidden p-2.5 rounded-full border-2 transition-all shadow-xs active:scale-95 cursor-pointer ${iconBtnClass}`}
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+            >
+              {mobileMenuOpen ? <X size={20} strokeWidth={2.5} /> : <Menu size={20} strokeWidth={2.5} />}
             </button>
           </div>
         </div>
@@ -364,55 +373,61 @@ export default function Header() {
             initial={{ opacity: 0, y: -8 }} 
             animate={{ opacity: 1, y: 0 }} 
             exit={{ opacity: 0, y: -8 }} 
-            className="md:hidden absolute top-full left-0 right-0 bg-white dark:bg-zinc-950 backdrop-blur-xl border-b border-zinc-200 dark:border-zinc-800 shadow-2xl max-h-[85vh] overflow-y-auto z-[100]"
+            className="md:hidden absolute top-full left-0 right-0 bg-white dark:bg-zinc-950 backdrop-blur-xl border-b-2 border-zinc-300 dark:border-zinc-800 shadow-2xl max-h-[85vh] overflow-y-auto z-[100]"
           >
-            <div className="p-4 space-y-2">
-              {/* Buy/Sell Accordion */}
-              <div className="border border-zinc-100 dark:border-zinc-800 rounded-xl overflow-hidden bg-zinc-50/50 dark:bg-zinc-900/50">
-                <button
-                  onClick={() => setMobileBuySellOpen(!mobileBuySellOpen)}
-                  className="flex items-center justify-between w-full px-4 py-3 font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all"
-                >
-                  <span className="flex items-center gap-2 text-sm">
-                    <LayoutGrid size={16} className="text-emerald-600 dark:text-emerald-400" /> Buy/Sell
-                  </span>
-                  <ChevronDown size={15} className={`transition-transform duration-200 text-zinc-400 dark:text-zinc-500 ${mobileBuySellOpen ? "rotate-180" : ""}`} />
-                </button>
-                <AnimatePresence>
-                  {mobileBuySellOpen && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      className="overflow-hidden bg-white dark:bg-zinc-900 border-t border-zinc-100 dark:border-zinc-800 px-6 py-2 space-y-1.5"
-                    >
-                      <Link href="/buy-ev" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-400">
-                        Buy EV
-                      </Link>
-                      <Link href="/sell-ev" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-400">
-                        Sell EV
-                      </Link>
-                      <Link href="/upcoming" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-400">
-                        Upcoming
-                      </Link>
-                      <Link href="/new-launches" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-400">
-                        New Launches
-                      </Link>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+            <div className="p-4 space-y-2.5">
+              {/* Home */}
+              <Link
+                href="/"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-[15px] transition-all ${
+                  pathname === "/"
+                    ? "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border-2 border-emerald-300/90 dark:border-emerald-700/80 shadow-xs"
+                    : "text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-850"
+                }`}
+              >
+                <Home size={19} strokeWidth={2.4} className="text-emerald-600 dark:text-emerald-400" />
+                <span>Home</span>
+              </Link>
+
+              {/* Find */}
+              <Link
+                href="/catalog"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-[15px] transition-all ${
+                  pathname.startsWith("/catalog")
+                    ? "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border-2 border-emerald-300/90 dark:border-emerald-700/80 shadow-xs"
+                    : "text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-850"
+                }`}
+              >
+                <LayoutGrid size={19} strokeWidth={2.4} className="text-emerald-600 dark:text-emerald-400" />
+                <span>Find</span>
+              </Link>
+
+              {/* Sell */}
+              <Link
+                href="/sell-ev"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-[15px] transition-all ${
+                  pathname.startsWith("/sell-ev")
+                    ? "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border-2 border-emerald-300/90 dark:border-emerald-700/80 shadow-xs"
+                    : "text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-850"
+                }`}
+              >
+                <IndianRupee size={19} strokeWidth={2.4} className="text-emerald-600 dark:text-emerald-400" />
+                <span>Sell</span>
+              </Link>
 
               {/* Service Accordion */}
-              <div className="border border-zinc-100 dark:border-zinc-800 rounded-xl overflow-hidden bg-zinc-50/50 dark:bg-zinc-900/50">
+              <div className="border-2 border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden bg-zinc-50/70 dark:bg-zinc-900/60">
                 <button
                   onClick={() => setMobileServiceOpen(!mobileServiceOpen)}
-                  className="flex items-center justify-between w-full px-4 py-3 font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all"
+                  className="flex items-center justify-between w-full px-4 py-3 font-bold text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all"
                 >
-                  <span className="flex items-center gap-2 text-sm">
-                    <SlidersHorizontal size={16} className="text-emerald-600 dark:text-emerald-400" /> Service
+                  <span className="flex items-center gap-3 text-[15px]">
+                    <SlidersHorizontal size={19} strokeWidth={2.4} className="text-emerald-600 dark:text-emerald-400" /> Service
                   </span>
-                  <ChevronDown size={15} className={`transition-transform duration-200 text-zinc-400 dark:text-zinc-500 ${mobileServiceOpen ? "rotate-180" : ""}`} />
+                  <ChevronDown size={16} strokeWidth={2.5} className={`transition-transform duration-200 text-zinc-500 dark:text-zinc-400 ${mobileServiceOpen ? "rotate-180" : ""}`} />
                 </button>
                 <AnimatePresence>
                   {mobileServiceOpen && (
@@ -420,15 +435,15 @@ export default function Header() {
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      className="overflow-hidden bg-white dark:bg-zinc-900 border-t border-zinc-100 dark:border-zinc-800 px-6 py-2 space-y-1.5"
+                      className="overflow-hidden bg-white dark:bg-zinc-900 border-t-2 border-zinc-200 dark:border-zinc-800 px-6 py-2 space-y-1.5"
                     >
-                      <Link href="/service/insurance" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-400">
+                      <Link href="/service/insurance" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-bold text-zinc-800 dark:text-zinc-200 hover:text-emerald-700 dark:hover:text-emerald-400">
                         Insurance
                       </Link>
-                      <Link href="/service/scrap" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-400">
+                      <Link href="/service/scrap" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-bold text-zinc-800 dark:text-zinc-200 hover:text-emerald-700 dark:hover:text-emerald-400">
                         Scrap
                       </Link>
-                      <Link href="/service/product" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-400">
+                      <Link href="/service/product" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-bold text-zinc-800 dark:text-zinc-200 hover:text-emerald-700 dark:hover:text-emerald-400">
                         Product
                       </Link>
                     </motion.div>
@@ -436,51 +451,35 @@ export default function Header() {
                 </AnimatePresence>
               </div>
 
-              {/* Locator Accordion */}
-              <div className="border border-zinc-100 dark:border-zinc-800 rounded-xl overflow-hidden bg-zinc-50/50 dark:bg-zinc-900/50">
-                <button
-                  onClick={() => setMobileLocatorOpen(!mobileLocatorOpen)}
-                  className="flex items-center justify-between w-full px-4 py-3 font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all"
-                >
-                  <span className="flex items-center gap-2 text-sm">
-                    <MapPin size={16} className="text-emerald-600 dark:text-emerald-400" /> Locator
-                  </span>
-                  <ChevronDown size={15} className={`transition-transform duration-200 text-zinc-400 dark:text-zinc-500 ${mobileLocatorOpen ? "rotate-180" : ""}`} />
-                </button>
-                <AnimatePresence>
-                  {mobileLocatorOpen && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      className="overflow-hidden bg-white dark:bg-zinc-900 border-t border-zinc-100 dark:border-zinc-800 px-6 py-2 space-y-1.5"
-                    >
-                      <Link href="/charging-station" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2.5 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-400">
-                        <Zap size={15} className="text-amber-500" /> Charging Station
-                      </Link>
-                      <Link href="/nearme" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2.5 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-emerald-700 dark:hover:text-emerald-400">
-                        <Navigation size={15} className="text-emerald-600 dark:text-emerald-400" /> Near Me
-                      </Link>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+              {/* Charging Station */}
+              <Link
+                href="/charging-station"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-[15px] transition-all ${
+                  pathname.startsWith("/charging-station")
+                    ? "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border-2 border-emerald-300/90 dark:border-emerald-700/80 shadow-xs"
+                    : "text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-850"
+                }`}
+              >
+                <Zap size={19} strokeWidth={2.4} className="text-amber-500" />
+                <span>Charging Station</span>
+              </Link>
 
               {/* For You */}
               <Link
                 href="/foryou"
                 onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center justify-between px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
+                className={`flex items-center justify-between px-4 py-3 rounded-xl font-black text-[15px] transition-all ${
                   pathname.startsWith("/foryou")
-                    ? "bg-violet-600 text-white font-bold"
-                    : "bg-violet-50 dark:bg-violet-950/30 hover:bg-violet-100/80 dark:hover:bg-violet-900/40 text-violet-700 dark:text-violet-300 border border-violet-100 dark:border-violet-900/50"
+                    ? "bg-violet-600 text-white font-black shadow-sm"
+                    : "bg-violet-100 dark:bg-violet-950/50 hover:bg-violet-200/80 dark:hover:bg-violet-900/60 text-violet-950 dark:text-violet-200 border-2 border-violet-300/80 dark:border-violet-800/80"
                 }`}
               >
                 <span className="flex items-center gap-2">
-                  <Sparkles size={16} className={pathname.startsWith("/foryou") ? "" : "text-violet-500"} /> For You
+                  <Sparkles size={17} strokeWidth={2.4} className={pathname.startsWith("/foryou") ? "" : "text-violet-600"} /> For You
                 </span>
                 {!pathname.startsWith("/foryou") && (
-                  <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${pathname.startsWith("/foryou") ? "bg-white text-violet-700" : "bg-violet-600 text-white animate-pulse"}`}>
+                  <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-violet-600 text-white animate-pulse">
                     New
                   </span>
                 )}
@@ -495,13 +494,13 @@ export default function Header() {
               <Link
                 href={user ? "/profile" : "/login"}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`mt-2 flex items-center justify-center gap-2 w-full py-3 rounded-xl font-semibold text-sm shadow-md border ${
+                className={`mt-2 flex items-center justify-center gap-2 w-full py-3 rounded-xl font-bold text-sm shadow-md border-2 ${
                   user
-                    ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/40"
-                    : "bg-zinc-900 dark:bg-zinc-800 text-white hover:bg-zinc-800 dark:hover:bg-zinc-700 border-zinc-200 dark:border-zinc-700"
+                    ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100"
+                    : "bg-zinc-900 dark:bg-zinc-800 text-white hover:bg-zinc-800 dark:hover:bg-zinc-700 border-zinc-300 dark:border-zinc-700"
                 }`}
               >
-                <User size={16} />
+                <User size={16} strokeWidth={2.3} />
                 <span>{user ? (user.displayName || "Profile") : "Login / Register"}</span>
               </Link>
             </div>
@@ -509,6 +508,46 @@ export default function Header() {
         )}
       </AnimatePresence>
       </header>
+
+      {/* Floating Restore Bar / Pill when Header is Minimized */}
+      <AnimatePresence>
+        {isMinimized && !mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="fixed top-0 left-0 right-0 sm:top-3.5 sm:right-6 sm:left-auto sm:w-auto z-[120] pointer-events-auto"
+          >
+            <button
+              onClick={() => {
+                if (isTabsSticky) {
+                  setTemporarilyExpanded(true);
+                }
+                setIsManuallyMinimized(false);
+              }}
+              title="Expand Header"
+              aria-label="Expand header"
+              className="w-full sm:w-auto flex items-center justify-between sm:justify-start gap-2 px-4 py-2 sm:px-3.5 sm:py-1.5 rounded-none sm:rounded-full bg-white/95 dark:bg-[#071E15]/95 backdrop-blur-2xl border-b sm:border-2 border-[#1F7A4D]/30 dark:border-emerald-500/40 shadow-xs sm:shadow-xl sm:shadow-emerald-950/20 text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-[#0C2B1F] transition-all cursor-pointer active:scale-[0.99] sm:active:scale-95 group"
+            >
+              <div className="flex items-center gap-2">
+                <Image
+                  src="/evplsenewlogo.png"
+                  alt="EVPLSE"
+                  width={56}
+                  height={14}
+                  className="h-3 sm:h-3.5 w-auto object-contain"
+                />
+                <span className="text-[11px] sm:text-xs font-black text-emerald-700 dark:text-[#8FE24A]">Header</span>
+              </div>
+              <div className="flex items-center gap-1 text-[10px] sm:text-[11px] text-[#1F7A4D] dark:text-[#8FE24A] font-bold bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200/60 dark:border-emerald-800/40">
+                <span>Tap to expand</span>
+                <ChevronDown size={12} strokeWidth={2.6} className="group-hover:translate-y-0.5 transition-transform" />
+              </div>
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

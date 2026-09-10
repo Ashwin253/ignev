@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, ShoppingBag, User, Phone, Mail, MapPin,
-  Loader2, CheckCircle2,
+  Loader2, CheckCircle2, WalletCards, Banknote,
 } from "lucide-react";
 import Image from "next/image";
 
@@ -24,6 +24,7 @@ type CustomerForm = {
 };
 
 type Step = "form" | "processing" | "success" | "error";
+type PaymentMethod = "online" | "cod";
 
 const INDIAN_STATES = [
   "Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chhattisgarh","Goa","Gujarat",
@@ -44,13 +45,16 @@ declare global {
 export default function CheckoutDrawer({
   product,
   onClose,
+  onOrderPlaced,
 }: {
   product: CheckoutProduct | null;
   onClose: () => void;
+  onOrderPlaced?: (order: { id: string; productName: string; price: string; paymentMethod: PaymentMethod }) => void;
 }) {
   const [step, setStep] = useState<Step>("form");
   const [errorMsg, setErrorMsg] = useState("");
   const [paymentId, setPaymentId] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cod");
   const [form, setForm] = useState<CustomerForm>({
     name: "", email: "", phone: "",
     address: "", city: "", state: "Maharashtra", pincode: "",
@@ -96,6 +100,7 @@ export default function CheckoutDrawer({
           productId: product.id,
           productName: product.name,
           price: product.priceRaw,
+          paymentMethod,
           customer: form,
         }),
       });
@@ -105,11 +110,20 @@ export default function CheckoutDrawer({
         amount?: number;
         currency?: string;
         keyId?: string;
+        orderId?: string;
+        paymentMethod?: PaymentMethod;
         error?: string;
       };
 
       if (!orderRes.ok || orderData.error) {
         throw new Error(orderData.error ?? "Failed to create order.");
+      }
+
+      if (orderData.paymentMethod === "cod") {
+        setPaymentId(orderData.orderId ?? "");
+        onOrderPlaced?.({ id: orderData.orderId ?? "", productName: product.name, price: product.price, paymentMethod: "cod" });
+        setStep("success");
+        return;
       }
 
       if (!orderData.razorpayOrderId || !orderData.amount || !orderData.currency || !orderData.keyId) {
@@ -156,6 +170,7 @@ export default function CheckoutDrawer({
           }
 
           setPaymentId(verifyData.paymentId ?? response.razorpay_payment_id);
+          onOrderPlaced?.({ id: verifyData.paymentId ?? response.razorpay_payment_id, productName: product.name, price: product.price, paymentMethod: "online" });
           setStep("success");
         },
         modal: {
@@ -290,11 +305,22 @@ export default function CheckoutDrawer({
 
                 <button type="submit"
                   className="w-full mt-2 rounded-2xl bg-sky-600 hover:bg-sky-700 text-white font-bold py-4 text-sm transition-colors shadow-sm active:scale-[0.98]">
-                  Pay {product?.price} with Razorpay →
+                  {paymentMethod === "cod" ? `Place COD order · ${product?.price}` : `Pay ${product?.price} with Razorpay →`}
                 </button>
 
+                <div className="grid grid-cols-2 gap-2">
+                  <button type="button" onClick={() => setPaymentMethod("cod")}
+                    className={`flex items-center justify-center gap-2 rounded-xl border px-3 py-3 text-xs font-bold transition ${paymentMethod === "cod" ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-slate-200 text-slate-500 hover:bg-slate-50"}`}>
+                    <Banknote size={15} /> Cash on delivery
+                  </button>
+                  <button type="button" onClick={() => setPaymentMethod("online")}
+                    className={`flex items-center justify-center gap-2 rounded-xl border px-3 py-3 text-xs font-bold transition ${paymentMethod === "online" ? "border-sky-500 bg-sky-50 text-sky-700" : "border-slate-200 text-slate-500 hover:bg-slate-50"}`}>
+                    <WalletCards size={15} /> Online payment
+                  </button>
+                </div>
+
                 <p className="text-center text-xs text-slate-400 mt-2">
-                  Secured by Razorpay · UPI, Cards, Net Banking, Wallets
+                  {paymentMethod === "cod" ? "Pay when your order is delivered." : "Secured by Razorpay · UPI, Cards, Net Banking, Wallets"}
                 </p>
               </motion.form>
             )}
@@ -315,7 +341,9 @@ export default function CheckoutDrawer({
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-slate-900 mb-1">Order placed!</h3>
-                  <p className="text-slate-500 text-sm">Payment confirmed. You will receive a confirmation shortly.</p>
+                  <p className="text-slate-500 text-sm">
+                    {paymentMethod === "cod" ? "Your order is confirmed. Pay when it is delivered." : "Payment confirmed. You will receive a confirmation shortly."}
+                  </p>
                   {paymentId && (
                     <p className="mt-3 text-xs text-slate-400 font-mono bg-slate-50 rounded-lg px-3 py-2">
                       Payment ID: {paymentId}

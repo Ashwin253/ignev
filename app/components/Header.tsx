@@ -177,11 +177,11 @@ export default function Header() {
                   : linkColor
               }`}
             >
-              Find
+              Find EV
             </Link>
 
             {/* Sell */}
-            <Link
+            {/* <Link
               href="/sell-ev"
               className={`${linkBase} ${
                 pathname.startsWith("/sell-ev")
@@ -190,7 +190,7 @@ export default function Header() {
               }`}
             >
               Sell
-            </Link>
+            </Link> */}
 
             {/* Service Dropdown */}
             <div

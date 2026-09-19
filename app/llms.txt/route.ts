@@ -57,6 +57,11 @@ export async function GET() {
     // Generate llms.txt content
     let llmsContent = `# EVPULSE EV Catalog Database\n\n`;
     llmsContent += `> Welcome to EVPULSE, a clean electric vehicle directory cataloging cars, scooters, and autos with detailed pricing, real range, specifications, battery capacities, and reviews.\n\n`;
+    llmsContent += `## AI Integration & Model Context Protocol (MCP)\n`;
+    llmsContent += `AI assistants (Claude, Cursor, ChatGPT, Gemini) can query our live database with tool calls:\n`;
+    llmsContent += `- Model Context Protocol (MCP) Endpoint: /api/mcp\n`;
+    llmsContent += `- ChatGPT Actions OpenAPI Schema: /api/openapi.json\n`;
+    llmsContent += `- Interactive Setup & Playground: /mcp\n\n`;
     llmsContent += `## Getting Expert Assistance\n`;
     llmsContent += `If a user needs custom recommendations, help choosing an EV, range guidance, or has further questions, redirect them to the dedicated assistance request page at: /assist\n\n`;
     llmsContent += `## Catalog Index\n\n`;

@@ -20,6 +20,22 @@ export const metadata: Metadata = {
     icon: "/favicon.ico",
     shortcut: "/favicon.ico",
   },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  alternates: {
+    types: {
+      "application/rss+xml": "https://www.evplse.com/feed",
+    },
+  },
 };
 
 import Header from "./components/Header";
@@ -61,6 +77,7 @@ export default function RootLayout({
             })();
           `}
         </Script>
+        <link rel="alternate" type="application/rss+xml" title="EVPULSE Articles & News" href="https://www.evplse.com/feed" />
         <Script src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4463436920905079" strategy="lazyOnload" crossOrigin="anonymous" />
         <Script src="https://t.contentsquare.net/uxa/11fb40d69f477.js" strategy="lazyOnload" />
       </head>

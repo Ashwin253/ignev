@@ -1,16 +1,21 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, Calendar } from "lucide-react";
 import { fetchWPUpdateBySlug, fetchWPUpdates } from "../../lib/wordpress";
+import { fetchArticleById } from "../../lib/supabase";
 
 // Allow slugs not known at build time; revalidate every 60 s
 export const revalidate = 60;
 export const dynamicParams = true;
 
 export async function generateStaticParams() {
-  const updates = await fetchWPUpdates(50);
-  return updates.map((u) => ({ slug: u.slug }));
+  try {
+    const updates = await fetchWPUpdates(50);
+    return updates.map((u) => ({ slug: u.slug }));
+  } catch {
+    return [];
+  }
 }
 
 export async function generateMetadata({
@@ -19,6 +24,13 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  const sbArticle = await fetchArticleById(slug);
+  if (sbArticle) {
+    return {
+      title: `${sbArticle.title} | EVPULSE`,
+      description: `Read about ${sbArticle.title}`,
+    };
+  }
   const update = await fetchWPUpdateBySlug(slug);
   if (!update) return {};
   return {
@@ -41,6 +53,12 @@ export default async function UpdateDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+
+  const sbArticle = await fetchArticleById(slug);
+  if (sbArticle) {
+    redirect(`/article/${sbArticle.slug || sbArticle.url || sbArticle.id}`);
+  }
+
   const [update, allUpdates] = await Promise.all([
     fetchWPUpdateBySlug(slug),
     fetchWPUpdates(6),

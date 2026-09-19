@@ -61,7 +61,41 @@ export async function fetchProductContent(productSlug: string) {
   }
 }
 
-export async function fetchLatestUpdates(limit = 3) {
+export function extractArticleMeta(rawBody?: string) {
+  if (!rawBody) return { authorName: "", authorEmail: "", cleanBody: "" };
+  const match = rawBody.match(/^<!--meta:(\{.*?\})-->\s*/);
+  if (match) {
+    try {
+      const meta = JSON.parse(match[1]);
+      return {
+        authorName: meta.author_name || "",
+        authorEmail: meta.author_email || "",
+        cleanBody: rawBody.replace(/^<!--meta:(\{.*?\})-->\s*/, ""),
+      };
+    } catch {}
+  }
+  return { authorName: "", authorEmail: "", cleanBody: rawBody };
+}
+
+export function stripMarkdown(text: string): string {
+  if (!text) return "";
+  return text
+    .replace(/^#+\s+/gm, "")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/\*([^*]+)\*/g, "$1")
+    .replace(/__([^_]+)__/g, "$1")
+    .replace(/_([^_]+)_/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/!\[[^\]]*\]\([^)]+\)/g, "")
+    .replace(/`{1,3}[^`]*`{1,3}/g, "")
+    .replace(/>\s+/g, "")
+    .replace(/[-*+]\s+/g, "")
+    .replace(/\n+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+export async function fetchLatestUpdates(limit = 10) {
   if (!supabaseEnabled()) return [];
   try {
     const { data, error } = await supabase
@@ -81,19 +115,44 @@ export async function fetchLatestUpdates(limit = 3) {
   }
 }
 
-export async function fetchArticleById(id: string) {
-  if (!supabaseEnabled() || !id) return null;
+export async function fetchArticleById(idOrSlug: string) {
+  if (!supabaseEnabled() || !idOrSlug) return null;
   try {
-    const { data, error } = await supabase
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug);
+    if (isUuid) {
+      const { data } = await supabase
+        .from("product_content")
+        .select("*")
+        .eq("id", idOrSlug)
+        .maybeSingle();
+      if (data) return data;
+    }
+
+    // Lookup by url (where custom slug is stored)
+    const { data: byUrl } = await supabase
       .from("product_content")
       .select("*")
-      .eq("id", id)
-      .single();
-    if (error) {
-      console.warn("fetchArticleById error:", error.message);
-      return null;
-    }
-    return data;
+      .eq("url", idOrSlug)
+      .maybeSingle();
+    if (byUrl) return byUrl;
+
+    // Lookup by slug column if migration was applied
+    try {
+      const { data: bySlug } = await supabase
+        .from("product_content")
+        .select("*")
+        .eq("slug", idOrSlug)
+        .maybeSingle();
+      if (bySlug) return bySlug;
+    } catch {}
+
+    // Fallback by id directly
+    const { data: byId } = await supabase
+      .from("product_content")
+      .select("*")
+      .eq("id", idOrSlug)
+      .maybeSingle();
+    return byId || null;
   } catch (e) {
     console.warn("fetchArticleById exception:", e);
     return null;

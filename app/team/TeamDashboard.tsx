@@ -377,6 +377,8 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
   const [loginError, setLoginError] = useState("");
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [newPassword, setNewPassword] = useState("");
+  const [showEditName, setShowEditName] = useState(false);
+  const [userNameInput, setUserNameInput] = useState("");
   const [listings, setListings] = useState<(EvListingRow & { variants: EvVariantRow[] })[]>([]);
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
@@ -444,6 +446,17 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
   const uniqueBrands = useMemo(() => {
     return [...new Set(activeListings.map((l) => l.brand).filter(Boolean))].sort();
   }, [activeListings]);
+
+  const currentUserName = useMemo(() => {
+    if (!user) return "";
+    return (
+      user.user_metadata?.full_name ||
+      user.user_metadata?.name ||
+      user.user_metadata?.display_name ||
+      (typeof window !== "undefined" ? localStorage.getItem("team_author_name") : "") ||
+      (user.email ? user.email.split("@")[0] : "")
+    );
+  }, [user]);
   const filteredListings = useMemo(() => {
     if (!selectedBrand) return [];
     return activeListings.filter((l) => l.brand === selectedBrand);
@@ -1272,6 +1285,37 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
     setLoading(false);
   };
 
+  const handleUpdateName = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = userNameInput.trim();
+    if (!trimmed) {
+      alert("Please enter a valid display name.");
+      return;
+    }
+    setLoading(true);
+    const { data, error } = await supabase.auth.updateUser({
+      data: { full_name: trimmed, name: trimmed, display_name: trimmed }
+    });
+    if (error) {
+      alert("Error: " + error.message);
+    } else {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("team_author_name", trimmed);
+      }
+      if (data?.user) {
+        setUser(data.user);
+      } else {
+        setUser((prev: any) => prev ? {
+          ...prev,
+          user_metadata: { ...(prev.user_metadata || {}), full_name: trimmed, name: trimmed, display_name: trimmed }
+        } : prev);
+      }
+      alert("Author name updated successfully!");
+      setShowEditName(false);
+    }
+    setLoading(false);
+  };
+
   const startNew = () => {
     setEditing("new");
     const initialForm = {
@@ -1711,6 +1755,35 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
           </div>
         </div>
       )}
+      {showEditName && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl relative">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-slate-900">Edit Author Name</h3>
+              <button onClick={() => setShowEditName(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer"><X size={20} /></button>
+            </div>
+            <form onSubmit={handleUpdateName} className="space-y-4">
+              <label className="block">
+                <span className="text-[10px] font-bold uppercase text-slate-500">Your Full Name / Author Name</span>
+                <input
+                  type="text"
+                  value={userNameInput}
+                  onChange={(e) => setUserNameInput(e.target.value)}
+                  placeholder="e.g. Rahul Sharma"
+                  required
+                  className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-sky-400"
+                />
+              </label>
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                This name is automatically set as the author when you write new articles and content.
+              </p>
+              <button type="submit" disabled={loading} className="w-full rounded-xl bg-slate-900 py-3 text-sm font-bold text-white hover:bg-sky-600 disabled:opacity-50 transition cursor-pointer">
+                {loading ? "Updating..." : "Save Name"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
       <div className="mx-auto max-w-5xl">
         <div className="flex items-center justify-between gap-4 mb-8">
           <div>
@@ -1724,34 +1797,46 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   <Download size={12} /> Install App
                 </button>
               )}
-            </div>             <p className="text-xs sm:text-sm text-slate-500 truncate max-w-[150px] sm:max-w-none">{user.email}</p>
-            <div className="flex gap-2.5 mt-1">
+            </div>
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-600 mt-1">
+              {currentUserName && <span className="font-semibold text-slate-900">{currentUserName}</span>}
+              {currentUserName && <span className="text-slate-300">•</span>}
+              <p className="text-slate-500 truncate max-w-[150px] sm:max-w-none">{user.email}</p>
+            </div>
+            <div className="flex items-center gap-2.5 mt-1.5">
+              <button 
+                onClick={() => { setUserNameInput(currentUserName); setShowEditName(true); }} 
+                className="text-[10px] sm:text-xs font-bold text-sky-600 hover:text-sky-700 transition cursor-pointer"
+              >
+                Edit Name
+              </button>
+              <span className="text-[10px] sm:text-xs text-slate-350">|</span>
               <button 
                 onClick={() => setShowChangePassword(true)} 
-                className="text-[10px] sm:text-xs font-bold text-sky-600 hover:text-sky-700 transition"
+                className="text-[10px] sm:text-xs font-bold text-sky-600 hover:text-sky-700 transition cursor-pointer"
               >
                 Change Password
               </button>
               <span className="text-[10px] sm:text-xs text-slate-350">|</span>
               <button 
                 onClick={handleLogout} 
-                className="text-[10px] sm:text-xs font-bold text-rose-550 hover:text-rose-750 transition"
+                className="text-[10px] sm:text-xs font-bold text-rose-550 hover:text-rose-750 transition cursor-pointer"
               >
                 Logout
               </button>
             </div>
           </div>
           <div className="flex gap-1.5 sm:gap-2 shrink-0">
-            <button onClick={() => { setActiveSection("all_listings"); setEditing(null); setSelectedBrand(""); setSelectedModelId(""); setTableBrandFilter(""); }} className="inline-flex items-center gap-1 sm:gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
+            <button onClick={() => { setActiveSection("all_listings"); setEditing(null); setSelectedBrand(""); setSelectedModelId(""); setTableBrandFilter(""); }} className={`inline-flex items-center gap-1 sm:gap-2 rounded-xl border px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold transition-colors ${activeSection === "all_listings" ? "border-slate-900 bg-slate-900 text-white shadow-sm" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>
               All Listings
             </button>
-            <button onClick={() => { setActiveSection("brands"); setEditing(null); setSelectedBrand(""); setSelectedModelId(""); setTableBrandFilter(""); }} className="inline-flex items-center gap-1 sm:gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
-              All Brands
+            <button onClick={() => { setActiveSection("content"); }} className={`inline-flex items-center gap-1 sm:gap-2 rounded-xl border px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold transition-colors ${activeSection === "content" ? "border-slate-900 bg-slate-900 text-white shadow-sm" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>
+              All Content
             </button>
-            <button onClick={() => { setActiveSection("media"); }} className="inline-flex items-center gap-1 sm:gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
+            <button onClick={() => { setActiveSection("media"); }} className={`inline-flex items-center gap-1 sm:gap-2 rounded-xl border px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold transition-colors ${activeSection === "media" ? "border-slate-900 bg-slate-900 text-white shadow-sm" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>
               All Media
             </button>
-            <button onClick={() => { setActiveSection("chargers"); }} className="inline-flex items-center gap-1 sm:gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
+            <button onClick={() => { setActiveSection("chargers"); }} className={`inline-flex items-center gap-1 sm:gap-2 rounded-xl border px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold transition-colors ${activeSection === "chargers" ? "border-slate-900 bg-slate-900 text-white shadow-sm" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>
               All Chargers
             </button>
           </div>
@@ -1778,7 +1863,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             <option value="analytics">📊 Analytics</option>
             <option value="map">📍 Map</option>
             <option value="banners">🖼️ Banners</option>
-            <option value="content">📄 Content</option>
+            <option value="content">📄 All Content</option>
             <option value="offers">🏷️ Offers</option>
             <option value="chargers">🔌 Chargers Compatibility</option>
             <option value="brands">🏷️ All Brands (Rankings)</option>
@@ -1826,9 +1911,9 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${activeSection === "banners" ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-955 border border-slate-300"}`}>
             🖼️ Banners
           </button>
-          <button onClick={() => setActiveSection("content")}
-            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${activeSection === "content" ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-955 border border-slate-300"}`}>
-            📄 Content
+          <button onClick={() => { setActiveSection("brands"); setEditing(null); setSelectedBrand(""); setSelectedModelId(""); setTableBrandFilter(""); }}
+            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${activeSection === "brands" ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-955 border border-slate-300"}`}>
+            🏷️ Brands
           </button>
           <button onClick={() => setActiveSection("offers")}
             className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${activeSection === "offers" ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-955 border border-slate-300"}`}>
@@ -1852,9 +1937,14 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
         {activeSection === "analytics" && <AnalyticsPanel supabase={supabase} />}
         {activeSection === "map" && <MapPanel supabase={supabase} userEmail={user.email || ""} />}
         {activeSection === "chargers" && <ChargersPanel supabase={supabase} userEmail={user.email || ""} listings={listings} />}
-        {activeSection === "banners" && <BannersPanel supabase={supabase} />}
-        {activeSection === "content" && <ContentPanel supabase={supabase} />}
-        {activeSection === "offers" && <OffersPanel supabase={supabase} uniqueBrands={uniqueBrands} />}
+        {activeSection === "content" && (
+          <ContentPanel
+            supabase={supabase}
+            listings={listings}
+            currentUserEmail={user.email || ""}
+            currentUserName={currentUserName}
+          />
+        )}
         {activeSection === "media" && <MediaPanel supabase={supabase} />}
         {activeSection === "brands" && <BrandsPanel supabase={supabase} userEmail={user.email || ""} listings={listings} />}
         {activeSection === "all_listings" && (

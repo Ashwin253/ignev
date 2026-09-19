@@ -5,7 +5,7 @@ import {
   formatPricing,
   type EvListing,
 } from "./lib/wordpress";
-import { fetchEvListingsFromSupabase, fetchHeroBanners, fetchLatestUpdates, fetchBrandRankings } from "./lib/supabase";
+import { fetchEvListingsFromSupabase, fetchHeroBanners, fetchLatestUpdates, fetchBrandRankings, extractArticleMeta, stripMarkdown } from "./lib/supabase";
 import { getVehiclePhoto } from "./lib/vehicle-images";
 import { Suspense } from "react";
 import dynamic from "next/dynamic";
@@ -74,15 +74,23 @@ async function HomeContent() {
     
     const sbUpdates = await fetchLatestUpdates(3);
     if (sbUpdates.length) {
-      updates = sbUpdates.map((u: any) => ({
-        id: u.id,
-        title: u.title,
-        slug: u.product_slug || "",
-        href: `/article/${u.id}`,
-        excerpt: u.body ? u.body.substring(0, 100) + "..." : "",
-        date: u.created_at,
-        photo: u.thumbnail || "https://images.unsplash.com/photo-1563720223185-11003d516935?w=800&auto=format&fit=crop&q=80"
-      }));
+      updates = sbUpdates.map((u: any) => {
+        const meta = extractArticleMeta(u.body);
+        const cleanBody = meta.cleanBody || u.body || "";
+        const plainText = stripMarkdown(cleanBody);
+        const excerpt = plainText.length > 110 ? plainText.slice(0, 107) + "…" : plainText;
+        return {
+          id: u.id,
+          title: u.title,
+          slug: u.product_slug || "",
+          href: `/article/${u.slug || u.url || u.id}`,
+          excerpt,
+          date: u.created_at,
+          photo: u.thumbnail || "https://images.unsplash.com/photo-1563720223185-11003d516935?w=800&auto=format&fit=crop&q=80",
+          authorName: u.author_name || meta.authorName || "",
+          authorEmail: u.author_email || meta.authorEmail || "",
+        };
+      });
     }
 
     const sbRankings = await fetchBrandRankings();

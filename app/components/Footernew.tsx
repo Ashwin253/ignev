@@ -67,6 +67,12 @@ export default function Footer() {
                   Terms of Service
                 </Link>
               </li>
+              <li>
+                <Link href="/mcp" className="text-emerald-500 hover:text-emerald-400 transition-colors flex items-center gap-1.5 font-medium">
+                  <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  Connect AI / MCP
+                </Link>
+              </li>
             </ul>
           </div>
 

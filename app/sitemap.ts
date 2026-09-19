@@ -1,18 +1,47 @@
 import { MetadataRoute } from 'next';
-import { fetchEvListingsFromSupabase } from './lib/supabase';
+import { fetchEvListingsFromSupabase, fetchLatestUpdates } from './lib/supabase';
+
+function safeDate(val: any): Date {
+  if (!val) return new Date();
+  const d = new Date(val);
+  return isNaN(d.getTime()) ? new Date() : d;
+}
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.evplse.com';
+  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://www.evplse.com').replace(/\/+$/, '');
 
-  // Fetch dynamic content from Supabase
-  const products = await fetchEvListingsFromSupabase(500);
+  let products: any[] = [];
+  let articles: any[] = [];
 
-  const productUrls: MetadataRoute.Sitemap = products.map((product) => ({
-    url: `${baseUrl}/product/${product.slug}`,
-    lastModified: new Date(),
-    changeFrequency: 'daily',
-    priority: 0.8,
-  }));
+  try {
+    products = await fetchEvListingsFromSupabase(500);
+  } catch (err) {
+    console.warn("Sitemap products fetch error:", err);
+  }
+
+  try {
+    articles = await fetchLatestUpdates(500);
+  } catch (err) {
+    console.warn("Sitemap articles fetch error:", err);
+  }
+
+  const productUrls: MetadataRoute.Sitemap = (products || [])
+    .filter((p) => p && p.slug)
+    .map((product) => ({
+      url: `${baseUrl}/product/${product.slug}`,
+      lastModified: safeDate(product.created_at || product.date),
+      changeFrequency: 'daily',
+      priority: 0.8,
+    }));
+
+  const articleUrls: MetadataRoute.Sitemap = (articles || [])
+    .filter((a) => a && (a.slug || a.url || a.id))
+    .map((article: any) => ({
+      url: `${baseUrl}/article/${article.slug || article.url || article.id}`,
+      lastModified: safeDate(article.created_at),
+      changeFrequency: 'weekly',
+      priority: 0.85,
+    }));
 
   const staticUrls: MetadataRoute.Sitemap = [
     {
@@ -83,5 +112,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  return [...staticUrls, ...productUrls];
+  return [...staticUrls, ...productUrls, ...articleUrls];
 }

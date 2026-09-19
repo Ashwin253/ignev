@@ -131,10 +131,14 @@ const Footer = () => {
 
         <div className="border-t border-black/10 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-black">
           <p className="mb-4 md:mb-0">&copy; {new Date().getFullYear()} EVPLSE. All rights reserved.</p>
-          <div className="flex space-x-6">
+          <div className="flex space-x-6 items-center flex-wrap gap-y-2">
             <Link href="/about" className="hover:text-amber-600 transition font-medium">About Us</Link>
             <Link href="/privacy" className="hover:text-amber-600 transition font-medium">Privacy Policy</Link>
             <Link href="/terms" className="hover:text-amber-600 transition font-medium">Terms of Services</Link>
+            <Link href="/mcp" className="hover:text-emerald-600 transition font-medium flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              Connect AI / MCP
+            </Link>
           </div>
         </div>
       </div>

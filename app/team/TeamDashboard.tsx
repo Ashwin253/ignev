@@ -1785,8 +1785,8 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
         </div>
       )}
       <div className="mx-auto max-w-5xl">
-        <div className="flex items-center justify-between gap-4 mb-8">
-          <div>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
+          <div className="w-full sm:w-auto">
             <div className="flex items-center gap-2.5 flex-wrap">
               <h1 className="text-xl sm:text-2xl font-black text-slate-900 leading-tight">Team Dashboard</h1>
               {deferredPrompt && (
@@ -1825,8 +1825,64 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                 Logout
               </button>
             </div>
+
+            {/* Mobile dropdown for All Listings, All Content, All Media, All Chargers */}
+            <div className="block sm:hidden mt-3.5">
+              <div className="relative w-full">
+                <select
+                  value={["all_listings", "content", "media", "chargers"].includes(activeSection) ? activeSection : ""}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === "all_listings") {
+                      setActiveSection("all_listings");
+                      setEditing(null);
+                      setSelectedBrand("");
+                      setSelectedModelId("");
+                      setTableBrandFilter("");
+                    } else if (val === "content") {
+                      setActiveSection("content");
+                    } else if (val === "media") {
+                      setActiveSection("media");
+                    } else if (val === "chargers") {
+                      setActiveSection("chargers");
+                    }
+                  }}
+                  className={`w-full appearance-none rounded-xl border pl-3.5 pr-9 py-2.5 text-xs font-bold outline-none cursor-pointer transition-colors shadow-sm ${
+                    ["all_listings", "content", "media", "chargers"].includes(activeSection)
+                      ? "border-slate-900 bg-slate-900 text-white"
+                      : "border-slate-300 bg-white text-slate-800 hover:bg-slate-50"
+                  }`}
+                >
+                  <option value="" disabled hidden>
+                    All Views (Listings, Content, Media, Chargers)
+                  </option>
+                  <option value="all_listings" className="text-slate-900 bg-white font-semibold">
+                    All Listings
+                  </option>
+                  <option value="content" className="text-slate-900 bg-white font-semibold">
+                    All Content
+                  </option>
+                  <option value="media" className="text-slate-900 bg-white font-semibold">
+                    All Media
+                  </option>
+                  <option value="chargers" className="text-slate-900 bg-white font-semibold">
+                    All Chargers
+                  </option>
+                </select>
+                <ChevronDown
+                  size={14}
+                  className={`pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 ${
+                    ["all_listings", "content", "media", "chargers"].includes(activeSection)
+                      ? "text-white"
+                      : "text-slate-500"
+                  }`}
+                />
+              </div>
+            </div>
           </div>
-          <div className="flex gap-1.5 sm:gap-2 shrink-0">
+
+          {/* Desktop buttons */}
+          <div className="hidden sm:flex gap-1.5 sm:gap-2 shrink-0">
             <button onClick={() => { setActiveSection("all_listings"); setEditing(null); setSelectedBrand(""); setSelectedModelId(""); setTableBrandFilter(""); }} className={`inline-flex items-center gap-1 sm:gap-2 rounded-xl border px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold transition-colors ${activeSection === "all_listings" ? "border-slate-900 bg-slate-900 text-white shadow-sm" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>
               All Listings
             </button>
@@ -1849,14 +1905,17 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             onChange={(e) => {
               const val = e.target.value as any;
               setActiveSection(val);
-              if (val === "listings") {
+              if (val === "listings" || val === "all_listings") {
                 setSelectedBrand("");
                 setSelectedModelId("");
                 setEditing(null);
+                setTableBrandFilter("");
               }
             }}
             className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-bold text-slate-800 outline-none cursor-pointer"
-          >            <option value="listings">EV Listings</option>
+          >
+            <option value="listings">EV Listings</option>
+            <option value="all_listings">📑 All Listings</option>
             <option value="leads">Enquiries {pendingEnquiriesCount > 0 ? `(${pendingEnquiriesCount} new)` : ""}</option>
             <option value="foryou_leads">✨ For You {pendingForYouCount > 0 ? `(${pendingForYouCount} new)` : ""}</option>
             {/* <option value="prices">⛽ Fuel Prices</option> */}
@@ -1864,9 +1923,12 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             <option value="map">📍 Map</option>
             <option value="banners">🖼️ Banners</option>
             <option value="content">📄 All Content</option>
+            <option value="media">🖼️ All Media</option>
             <option value="offers">🏷️ Offers</option>
             <option value="chargers">🔌 Chargers Compatibility</option>
             <option value="brands">🏷️ All Brands (Rankings)</option>
+            <option value="approvals">🛡️ B2B Approvals</option>
+            <option value="vehicle_approvals">🚗 Vehicle Approvals</option>
           </select>
         </div>
 

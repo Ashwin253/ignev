@@ -90,6 +90,13 @@ export default function HeaderSearch({ isScrolled }: { isScrolled: boolean }) {
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Filter by Type</span>
                     <div className="grid grid-cols-4 gap-1.5">
                       <button
+                        onClick={() => handleTabClick({ type: "cars" })}
+                        className="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-slate-50 hover:bg-sky-50 hover:text-sky-600 border border-slate-100 text-[10px] font-bold transition-colors cursor-pointer"
+                      >
+                        <CarFront size={14} className="text-sky-600" />
+                        Cars
+                      </button>
+                      <button
                         onClick={() => handleTabClick({ type: "bike" })}
                         className="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-slate-50 hover:bg-sky-50 hover:text-sky-600 border border-slate-100 text-[10px] font-bold transition-colors cursor-pointer"
                       >
@@ -103,13 +110,7 @@ export default function HeaderSearch({ isScrolled }: { isScrolled: boolean }) {
                         <Bike size={14} className="text-sky-600" />
                         Scooter
                       </button>
-                      <button
-                        onClick={() => handleTabClick({ type: "cars" })}
-                        className="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-slate-50 hover:bg-sky-50 hover:text-sky-600 border border-slate-100 text-[10px] font-bold transition-colors cursor-pointer"
-                      >
-                        <CarFront size={14} className="text-sky-600" />
-                        Cars
-                      </button>
+
                       <button
                         onClick={() => handleTabClick({ type: "commercial" })}
                         className="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-slate-50 hover:bg-sky-50 hover:text-sky-600 border border-slate-100 text-[10px] font-bold transition-colors cursor-pointer"

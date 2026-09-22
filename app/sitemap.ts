@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next';
 import { fetchEvListingsFromSupabase, fetchLatestUpdates } from './lib/supabase';
+import { fetchWPUpdates } from './lib/wordpress';
 
 function safeDate(val: any): Date {
   if (!val) return new Date();
@@ -12,6 +13,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   let products: any[] = [];
   let articles: any[] = [];
+  let wpArticles: any[] = [];
 
   try {
     products = await fetchEvListingsFromSupabase(500);
@@ -23,6 +25,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     articles = await fetchLatestUpdates(500);
   } catch (err) {
     console.warn("Sitemap articles fetch error:", err);
+  }
+
+  try {
+    wpArticles = await fetchWPUpdates(100);
+  } catch (err) {
+    console.warn("Sitemap WP articles fetch error:", err);
   }
 
   const productUrls: MetadataRoute.Sitemap = (products || [])
@@ -41,6 +49,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: safeDate(article.created_at),
       changeFrequency: 'weekly',
       priority: 0.85,
+    }));
+
+  const wpUrls: MetadataRoute.Sitemap = (wpArticles || [])
+    .filter((w) => w && w.slug)
+    .map((wp: any) => ({
+      url: `${baseUrl}/updates/${wp.slug}`,
+      lastModified: safeDate(wp.date),
+      changeFrequency: 'weekly',
+      priority: 0.8,
     }));
 
   const staticUrls: MetadataRoute.Sitemap = [
@@ -112,5 +129,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  return [...staticUrls, ...productUrls, ...articleUrls];
+  return [...staticUrls, ...productUrls, ...articleUrls, ...wpUrls];
 }

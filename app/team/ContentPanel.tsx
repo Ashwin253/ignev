@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Pencil, X, Save, Loader2, FileText, Upload, Image as ImageIcon, Sparkles, RefreshCw, ExternalLink, Car, User } from "lucide-react";
+import { Plus, Trash2, Pencil, X, Save, Loader2, FileText, Upload, Image as ImageIcon, Sparkles, RefreshCw, ExternalLink, Car, User, AlertTriangle, CheckCircle } from "lucide-react";
 import MarkdownEditor from "./MarkdownEditor";
 import { extractArticleMeta } from "../lib/supabase";
 export { extractArticleMeta };
@@ -64,6 +64,7 @@ export default function ContentPanel({
   const [search, setSearch] = useState("");
   const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
   const [isCustomSlugEdited, setIsCustomSlugEdited] = useState(false);
+  const [thumbnailDim, setThumbnailDim] = useState<{ width: number; height: number } | null>(null);
 
   useEffect(() => {
     fetchContents();
@@ -79,6 +80,7 @@ export default function ContentPanel({
 
   const startNew = () => {
     setEditing("new");
+    setThumbnailDim(null);
     const defaultAuthorName = currentUserName || (currentUserEmail ? currentUserEmail.split("@")[0] : "Editorial Team");
     setForm({
       ...emptyContent,
@@ -91,6 +93,7 @@ export default function ContentPanel({
   const startEdit = (c: ProductContent & { id: string }) => {
     const meta = extractArticleMeta(c.body);
     setEditing(c.id);
+    setThumbnailDim(null);
     setForm({
       ...c,
       slug: c.slug || c.url || "",
@@ -136,6 +139,17 @@ export default function ContentPanel({
       alert("Please select a valid image file.");
       return;
     }
+
+    // Pre-check natural dimensions
+    try {
+      const objUrl = URL.createObjectURL(file);
+      const testImg = new window.Image();
+      testImg.src = objUrl;
+      testImg.onload = () => {
+        setThumbnailDim({ width: testImg.naturalWidth, height: testImg.naturalHeight });
+        URL.revokeObjectURL(objUrl);
+      };
+    } catch {}
 
     setUploadingThumbnail(true);
     try {
@@ -373,21 +387,32 @@ export default function ContentPanel({
 
             {/* Thumbnail URL with Upload */}
             <div className="block sm:col-span-2">
-              <span className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">
-                Thumbnail Image (Optional)
-              </span>
-              <div className="mt-1.5 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <div className="flex flex-wrap items-center justify-between gap-1.5 mb-1.5">
+                <span className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">
+                  Thumbnail Image (Optional)
+                </span>
+                <span className="text-[11px] font-semibold text-slate-500">
+                  Google Discover requirement: <span className="text-slate-800 font-bold">≥ 1,200px wide</span>
+                </span>
+              </div>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                 <div className="relative flex-1">
                   <input
                     value={form.thumbnail || ""}
-                    onChange={(e) => setForm({ ...form, thumbnail: e.target.value })}
+                    onChange={(e) => {
+                      setForm({ ...form, thumbnail: e.target.value });
+                      setThumbnailDim(null);
+                    }}
                     placeholder="Enter image URL (https://...) or upload directly →"
                     className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-medium outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 pr-9"
                   />
                   {form.thumbnail && (
                     <button
                       type="button"
-                      onClick={() => setForm({ ...form, thumbnail: "" })}
+                      onClick={() => {
+                        setForm({ ...form, thumbnail: "" });
+                        setThumbnailDim(null);
+                      }}
                       className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 p-1 rounded-md"
                       title="Clear thumbnail"
                     >
@@ -416,6 +441,28 @@ export default function ContentPanel({
                 </label>
               </div>
 
+              {/* Warning or Success Resolution Banner */}
+              {form.thumbnail && thumbnailDim && (
+                thumbnailDim.width < 1200 ? (
+                  <div className="mt-2.5 flex items-start gap-2.5 p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs">
+                    <AlertTriangle size={16} className="text-amber-600 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-bold text-amber-950">
+                        Warning: Image width is {thumbnailDim.width}px (less than 1,200px)
+                      </p>
+                      <p className="mt-0.5 text-[11px] text-amber-800 leading-relaxed">
+                        Google Discover & Google Feed require lead images to be at least <strong>1,200px wide</strong> (16:9 ratio recommended). Articles with smaller images will likely not be featured in Google Feed.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-2 flex items-center gap-2 p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold w-fit">
+                    <CheckCircle size={14} className="text-emerald-600 shrink-0" />
+                    <span>{thumbnailDim.width} × {thumbnailDim.height}px — Ready for Google Discover (≥ 1,200px)</span>
+                  </div>
+                )
+              )}
+
               {/* Thumbnail Preview if present */}
               {form.thumbnail && (
                 <div className="mt-3 flex items-center gap-3 p-2.5 rounded-xl border border-slate-200 bg-white w-fit shadow-xs">
@@ -424,14 +471,30 @@ export default function ContentPanel({
                       src={form.thumbnail}
                       alt="Thumbnail preview"
                       className="w-full h-full object-cover"
+                      onLoad={(e) => {
+                        const { naturalWidth, naturalHeight } = e.currentTarget;
+                        setThumbnailDim({ width: naturalWidth, height: naturalHeight });
+                      }}
                       onError={(e) => {
                         (e.currentTarget as HTMLElement).style.display = "none";
+                        setThumbnailDim(null);
                       }}
                     />
                   </div>
                   <div className="text-xs">
-                    <p className="font-bold text-slate-700">Thumbnail Preview</p>
-                    <p className="text-[10px] text-slate-400 truncate max-w-[240px] font-mono">{form.thumbnail}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-bold text-slate-700">Thumbnail Preview</p>
+                      {thumbnailDim && (
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                          thumbnailDim.width >= 1200
+                            ? "bg-emerald-100 text-emerald-800"
+                            : "bg-amber-100 text-amber-800"
+                        }`}>
+                          {thumbnailDim.width} × {thumbnailDim.height}px
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-slate-400 truncate max-w-[240px] font-mono mt-0.5">{form.thumbnail}</p>
                   </div>
                 </div>
               )}

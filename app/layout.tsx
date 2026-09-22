@@ -80,6 +80,22 @@ export default function RootLayout({
         <link rel="alternate" type="application/rss+xml" title="EVPULSE Articles & News" href="https://www.evplse.com/feed" />
         <Script src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4463436920905079" strategy="lazyOnload" crossOrigin="anonymous" />
         <Script src="https://t.contentsquare.net/uxa/11fb40d69f477.js" strategy="lazyOnload" />
+        <Script
+          src="https://news.google.com/swg/js/v1/swg-basic.js"
+          strategy="afterInteractive"
+        />
+        <Script id="swg-basic-init" strategy="afterInteractive">
+          {`
+            (self.SWG_BASIC = self.SWG_BASIC || []).push(function(basicSubscriptions) {
+              basicSubscriptions.init({
+                type: "NewsArticle",
+                isPartOfType: ["Product"],
+                isPartOfProductId: "CAownrzHDA:openaccess",
+                clientOptions: { theme: "light", lang: "en" },
+              });
+            });
+          `}
+        </Script>
       </head>
       <body className="min-h-full flex flex-col bg-zinc-50 text-zinc-900 dark:bg-[#0f1115] dark:text-white transition-colors duration-300">
         <ClarityScript />

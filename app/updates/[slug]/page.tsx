@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, Calendar } from "lucide-react";
 import { fetchWPUpdateBySlug, fetchWPUpdates } from "../../lib/wordpress";
-import { fetchArticleById } from "../../lib/supabase";
+import { fetchArticleById, extractArticleMeta } from "../../lib/supabase";
 
 // Allow slugs not known at build time; revalidate every 60 s
 export const revalidate = 60;
@@ -24,18 +24,94 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.evplse.com").replace(/\/+$/, "");
+
   const sbArticle = await fetchArticleById(slug);
   if (sbArticle) {
+    const meta = extractArticleMeta(sbArticle.body);
+    const cleanBody = meta.cleanBody || sbArticle.body || "";
+    const description = cleanBody.replace(/[#*`_\[\]]/g, "").slice(0, 160).trim() || `Read about ${sbArticle.title} on EVPULSE`;
+    const articleSlug = sbArticle.slug || sbArticle.url || sbArticle.id;
+    const articleUrl = `${baseUrl}/article/${articleSlug}`;
+    const images = sbArticle.thumbnail ? [sbArticle.thumbnail] : [`${baseUrl}/og-image.jpg`];
+    const authorName = sbArticle.author_name || meta.authorName || "EVPULSE Editorial";
+
     return {
       title: `${sbArticle.title} | EVPULSE`,
-      description: `Read about ${sbArticle.title}`,
+      description,
+      alternates: {
+        canonical: articleUrl,
+      },
+      openGraph: {
+        title: sbArticle.title,
+        description,
+        url: articleUrl,
+        siteName: "EVPULSE",
+        type: "article",
+        publishedTime: sbArticle.created_at,
+        authors: [authorName],
+        images: images.map((img: string) => ({ url: img, alt: sbArticle.title })),
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: sbArticle.title,
+        description,
+        images,
+      },
+      robots: {
+        index: true,
+        follow: true,
+        googleBot: {
+          index: true,
+          follow: true,
+          "max-video-preview": -1,
+          "max-image-preview": "large",
+          "max-snippet": -1,
+        },
+      },
     };
   }
+
   const update = await fetchWPUpdateBySlug(slug);
   if (!update) return {};
+
+  const pageUrl = `${baseUrl}/updates/${slug}`;
+  const images = update.photo ? [update.photo] : [`${baseUrl}/og-image.jpg`];
+  const description = update.excerpt || `Read the latest update on ${update.title} at EVPULSE.`;
+
   return {
     title: `${update.title} | EVPULSE Updates`,
-    description: update.excerpt || update.title,
+    description,
+    alternates: {
+      canonical: pageUrl,
+    },
+    openGraph: {
+      title: update.title,
+      description,
+      url: pageUrl,
+      siteName: "EVPULSE",
+      type: "article",
+      publishedTime: update.date,
+      authors: ["EVPULSE Editorial"],
+      images: images.map((img: string) => ({ url: img, alt: update.title })),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: update.title,
+      description,
+      images,
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-video-preview": -1,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+      },
+    },
   };
 }
 
@@ -53,6 +129,7 @@ export default async function UpdateDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.evplse.com").replace(/\/+$/, "");
 
   const sbArticle = await fetchArticleById(slug);
   if (sbArticle) {
@@ -66,12 +143,47 @@ export default async function UpdateDetailPage({
 
   if (!update) notFound();
 
+  const canonicalUrl = `${baseUrl}/updates/${slug}`;
+
+  // Google Discover & Google News Schema.org JSON-LD
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "NewsArticle",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": canonicalUrl,
+    },
+    "headline": update.title,
+    "description": update.excerpt || update.title,
+    "image": update.photo ? [update.photo] : [`${baseUrl}/og-image.jpg`],
+    "datePublished": update.date || new Date().toISOString(),
+    "dateModified": update.date || new Date().toISOString(),
+    "author": {
+      "@type": "Person",
+      "name": "EVPULSE Editorial",
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "EVPULSE",
+      "url": baseUrl,
+      "logo": {
+        "@type": "ImageObject",
+        "url": `${baseUrl}/favicon.ico`,
+      },
+    },
+  };
+
   const related = allUpdates
     .filter((u) => u.slug !== slug)
     .slice(0, 3);
 
   return (
     <article className="bg-white min-h-screen py-24 selection:bg-emerald-100 selection:text-emerald-900">
+      {/* Schema.org Structured Data for Google Discover & Google News */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
         
         {/* Header Section (Centered and narrower) */}

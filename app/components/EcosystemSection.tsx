@@ -56,9 +56,9 @@ interface EcosystemSectionProps {
   brandRankings?: BrandRankItem[];
 }
 
-type CategoryTab = "bike" | "scooter" | "cars" | "commercial";
+type CategoryTab =  "cars" |"bike" | "scooter"  | "commercial";
 
-const CATEGORY_TABS: CategoryTab[] = ["bike", "scooter", "cars", "commercial"];
+const CATEGORY_TABS: CategoryTab[] = ["cars","bike", "scooter", "commercial"];
 
 const CATEGORY_CONFIG: Record<
   CategoryTab,
@@ -69,7 +69,15 @@ const CATEGORY_CONFIG: Record<
     icon: React.ElementType;
     catalogHref: string;
   }
-> = {
+> = {  
+  cars: {
+    label: "Cars",
+    sublabel: "Cars, SUVs, Sedans & Passenger Vans",
+    watermark: "CARS",
+    icon: Car,
+    catalogHref: "/buy-ev?type=cars",
+  },
+
   bike: {
     label: "Bikes",
     sublabel: "Electric Motorcycles & Performance Bikes",
@@ -83,15 +91,7 @@ const CATEGORY_CONFIG: Record<
     watermark: "SCOOTER",
     icon: Zap,
     catalogHref: "/buy-ev?type=scooter",
-  },
-  cars: {
-    label: "Cars",
-    sublabel: "Cars, SUVs, Sedans & Passenger Vans",
-    watermark: "CARS",
-    icon: Car,
-    catalogHref: "/buy-ev?type=cars",
-  },
-  commercial: {
+  },  commercial: {
     label: "Commercial",
     sublabel: "Commercial Fleet, Trucks, Cargo & 3-Wheelers",
     watermark: "COMMERCIAL",

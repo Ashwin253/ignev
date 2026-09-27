@@ -1,3 +1,20 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "About Us | EVPLSE - India's Premier EV Marketplace",
+  description: "Learn about EVPLSE (EVPULSE Future Mobility), India's leading platform for electric and hybrid vehicles, charging stations, and green mobility solutions.",
+  alternates: {
+    canonical: "/about",
+  },
+  openGraph: {
+    title: "About Us | EVPLSE",
+    description: "Learn about EVPLSE (EVPULSE Future Mobility), India's leading platform for electric and hybrid vehicles.",
+    url: "https://www.evplse.com/about",
+    siteName: "EVPLSE",
+    type: "website",
+  },
+};
+
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-[#f8f5f0] text-slate-900 pt-32 pb-20 px-4 sm:px-6 lg:px-8">

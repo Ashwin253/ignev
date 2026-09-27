@@ -13,6 +13,7 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.evplse.com"),
   title: "EVPLSE | Drive Electric. Buy Smart.",
   description: "Buy, rent, sell and service EV & Hybrid vehicles in one place. Your trusted EV marketplace in India.",
   keywords: "EV, Hybrid, Buy EV, Rent EV, Sell EV, Electric Vehicles India",
@@ -32,6 +33,7 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
+    canonical: "/",
     types: {
       "application/rss+xml": "https://www.evplse.com/feed",
     },

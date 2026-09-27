@@ -56,9 +56,25 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   try {
     const item = await fetchEvListingBySlugFromSupabase(slug);
     if (!item) return { title: "EVPULSE" };
+    const canonicalSlug = item.slug || slug;
+    const cleanTitle = `${item.brand} ${item.title} | EVPULSE`;
+    const cleanDesc = `${item.brand} ${item.title} — ${item.types[0] ?? "EV"}. Starting at ${formatPricing(item.prices)}.`;
+    const fallbackPhoto = getVehicleFallbackImage(item);
+    const photoUrl = item.photo || (item.galleryImages && item.galleryImages[0]) || fallbackPhoto;
+
     return {
-      title: `${item.brand} ${item.title} | EVPULSE`,
-      description: `${item.brand} ${item.title} — ${item.types[0] ?? "EV"}. Starting at ${formatPricing(item.prices)}.`,
+      title: cleanTitle,
+      description: cleanDesc,
+      alternates: {
+        canonical: `/product/${canonicalSlug}`,
+      },
+      openGraph: {
+        title: cleanTitle,
+        description: cleanDesc,
+        url: `https://www.evplse.com/product/${canonicalSlug}`,
+        type: "website",
+        images: photoUrl ? [{ url: photoUrl }] : undefined,
+      },
     };
   } catch {
     return { title: "EVPULSE" };

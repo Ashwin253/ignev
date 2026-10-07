@@ -9,7 +9,9 @@ type Charger = {
   network: string;
   connector_type: string;
   power_output: string;
-  compatible_vehicles: string; // Comma-separated brands/models e.g. "Ather, TVS, Honda"
+  compatible_vehicles: string;
+  price_per_unit: string;   // default price e.g. "18"
+  unit: string;             // "kWh" | "min" | "session" | "swap"
   is_active: boolean;
 };
 
@@ -19,6 +21,8 @@ const emptyCharger: Charger = {
   connector_type: "",
   power_output: "",
   compatible_vehicles: "",
+  price_per_unit: "",
+  unit: "kWh",
   is_active: true,
 };
 
@@ -228,6 +232,34 @@ export default function ChargersPanel({ supabase, userEmail, listings = [] }: { 
               />
             </label>
 
+            {/* Default Pricing */}
+            <label className="block">
+              <span className="text-[10px] font-bold uppercase text-slate-500">Default Price (₹)</span>
+              <input
+                type="number"
+                min="0"
+                step="0.5"
+                value={form.price_per_unit}
+                onChange={e => setForm({ ...form, price_per_unit: e.target.value })}
+                placeholder="e.g. 18"
+                className="mt-1 w-full rounded-xl border border-slate-250 bg-white px-4 py-2.5 text-sm outline-none focus:border-sky-500"
+              />
+            </label>
+
+            <label className="block">
+              <span className="text-[10px] font-bold uppercase text-slate-500">Billing Unit</span>
+              <select
+                value={form.unit}
+                onChange={e => setForm({ ...form, unit: e.target.value })}
+                className="mt-1 w-full rounded-xl border border-slate-250 bg-white px-4 py-2.5 text-sm outline-none focus:border-sky-500 cursor-pointer"
+              >
+                <option value="kWh">Per kWh (energy)</option>
+                <option value="min">Per Minute (time)</option>
+                <option value="session">Per Session (flat)</option>
+                <option value="swap">Per Swap</option>
+              </select>
+            </label>
+
             <div className="block sm:col-span-2">
               <span className="text-[10px] font-bold uppercase text-slate-500">Compatible Vehicles</span>
               <div className="mt-1.5 border border-slate-250 bg-white rounded-xl p-3.5 max-h-40 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -305,6 +337,8 @@ export default function ChargersPanel({ supabase, userEmail, listings = [] }: { 
               <th className="px-6 py-4">Network</th>
               <th className="px-6 py-4">Connector Type</th>
               <th className="px-6 py-4">Power</th>
+              <th className="px-6 py-4">Default Price</th>
+              <th className="px-6 py-4">Power</th>
               <th className="px-6 py-4">Compatible Brands</th>
               <th className="px-6 py-4 text-center">Status</th>
               <th className="px-6 py-4 text-right">Actions</th>
@@ -317,6 +351,9 @@ export default function ChargersPanel({ supabase, userEmail, listings = [] }: { 
                 <td className="px-6 py-4 text-slate-600">{c.network}</td>
                 <td className="px-6 py-4 font-mono text-xs">{c.connector_type}</td>
                 <td className="px-6 py-4">{c.power_output}</td>
+                <td className="px-6 py-4 font-semibold text-emerald-700 text-xs">
+                  {c.price_per_unit ? `₹${c.price_per_unit}/${c.unit || "kWh"}` : <span className="text-slate-400 font-normal">—</span>}
+                </td>
                 <td className="px-6 py-4">
                   <div className="flex flex-wrap gap-1">
                     {c.compatible_vehicles.split(",").map(v => v.trim()).filter(Boolean).map(v => (

@@ -18,6 +18,7 @@ import ForYouLeadsPanel from "./ForYouLeadsPanel";
 import ApprovalsPanel from "./ApprovalsPanel";
 import VehicleApprovalsPanel from "./VehicleApprovalsPanel";
 import BrandsPanel from "./BrandsPanel";
+import VehiclePricingPanel, { DEFAULT_AREA_RULES, calculateAddonAmount, fmtLakh } from "./VehiclePricingPanel";
 
 import { requestFcmToken } from "../lib/firebase";
 import { useVoiceDictation, MicButton } from "./VoiceInput";
@@ -433,7 +434,11 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
     }
   };
 
-  const [activeSection, setActiveSection] = useState<"listings" | "all_listings" | "brands" | "leads" | "foryou_leads" | "prices" | "analytics" | "map" | "banners" | "content" | "offers" | "media" | "chargers" | "approvals" | "vehicle_approvals" | "protest">("listings");
+  const [activeSection, setActiveSection] = useState<"listings" | "all_listings" | "brands" | "leads" | "foryou_leads" | "prices" | "vehicle_pricing" | "analytics" | "map" | "banners" | "content" | "offers" | "media" | "chargers" | "approvals" | "vehicle_approvals" | "protest">("listings");
+  // Sub-tabs that live inside merged sections
+  const [listingsSubTab, setListingsSubTab] = useState<"editor" | "pricing" | "brands">("editor");
+  const [enquiriesSubTab, setEnquiriesSubTab] = useState<"general" | "foryou">("general");
+  const [approvalsSubTab, setApprovalsSubTab] = useState<"b2b" | "vehicle">("b2b");
   const [selectedModelId, setSelectedModelId] = useState<string>("");
   const [selectedBrand, setSelectedBrand] = useState<string>("");
   const [tableBrandFilter, setTableBrandFilter] = useState<string>("");
@@ -1917,18 +1922,14 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             <option value="listings">EV Listings</option>
             <option value="all_listings">📑 All Listings</option>
             <option value="leads">Enquiries {pendingEnquiriesCount > 0 ? `(${pendingEnquiriesCount} new)` : ""}</option>
-            <option value="foryou_leads">✨ For You {pendingForYouCount > 0 ? `(${pendingForYouCount} new)` : ""}</option>
             {/* <option value="prices">⛽ Fuel Prices</option> */}
             <option value="analytics">📊 Analytics</option>
             <option value="map">📍 Map</option>
-            <option value="banners">🖼️ Banners</option>
+            <option value="banners">🖼️ Banners & Offers</option>
             <option value="content">📄 All Content</option>
             <option value="media">🖼️ All Media</option>
-            <option value="offers">🏷️ Offers</option>
             <option value="chargers">🔌 Chargers Compatibility</option>
-            <option value="brands">🏷️ All Brands (Rankings)</option>
-            <option value="approvals">🛡️ B2B Approvals</option>
-            <option value="vehicle_approvals">🚗 Vehicle Approvals</option>
+            <option value="approvals">🛡️ Approvals</option>
           </select>
         </div>
 
@@ -1940,20 +1941,10 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
           <button onClick={() => setActiveSection("leads")}
             className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 relative ${activeSection === "leads" ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-955 border border-slate-300"}`}>
             <MessageSquare size={14} /> Enquiries
-            {pendingEnquiriesCount > 0 && (
+            {(pendingEnquiriesCount > 0 || pendingForYouCount > 0) && (
               <span className="absolute top-0 right-0 -mt-1 -mr-1 flex h-3 w-3">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
-              </span>
-            )}
-          </button>
-          <button onClick={() => setActiveSection("foryou_leads")}
-            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 relative ${activeSection === "foryou_leads" ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-955 border border-slate-300"}`}>
-            <Sparkles size={14} className={activeSection === "foryou_leads" ? "text-violet-400" : "text-violet-600"} /> For You
-            {pendingForYouCount > 0 && (
-              <span className="absolute top-0 right-0 -mt-1 -mr-1 flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-violet-600"></span>
               </span>
             )}
           </button>
@@ -1971,33 +1962,86 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
           </button>
           <button onClick={() => setActiveSection("banners")}
             className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${activeSection === "banners" ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-955 border border-slate-300"}`}>
-            🖼️ Banners
-          </button>
-          <button onClick={() => { setActiveSection("brands"); setEditing(null); setSelectedBrand(""); setSelectedModelId(""); setTableBrandFilter(""); }}
-            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${activeSection === "brands" ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-955 border border-slate-300"}`}>
-            🏷️ Brands
-          </button>
-          <button onClick={() => setActiveSection("offers")}
-            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${activeSection === "offers" ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-955 border border-slate-300"}`}>
-            🏷️ Offers
+            🖼️ Banners & Offers
           </button>
           <button onClick={() => setActiveSection("approvals")}
-            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${activeSection === "approvals" ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-955 border border-slate-300"}`}>
-            🛡️ B2B Approvals
-          </button>
-          <button onClick={() => setActiveSection("vehicle_approvals")}
-            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 relative ${activeSection === "vehicle_approvals" ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-955 border border-slate-300"}`}>
-            🚗 Vehicle Approvals
+            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${(activeSection === "approvals" || activeSection === "vehicle_approvals") ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-955 border border-slate-300"}`}>
+            🛡️ Approvals
           </button>
         </div>
 
-        {activeSection === "leads" && <LeadsPanel supabase={supabase} userId={user.id} />}
-        {activeSection === "foryou_leads" && <ForYouLeadsPanel supabase={supabase} userId={user.id} />}
-        {activeSection === "approvals" && <ApprovalsPanel />}
-        {activeSection === "vehicle_approvals" && <VehicleApprovalsPanel supabase={supabase} />}
+        {/* ── Enquiries (General + For You sub-tabs) ── */}
+        {activeSection === "leads" && (
+          <div>
+            <div className="flex flex-wrap items-center gap-2 mb-6 bg-slate-100/90 p-1.5 rounded-2xl border border-slate-200/80 w-fit shadow-xs">
+              <button
+                onClick={() => setEnquiriesSubTab("general")}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${enquiriesSubTab === "general" ? "bg-slate-950 text-white shadow-md" : "text-slate-600 hover:text-slate-900 hover:bg-white/70"}`}
+              >
+                <MessageSquare size={14} /> General Enquiries
+                {pendingEnquiriesCount > 0 && (
+                  <span className="ml-1 inline-flex items-center justify-center rounded-full bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 min-w-5 h-5">{pendingEnquiriesCount}</span>
+                )}
+              </button>
+              <button
+                onClick={() => setEnquiriesSubTab("foryou")}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${enquiriesSubTab === "foryou" ? "bg-violet-700 text-white shadow-md" : "text-slate-600 hover:text-slate-900 hover:bg-white/70"}`}
+              >
+                <Sparkles size={14} /> For You Leads
+                {pendingForYouCount > 0 && (
+                  <span className="ml-1 inline-flex items-center justify-center rounded-full bg-violet-500 text-white text-[10px] font-bold px-1.5 py-0.5 min-w-5 h-5">{pendingForYouCount}</span>
+                )}
+              </button>
+            </div>
+            {enquiriesSubTab === "general" && <LeadsPanel supabase={supabase} userId={user.id} />}
+            {enquiriesSubTab === "foryou" && <ForYouLeadsPanel supabase={supabase} userId={user.id} />}
+          </div>
+        )}
+
+        {/* ── Approvals (B2B + Vehicle sub-tabs) ── */}
+        {(activeSection === "approvals" || activeSection === "vehicle_approvals") && (
+          <div>
+            <div className="flex flex-wrap items-center gap-2 mb-6 bg-slate-100/90 p-1.5 rounded-2xl border border-slate-200/80 w-fit shadow-xs">
+              <button
+                onClick={() => setApprovalsSubTab("b2b")}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${approvalsSubTab === "b2b" ? "bg-slate-950 text-white shadow-md" : "text-slate-600 hover:text-slate-900 hover:bg-white/70"}`}
+              >
+                🛡️ B2B Approvals
+              </button>
+              <button
+                onClick={() => setApprovalsSubTab("vehicle")}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${approvalsSubTab === "vehicle" ? "bg-slate-950 text-white shadow-md" : "text-slate-600 hover:text-slate-900 hover:bg-white/70"}`}
+              >
+                🚗 Vehicle Approvals
+              </button>
+            </div>
+            {approvalsSubTab === "b2b" && <ApprovalsPanel />}
+            {approvalsSubTab === "vehicle" && <VehicleApprovalsPanel supabase={supabase} />}
+          </div>
+        )}
+
+        {activeSection === "vehicle_pricing" && (
+          <VehiclePricingPanel
+            supabase={supabase}
+            userEmail={user?.email || ""}
+            listings={listings as any}
+          />
+        )}
         {activeSection === "prices" && <FuelPricesPanel supabase={supabase} userEmail={user.email || ""} />}
         {activeSection === "analytics" && <AnalyticsPanel supabase={supabase} />}
         {activeSection === "map" && <MapPanel supabase={supabase} userEmail={user.email || ""} />}
+
+        {/* ── Banners & Offers (handled by BannersPanel's own mode toggle + OffersPanel) ── */}
+        {activeSection === "banners" && (
+          <div className="space-y-6">
+            <BannersPanel supabase={supabase} />
+            <div className="border-t border-slate-200 pt-6">
+              <h3 className="text-sm font-extrabold text-slate-800 mb-4">🏷️ Offers</h3>
+              <OffersPanel supabase={supabase} />
+            </div>
+          </div>
+        )}
+
         {activeSection === "chargers" && <ChargersPanel supabase={supabase} userEmail={user.email || ""} listings={listings} />}
         {activeSection === "content" && (
           <ContentPanel
@@ -2008,7 +2052,6 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
           />
         )}
         {activeSection === "media" && <MediaPanel supabase={supabase} />}
-        {activeSection === "brands" && <BrandsPanel supabase={supabase} userEmail={user.email || ""} listings={listings} />}
         {activeSection === "all_listings" && (
           <div className="mb-6 rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-100 bg-slate-50 flex flex-wrap justify-between items-center gap-3">
@@ -2164,6 +2207,40 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
 
         {activeSection === "listings" && (
         <>
+        {/* EV Listings sub-tabs — shown only when not deep-editing a listing */}
+        {!editing && (
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+            <div className="flex flex-wrap items-center gap-2 bg-slate-100/90 p-1.5 rounded-2xl border border-slate-200/80 shadow-xs">
+              <button
+                onClick={() => setListingsSubTab("editor")}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${listingsSubTab === "editor" ? "bg-slate-950 text-white shadow-md" : "text-slate-600 hover:text-slate-900 hover:bg-white/70"}`}
+              >
+                🚗 EV Listings
+              </button>
+              <button
+                onClick={() => setListingsSubTab("pricing")}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${listingsSubTab === "pricing" ? "bg-slate-950 text-white shadow-md" : "text-slate-600 hover:text-slate-900 hover:bg-white/70"}`}
+              >
+                💰 Vehicle Pricing
+              </button>
+              <button
+                onClick={() => setListingsSubTab("brands")}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${listingsSubTab === "brands" ? "bg-slate-950 text-white shadow-md" : "text-slate-600 hover:text-slate-900 hover:bg-white/70"}`}
+              >
+                🏷️ Brand Rankings
+              </button>
+            </div>
+          </div>
+        )}
+        {listingsSubTab === "pricing" && !editing ? (
+          <VehiclePricingPanel
+            supabase={supabase}
+            userEmail={user?.email || ""}
+            listings={listings as any}
+          />
+        ) : listingsSubTab === "brands" && !editing ? (
+          <BrandsPanel supabase={supabase} userEmail={user.email || ""} listings={listings} />
+        ) : (<>
         {/* {!editing && (
           <div className="mb-6 rounded-2xl border border-slate-300 bg-white p-5 shadow-sm">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -4632,10 +4709,28 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             )}
 
             {listingFormTab === "pricing" && (
-            <div className="rounded-xl border-2 border-sky-300 bg-sky-100 p-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
-                <p className="text-xs font-bold uppercase tracking-wider text-sky-700">City & District Pricing ({form.city_pricing?.length || 0})</p>
-                <div className="flex flex-wrap gap-2">
+            <div className="rounded-xl border-2 border-sky-300 bg-sky-100 p-4 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-sky-200 pb-3">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-wider text-sky-800">
+                    Vehicle Pricing & Area Rules ({form.city_pricing?.length || 0} entries)
+                  </p>
+                  <p className="text-[11px] text-sky-700 mt-0.5">
+                    Define custom city/district pricing, or auto-calculate on-road prices using Area Type % & Max Cap rules.
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditing(null);
+                      setActiveSection("listings");
+                      setListingsSubTab("pricing");
+                    }}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-800 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 px-3 py-1.5 rounded-lg shadow-xs transition-colors cursor-pointer"
+                  >
+                    💰 Open Area Pricing Panel
+                  </button>
                   <button type="button" onClick={() => {
                     const defaultCities = ["Delhi", "Mumbai", "Bangalore", "Chennai", "Hyderabad", "Pune", "Kolkata", "Kochi", "Jaipur", "Ahmedabad"];
                     const variantNames = variants.map(v => v.variant_name).filter(Boolean);
@@ -4705,8 +4800,8 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                     navigator.clipboard.writeText(JSON.stringify(exportData, null, 2))
                       .then(() => alert("Pricing template copied to clipboard!"))
                       .catch((err) => alert("Failed to copy pricing: " + err));
-                  }} className="inline-flex items-center gap-1.5 rounded-lg border border-sky-200 bg-white px-3 py-1.5 text-xs font-bold text-sky-600 hover:bg-sky-50 cursor-pointer shadow-xs transition-colors">
-                    <Copy size={12} /> Copy Pricing
+                  }} className="inline-flex items-center gap-1.5 rounded-lg border border-sky-200 bg-white px-2.5 py-1.5 text-xs font-bold text-sky-600 hover:bg-sky-50 cursor-pointer shadow-xs transition-colors">
+                    <Copy size={12} /> Copy JSON
                   </button>
                   <button type="button" onClick={() => {
                     const text = prompt("Paste your pricing JSON here:");
@@ -4714,19 +4809,15 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                     try {
                       let cleanedText = text.trim();
                       
-                      // Extract JSON block out of text containing markdown, prefaces, or notes
                       const extractJson = (str: string): string => {
                         let candidate = str.trim();
-                        // Strip markdown code block wrappers if they exist
                         if (candidate.startsWith("```")) {
                           candidate = candidate.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
                         }
-                        
                         try {
                           JSON.parse(candidate);
                           return candidate;
                         } catch (e) {
-                          // Find first { or [ and last } or ]
                           const firstBrace = candidate.indexOf('{');
                           const firstBracket = candidate.indexOf('[');
                           let start = -1;
@@ -4765,7 +4856,6 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                       cleanedText = extractJson(cleanedText);
                       const parsed = JSON.parse(cleanedText);
                       
-                      // Handle both wrapped object and direct array format
                       const rawList = Array.isArray(parsed) ? parsed : (parsed.pricing || null);
                       if (!Array.isArray(rawList)) {
                         alert("Invalid format: JSON must be an array or contain a 'pricing' array.");
@@ -4774,11 +4864,9 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
 
                       const cleanAndConvertToLakh = (valStr: string): string => {
                         if (!valStr || valStr.trim() === "") return "";
-                        // Remove currency symbols, commas, letters (like L or lakh) and spaces
                         const cleaned = valStr.replace(/[₹\s,a-zA-Z]/g, "");
                         const num = parseFloat(cleaned);
                         if (isNaN(num)) return "";
-                        // If it's full rupees (e.g. > 1000), convert to lakhs
                         if (num > 1000) {
                           const numLakh = num / 100000;
                           return parseFloat(numLakh.toFixed(2)).toString();
@@ -4792,7 +4880,6 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                           const rawOnRoadPrice = item.on_road_price !== undefined && item.on_road_price !== null ? String(item.on_road_price) : "";
                           const cleanedOnRoadPrice = cleanAndConvertToLakh(rawOnRoadPrice);
 
-                          // Resolve variant name to ID
                           let resolvedVariantId: string | null = null;
                           const vName = item.variant_name || item.variant_id;
                           if (vName && vName !== "Main Model / Base") {
@@ -4819,8 +4906,8 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                     } catch (e: any) {
                       alert("Invalid JSON format: " + e.message);
                     }
-                  }} className="inline-flex items-center gap-1.5 rounded-lg border border-sky-200 bg-white px-3 py-1.5 text-xs font-bold text-sky-600 hover:bg-sky-50 cursor-pointer shadow-xs transition-colors">
-                    <Clipboard size={12} className="opacity-75" /> Paste Pricing
+                  }} className="inline-flex items-center gap-1.5 rounded-lg border border-sky-200 bg-white px-2.5 py-1.5 text-xs font-bold text-sky-600 hover:bg-sky-50 cursor-pointer shadow-xs transition-colors">
+                    <Clipboard size={12} className="opacity-75" /> Paste JSON
                   </button>
                   <button type="button" onClick={() => {
                     const newEntry = {
@@ -4833,11 +4920,101 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                     };
                     setForm({ ...form, city_pricing: [...(form.city_pricing || []), newEntry] });
                   }} className="inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-sky-700 cursor-pointer shadow-xs transition-colors">
-                    <Plus size={12} /> Add Pricing Entry
+                    <Plus size={12} /> Add Custom Entry
                   </button>
                 </div>
               </div>
 
+              {/* ── Area Rule Auto-Calculator Bar ── */}
+              <div className="bg-white rounded-xl border border-sky-200 p-3.5 space-y-2 shadow-xs">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-sky-600 text-white font-bold text-xs">⚡</span>
+                    <div>
+                      <p className="text-xs font-bold text-slate-900">Auto-Apply Area Type Rule (% & Max Cap)</p>
+                      <p className="text-[11px] text-slate-500">Calculate on-road prices for 10 default cities using state EV policies (% Road Tax + Max Caps + Subsidies).</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const defaultCities = [
+                          { name: "Delhi", state: "Delhi", ruleId: "delhi-ev" },
+                          { name: "Mumbai", state: "Maharashtra", ruleId: "maharashtra-ev" },
+                          { name: "Bangalore", state: "Karnataka", ruleId: "karnataka-ev" },
+                          { name: "Chennai", state: "Tamil Nadu", ruleId: "tamilnadu-ev" },
+                          { name: "Kochi", state: "Kerala", ruleId: "kerala-ev" },
+                          { name: "Hyderabad", state: "Telangana", ruleId: "metro-tier1" },
+                          { name: "Pune", state: "Maharashtra", ruleId: "maharashtra-ev" },
+                          { name: "Kolkata", state: "West Bengal", ruleId: "metro-tier1" },
+                          { name: "Ahmedabad", state: "Gujarat", ruleId: "metro-tier1" },
+                          { name: "Jaipur", state: "Rajasthan", ruleId: "tier2-standard" },
+                        ];
+
+                        // Find base price
+                        const firstVarPrice = variants.find(v => v.price)?.price;
+                        const basePriceNum = firstVarPrice ? Number(firstVarPrice) : 1000000;
+
+                        const generated: any[] = [];
+
+                        defaultCities.forEach(cityObj => {
+                          const rule = DEFAULT_AREA_RULES.find(r => r.id === cityObj.ruleId) || DEFAULT_AREA_RULES[0];
+                          
+                          // 1. Base model
+                          let baseTotalNet = 0;
+                          rule.addons.forEach(a => {
+                            const amt = calculateAddonAmount(a, basePriceNum);
+                            baseTotalNet += a.is_deduction ? -Math.abs(amt) : amt;
+                          });
+                          const baseOnRoadNum = basePriceNum + baseTotalNet;
+                          const baseOnRoadLakh = (baseOnRoadNum / 100000).toFixed(2);
+
+                          generated.push({
+                            id: Math.random().toString(36).substring(2, 9),
+                            location_name: cityObj.name,
+                            location_type: "City",
+                            showroom_price: (basePriceNum / 100000).toFixed(2),
+                            on_road_price: baseOnRoadLakh,
+                            variant_id: null,
+                          });
+
+                          // 2. Each variant
+                          variants.forEach(v => {
+                            if (!v.variant_name) return;
+                            const vPriceNum = v.price ? Number(v.price) : basePriceNum;
+                            let vTotalNet = 0;
+                            rule.addons.forEach(a => {
+                              const amt = calculateAddonAmount(a, vPriceNum);
+                              vTotalNet += a.is_deduction ? -Math.abs(amt) : amt;
+                            });
+                            const vOnRoadNum = vPriceNum + vTotalNet;
+                            const vOnRoadLakh = (vOnRoadNum / 100000).toFixed(2);
+
+                            generated.push({
+                              id: Math.random().toString(36).substring(2, 9),
+                              location_name: cityObj.name,
+                              location_type: "City",
+                              showroom_price: (vPriceNum / 100000).toFixed(2),
+                              on_road_price: vOnRoadLakh,
+                              variant_id: v.id || v.variant_name,
+                            });
+                          });
+                        });
+
+                        setForm({ ...form, city_pricing: generated });
+                        alert(`Successfully auto-calculated ${generated.length} pricing entries across 10 cities and variants using Area Rules!`);
+                      }}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-sky-700 shadow-xs transition-colors shrink-0 cursor-pointer"
+                    >
+                      <Sparkles size={12} /> Auto-Generate from Area Rules
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Pricing Entries Table ── */}
               <div className="space-y-3">
                 {form.city_pricing && form.city_pricing.map((p, index) => (
                   <div key={p.id || index} className="rounded-xl border border-sky-200 bg-white p-3 shadow-xs">
@@ -4901,7 +5078,12 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                       />
                     </div>
 
-                    <div className="mt-2.5 flex justify-start">
+                    <div className="mt-2.5 flex justify-between items-center text-xs">
+                      {p.on_road_price && (
+                        <span className="text-[11px] font-semibold text-emerald-700">
+                          Effective: ₹{parseFloat(p.on_road_price) < 1000 ? `${p.on_road_price} Lakh` : fmtLakh(p.on_road_price)}
+                        </span>
+                      )}
                       <button 
                         type="button" 
                         onClick={() => {
@@ -4916,8 +5098,9 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   </div>
                 ))}
                 {(!form.city_pricing || form.city_pricing.length === 0) && (
-                  <div className="text-center py-6 bg-white/50 rounded-xl border border-dashed border-sky-300 text-sky-600/70 text-xs font-semibold">
-                    No city or district-wise pricing added yet. Click "+ Add Pricing Entry" to begin.
+                  <div className="text-center py-8 bg-white/60 rounded-xl border border-dashed border-sky-300 text-sky-700 text-xs font-semibold space-y-2">
+                    <p>No city or district-wise pricing added yet.</p>
+                    <p className="text-[11px] text-slate-500">Click <strong>"Auto-Generate from Area Rules"</strong> to populate 10 cities with state policy calculations, or <strong>"+ Add Custom Entry"</strong> to enter manual pricing.</p>
                   </div>
                 )}
               </div>
@@ -4966,7 +5149,8 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
         {/* Old listings table — hidden, using "Manage Variants" dropdown above */}
         {loading && <div className="text-center py-12 text-slate-400">Loading...</div>}
         {!loading && listings.length === 0 && !editing && <div className="text-center py-12 text-slate-400">No listings yet. Add your first one!</div>}
-        </>)}
+        </>)}{/* end listingsSubTab === "brands" else */}
+        </>)}{/* end activeSection === "listings" */}
       </div>
 
       {isPasteModalOpen && (

@@ -1,11 +1,42 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MapPin, Plus, Trash2, Pencil, X, Save, Loader2 } from "lucide-react";
+import { MapPin, Plus, Trash2, Pencil, X, Save, Loader2, IndianRupee } from "lucide-react";
 
-type Station = { id?: string; name: string; type: string; lat: number; lng: number; city: string; address: string; connector_types: string[]; power_kw: number | null; network: string; is_active: boolean };
+type PricingEntry = {
+  connector_type: string;  // e.g. "CCS2 DC", "Type2 AC"
+  price_per_unit: string;  // e.g. "18"
+  unit: "kWh" | "min" | "session" | "swap"; // billing unit
+  notes: string;           // e.g. "Peak hours only"
+};
 
-const emptyStation: Station = { name: "", type: "charging", lat: 0, lng: 0, city: "", address: "", connector_types: [], power_kw: null, network: "", is_active: true };
+type Station = {
+  id?: string;
+  name: string;
+  type: string;
+  lat: number;
+  lng: number;
+  city: string;
+  address: string;
+  connector_types: string[];
+  power_kw: number | null;
+  network: string;
+  is_active: boolean;
+  pricing: PricingEntry[];
+};
+
+const emptyPricingEntry = (): PricingEntry => ({
+  connector_type: "",
+  price_per_unit: "",
+  unit: "kWh",
+  notes: "",
+});
+
+const emptyStation: Station = {
+  name: "", type: "charging", lat: 0, lng: 0, city: "", address: "",
+  connector_types: [], power_kw: null, network: "", is_active: true,
+  pricing: [],
+};
 
 export default function MapPanel({ supabase, userEmail }: { supabase: any; userEmail: string }) {
   const [stations, setStations] = useState<(Station & { id: string })[]>([]);
@@ -51,7 +82,11 @@ export default function MapPanel({ supabase, userEmail }: { supabase: any; userE
   };
 
   const startNew = () => { setEditing("new"); setForm(emptyStation); setMapsLink(""); };
-  const startEdit = (s: Station & { id: string }) => { setEditing(s.id); setForm(s); setMapsLink(""); };
+  const startEdit = (s: Station & { id: string }) => {
+    setEditing(s.id);
+    setForm({ ...s, pricing: Array.isArray(s.pricing) ? s.pricing : [] });
+    setMapsLink("");
+  };
 
   const handleAutoFill = async () => {
     if (!mapsLink) return;
@@ -93,6 +128,7 @@ export default function MapPanel({ supabase, userEmail }: { supabase: any; userE
       network: rest.network || "",
       is_active: rest.is_active ?? true,
       added_by_email: userEmail,
+      pricing: rest.pricing || [],
     };
     if (editing === "new") {
       const { error } = await supabase.from("ev_stations").insert(payload);
@@ -329,6 +365,115 @@ export default function MapPanel({ supabase, userEmail }: { supabase: any; userE
             <label className="block"><span className="text-xs font-bold text-slate-600">Longitude</span><input type="number" step="any" value={form.lng || ""} onChange={(e) => setForm({ ...form, lng: Number(e.target.value) })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
             <label className="block sm:col-span-2 lg:col-span-3"><span className="text-xs font-bold text-slate-600">Connectors & Power (comma-sep)</span><input value={form.connector_types.join(", ")} onChange={(e) => setForm({ ...form, connector_types: e.target.value.split(",").map(s => s.trim()).filter(Boolean) })} placeholder="CCS2 60kW, Type2 22kW" className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
           </div>
+
+          {/* ── Charger Pricing ── */}
+          <div className="mt-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                <IndianRupee size={13} className="text-emerald-600" />
+                Charger Pricing
+              </span>
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, pricing: [...(form.pricing || []), emptyPricingEntry()] })}
+                className="inline-flex items-center gap-1 text-[10px] font-bold text-sky-600 hover:text-sky-800 border border-sky-200 rounded-lg px-2.5 py-1 bg-white hover:bg-sky-50 transition-colors"
+              >
+                <Plus size={10} /> Add Connector Pricing
+              </button>
+            </div>
+
+            {(form.pricing || []).length === 0 && (
+              <p className="text-[10px] text-slate-400 italic bg-slate-50 rounded-lg px-3 py-2 border border-dashed border-slate-200">
+                No pricing set. Visitors will see "Pricing unavailable". Add at least one entry to show costs.
+              </p>
+            )}
+
+            {(form.pricing || []).map((entry, idx) => (
+              <div key={idx} className="grid grid-cols-2 sm:grid-cols-4 gap-2 items-end bg-white border border-slate-200 rounded-xl p-3 relative">
+                {/* Connector Type */}
+                <label className="block">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Connector / Port</span>
+                  <input
+                    type="text"
+                    value={entry.connector_type}
+                    onChange={(e) => {
+                      const updated = [...form.pricing];
+                      updated[idx] = { ...updated[idx], connector_type: e.target.value };
+                      setForm({ ...form, pricing: updated });
+                    }}
+                    placeholder="e.g. CCS2 DC"
+                    className="mt-1 w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs outline-none focus:border-sky-400"
+                  />
+                </label>
+
+                {/* Price */}
+                <label className="block">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Price (₹)</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.5"
+                    value={entry.price_per_unit}
+                    onChange={(e) => {
+                      const updated = [...form.pricing];
+                      updated[idx] = { ...updated[idx], price_per_unit: e.target.value };
+                      setForm({ ...form, pricing: updated });
+                    }}
+                    placeholder="18"
+                    className="mt-1 w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs outline-none focus:border-sky-400"
+                  />
+                </label>
+
+                {/* Unit */}
+                <label className="block">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Per Unit</span>
+                  <select
+                    value={entry.unit}
+                    onChange={(e) => {
+                      const updated = [...form.pricing];
+                      updated[idx] = { ...updated[idx], unit: e.target.value as PricingEntry["unit"] };
+                      setForm({ ...form, pricing: updated });
+                    }}
+                    className="mt-1 w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs outline-none bg-white focus:border-sky-400 cursor-pointer"
+                  >
+                    <option value="kWh">kWh (energy)</option>
+                    <option value="min">Minute (time)</option>
+                    <option value="session">Session (flat)</option>
+                    <option value="swap">Swap</option>
+                  </select>
+                </label>
+
+                {/* Notes */}
+                <label className="block">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Notes</span>
+                  <input
+                    type="text"
+                    value={entry.notes}
+                    onChange={(e) => {
+                      const updated = [...form.pricing];
+                      updated[idx] = { ...updated[idx], notes: e.target.value };
+                      setForm({ ...form, pricing: updated });
+                    }}
+                    placeholder="e.g. Peak hours"
+                    className="mt-1 w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs outline-none focus:border-sky-400"
+                  />
+                </label>
+
+                {/* Remove row */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const updated = form.pricing.filter((_, i) => i !== idx);
+                    setForm({ ...form, pricing: updated });
+                  }}
+                  className="absolute top-2 right-2 text-slate-300 hover:text-rose-500 transition-colors"
+                  title="Remove pricing row"
+                >
+                  <X size={13} />
+                </button>
+              </div>
+            ))}
+          </div>
           <div className="flex items-center gap-3 mt-4">
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} /> Active</label>
             <button onClick={handleSave} disabled={saving} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50">
@@ -428,6 +573,12 @@ export default function MapPanel({ supabase, userEmail }: { supabase: any; userE
                     </span>
                     {s.network ? s.network : "Unknown Network"}
                   </p>
+                  {Array.isArray((s as any).pricing) && (s as any).pricing.length > 0 && (
+                    <p className="text-[10px] text-emerald-700 font-semibold mt-0.5">
+                      ₹{(s as any).pricing[0].price_per_unit}/{(s as any).pricing[0].unit}
+                      {(s as any).pricing.length > 1 && ` +${(s as any).pricing.length - 1} more`}
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">

@@ -43,6 +43,8 @@ export default function BannersPanel({ supabase }: { supabase: any }) {
     url: string;
     field: BannerCropField;
   } | null>(null);
+  // "hero" = normal hero slider banners | "offer_popup" = BestOfferPopup banner
+  const [panelMode, setPanelMode] = useState<"hero" | "offer_popup">("hero");
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: "image_horizontal" | "image_vertical" | "video_url") => {
     const file = e.target.files?.[0];
@@ -63,11 +65,24 @@ export default function BannersPanel({ supabase }: { supabase: any }) {
 
   useEffect(() => {
     fetchBanners();
-  }, []);
+  }, [panelMode]);
 
   const fetchBanners = async () => {
     setLoading(true);
-    const { data, error } = await supabase.from("hero_banners").select("*").order("order_index", { ascending: true }).order("created_at", { ascending: false });
+    let query = supabase
+      .from("hero_banners")
+      .select("*")
+      .order("order_index", { ascending: true })
+      .order("created_at", { ascending: false });
+
+    if (panelMode === "offer_popup") {
+      query = query.eq("label", "offer_popup");
+    } else {
+      // Hero banners: exclude the offer_popup label
+      query = query.or("label.is.null,label.neq.offer_popup");
+    }
+
+    const { data, error } = await query;
     if (error) console.warn("Fetch banners error:", error.message);
     setBanners((data ?? []) as any);
     setLoading(false);
@@ -123,7 +138,10 @@ export default function BannersPanel({ supabase }: { supabase: any }) {
 
   const startNew = () => {
     setEditing("new");
-    setForm({ ...emptyBanner });
+    setForm({
+      ...emptyBanner,
+      label: panelMode === "offer_popup" ? "offer_popup" : "",
+    });
   };
 
   const startEdit = (b: HeroBanner & { id: string }) => {
@@ -157,10 +175,36 @@ export default function BannersPanel({ supabase }: { supabase: any }) {
 
   return (
     <div className="space-y-6">
+      {/* ── Mode Toggle ── */}
+      <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl p-1.5 w-fit">
+        <button
+          onClick={() => { setPanelMode("hero"); setEditing(null); }}
+          className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${panelMode === "hero" ? "bg-slate-900 text-white shadow-sm" : "text-slate-500 hover:text-slate-800"}`}
+        >
+          🖼️ Hero Banners
+        </button>
+        <button
+          onClick={() => { setPanelMode("offer_popup"); setEditing(null); }}
+          className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${panelMode === "offer_popup" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-500 hover:text-slate-800"}`}
+        >
+          🎁 Offer Popup
+        </button>
+      </div>
+
+      {/* ── Mode description ── */}
+      {panelMode === "offer_popup" && (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs text-emerald-800 leading-relaxed">
+          <strong>Offer Popup banner</strong> — This controls the photo and title shown in the "Get Best Offer" popup that appears on every page. Set the <strong>CTA</strong> field as the popup title, <strong>Details</strong> as the subtitle, and upload a <strong>Horizontal image</strong> as the background photo. Only the first active entry is used. Leave empty to use the default green gradient.
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
-        <p className="text-sm text-slate-600"><span className="font-bold text-slate-900">{banners.length}</span> banners</p>
+        <p className="text-sm text-slate-600">
+          <span className="font-bold text-slate-900">{banners.length}</span>{" "}
+          {panelMode === "offer_popup" ? "offer popup banner" : "banner"}{banners.length !== 1 ? "s" : ""}
+        </p>
         <button onClick={startNew} className="inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-3 py-2 text-xs font-bold text-white hover:bg-sky-700">
-          <Plus size={12} /> Add Banner
+          <Plus size={12} /> {panelMode === "offer_popup" ? "Set Offer Popup" : "Add Banner"}
         </button>
       </div>
 

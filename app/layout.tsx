@@ -43,6 +43,7 @@ export const metadata: Metadata = {
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import AssistPopup from "./components/AssistPopup";
+import BestOfferPopup from "./components/BestOfferPopup";
 import EnquiryModal from "./components/EnquiryModal";
 import ClarityScript from "./components/ClarityScript";
 import PageTracker from "./components/PageTracker";
@@ -113,14 +114,15 @@ export default function RootLayout({
               </main>
               <Footer />
               <CompareWidget />
-              {/* <AssistPopup /> */}
+             <AssistPopup /> 
+              <BestOfferPopup />
               <EnquiryModal />
               <AddToHomescreen />
               <FloatingMobileNav />
               {/* <TidioChat /> */}
               {/* <TawkChat /> */}
               <Suspense fallback={null}>
-                {/* <AiChatPopup /> */}
+                <AiChatPopup />
               </Suspense>
             </LocationProvider>
           </CompareProvider>

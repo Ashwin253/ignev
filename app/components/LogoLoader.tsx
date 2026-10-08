@@ -37,7 +37,7 @@ export default function LogoLoader({ fullscreen = true, message = "Loading..." }
         
         <video
           ref={videoRef}
-          src="/evplsenextconcept.mp4"
+          src="/evplsenobgnew.webm"
           className="w-full h-full object-contain rounded-full relative z-10"
           autoPlay
           loop

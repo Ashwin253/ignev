@@ -49,19 +49,19 @@ export default function LogoLoader({ fullscreen = true, message = "Loading..." }
       
       {/* Loading message & Progress bar */}
       <div className="mt-6 flex flex-col items-center gap-3 relative z-10 max-w-md px-6 text-center">
-        <span className="text-xs md:text-sm font-semibold tracking-widest text-slate-300 uppercase animate-pulse">
+        <span className={`text-xs md:text-sm font-semibold tracking-widest uppercase animate-pulse ${fullscreen ? "text-slate-800" : "text-slate-300"}`}>
           {message}
         </span>
-        <div className="w-24 h-[2px] bg-slate-800 rounded-full overflow-hidden">
+        <div className={`w-24 h-[2px] rounded-full overflow-hidden ${fullscreen ? "bg-slate-300" : "bg-slate-800"}`}>
           <div className="h-full bg-gradient-to-r from-[#007BFF] via-[#A3FF12] to-[#007BFF] w-1/2 rounded-full animate-loader-slide" />
         </div>
 
         {fact && (
-          <div className="mt-4 max-w-xs md:max-w-sm bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-md shadow-2xl transition-all duration-300">
-            <span className="text-[10px] md:text-xs font-bold tracking-wider text-[#A3FF12] uppercase block mb-1">
+          <div className={`mt-4 max-w-xs md:max-w-sm rounded-2xl p-4 backdrop-blur-md transition-all duration-300 ${fullscreen ? "bg-white/70 border border-slate-200 shadow-lg" : "bg-white/5 border border-white/10 shadow-2xl"}`}>
+            <span className={`text-[10px] md:text-xs font-bold tracking-wider uppercase block mb-1 ${fullscreen ? "text-emerald-700" : "text-[#A3FF12]"}`}>
               ⚡ EV Fact
             </span>
-            <p className="text-[11px] md:text-xs text-slate-300 leading-relaxed font-medium">
+            <p className={`text-[11px] md:text-xs leading-relaxed font-medium ${fullscreen ? "text-slate-700" : "text-slate-300"}`}>
               {fact}
             </p>
           </div>

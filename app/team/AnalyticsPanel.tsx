@@ -3,10 +3,17 @@
 import { useState, useEffect } from "react";
 import {
   TrendingUp, Eye, Smartphone, Monitor, Globe,
-  Car, RotateCcw, Trash2, RefreshCw, BarChart3,
-  Layers, ArrowUpRight, Sparkles, CheckCircle2, Shield,
-  Calendar, Database, ChevronDown, Clock
+  Car, RefreshCw, BarChart3,
+  Layers, Calendar, ChevronDown,
 } from "lucide-react";
+
+type Period = "7" | "30" | "90";
+
+const PERIODS: { label: string; value: Period }[] = [
+  { label: "Last 1 Week", value: "7" },
+  { label: "Last 1 Month", value: "30" },
+  { label: "Last 3 Months", value: "90" },
+];
 
 export default function AnalyticsPanel({ supabase }: { supabase?: any }) {
   const [stats, setStats] = useState<{
@@ -20,13 +27,12 @@ export default function AnalyticsPanel({ supabase }: { supabase?: any }) {
   } | null>(null);
 
   const [loading, setLoading] = useState(true);
-  const [cleanupLoading, setCleanupLoading] = useState(false);
-  const [showCleanupMenu, setShowCleanupMenu] = useState(false);
-  const [showSchema, setShowSchema] = useState(false);
+  const [period, setPeriod] = useState<Period>("30");
+  const [showPeriodMenu, setShowPeriodMenu] = useState(false);
 
   useEffect(() => {
     fetchStats();
-  }, [supabase]);
+  }, [supabase, period]);
 
   const fetchStats = async () => {
     if (!supabase) {
@@ -37,24 +43,27 @@ export default function AnalyticsPanel({ supabase }: { supabase?: any }) {
     try {
       const now = new Date();
       const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+      const periodStart = new Date(now.getTime() - parseInt(period) * 24 * 60 * 60 * 1000).toISOString();
 
-      // Total & Today count
-      const { count: total } = await supabase.from("page_views").select("*", { count: "exact", head: true });
+      // Total & Today count (scoped to selected period)
+      const { count: total } = await supabase.from("page_views").select("*", { count: "exact", head: true }).gte("created_at", periodStart);
       const { count: today } = await supabase.from("page_views").select("*", { count: "exact", head: true }).gte("created_at", todayStart);
 
-      // Fetch oldest record date
+      // Fetch oldest record date within period
       const { data: oldestRows } = await supabase
         .from("page_views")
         .select("created_at")
+        .gte("created_at", periodStart)
         .order("created_at", { ascending: true })
         .limit(1);
 
       const oldestDate = oldestRows?.[0]?.created_at || null;
 
-      // Fetch last 1,000 views to calculate breakdowns
+      // Fetch last 1,000 views within period to calculate breakdowns
       const { data: rawViews } = await supabase
         .from("page_views")
         .select("path, slug, device, referrer, created_at")
+        .gte("created_at", periodStart)
         .order("created_at", { ascending: false })
         .limit(1000);
 
@@ -146,34 +155,6 @@ export default function AnalyticsPanel({ supabase }: { supabase?: any }) {
     }
   };
 
-  const handleCleanupData = async (days: "30" | "90" | "all") => {
-    let confirmPrompt = "";
-    if (days === "all") {
-      confirmPrompt = "Are you sure you want to RESET all analytics data?\nAll recorded page views will be permanently deleted from Supabase.";
-    } else {
-      confirmPrompt = `Delete analytics pageview records older than ${days} days from Supabase?`;
-    }
-
-    if (!confirm(confirmPrompt)) return;
-
-    setCleanupLoading(true);
-    setShowCleanupMenu(false);
-
-    try {
-      const res = await fetch(`/api/track?days=${days}`, { method: "DELETE" });
-      const data = await res.json();
-      if (res.ok) {
-        alert(data.message || "Old analytics data cleaned successfully.");
-        fetchStats();
-      } else {
-        alert("Cleanup failed: " + (data.error || "Unknown error"));
-      }
-    } catch (err: any) {
-      alert("Error cleaning analytics: " + err.message);
-    } finally {
-      setCleanupLoading(false);
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -188,12 +169,46 @@ export default function AnalyticsPanel({ supabase }: { supabase?: any }) {
               In-House Team Analytics
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Live telemetry stored in Supabase table <code className="text-[11px] bg-slate-100 px-1.5 py-0.5 rounded font-mono text-sky-700">page_views</code>.
+              Live telemetry stored in Supabase · <span className="font-semibold text-sky-600">{PERIODS.find(p => p.value === period)?.label}</span>
             </p>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 relative">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Period Filter Dropdown */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowPeriodMenu(!showPeriodMenu)}
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-sky-200 bg-sky-50 hover:bg-sky-100 text-xs font-bold text-sky-700 transition-colors cursor-pointer shadow-xs"
+            >
+              <Calendar size={13} />
+              {PERIODS.find(p => p.value === period)?.label}
+              <ChevronDown size={12} className={showPeriodMenu ? "rotate-180 transition-transform" : "transition-transform"} />
+            </button>
+
+            {showPeriodMenu && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl border border-slate-200 shadow-xl p-1.5 z-30 space-y-0.5 animate-in fade-in duration-150">
+                {PERIODS.map(p => (
+                  <button
+                    key={p.value}
+                    type="button"
+                    onClick={() => { setPeriod(p.value); setShowPeriodMenu(false); }}
+                    className={`w-full text-left px-3 py-2 text-xs font-semibold rounded-xl transition-colors cursor-pointer flex items-center gap-2 ${
+                      period === p.value
+                        ? "bg-sky-50 text-sky-700"
+                        : "text-slate-700 hover:bg-slate-50"
+                    }`}
+                  >
+                    <Calendar size={12} className="text-sky-400" />
+                    {p.label}
+                    {period === p.value && <span className="ml-auto text-sky-500">✓</span>}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
           <button
             type="button"
             onClick={fetchStats}
@@ -202,58 +217,6 @@ export default function AnalyticsPanel({ supabase }: { supabase?: any }) {
           >
             <RefreshCw size={13} className={loading ? "animate-spin" : ""} /> Refresh
           </button>
-
-          {/* Clean / Delete Data Dropdown */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setShowCleanupMenu(!showCleanupMenu)}
-              disabled={cleanupLoading}
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-xs font-bold text-rose-700 transition-colors cursor-pointer shadow-xs disabled:opacity-50"
-            >
-              <Trash2 size={13} />
-              {cleanupLoading ? "Cleaning..." : "Manage / Clean Data"}
-              <ChevronDown size={12} />
-            </button>
-
-            {showCleanupMenu && (
-              <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl border border-slate-200 shadow-xl p-2 z-30 space-y-1 animate-in fade-in duration-150">
-                <div className="px-3 py-2 border-b border-slate-100">
-                  <p className="text-xs font-bold text-slate-800">Data Retention & Cleanup</p>
-                  <p className="text-[10px] text-slate-500">Prune old Supabase database records</p>
-                </div>
-                
-                <button
-                  type="button"
-                  onClick={() => handleCleanupData("30")}
-                  className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-xl transition-colors cursor-pointer flex items-center gap-2"
-                >
-                  <Clock size={13} className="text-slate-400" />
-                  Delete records older than 30 days
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleCleanupData("90")}
-                  className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-xl transition-colors cursor-pointer flex items-center gap-2"
-                >
-                  <Clock size={13} className="text-slate-400" />
-                  Delete records older than 90 days
-                </button>
-
-                <div className="border-t border-slate-100 pt-1">
-                  <button
-                    type="button"
-                    onClick={() => handleCleanupData("all")}
-                    className="w-full text-left px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer flex items-center gap-2"
-                  >
-                    <Trash2 size={13} className="text-rose-500" />
-                    Reset all stats to 0 (Clear all)
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
         </div>
       </div>
 
@@ -454,38 +417,6 @@ export default function AnalyticsPanel({ supabase }: { supabase?: any }) {
               <div className="text-center py-8 text-slate-400 text-xs font-semibold">
                 No referral channels recorded yet.
               </div>
-            )}
-          </div>
-
-          {/* Supabase Storage Schema Reference */}
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-slate-700 flex items-center gap-1.5">
-                <Database size={14} className="text-sky-600" />
-                Supabase Storage Table
-              </span>
-              <button
-                type="button"
-                onClick={() => setShowSchema(!showSchema)}
-                className="text-[11px] font-bold text-sky-600 hover:text-sky-700 cursor-pointer"
-              >
-                {showSchema ? "Hide SQL" : "View SQL"}
-              </button>
-            </div>
-
-            {showSchema && (
-              <pre className="p-3 bg-slate-900 text-slate-200 rounded-xl text-[10px] font-mono overflow-x-auto">
-{`CREATE TABLE IF NOT EXISTS page_views (
-  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  path        text NOT NULL,
-  slug        text DEFAULT '',
-  referrer    text DEFAULT '',
-  device      text DEFAULT 'desktop',
-  created_at  timestamptz DEFAULT now()
-);
-CREATE INDEX IF NOT EXISTS idx_pv_created_at ON page_views(created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_pv_slug ON page_views(slug);`}
-              </pre>
             )}
           </div>
 

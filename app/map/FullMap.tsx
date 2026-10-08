@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Zap, Wrench, Navigation, MapPin, Search, Filter,
+  Building2, Zap, Wrench, Navigation, MapPin, Search, Filter,
   Share2, X, Loader2, SlidersHorizontal, ChevronDown,
   IndianRupee, Fuel,
 } from "lucide-react";
@@ -94,7 +94,19 @@ const allLocations = [
   ...statiqLocations,
 ];
 
-type Location = typeof allLocations[0] & { network?: string };
+type Location = {
+  id: string;
+  type: "charging" | "spare" | "dealer";
+  lat: number;
+  lng: number;
+  name: string;
+  address: string;
+  network?: string;
+  brands?: string[];
+  pincode?: string;
+  city?: string;
+  offers?: string[];
+};
 
 // ── Leaflet hook ──────────────────────────────────────────────────────────────
 
@@ -147,7 +159,7 @@ function useLeafletMap(containerRef: React.RefObject<HTMLDivElement | null>) {
       });
       locations.forEach((loc) => {
         const isSelected = loc.id === selectedId;
-        const color = loc.type === "charging" ? "#10b981" : "#f59e0b";
+        const color = loc.type === "dealer" ? "#7c3aed" : loc.type === "charging" ? "#10b981" : "#f59e0b";
         const size  = isSelected ? 38 : 30;
         const icon = L.divIcon({
           className: "",
@@ -244,7 +256,10 @@ function findLocalLocationMatches(query: string, locations: Location[]) {
   return locations
     .filter((loc) =>
       loc.name.toLowerCase().includes(normalized) ||
-      loc.address.toLowerCase().includes(normalized)
+      loc.address.toLowerCase().includes(normalized) ||
+      loc.city?.toLowerCase().includes(normalized) ||
+      loc.pincode?.toLowerCase().includes(normalized) ||
+      loc.brands?.some((brand) => brand.toLowerCase().includes(normalized))
     )
     .slice(0, 4);
 }
@@ -436,8 +451,8 @@ function SidebarContent({
   routeActive: boolean; routeLoading: boolean; routeError: string;
   routeDistanceKm: number | null;
   onFindRoute: () => void; onClearRoute: () => void;
-  filterType: "all" | "charging" | "spare";
-  setFilterType: (v: "all" | "charging" | "spare") => void;
+  filterType: "all" | "charging" | "spare" | "dealer";
+  setFilterType: (v: "all" | "charging" | "spare" | "dealer") => void;
   selectedId: string | null;
   setSelectedId: (v: string | null) => void;
   displayedLocations: Location[];
@@ -459,7 +474,7 @@ function SidebarContent({
   const placeTypeFilter = (
     <div className="space-y-3">
       <div className="flex gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200">
-        {(["all", "charging", "spare"] as const).map((t) => (
+        {(["all", "charging", "spare", "dealer"] as const).map((t) => (
           <button key={t} onClick={() => { setFilterType(t); setSelectedId(null); }}
             className={`flex-grow py-2 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
               filterType === t
@@ -468,7 +483,8 @@ function SidebarContent({
             }`}>
             {t === "charging" && <Zap size={13} className={filterType === t ? "text-emerald-500" : ""} />}
             {t === "spare"    && <Wrench size={13} className={filterType === t ? "text-amber-500" : ""} />}
-            {t === "all" ? "All Points" : t === "charging" ? "Charging" : "Services"}
+            {t === "dealer"   && <Building2 size={13} className={filterType === t ? "text-violet-500" : ""} />}
+            {t === "all" ? "All Points" : t === "charging" ? "Charging" : t === "spare" ? "Services" : "Dealers"}
           </button>
         ))}
       </div>
@@ -554,12 +570,18 @@ function SidebarContent({
         <div key={loc.id} onClick={() => setSelectedId(selectedId === loc.id ? null : loc.id)}
           className={`p-4 rounded-xl cursor-pointer transition-all border ${selectedId === loc.id ? "bg-blue-50 border-blue-200 shadow-md" : "bg-white border-slate-200 shadow-sm hover:border-blue-300 hover:shadow-md"}`}>
           <div className="flex items-start gap-3">
-            <div className={`mt-0.5 shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${loc.type === "charging" ? "bg-emerald-100 text-emerald-600" : "bg-amber-100 text-amber-600"}`}>
-              {loc.type === "charging" ? <Zap size={16} /> : <Wrench size={16} />}
+            <div className={`mt-0.5 shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${loc.type === "dealer" ? "bg-violet-100 text-violet-600" : loc.type === "charging" ? "bg-emerald-100 text-emerald-600" : "bg-amber-100 text-amber-600"}`}>
+              {loc.type === "dealer" ? <Building2 size={16} /> : loc.type === "charging" ? <Zap size={16} /> : <Wrench size={16} />}
             </div>
             <div className="min-w-0 flex-1">
               <p className="font-bold text-slate-900 truncate">{loc.name}</p>
               <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{loc.address}</p>
+              {loc.type === "dealer" && (
+                <>
+                  <p className="text-[11px] font-semibold text-violet-700 mt-1">{(loc.brands || []).join(", ") || "Dealer"}{loc.pincode ? ` · ${loc.pincode}` : ""}</p>
+                  {(loc.offers || []).length > 0 && <p className="text-[11px] text-emerald-700 mt-1 line-clamp-2">Offers: {loc.offers?.join(" • ")}</p>}
+                </>
+              )}
             </div>
           </div>
           {selectedId === loc.id && (
@@ -740,7 +762,7 @@ export default function FullMap() {
 
   const [activeTab, setActiveTab]           = useState<"route" | "filters" | "cost">("route");
   const [selectedId, setSelectedId]         = useState<string | null>(null);
-  const [filterType, setFilterType]         = useState<"all" | "charging" | "spare">("all");
+  const [filterType, setFilterType]         = useState<"all" | "charging" | "spare" | "dealer">("all");
   const [originInput, setOriginInput]       = useState("");
   const [destInput, setDestInput]           = useState("");
   const [selectingPoint, setSelectingPoint] = useState<"origin" | "dest" | null>(null);
@@ -764,19 +786,30 @@ export default function FullMap() {
     async function loadStations() {
       try {
         const res = await fetch("/api/stations");
-        const { stations } = await res.json();
-        if (stations?.length) {
-          const formatted = stations.map((s: any) => ({
+        const { stations, dealers } = await res.json();
+        const formattedStations = (stations || []).map((s: any) => ({
             id: String(s.id),
-            type: s.type || "charging",
+            type: (s.type === "spare" ? "spare" : "charging") as Location["type"],
             lat: Number(s.lat),
             lng: Number(s.lng),
             name: s.name,
             address: s.address || `${s.city || 'EV'} Station`,
             network: s.network || "",
+            city: s.city || "",
           }));
-          setDbLocations(formatted);
-        }
+        const formattedDealers = (dealers || []).map((d: any) => ({
+          id: `dealer-${String(d.id)}`,
+          type: "dealer" as const,
+          lat: Number(d.lat),
+          lng: Number(d.lng),
+          name: d.name,
+          address: d.address || `${d.city || "Dealer"}${d.pincode ? ` · ${d.pincode}` : ""}`,
+          brands: Array.isArray(d.brands) ? d.brands : [],
+          pincode: d.pincode || "",
+          city: d.city || "",
+          offers: Array.isArray(d.offers) ? d.offers : [],
+        }));
+        setDbLocations([...formattedStations, ...formattedDealers]);
       } catch (e) {
         console.warn("Could not fetch stations", e);
       }
@@ -876,6 +909,13 @@ export default function FullMap() {
     
     // Filter by compatible vehicle if selected
     if (activeVehicleData) {
+      if (l.type === "dealer") {
+        const vehicleBrand = String(activeVehicleData.brand || "").toLowerCase().trim();
+        if (vehicleBrand && !(l.brands || []).some((brand) => brand.toLowerCase().includes(vehicleBrand) || vehicleBrand.includes(brand.toLowerCase()))) {
+          return false;
+        }
+        return true;
+      }
       const net = (l.network || "").toLowerCase().trim();
       
       // If we have charger configurations in DB, use them:

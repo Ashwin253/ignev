@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Check, Phone, MapPin, MessageSquare, Clock, User } from "lucide-react";
+import { Check, Phone, MapPin, MessageSquare, Clock, User, Gift } from "lucide-react";
 
 type Lead = {
   id: string;
@@ -109,11 +109,22 @@ export default function LeadsPanel({ supabase, userId }: { supabase: any; userId
       {/* Leads list */}
       <div className="space-y-2">
         {filtered.map((lead) => (
-          <div key={lead.id} className={`rounded-xl border p-4 transition-all ${lead.assisted_by ? "border-emerald-200 bg-emerald-50/50" : "border-slate-200 bg-white"}`}>
+          <div key={lead.id} className={`rounded-xl border p-4 transition-all ${
+            lead.assisted_by
+              ? "border-emerald-200 bg-emerald-50/50"
+              : lead.source === "Get Best Offer"
+              ? "border-amber-300 bg-amber-50/60"
+              : "border-slate-200 bg-white"
+          }`}>
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <p className="font-bold text-slate-900 text-sm">{lead.name || "Anonymous"}</p>
+                  {lead.source === "Get Best Offer" && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 border border-amber-300 px-2 py-0.5 text-[9px] font-bold text-amber-700">
+                      <Gift size={9} /> Best Offer
+                    </span>
+                  )}
                   {lead.assisted_by && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-bold text-emerald-700">
                       <Check size={9} /> Assisted

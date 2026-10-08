@@ -70,11 +70,13 @@ export async function GET() {
   // Sort descending by date
   items.sort((a, b) => b.pubDate.getTime() - a.pubDate.getTime());
 
-  // Filter for articles from the last 48 hours (Google News requirement).
-  // If none exist within 48h, include the 10 most recent articles to prevent empty sitemap.
+  // Google requires News sitemaps to contain only articles from the last 48 hours.
+  // An empty News sitemap is valid when there are no newly published articles;
+  // older URLs belong in the regular sitemap instead.
   const twoDaysAgo = Date.now() - 48 * 60 * 60 * 1000;
-  const recentItems = items.filter((item) => item.pubDate.getTime() >= twoDaysAgo);
-  const selectedItems = recentItems.length > 0 ? recentItems : items.slice(0, 10);
+  const selectedItems = items
+    .filter((item) => item.pubDate.getTime() >= twoDaysAgo)
+    .slice(0, 1000);
 
   const urlsXml = selectedItems
     .map(

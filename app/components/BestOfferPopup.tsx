@@ -117,6 +117,7 @@ export default function BestOfferPopup() {
 
   // â”€â”€ Ask later â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const askLater = () => {
+    clearSchedule();
     setVisible(false);
     if (pathname?.startsWith("/team")) return;
     scheduleShow(RETRY_DELAY_MS);
@@ -209,11 +210,12 @@ export default function BestOfferPopup() {
 
                 {/* Ask later pill */}
                 <button
+                  type="button"
                   onClick={askLater}
-                  aria-label="Ask later"
+                  aria-label="Ask me later"
                   className="absolute top-3 right-3 flex items-center gap-1 px-3 py-1.5 rounded-full bg-black/40 hover:bg-black/60 text-white text-[11px] font-semibold backdrop-blur-sm transition-colors cursor-pointer z-10"
                 >
-                  Ask later
+                  Ask me later
                 </button>
 
                 {/* Title block over the image */}
@@ -246,11 +248,12 @@ export default function BestOfferPopup() {
                 <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full bg-white/5 blur-xl pointer-events-none" />
 
                 <button
+                  type="button"
                   onClick={askLater}
-                  aria-label="Ask later"
+                  aria-label="Ask me later"
                   className="absolute top-4 right-4 flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-[11px] font-semibold transition-colors cursor-pointer z-10"
                 >
-                  Ask later
+                  Ask me later
                 </button>
 
                 <div className="flex items-start gap-4 relative z-10">
@@ -386,13 +389,6 @@ export default function BestOfferPopup() {
                     No spam. Your details are only shared with our verified EV experts.
                   </p>
 
-                  <button
-                    type="button"
-                    onClick={askLater}
-                    className="w-full text-center text-[11px] text-[#6C8377] hover:text-[#1F7A4D] font-medium transition-colors cursor-pointer"
-                  >
-                    Ask me later
-                  </button>
                 </form>
               )}
             </div>

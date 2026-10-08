@@ -32,6 +32,7 @@ export default function OffersPanel({ supabase, uniqueBrands = [] }: { supabase:
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [dealerOfferCounts, setDealerOfferCounts] = useState<Record<string, number>>({});
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -52,6 +53,7 @@ export default function OffersPanel({ supabase, uniqueBrands = [] }: { supabase:
 
   useEffect(() => {
     fetchOffers();
+    fetchDealerOfferCounts();
   }, []);
 
   const fetchOffers = async () => {
@@ -60,6 +62,22 @@ export default function OffersPanel({ supabase, uniqueBrands = [] }: { supabase:
     if (error) console.warn("Fetch offers error:", error.message);
     setOffers((data ?? []) as any);
     setLoading(false);
+  };
+
+  const fetchDealerOfferCounts = async () => {
+    const { data, error } = await supabase.from("ev_dealers").select("offer_ids");
+    if (error) {
+      console.warn("Fetch dealer offer links error:", error.message);
+      return;
+    }
+    const counts: Record<string, number> = {};
+    (data ?? []).forEach((dealer: any) => {
+      (Array.isArray(dealer.offer_ids) ? dealer.offer_ids : []).forEach((offerId: string) => {
+        const key = String(offerId);
+        counts[key] = (counts[key] || 0) + 1;
+      });
+    });
+    setDealerOfferCounts(counts);
   };
 
   const startNew = () => {
@@ -170,6 +188,7 @@ export default function OffersPanel({ supabase, uniqueBrands = [] }: { supabase:
                     {o.product_slug && <span className="inline-flex rounded-md bg-sky-100 px-2 py-0.5 text-[10px] font-bold text-sky-700">Model: {o.product_slug}</span>}
                     {o.cities && <span className="inline-flex rounded-md bg-orange-100 px-2 py-0.5 text-[10px] font-bold text-orange-700">Cities: {o.cities}</span>}
                     {o.valid_until && <span className="inline-flex items-center gap-1 rounded-md bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-700"><CalendarDays size={10} /> Valid till: {new Date(o.valid_until).toLocaleDateString()}</span>}
+                    {(dealerOfferCounts[o.id] || 0) > 0 && <span className="inline-flex rounded-md bg-violet-100 px-2 py-0.5 text-[10px] font-bold text-violet-700">{dealerOfferCounts[o.id]} dealer location{dealerOfferCounts[o.id] === 1 ? "" : "s"}</span>}
                   </div>
                 </div>
               </div>

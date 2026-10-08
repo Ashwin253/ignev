@@ -193,6 +193,20 @@ export default function BestOfferPopup() {
             aria-modal="true"
             aria-label="Get Best Offer"
           >
+            {/* Keep this outside the media/header layers so it remains tappable in every layout. */}
+            <button
+              type="button"
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                askLater();
+              }}
+              aria-label="Ask me later"
+              className="absolute top-3 right-3 z-[80] inline-flex pointer-events-auto items-center gap-1 rounded-full bg-black/55 px-3 py-1.5 text-[11px] font-semibold text-white shadow-lg backdrop-blur-sm transition-colors hover:bg-black/75 focus:outline-none focus:ring-2 focus:ring-white/80 cursor-pointer"
+            >
+              Ask me later
+            </button>
+
             {/* â”€â”€ Header: photo (if set) OR gradient fallback â”€â”€ */}
             {popupImage ? (
               <div
@@ -207,16 +221,6 @@ export default function BestOfferPopup() {
                 />
                 {/* Dark gradient scrim so text is readable */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-
-                {/* Ask later pill */}
-                <button
-                  type="button"
-                  onClick={askLater}
-                  aria-label="Ask me later"
-                  className="absolute top-3 right-3 flex items-center gap-1 px-3 py-1.5 rounded-full bg-black/40 hover:bg-black/60 text-white text-[11px] font-semibold backdrop-blur-sm transition-colors cursor-pointer z-10"
-                >
-                  Ask me later
-                </button>
 
                 {/* Title block over the image */}
                 <div className="absolute bottom-0 left-0 right-0 px-5 pb-5 z-10">
@@ -246,15 +250,6 @@ export default function BestOfferPopup() {
               >
                 <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full bg-[#8FE24A]/20 blur-2xl pointer-events-none" />
                 <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full bg-white/5 blur-xl pointer-events-none" />
-
-                <button
-                  type="button"
-                  onClick={askLater}
-                  aria-label="Ask me later"
-                  className="absolute top-4 right-4 flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-[11px] font-semibold transition-colors cursor-pointer z-10"
-                >
-                  Ask me later
-                </button>
 
                 <div className="flex items-start gap-4 relative z-10">
                   <div className="w-12 h-12 rounded-2xl bg-[#8FE24A] flex items-center justify-center shrink-0 shadow-lg shadow-[#8FE24A]/30">

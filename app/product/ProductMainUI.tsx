@@ -10,7 +10,7 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   ArrowLeft, Gauge, Tag,
-  BatteryCharging, Fuel, Zap, ChevronDown, Share2, Navigation, X,
+  BatteryCharging, Fuel, Zap, ChevronDown, Share2, Navigation, X, MapPin,
 } from "lucide-react";
 import type { EvListing } from "../lib/wordpress";
 import { useProductSelection } from "./ProductSelectionProvider";
@@ -196,6 +196,36 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
   }, [displayPriceRaw]);
   const emiMonthly = useMemo(() => calcEmi(currentPrice * 0.8, 9.5, 36), [currentPrice]);
   const evEfficiency = activeVariant?.range? parseFloat(activeVariant.capacity) / parseFloat(activeVariant.range) : 0.14;
+  const pricingCities = useMemo(() => {
+    return Array.from(new Set(
+      (item.city_pricing || [])
+        .map((entry) => entry.location_name?.trim())
+        .filter(Boolean)
+    )) as string[];
+  }, [item.city_pricing]);
+  const [selectedPricingCity, setSelectedPricingCity] = useState("");
+  const activePricingCity = pricingCities.includes(selectedPricingCity)
+    ? selectedPricingCity
+    : pricingCities[0] || "";
+  const selectedOnRoadPrice = useMemo(() => {
+    if (!activePricingCity) return "";
+    const rows = (item.city_pricing || []).filter((entry) => entry.location_name === activePricingCity);
+    const activeVariantId = activeVariant?.id ? String(activeVariant.id) : "";
+    const activeVariantName = activeVariant?.modelName?.toLowerCase().trim() || "";
+    const variantMatch = rows.find((entry) => {
+      if (!entry.variant_id) return false;
+      const value = String(entry.variant_id);
+      return value === activeVariantId || value.toLowerCase().trim() === activeVariantName;
+    });
+    const baseMatch = rows.find((entry) => !entry.variant_id || entry.variant_id === "Main Model / Base");
+    return variantMatch?.on_road_price || baseMatch?.on_road_price || rows[0]?.on_road_price || "";
+  }, [item.city_pricing, activePricingCity, activeVariant]);
+
+  useEffect(() => {
+    if (selectedPricingCity && !pricingCities.includes(selectedPricingCity)) {
+      setSelectedPricingCity(pricingCities[0] || "");
+    }
+  }, [pricingCities, selectedPricingCity]);
 
   const [stations, setStations] = useState<any[]>([]);
   const [showEmiCalculator, setShowEmiCalculator] = useState(false);
@@ -415,9 +445,31 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
                 {/* 80% width small text center : EMI start */}
                 {specificPriceStr && emiMonthly > 0 && (
                   <div className="w-[80%] mx-auto pt-2.5 border-t border-zinc-200/60 dark:border-zinc-800/80 text-center">
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                      EMI Starts at <span className="font-semibold text-zinc-800 dark:text-zinc-200">₹{rupees(emiMonthly)}/mo</span>
-                    </p>
+                    <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+                      <span>
+                        EMI Starts at <span className="font-semibold text-zinc-800 dark:text-zinc-200">₹{rupees(emiMonthly)}/mo</span>
+                      </span>
+                      {activePricingCity && (
+                        <>
+                          <span className="text-zinc-300 dark:text-zinc-700">•</span>
+                          <label className="inline-flex items-center gap-1.5 font-medium text-zinc-500 dark:text-zinc-400">
+                            <MapPin size={12} className="text-emerald-600" />
+                            <span>City:</span>
+                            <select
+                              value={activePricingCity}
+                              onChange={(e) => setSelectedPricingCity(e.target.value)}
+                              aria-label="Select city for on-road price"
+                              className="max-w-[130px] cursor-pointer rounded-md border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-xs font-bold text-emerald-700 outline-none dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-400"
+                            >
+                              {pricingCities.map((city) => <option key={city} value={city}>{city}</option>)}
+                            </select>
+                          </label>
+                          {selectedOnRoadPrice && (
+                            <span className="font-semibold text-emerald-700 dark:text-emerald-400">On-road ₹{selectedOnRoadPrice} L</span>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>

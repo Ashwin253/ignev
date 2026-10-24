@@ -67,49 +67,49 @@ export default function QuickClientPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.2),_transparent_35%),linear-gradient(180deg,#07111f_0%,#0f172a_55%,#111827_100%)] text-white">
+    <div className="min-h-screen pt-20 text-ink">
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <p className="text-xs uppercase tracking-[0.35em] text-sky-300/80">QUICK SERVICE</p>
+          <p className="text-xs uppercase tracking-[0.35em] text-brand">QUICK SERVICE</p>
           {/* <h1 className="mt-3 text-3xl font-semibold sm:text-5xl">Request pickup, cleaning, or service in under 30 minutes</h1> */}
-          <p className="mt-4 max-w-3xl text-sm leading-6 text-slate-300">
+          <p className="mt-4 max-w-3xl text-sm leading-6 text-ink-soft">
             Tap your current location, choose a service, and send a quick request. We&apos;ll use your live location to help route the nearest team.
           </p>
         </div>
 
         <div className="grid gap-6">
-          <section className="rounded-3xl border border-white/10 bg-white/5 p-4 sm:p-5 shadow-2xl backdrop-blur">
-            <div className="flex items-center gap-2 text-sky-300">
+          <section className="rounded-3xl border border-line bg-white p-4 sm:p-5 shadow-card ">
+            <div className="flex items-center gap-2 text-brand">
               <Clock3 size={18} />
               <h2 className="text-lg font-semibold">Choose service</h2>
             </div>
 
             <div className="mt-5">
               <label className="grid gap-2">
-                <span className="text-xs uppercase tracking-wider text-slate-400">Service type</span>
+                <span className="text-xs uppercase tracking-wider text-ink-mute">Service type</span>
                 <select
                   value={selected}
                   onChange={(e) => setSelected(e.target.value as (typeof serviceTypes)[number]["id"])}
-                  className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-sky-400/60 transition-all hover:bg-white/10"
+                  className="rounded-2xl border border-line bg-white px-4 py-3 text-sm text-ink outline-none focus:border-brand transition-all hover:bg-white"
                 >
-                  <option value="" className="bg-slate-900">Select service</option>
+                  <option value="" className="bg-white">Select service</option>
                   {serviceTypes.map((service) => (
-                    <option key={service.id} value={service.id} className="bg-slate-900">
+                    <option key={service.id} value={service.id} className="bg-white">
                       {service.title}
                     </option>
                   ))}
                 </select>
               </label>
-              {selectedService && <p className="mt-2 text-xs text-slate-400">{selectedService.detail}</p>}
+              {selectedService && <p className="mt-2 text-xs text-ink-mute">{selectedService.detail}</p>}
             </div>
 
 
 
-            <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-3 sm:p-4">
+            <div className="mt-6 rounded-2xl border border-line bg-paper p-3 sm:p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-white">Service Location</p>
-                  <p className="mt-1 text-xs text-slate-400">
+                  <p className="text-sm font-semibold text-ink">Service Location</p>
+                  <p className="mt-1 text-xs text-ink-mute">
                     {usePincode ? "Enter your area pincode for the service." : "We'll use your live location to route the nearest team."}
                   </p>
                 </div>
@@ -117,7 +117,7 @@ export default function QuickClientPage() {
                   {!usePincode && !location.lat && (
                     <button
                       onClick={requestCurrentLocation}
-                      className="inline-flex items-center gap-2 rounded-full bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-sky-700"
+                      className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700"
                     >
                       {loadingLocation ? <WandSparkles size={16} className="animate-pulse" /> : <MapPin size={16} />}
                       Use my location
@@ -126,7 +126,7 @@ export default function QuickClientPage() {
                   
                   {!usePincode && location.lat && (
                     <div className="flex items-center gap-2">
-                      <p className="rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-100">
+                      <p className="rounded-full border border-brand bg-brand-soft px-3 py-2 text-xs font-medium text-brand-deep">
                         Live location captured
                       </p>
                       <button 
@@ -135,7 +135,7 @@ export default function QuickClientPage() {
                           setLocation({ lat: null, lng: null, note: "" });
                           setStatus("");
                         }}
-                        className="text-xs text-sky-400 hover:underline px-2"
+                        className="text-xs text-brand hover:underline px-2"
                       >
                         Use Pincode instead?
                       </button>
@@ -150,11 +150,11 @@ export default function QuickClientPage() {
                           placeholder="Pincode"
                           value={pincode}
                           onChange={(e) => setPincode(e.target.value.replace(/\D/g, ''))}
-                          className="w-full rounded-xl border border-white/10 bg-black px-4 py-2 text-sm text-white outline-none focus:border-sky-400/60 pr-10"
+                          className="w-full rounded-xl border border-line bg-white px-4 py-2 text-sm text-ink outline-none focus:border-brand pr-10"
                           maxLength={6}
                         />
                         {pincode.length === 6 && (
-                          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-400">
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-deep">
                             <CheckCircle2 size={16} />
                           </div>
                         )}
@@ -164,7 +164,7 @@ export default function QuickClientPage() {
                           setUsePincode(false);
                           setPincode("");
                         }}
-                        className="text-xs text-slate-400 hover:text-white px-2"
+                        className="text-xs text-ink-mute hover:text-ink px-2"
                       >
                         Cancel
                       </button>
@@ -174,7 +174,7 @@ export default function QuickClientPage() {
                   {!usePincode && !location.lat && !loadingLocation && (
                      <button 
                         onClick={() => setUsePincode(true)}
-                        className="text-xs text-sky-400 hover:underline px-2"
+                        className="text-xs text-brand hover:underline px-2"
                       >
                         Or enter Pincode
                       </button>
@@ -183,17 +183,17 @@ export default function QuickClientPage() {
               </div>
             </div>
 
-            <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-3 sm:p-4">
+            <div className="mt-6 rounded-2xl border border-line bg-paper p-3 sm:p-4">
               <label className="grid gap-2">
-                <span className="text-xs uppercase tracking-wider text-slate-400">Vehicle type</span>
+                <span className="text-xs uppercase tracking-wider text-ink-mute">Vehicle type</span>
                 <select
                   value={vehicleType}
                   onChange={(e) => setVehicleType(e.target.value as (typeof vehicleTypes)[number])}
-                  className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-sky-400/60 transition-all hover:bg-white/10"
+                  className="rounded-2xl border border-line bg-white px-4 py-3 text-sm text-ink outline-none focus:border-brand transition-all hover:bg-white"
                 >
-                  <option value="" className="bg-slate-900">Select vehicle type</option>
+                  <option value="" className="bg-white">Select vehicle type</option>
                   {vehicleTypes.map((type) => (
-                    <option key={type} value={type} className="bg-slate-900">
+                    <option key={type} value={type} className="bg-white">
                       {type}
                     </option>
                   ))}
@@ -201,39 +201,39 @@ export default function QuickClientPage() {
               </label>
             </div>
 
-            <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-3 sm:p-5">
-              <p className="text-xs uppercase tracking-wider text-slate-400">Contact details</p>
-              <div className="mt-3 rounded-2xl border border-white/10 bg-white/5 p-3 sm:p-4">
-                <p className="text-sm font-semibold text-white">Share contact details</p>
+            <div className="mt-6 rounded-2xl border border-line bg-paper p-3 sm:p-5">
+              <p className="text-xs uppercase tracking-wider text-ink-mute">Contact details</p>
+              <div className="mt-3 rounded-2xl border border-line bg-white p-3 sm:p-4">
+                <p className="text-sm font-semibold text-ink">Share contact details</p>
                 <form onSubmit={handleSubmit} className="mt-4 grid gap-3">
                   <input
                     name="name"
                     type="text"
                     placeholder="Your name"
-                    className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400/60"
+                    className="rounded-2xl border border-line bg-white px-4 py-3 text-sm text-ink outline-none focus:border-brand"
                   />
                   <ValidationError prefix="Name" field="name" errors={formState.errors} />
                   <input
                     name="phone"
                     type="tel"
                     placeholder="Mobile number"
-                    className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400/60"
+                    className="rounded-2xl border border-line bg-white px-4 py-3 text-sm text-ink outline-none focus:border-brand"
                   />
                   <ValidationError prefix="Phone" field="phone" errors={formState.errors} />
-                  <div className="rounded-2xl border border-white/10 bg-white/10 p-3">
-                    <p className="text-xs uppercase tracking-wider text-slate-400">Preferred time</p>
+                  <div className="rounded-2xl border border-line bg-white p-3">
+                    <p className="text-xs uppercase tracking-wider text-ink-mute">Preferred time</p>
                     <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                       <button
                         type="button"
                         onClick={() => setPreferredMode("soon")}
-                        className={`flex-1 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${preferredMode === "soon" ? "border-emerald-300 bg-emerald-500/30 text-emerald-50" : "border-slate-500/40 bg-slate-800/60 text-slate-100 hover:bg-slate-700/60"}`}
+                        className={`flex-1 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${preferredMode === "soon" ? "border-brand bg-brand-soft text-emerald-50" : "border-line-strong bg-white text-ink-soft hover:bg-ink/5"}`}
                       >
                         Under 1 hour
                       </button>
                       <button
                         type="button"
                         onClick={() => setPreferredMode("schedule")}
-                        className={`flex-1 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${preferredMode === "schedule" ? "border-sky-300 bg-sky-500/30 text-sky-50" : "border-slate-500/40 bg-slate-800/60 text-slate-100 hover:bg-slate-700/60"}`}
+                        className={`flex-1 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${preferredMode === "schedule" ? "border-brand bg-brand-soft text-emerald-50" : "border-line-strong bg-white text-ink-soft hover:bg-ink/5"}`}
                       >
                         Date & time
                       </button>
@@ -245,14 +245,14 @@ export default function QuickClientPage() {
                           type="date"
                           value={preferredDate}
                           onChange={(e) => setPreferredDate(e.target.value)}
-                          className="w-full rounded-2xl border border-white/10 bg-black px-4 py-3 text-sm text-white outline-none focus:border-sky-400/60 transition-all [color-scheme:dark]"
+                          className="w-full rounded-2xl border border-line bg-white px-4 py-3 text-sm text-ink outline-none focus:border-brand transition-all "
                         />
                         <input
                           name="preferredTime"
                           type="time"
                           value={preferredTime}
                           onChange={(e) => setPreferredTime(e.target.value)}
-                          className="w-full rounded-2xl border border-white/10 bg-black px-4 py-3 text-sm text-white outline-none focus:border-sky-400/60 transition-all [color-scheme:dark]"
+                          className="w-full rounded-2xl border border-line bg-white px-4 py-3 text-sm text-ink outline-none focus:border-brand transition-all "
                         />
                       </div>
                     )}
@@ -269,10 +269,10 @@ export default function QuickClientPage() {
                       {formState.submitting ? "Sending..." : "Request service"}
                     </button>
                     {formState.succeeded && (
-                      <p className="text-xs text-emerald-200">Request sent. Our team will contact you shortly.</p>
+                      <p className="text-xs text-brand-deep">Request sent. Our team will contact you shortly.</p>
                     )}
                     {Boolean(formState.errors) && (
-                      <p className="text-xs text-rose-300">Please check the form and try again.</p>
+                      <p className="text-xs text-coral">Please check the form and try again.</p>
                     )}
                   </form>
                 </div>

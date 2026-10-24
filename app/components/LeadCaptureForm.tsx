@@ -105,11 +105,11 @@ export default function LeadCaptureForm({
   const colorStyles = {
     indigo: {
       accent: "indigo",
-      btn: "bg-indigo-600 hover:bg-indigo-700 focus:border-indigo-500 focus:ring-indigo-500",
-      ring: "ring-indigo-100",
-      text: "text-indigo-600",
-      border: "border-indigo-200",
-      badge: "bg-indigo-50 text-indigo-700 border-indigo-100",
+      btn: "bg-emerald-600 hover:bg-emerald-700 focus:border-emerald-500 focus:ring-emerald-500",
+      ring: "ring-emerald-100",
+      text: "text-emerald-600",
+      border: "border-emerald-200",
+      badge: "bg-emerald-50 text-emerald-700 border-emerald-100",
     },
     emerald: {
       accent: "emerald",
@@ -121,11 +121,11 @@ export default function LeadCaptureForm({
     },
     teal: {
       accent: "teal",
-      btn: "bg-teal-600 hover:bg-teal-700 focus:border-teal-500 focus:ring-teal-500",
-      ring: "ring-teal-100",
-      text: "text-teal-600",
-      border: "border-teal-200",
-      badge: "bg-teal-50 text-teal-700 border-teal-100",
+      btn: "bg-emerald-600 hover:bg-emerald-700 focus:border-emerald-500 focus:ring-emerald-500",
+      ring: "ring-emerald-100",
+      text: "text-emerald-600",
+      border: "border-emerald-200",
+      badge: "bg-emerald-50 text-emerald-700 border-emerald-100",
     },
   };
 

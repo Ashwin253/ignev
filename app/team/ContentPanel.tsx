@@ -290,24 +290,24 @@ export default function ContentPanel({
             <span className="font-bold text-slate-900">{contents.length}</span> published articles & updates
           </p>
         </div>
-        <button onClick={startNew} className="inline-flex items-center gap-1.5 rounded-xl bg-sky-600 px-4 py-2 text-xs font-bold text-white hover:bg-sky-700 shadow-sm transition">
+        <button onClick={startNew} className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 shadow-sm transition">
           <Plus size={14} /> Add New Content
         </button>
       </div>
 
       {/* Editing / Creating Modal Form */}
       {editing && (
-        <div className="rounded-2xl border border-sky-200 bg-sky-50/70 p-5 sm:p-6 mb-6 shadow-sm">
-          <div className="flex items-center justify-between pb-4 mb-4 border-b border-sky-100">
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-5 sm:p-6 mb-6 shadow-sm">
+          <div className="flex items-center justify-between pb-4 mb-4 border-b border-emerald-100">
             <div>
-              <p className="text-base font-extrabold text-sky-900">
+              <p className="text-base font-extrabold text-emerald-900">
                 {editing === "new" ? "Create New Content" : "Edit Content"}
               </p>
-              <p className="text-xs text-sky-600">
+              <p className="text-xs text-emerald-600">
                 Publish articles, guides, or updates linked to specific electric vehicles or general topics.
               </p>
             </div>
-            <button onClick={() => setEditing(null)} className="rounded-lg p-1.5 text-slate-400 hover:bg-white hover:text-slate-600 transition">
+            <button onClick={() => setEditing(null)} className="rounded-lg p-1.5 text-ink-mute hover:bg-white hover:text-slate-600 transition">
               <X size={18} />
             </button>
           </div>
@@ -320,7 +320,7 @@ export default function ContentPanel({
                 value={form.title}
                 onChange={(e) => handleTitleChange(e.target.value)}
                 placeholder="e.g. 5 Reasons to Buy Tata Nexon EV in 2026"
-                className="mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-medium outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                className="mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-medium outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
               />
             </label>
 
@@ -334,13 +334,13 @@ export default function ContentPanel({
                   type="button"
                   onClick={resetSlugFromTitle}
                   title="Auto-generate slug from title"
-                  className="inline-flex items-center gap-1 text-[11px] font-bold text-sky-600 hover:text-sky-700 transition"
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 hover:text-emerald-700 transition"
                 >
                   <RefreshCw size={11} /> Auto from Title
                 </button>
               </div>
-              <div className="mt-1.5 flex items-center rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm focus-within:border-sky-500 focus-within:ring-2 focus-within:ring-sky-100">
-                <span className="text-xs text-slate-400 font-mono select-none">/article/</span>
+              <div className="mt-1.5 flex items-center rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-100">
+                <span className="text-xs text-ink-mute font-mono select-none">/article/</span>
                 <input
                   value={form.slug || form.url || ""}
                   onChange={(e) => handleCustomSlugChange(e.target.value)}
@@ -348,7 +348,7 @@ export default function ContentPanel({
                   className="w-full bg-transparent px-1 font-mono text-xs text-slate-800 outline-none"
                 />
               </div>
-              <p className="mt-1 text-[11px] text-slate-500">
+              <p className="mt-1 text-[11px] text-ink-mute">
                 The web address for this article: <span className="font-mono text-slate-700">/article/{form.slug || form.url || "your-slug"}</span>
               </p>
             </div>
@@ -357,7 +357,7 @@ export default function ContentPanel({
             <div className="block">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-extrabold text-slate-700 uppercase tracking-wider flex items-center gap-1">
-                  <Car size={13} className="text-slate-500" /> Associated Vehicle (Optional)
+                  <Car size={13} className="text-ink-mute" /> Associated Vehicle (Optional)
                 </span>
                 {matchedVehicle && (
                   <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600">
@@ -370,7 +370,7 @@ export default function ContentPanel({
                 value={form.product_slug}
                 onChange={(e) => setForm({ ...form, product_slug: e.target.value })}
                 placeholder="Select or enter vehicle slug (e.g. tata-nexon-ev)..."
-                className="mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-medium outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                className="mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-medium outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
               />
               <datalist id="vehicle-slug-options">
                 {listings.map((l) => (
@@ -379,7 +379,7 @@ export default function ContentPanel({
                   </option>
                 ))}
               </datalist>
-              <p className="mt-1 text-[11px] text-slate-500">
+              <p className="mt-1 text-[11px] text-ink-mute">
                 Links this content to that car/bike page. Leave empty if this is a general EV guide.
               </p>
             </div>
@@ -391,7 +391,7 @@ export default function ContentPanel({
                 <span className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">
                   Thumbnail Image (Optional)
                 </span>
-                <span className="text-[11px] font-semibold text-slate-500">
+                <span className="text-[11px] font-semibold text-ink-mute">
                   Google Discover requirement: <span className="text-slate-800 font-bold">≥ 1,200px wide</span>
                 </span>
               </div>
@@ -404,7 +404,7 @@ export default function ContentPanel({
                       setThumbnailDim(null);
                     }}
                     placeholder="Enter image URL (https://...) or upload directly →"
-                    className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-medium outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 pr-9"
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-medium outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 pr-9"
                   />
                   {form.thumbnail && (
                     <button
@@ -413,7 +413,7 @@ export default function ContentPanel({
                         setForm({ ...form, thumbnail: "" });
                         setThumbnailDim(null);
                       }}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 p-1 rounded-md"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-mute hover:text-rose-500 p-1 rounded-md"
                       title="Clear thumbnail"
                     >
                       <X size={14} />
@@ -421,7 +421,7 @@ export default function ContentPanel({
                   )}
                 </div>
 
-                <label className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white hover:bg-sky-600 transition cursor-pointer shrink-0 shadow-sm">
+                <label className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-white hover:bg-emerald-600 transition cursor-pointer shrink-0 shadow-sm">
                   {uploadingThumbnail ? (
                     <>
                       <Loader2 size={14} className="animate-spin" /> Uploading...
@@ -494,7 +494,7 @@ export default function ContentPanel({
                         </span>
                       )}
                     </div>
-                    <p className="text-[10px] text-slate-400 truncate max-w-[240px] font-mono mt-0.5">{form.thumbnail}</p>
+                    <p className="text-[10px] text-ink-mute truncate max-w-[240px] font-mono mt-0.5">{form.thumbnail}</p>
                   </div>
                 </div>
               )}
@@ -515,22 +515,22 @@ export default function ContentPanel({
           </div>
 
           {/* Action Row */}
-          <div className="flex flex-wrap items-center justify-between gap-4 mt-6 pt-4 border-t border-sky-200/70">
+          <div className="flex flex-wrap items-center justify-between gap-4 mt-6 pt-4 border-t border-emerald-200/70">
             <div className="flex items-center gap-4 flex-wrap">
               <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={form.is_active}
                   onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
-                  className="w-4 h-4 rounded text-sky-600 focus:ring-sky-500 cursor-pointer"
+                  className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
                 />
                 Publish as Active
               </label>
-              <span className="text-slate-300 hidden sm:inline">|</span>
+              <span className="text-ink-soft hidden sm:inline">|</span>
               <div className="flex items-center gap-1.5 text-xs text-slate-600">
-                <User size={13} className="text-slate-400 shrink-0" />
+                <User size={13} className="text-ink-mute shrink-0" />
                 <span>Author: <strong className="text-slate-800">{editing === "new" ? (currentUserName || (currentUserEmail ? currentUserEmail.split("@")[0] : "Team")) : (form.author_name || currentUserName || "Team")}</strong></span>
-                <span className="rounded bg-sky-100 text-sky-700 px-1.5 py-0.5 text-[10px] font-bold">Auto</span>
+                <span className="rounded bg-emerald-100 text-emerald-700 px-1.5 py-0.5 text-[10px] font-bold">Auto</span>
               </div>
             </div>
 
@@ -562,12 +562,12 @@ export default function ContentPanel({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search content by title, article slug, or vehicle model..."
-          className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium outline-none focus:border-sky-500 shadow-xs"
+          className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium outline-none focus:border-emerald-500 shadow-xs"
         />
         {search && (
           <button
             onClick={() => setSearch("")}
-            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 hover:text-slate-600"
+            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-ink-mute hover:text-slate-600"
           >
             Clear
           </button>
@@ -576,8 +576,8 @@ export default function ContentPanel({
 
       {/* List of Content Items */}
       {loading ? (
-        <div className="py-12 text-center text-slate-400 flex flex-col items-center gap-2">
-          <Loader2 size={20} className="animate-spin text-sky-600" />
+        <div className="py-12 text-center text-ink-mute flex flex-col items-center gap-2">
+          <Loader2 size={20} className="animate-spin text-emerald-600" />
           <p className="text-sm font-medium">Loading content...</p>
         </div>
       ) : (
@@ -604,7 +604,7 @@ export default function ContentPanel({
                       />
                     </div>
                   ) : (
-                    <div className="w-10 h-10 rounded-lg bg-sky-50 border border-sky-100 flex items-center justify-center shrink-0 text-sky-600 mt-0.5">
+                    <div className="w-10 h-10 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0 text-emerald-600 mt-0.5">
                       <FileText size={18} />
                     </div>
                   )}
@@ -618,20 +618,20 @@ export default function ContentPanel({
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-3 mt-1 text-[11px] text-slate-500 flex-wrap">
+                    <div className="flex items-center gap-3 mt-1 text-[11px] text-ink-mute flex-wrap">
                       <span className="flex items-center gap-1 font-mono text-slate-600">
-                        <span className="text-slate-400">Slug:</span> /{articleSlug}
+                        <span className="text-ink-mute">Slug:</span> /{articleSlug}
                       </span>
                       {c.product_slug ? (
                         <span className="flex items-center gap-1 text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded font-medium">
                           <Car size={11} /> {c.product_slug}
                         </span>
                       ) : (
-                        <span className="text-slate-400 italic">General Article</span>
+                        <span className="text-ink-mute italic">General Article</span>
                       )}
                       {(c.author_name || extractArticleMeta(c.body).authorName || c.author_email || extractArticleMeta(c.body).authorEmail) && (
                         <span className="flex items-center gap-1 text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded font-medium">
-                          <User size={11} className="text-slate-400" />
+                          <User size={11} className="text-ink-mute" />
                           {c.author_name || extractArticleMeta(c.body).authorName || c.author_email || extractArticleMeta(c.body).authorEmail}
                         </span>
                       )}
@@ -644,13 +644,13 @@ export default function ContentPanel({
                     href={`/article/${articleSlug}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-bold text-sky-600 hover:bg-sky-50 hover:border-sky-200 transition"
+                    className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-bold text-emerald-600 hover:bg-emerald-50 hover:border-emerald-200 transition"
                   >
                     <ExternalLink size={11} /> Preview
                   </a>
                   <button
                     onClick={() => startEdit(c)}
-                    className="rounded-lg border border-slate-200 bg-white p-1.5 text-slate-600 hover:text-sky-600 hover:border-sky-200 transition"
+                    className="rounded-lg border border-slate-200 bg-white p-1.5 text-slate-600 hover:text-emerald-600 hover:border-emerald-200 transition"
                     title="Edit article"
                   >
                     <Pencil size={13} />
@@ -667,7 +667,7 @@ export default function ContentPanel({
             );
           })}
           {filtered.length === 0 && (
-            <div className="text-center py-12 text-slate-400 text-sm">
+            <div className="text-center py-12 text-ink-mute text-sm">
               No content found matching your search.
             </div>
           )}

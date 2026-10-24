@@ -79,27 +79,27 @@ export default function StationsMap() {
   };
 
   return (
-    <section className="py-16 md:py-24 bg-linear-to-b from-[#1a1d24] to-[#0f1115] text-white relative overflow-hidden" id="locations-map">
+    <section className="py-16 md:py-24 bg-linear-to-b from-[#0c6a43] to-[#06301f] text-white relative overflow-hidden" id="locations-map">
       <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
-      <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-blue-500/5 rounded-full blur-[120px] pointer-events-none translate-x-1/3 -translate-y-1/3" />
+      <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-emerald-500/5 rounded-full blur-[120px] pointer-events-none translate-x-1/3 -translate-y-1/3" />
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         <div className="text-center mb-12">
           <motion.div initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-blue-400 text-sm font-medium mb-5">
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-emerald-400 text-sm font-medium mb-5">
             <MapPin size={16} /> Interactive Map
           </motion.div>
           <motion.h2 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
             className="text-3xl md:text-5xl font-bold mb-4">
-            Charging &amp; <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-emerald-400">Spare Parts</span>
+            Charging &amp; <span className="text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-emerald-400">Spare Parts</span>
           </motion.h2>
         </div>
 
         <div className="flex flex-col-reverse lg:flex-row gap-6">
           {/* List */}
           <div className="w-full lg:w-1/3">
-            <div className="bg-[#1e222b]/80 backdrop-blur-xl p-6 rounded-3xl border border-white/5 shadow-xl">
+            <div className="bg-[#0a4a30]/80 backdrop-blur-xl p-6 rounded-3xl border border-white/5 shadow-xl">
               <h3 className="text-lg font-semibold mb-4">Explore Locations</h3>
               <div className="flex bg-black/20 p-1 rounded-xl border border-white/5 mb-5">
                 {(["all", "charging", "spare"] as const).map((f) => (
@@ -133,7 +133,7 @@ export default function StationsMap() {
                       <div className="flex gap-2 mt-3 ml-5">
                         <a href={`https://www.google.com/maps/dir/?api=1&destination=${loc.lat},${loc.lng}`}
                           target="_blank" rel="noopener noreferrer"
-                          className="flex-1 flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2 rounded-lg transition-colors">
+                          className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold py-2 rounded-lg transition-colors">
                           <Navigation size={12} /> Directions
                         </a>
                         <button onClick={() => handleShare(loc)}

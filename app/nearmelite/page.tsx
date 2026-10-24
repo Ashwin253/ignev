@@ -39,7 +39,7 @@ function NearMeLiteContent() {
           
           <button 
             onClick={() => handleSend("Car towing")}
-            className="w-full flex items-center justify-center gap-3 py-4 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-2xl transition-all active:scale-95 border border-blue-100"
+            className="w-full flex items-center justify-center gap-3 py-4 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold rounded-2xl transition-all active:scale-95 border border-emerald-100"
           >
             <Car size={20} /> Car towing
           </button>

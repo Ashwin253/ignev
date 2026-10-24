@@ -82,13 +82,13 @@ export default function ForYouLeadsPanel({ supabase, userId }: { supabase: any; 
 
   const pendingCount = leads.filter((l) => !l.assisted_by).length;
 
-  if (loading) return <div className="text-center py-12 text-slate-400">Loading curation leads...</div>;
+  if (loading) return <div className="text-center py-12 text-ink-mute">Loading curation leads...</div>;
 
   return (
     <div className="space-y-4">
       {/* Filter tabs */}
       <div className="flex items-center gap-2">
-        <button onClick={() => setFilter("all")} className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${filter === "all" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600"}`}>
+        <button onClick={() => setFilter("all")} className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${filter === "all" ? "bg-white text-ink" : "bg-slate-100 text-slate-600"}`}>
           All ({leads.length})
         </button>
         <button onClick={() => setFilter("pending")} className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${filter === "pending" ? "bg-amber-500 text-white" : "bg-slate-100 text-slate-600"}`}>
@@ -97,7 +97,7 @@ export default function ForYouLeadsPanel({ supabase, userId }: { supabase: any; 
         <button onClick={() => setFilter("confirmed")} className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${filter === "confirmed" ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-600"}`}>
           Sent/Confirmed ({leads.length - pendingCount})
         </button>
-        <button onClick={fetchLeads} className="ml-auto text-xs text-sky-600 font-bold hover:text-sky-700 cursor-pointer">Refresh</button>
+        <button onClick={fetchLeads} className="ml-auto text-xs text-emerald-600 font-bold hover:text-emerald-700 cursor-pointer">Refresh</button>
       </div>
 
       {/* Curation Leads list */}
@@ -122,7 +122,7 @@ export default function ForYouLeadsPanel({ supabase, userId }: { supabase: any; 
                         </span>
                       )}
                     </div>
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-mute">
                       {lead.phone && <span className="inline-flex items-center gap-1"><Phone size={10} /> {lead.phone}</span>}
                       {lead.pincode && <span className="inline-flex items-center gap-1"><MapPin size={10} /> State: {lead.pincode}</span>}
                       <span className="inline-flex items-center gap-1"><Clock size={10} /> {new Date(lead.created_at).toLocaleString()}</span>
@@ -131,55 +131,55 @@ export default function ForYouLeadsPanel({ supabase, userId }: { supabase: any; 
 
                   {/* Wizard Choices parsed representation */}
                   <div className="bg-slate-50 border border-slate-200/50 rounded-xl p-3.5 space-y-2">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Curation parameters</p>
+                    <p className="text-[10px] font-bold text-ink-mute uppercase tracking-wider">Curation parameters</p>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                       {parsed["usage"] && (
                         <div className="flex flex-col p-1.5 bg-white border border-slate-100 rounded-lg">
-                          <span className="text-[9px] text-slate-400 uppercase font-medium">Usage Type</span>
+                          <span className="text-[9px] text-ink-mute uppercase font-medium">Usage Type</span>
                           <span className="font-bold text-slate-800">{parsed["usage"]}</span>
                         </div>
                       )}
                       {parsed["vehicle type"] && (
                         <div className="flex flex-col p-1.5 bg-white border border-slate-100 rounded-lg">
-                          <span className="text-[9px] text-slate-400 uppercase font-medium">EV Type</span>
+                          <span className="text-[9px] text-ink-mute uppercase font-medium">EV Type</span>
                           <span className="font-bold text-slate-800">{parsed["vehicle type"]}</span>
                         </div>
                       )}
                       {parsed["commute"] && (
                         <div className="flex flex-col p-1.5 bg-white border border-slate-100 rounded-lg">
-                          <span className="text-[9px] text-slate-400 uppercase font-medium">Commute Range</span>
+                          <span className="text-[9px] text-ink-mute uppercase font-medium">Commute Range</span>
                           <span className="font-bold text-slate-800 capitalize">{parsed["commute"].replace("_", " ")}</span>
                         </div>
                       )}
                       {parsed["parking"] && (
                         <div className="flex flex-col p-1.5 bg-white border border-slate-100 rounded-lg">
-                          <span className="text-[9px] text-slate-400 uppercase font-medium">Charging Setup</span>
+                          <span className="text-[9px] text-ink-mute uppercase font-medium">Charging Setup</span>
                           <span className="font-bold text-slate-800 capitalize">{parsed["parking"].replace("_", " ")}</span>
                         </div>
                       )}
                       {parsed["budget range"] && (
                         <div className="flex flex-col p-1.5 bg-white border border-slate-100 rounded-lg">
-                          <span className="text-[9px] text-slate-400 uppercase font-medium">Budget Limits</span>
+                          <span className="text-[9px] text-ink-mute uppercase font-medium">Budget Limits</span>
                           <span className="font-bold text-slate-800 uppercase">{parsed["budget range"]}</span>
                         </div>
                       )}
                       {parsed["location"] && (
                         <div className="flex flex-col p-1.5 bg-white border border-slate-100 rounded-lg">
-                          <span className="text-[9px] text-slate-400 uppercase font-medium">Location</span>
+                          <span className="text-[9px] text-ink-mute uppercase font-medium">Location</span>
                           <span className="font-bold text-slate-800">{parsed["location"]}</span>
                         </div>
                       )}
                       {parsed["loan needed"] && (
                         <div className="flex flex-col p-1.5 bg-white border border-slate-100 rounded-lg col-span-2 sm:col-span-2">
-                          <span className="text-[9px] text-slate-400 uppercase font-medium">Financing Needs</span>
+                          <span className="text-[9px] text-ink-mute uppercase font-medium">Financing Needs</span>
                           <span className="font-bold text-slate-800 text-[11px] truncate">{parsed["loan needed"]}</span>
                         </div>
                       )}
                     </div>
 
                     <div className="flex items-center justify-between pt-2 border-t border-slate-200/50 mt-2">
-                      <span className="text-[10px] text-slate-500 font-medium">Real-Time match count shown to user:</span>
-                      <span className="text-xs font-extrabold text-violet-700 bg-violet-50 px-2 py-0.5 rounded border border-violet-100">
+                      <span className="text-[10px] text-ink-mute font-medium">Real-Time match count shown to user:</span>
+                      <span className="text-xs font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
                         {parsed["match count"] || "N/A"} matches
                       </span>
                     </div>
@@ -196,7 +196,7 @@ export default function ForYouLeadsPanel({ supabase, userId }: { supabase: any; 
                     <button 
                       onClick={() => confirmAndSend(lead.id)}
                       disabled={sendingId === lead.id}
-                      className="w-full md:w-auto inline-flex items-center justify-center gap-1.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-extrabold text-xs px-4 py-3 shadow-md shadow-violet-500/10 active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
+                      className="w-full md:w-auto inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-4 py-3 shadow-md shadow-emerald-500/10 active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
                     >
                       {sendingId === lead.id ? (
                         <>Sending...</>
@@ -209,7 +209,7 @@ export default function ForYouLeadsPanel({ supabase, userId }: { supabase: any; 
                   ) : lead.assisted_by === userId ? (
                     <button 
                       onClick={() => undoConfirmation(lead.id)}
-                      className="w-full md:w-auto inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 px-4 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50 active:scale-95 transition-all cursor-pointer"
+                      className="w-full md:w-auto inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 px-4 py-3 text-xs font-bold text-ink-mute hover:bg-slate-50 active:scale-95 transition-all cursor-pointer"
                     >
                       Undo Confirmation
                     </button>
@@ -220,8 +220,8 @@ export default function ForYouLeadsPanel({ supabase, userId }: { supabase: any; 
           );
         })}
         {filtered.length === 0 && (
-          <div className="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-300 text-slate-400 text-sm">
-            <Sparkles size={20} className="mx-auto mb-2 text-slate-300" />
+          <div className="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-300 text-ink-mute text-sm">
+            <Sparkles size={20} className="mx-auto mb-2 text-ink-soft" />
             No curation requests {filter !== "all" ? `in "${filter}" category` : "yet"}
           </div>
         )}

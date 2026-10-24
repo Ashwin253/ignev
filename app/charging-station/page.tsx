@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import FullMap from "../map/FullMap";
 
 export const metadata = {
-  title: "EV Charging Stations Map | EVPULSE",
+  title: "EV Charging Stations Map | EVPLSE",
   description: "Find nearby electric vehicle charging stations. View real-time availability, connector types, and navigation.",
 };
 

@@ -37,14 +37,14 @@ function ProductOwnershipInner({ item }: { item: EvListing }) {
     : undefined;
 
   return (
-    <div className="mt-20 rounded-3xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 px-5 py-10 md:px-10 md:py-14 shadow-lg">
+    <div className="mt-20 rounded-3xl bg-white border border-slate-200  px-5 py-10 md:px-10 md:py-14 shadow-lg">
       {/* Header */}
       <div className="text-center mb-8">
-        {/* <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-800 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500 dark:text-zinc-400 shadow-sm mb-4">
+        {/* <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white  px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500  shadow-sm mb-4">
           Ownership
         </span> */}
         <h2 className="text-2xl font-black text-slate-900 md:text-3xl">
-          Plan Your <span className="text-[#10855f]">Ownership</span>
+          Plan Your <span className="text-brand">Ownership</span>
         </h2>
       </div>
 
@@ -53,9 +53,9 @@ function ProductOwnershipInner({ item }: { item: EvListing }) {
         <button
           onClick={() => setActiveTab("emi")}
           className={`flex-1 flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition-all ${
-            activeTab === "emi"
+ activeTab === "emi"
               ? "bg-[#a5e6d1] text-slate-950 font-black shadow-md"
-              : "text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-zinc-800"
+              : "text-slate-500  hover:text-slate-900  hover:bg-white "
           }`}
         >
           <Banknote size={16} />
@@ -64,9 +64,9 @@ function ProductOwnershipInner({ item }: { item: EvListing }) {
         <button
           onClick={() => setActiveTab("cost")}
           className={`flex-1 flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition-all ${
-            activeTab === "cost"
+ activeTab === "cost"
               ? "bg-[#a5e6d1] text-slate-950 font-black shadow-md"
-              : "text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-zinc-800"
+              : "text-slate-500  hover:text-slate-900  hover:bg-white "
           }`}
         >
           <Fuel size={16} />
@@ -82,7 +82,7 @@ function ProductOwnershipInner({ item }: { item: EvListing }) {
 
       <p className="mt-8 text-center text-[11px] text-slate-500 font-medium max-w-xl mx-auto leading-relaxed">
         * Estimates may vary based on state subsidies, RTO charges, and insurance.{" "}
-        <span className="font-bold text-[#10855f]">Enquire for exact on-road pricing.</span>
+        <span className="font-bold text-brand">Enquire for exact on-road pricing.</span>
       </p>
     </div>
   );

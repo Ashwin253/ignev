@@ -130,16 +130,16 @@ export default function OffersPanel({ supabase, uniqueBrands = [] }: { supabase:
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <p className="text-sm text-slate-600"><span className="font-bold text-slate-900">{offers.length}</span> active offers</p>
-        <button onClick={startNew} className="inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-3 py-2 text-xs font-bold text-white hover:bg-sky-700">
+        <button onClick={startNew} className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-700">
           <Plus size={12} /> Add Offer
         </button>
       </div>
 
       {editing && (
-        <div className="rounded-2xl border border-sky-200 bg-sky-50 p-5 mb-6">
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <p className="text-sm font-bold text-sky-700">{editing === "new" ? "New Offer" : "Edit Offer"}</p>
-            <button onClick={() => setEditing(null)} className="text-slate-400 hover:text-slate-600"><X size={16} /></button>
+            <p className="text-sm font-bold text-emerald-700">{editing === "new" ? "New Offer" : "Edit Offer"}</p>
+            <button onClick={() => setEditing(null)} className="text-ink-mute hover:text-slate-600"><X size={16} /></button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <label className="block">
@@ -173,9 +173,9 @@ export default function OffersPanel({ supabase, uniqueBrands = [] }: { supabase:
         </div>
       )}
 
-      <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search offers..." className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-sky-400" />
+      <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search offers..." className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-brand" />
 
-      {loading ? <p className="text-slate-400 text-sm text-center py-8">Loading offers...</p> : (
+      {loading ? <p className="text-ink-mute text-sm text-center py-8">Loading offers...</p> : (
         <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden mt-4">
           {filtered.map((o) => (
             <div key={o.id} className={`flex items-start justify-between px-4 py-4 border-b border-slate-100 last:border-0 ${!o.is_active ? "opacity-50" : ""}`}>
@@ -185,20 +185,20 @@ export default function OffersPanel({ supabase, uniqueBrands = [] }: { supabase:
                   <p className="text-sm font-bold text-slate-900">{o.text}</p>
                   <div className="flex flex-wrap gap-2 mt-2">
                     {o.brand && <span className="inline-flex rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">Brand: {o.brand}</span>}
-                    {o.product_slug && <span className="inline-flex rounded-md bg-sky-100 px-2 py-0.5 text-[10px] font-bold text-sky-700">Model: {o.product_slug}</span>}
-                    {o.cities && <span className="inline-flex rounded-md bg-orange-100 px-2 py-0.5 text-[10px] font-bold text-orange-700">Cities: {o.cities}</span>}
+                    {o.product_slug && <span className="inline-flex rounded-md bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">Model: {o.product_slug}</span>}
+                    {o.cities && <span className="inline-flex rounded-md bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">Cities: {o.cities}</span>}
                     {o.valid_until && <span className="inline-flex items-center gap-1 rounded-md bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-700"><CalendarDays size={10} /> Valid till: {new Date(o.valid_until).toLocaleDateString()}</span>}
-                    {(dealerOfferCounts[o.id] || 0) > 0 && <span className="inline-flex rounded-md bg-violet-100 px-2 py-0.5 text-[10px] font-bold text-violet-700">{dealerOfferCounts[o.id]} dealer location{dealerOfferCounts[o.id] === 1 ? "" : "s"}</span>}
+                    {(dealerOfferCounts[o.id] || 0) > 0 && <span className="inline-flex rounded-md bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">{dealerOfferCounts[o.id]} dealer location{dealerOfferCounts[o.id] === 1 ? "" : "s"}</span>}
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <button onClick={() => startEdit(o)} className="text-[10px] text-slate-500 font-bold hover:text-sky-600"><Pencil size={12} /></button>
-                <button onClick={() => handleDelete(o.id)} className="text-[10px] text-slate-500 font-bold hover:text-rose-500"><Trash2 size={12} /></button>
+                <button onClick={() => startEdit(o)} className="text-[10px] text-ink-mute font-bold hover:text-emerald-600"><Pencil size={12} /></button>
+                <button onClick={() => handleDelete(o.id)} className="text-[10px] text-ink-mute font-bold hover:text-rose-500"><Trash2 size={12} /></button>
               </div>
             </div>
           ))}
-          {filtered.length === 0 && <p className="text-sm text-slate-400 text-center py-8">No offers found</p>}
+          {filtered.length === 0 && <p className="text-sm text-ink-mute text-center py-8">No offers found</p>}
         </div>
       )}
     </div>

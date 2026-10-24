@@ -11,7 +11,7 @@ import LogoLoader from "../components/LogoLoader";
 async function OwnContent({ slug }: { slug: string | undefined }) {
   const [listing, allListings] = await Promise.all([
     slug ? fetchEvListingBySlugFromSupabase(slug) : Promise.resolve(null),
-    fetchEvListingsFromSupabase(100)
+    fetchEvListingsFromSupabase(300)
   ]);
 
   const compactAll = allListings.map(l => ({
@@ -31,14 +31,14 @@ async function OwnContent({ slug }: { slug: string | undefined }) {
   return (
     <div className="space-y-12">
       {/* Vehicle Selection */}
-      <div className="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
+      <div className="rounded-3xl border border-line bg-white p-8 shadow-card">
         <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-              <CarFront className="text-sky-400" />
+            <h2 className="text-2xl font-extrabold text-ink flex items-center gap-2">
+              <CarFront className="text-brand" />
               {listing ? listing.title : "Select a Vehicle"}
             </h2>
-            <p className="text-sm text-slate-400 mt-1">
+            <p className="text-sm text-ink-soft mt-1">
               {listing ? `Planning ownership for ${listing.brand} ${listing.title}` : "Pick a vehicle to get started with personalized estimates."}
             </p>
           </div>
@@ -49,8 +49,8 @@ async function OwnContent({ slug }: { slug: string | undefined }) {
         </div>
 
         {listing && (
-          <div className="flex items-center gap-4 pt-6 border-t border-white/5">
-             <Link href={`/product/${listing.slug}`} className="text-xs font-bold text-sky-400 hover:underline">
+          <div className="flex items-center gap-4 pt-6 border-t border-line">
+             <Link href={`/product/${listing.slug}`} className="text-xs font-bold text-brand hover:underline">
                View {listing.title} Details
              </Link>
           </div>
@@ -72,23 +72,23 @@ export default async function OwnPage({ searchParams }: { searchParams: Promise<
   const slug = slugs?.split(",")[0];
 
   return (
-    <main className="min-h-screen bg-[#0b1220] pb-24 pt-28">
+    <main className="min-h-screen pb-24 pt-28">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-1/4 h-[500px] w-[500px] rounded-full bg-sky-500/10 blur-[120px]" />
-        <div className="absolute top-1/3 right-1/4 h-[400px] w-[400px] rounded-full bg-emerald-500/10 blur-[120px]" />
+        <div className="absolute top-0 left-1/4 h-[500px] w-[500px] rounded-full bg-volt/30 blur-[120px]" />
+        <div className="absolute top-1/3 right-1/4 h-[400px] w-[400px] rounded-full bg-brand/10 blur-[120px]" />
       </div>
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-12">
-          <Link href="/catalog" className="inline-flex items-center gap-2 text-sm font-medium text-slate-400 hover:text-white transition-colors mb-6">
+          <Link href="/catalog" className="inline-flex items-center gap-2 text-sm font-semibold text-ink-soft hover:text-brand transition-colors mb-6">
             <ArrowLeft size={14} /> Back to Catalog
           </Link>
-          <p className="text-xs font-black uppercase tracking-[0.3em] text-sky-400 mb-3">Ownership Planner</p>
-          <h1 className="text-4xl font-black text-white md:text-6xl max-w-4xl leading-[1.1]">
-            Plan your <span className="text-sky-400 text-glow">Finance</span> & <span className="text-emerald-400 text-glow">Savings</span>
+          <p className="text-xs font-extrabold uppercase tracking-[0.25em] text-brand mb-3">Ownership Planner</p>
+          <h1 className="text-4xl font-extrabold text-ink md:text-6xl max-w-4xl leading-[1.08]">
+            Plan your <span className="text-gradient">Finance</span> & <span className="text-gradient">Savings</span>
           </h1>
-          <p className="mt-6 text-lg text-slate-400 max-w-2xl leading-relaxed">
+          <p className="mt-6 text-lg text-ink-soft max-w-2xl leading-relaxed">
             Personalized EMI calculations, state-wise running costs, and EV vs Fuel savings comparison in one place.
           </p>
         </div>
@@ -97,8 +97,8 @@ export default async function OwnPage({ searchParams }: { searchParams: Promise<
           <OwnContent slug={slug} />
         </Suspense>
 
-        <div className="mt-16 rounded-3xl border border-white/5 bg-white/5 p-6 backdrop-blur text-center">
-          <p className="text-xs text-slate-500">
+        <div className="mt-16 rounded-3xl border border-line bg-white p-6 text-center">
+          <p className="text-xs text-ink-mute">
             * Estimates are indicative. Loan rates depend on bank discretion and credit profile. Fuel prices are updated periodically based on state averages.
           </p>
         </div>

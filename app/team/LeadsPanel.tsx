@@ -69,14 +69,14 @@ export default function LeadsPanel({ supabase, userId }: { supabase: any; userId
 
   const pendingCount = leads.filter((l) => !l.assisted_by).length;
 
-  if (loading) return <div className="text-center py-12 text-slate-400">Loading leads...</div>;
+  if (loading) return <div className="text-center py-12 text-ink-mute">Loading leads...</div>;
 
   return (
     <div className="space-y-4">
       {/* Filter bar */}
       <div className="flex flex-wrap items-center gap-4 bg-slate-50 p-3 rounded-xl border border-slate-200/60">
         <div className="flex items-center gap-2">
-          <button onClick={() => setFilter("all")} className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${filter === "all" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+          <button onClick={() => setFilter("all")} className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${filter === "all" ? "bg-white text-ink" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
             All ({leads.length})
           </button>
           <button onClick={() => setFilter("pending")} className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${filter === "pending" ? "bg-amber-500 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
@@ -89,7 +89,7 @@ export default function LeadsPanel({ supabase, userId }: { supabase: any; userId
 
         {/* Source Dropdown Filter */}
         <div className="flex items-center gap-2 text-xs">
-          <span className="font-bold text-slate-500">Source:</span>
+          <span className="font-bold text-ink-mute">Source:</span>
           <select
             value={selectedSource}
             onChange={(e) => setSelectedSource(e.target.value)}
@@ -103,7 +103,7 @@ export default function LeadsPanel({ supabase, userId }: { supabase: any; userId
           </select>
         </div>
 
-        <button onClick={fetchLeads} className="ml-auto text-xs text-sky-600 font-bold hover:text-sky-700 cursor-pointer">Refresh</button>
+        <button onClick={fetchLeads} className="ml-auto text-xs text-emerald-600 font-bold hover:text-emerald-700 cursor-pointer">Refresh</button>
       </div>
 
       {/* Leads list */}
@@ -131,17 +131,17 @@ export default function LeadsPanel({ supabase, userId }: { supabase: any; userId
                     </span>
                   )}
                 </div>
-                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-mute">
                   {lead.phone && <span className="inline-flex items-center gap-1"><Phone size={10} /> {lead.phone}</span>}
                   {lead.pincode && <span className="inline-flex items-center gap-1"><MapPin size={10} /> {lead.pincode}</span>}
                   {lead.interest && <span className="inline-flex items-center gap-1"><User size={10} /> {lead.interest}</span>}
                 </div>
                 {lead.message && (
                   <p className="mt-1.5 text-xs text-slate-600 flex items-start gap-1">
-                    <MessageSquare size={10} className="mt-0.5 shrink-0 text-slate-400" /> {lead.message}
+                    <MessageSquare size={10} className="mt-0.5 shrink-0 text-ink-mute" /> {lead.message}
                   </p>
                 )}
-                <p className="mt-1.5 text-[10px] text-slate-400 flex items-center gap-1">
+                <p className="mt-1.5 text-[10px] text-ink-mute flex items-center gap-1">
                   <Clock size={9} /> {new Date(lead.created_at).toLocaleString()} · {lead.source}
                 </p>
                 {lead.assisted_by === userId && lead.assisted_at && (
@@ -156,7 +156,7 @@ export default function LeadsPanel({ supabase, userId }: { supabase: any; userId
                   </button>
                 ) : lead.assisted_by === userId ? (
                   <button onClick={() => unmarkAssisted(lead.id)}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-[10px] font-bold text-slate-500 hover:bg-slate-50 transition-colors cursor-pointer">
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-[10px] font-bold text-ink-mute hover:bg-slate-50 transition-colors cursor-pointer">
                     Undo
                   </button>
                 ) : null}
@@ -165,7 +165,7 @@ export default function LeadsPanel({ supabase, userId }: { supabase: any; userId
           </div>
         ))}
         {filtered.length === 0 && (
-          <div className="text-center py-8 text-slate-400 text-sm">No leads {filter !== "all" ? `in "${filter}" category` : "yet"}</div>
+          <div className="text-center py-8 text-ink-mute text-sm">No leads {filter !== "all" ? `in "${filter}" category` : "yet"}</div>
         )}
       </div>
     </div>

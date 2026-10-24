@@ -99,12 +99,12 @@ export default function ApprovalsPanel() {
         <h2 className="text-xl font-extrabold text-slate-900 flex items-center gap-2">
           <ShieldAlert className="text-amber-500" size={22} /> B2B Partner Approvals
         </h2>
-        <p className="text-xs text-slate-500 mt-1">Review and approve applications for Dealers and EV Experts.</p>
+        <p className="text-xs text-ink-mute mt-1">Review and approve applications for Dealers and EV Experts.</p>
       </div>
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="animate-spin text-sky-600" size={28} />
+          <Loader2 className="animate-spin text-emerald-600" size={28} />
         </div>
       ) : users.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -115,8 +115,8 @@ export default function ApprovalsPanel() {
                   <div>
                     <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
                       u.requestedRole === "dealer" 
-                        ? "text-blue-700 bg-blue-50 border-blue-100" 
-                        : "text-purple-700 bg-purple-50 border-purple-100"
+                        ? "text-emerald-700 bg-emerald-50 border-emerald-100" 
+                        : "text-emerald-700 bg-emerald-50 border-emerald-100"
                     }`}>
                       {u.requestedRole === "dealer" ? "Dealer Application" : "EV Expert Application"}
                     </span>
@@ -126,15 +126,15 @@ export default function ApprovalsPanel() {
 
                 <div className="space-y-2 text-xs text-slate-600 bg-slate-50 p-3.5 rounded-xl border border-slate-100">
                   <p className="flex items-center gap-2">
-                    <Mail size={13} className="text-slate-400 shrink-0" /> {u.email}
+                    <Mail size={13} className="text-ink-mute shrink-0" /> {u.email}
                   </p>
                   <p className="flex items-center gap-2">
-                    <Phone size={13} className="text-slate-400 shrink-0" /> {u.mobile || "No phone number"}
+                    <Phone size={13} className="text-ink-mute shrink-0" /> {u.mobile || "No phone number"}
                   </p>
                   <p className="flex items-center gap-2">
-                    <MapPin size={13} className="text-slate-400 shrink-0" /> {u.city || "No city/state"}
+                    <MapPin size={13} className="text-ink-mute shrink-0" /> {u.city || "No city/state"}
                   </p>
-                  <p className="flex items-center gap-2 text-slate-400 pt-1 border-t border-slate-200/60 mt-1">
+                  <p className="flex items-center gap-2 text-ink-mute pt-1 border-t border-slate-200/60 mt-1">
                     <Clock size={13} className="shrink-0" /> {new Date(u.createdAt).toLocaleString()}
                   </p>
                 </div>
@@ -161,9 +161,9 @@ export default function ApprovalsPanel() {
         </div>
       ) : (
         <div className="text-center py-20 flex flex-col items-center justify-center border border-dashed border-slate-200 bg-white rounded-2xl">
-          <Check className="text-slate-300" size={40} />
+          <Check className="text-ink-soft" size={40} />
           <h3 className="font-extrabold text-sm text-slate-700 mt-4">No pending applications</h3>
-          <p className="text-xs text-slate-400 max-w-xs mt-1 leading-relaxed">
+          <p className="text-xs text-ink-mute max-w-xs mt-1 leading-relaxed">
             All partner requests for Dealers and EV Experts have been processed.
           </p>
         </div>

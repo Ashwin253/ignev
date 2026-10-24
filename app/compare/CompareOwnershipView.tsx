@@ -95,16 +95,16 @@ export default function CompareOwnershipView({
       <div className="rounded-3xl border border-slate-200 bg-slate-50/50 p-6 backdrop-blur-sm">
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
           <InputGroup label="Loan Tenure" value={`${loanYears} yrs`}>
-            <input type="range" min="1" max="7" step="0.5" value={loanYears} onChange={(e) => setLoanYears(parseFloat(e.target.value))} className="w-full accent-sky-600" />
+            <input type="range" min="1" max="7" step="0.5" value={loanYears} onChange={(e) => setLoanYears(parseFloat(e.target.value))} className="w-full accent-emerald-600" />
           </InputGroup>
           <InputGroup label="Down Payment" value={`${downPaymentPercent}%`}>
-            <input type="range" min="0" max="80" step="1" value={downPaymentPercent} onChange={(e) => setDownPaymentPercent(parseInt(e.target.value))} className="w-full accent-sky-600" />
+            <input type="range" min="0" max="80" step="1" value={downPaymentPercent} onChange={(e) => setDownPaymentPercent(parseInt(e.target.value))} className="w-full accent-emerald-600" />
           </InputGroup>
           <InputGroup label="Interest Rate" value={`${interestRate.toFixed(1)}%`}>
-            <input type="range" min="6" max="18" step="0.5" value={interestRate} onChange={(e) => setInterestRate(parseFloat(e.target.value))} className="w-full accent-violet-600" />
+            <input type="range" min="6" max="18" step="0.5" value={interestRate} onChange={(e) => setInterestRate(parseFloat(e.target.value))} className="w-full accent-emerald-600" />
           </InputGroup>
           <InputGroup label="Daily Run" value={`${dailyDistance} km`}>
-            <input type="range" min="5" max="200" step="5" value={dailyDistance} onChange={(e) => setDailyDistance(parseInt(e.target.value))} className="w-full accent-sky-600" />
+            <input type="range" min="5" max="200" step="5" value={dailyDistance} onChange={(e) => setDailyDistance(parseInt(e.target.value))} className="w-full accent-emerald-600" />
           </InputGroup>
           {/* <InputGroup label="Your State" value={selectedState}>
             <select value={selectedState} onChange={(e) => setSelectedState(e.target.value)} className="w-full bg-transparent text-sm font-bold outline-none">
@@ -126,7 +126,7 @@ export default function CompareOwnershipView({
                   <img src={getVehiclePhoto(p.photo, p)} alt={p.title} className="object-cover w-full h-full" loading="lazy" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[8px] font-black uppercase tracking-[0.2em] text-sky-600 truncate">{p.brand}</p>
+                  <p className="text-[8px] font-black uppercase tracking-[0.2em] text-emerald-600 truncate">{p.brand}</p>
                   <h3 className="text-xs font-black text-slate-900 leading-tight line-clamp-2">{p.title}</h3>
                 </div>
               </div>
@@ -164,8 +164,8 @@ export default function CompareOwnershipView({
               </div>
 
               {/* EMI Card */}
-              <div className="rounded-2xl border border-sky-100 bg-sky-50/50 p-5">
-                <div className="flex items-center gap-2 text-sky-600 mb-3">
+              <div className="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-5">
+                <div className="flex items-center gap-2 text-emerald-600 mb-3">
                   <Banknote size={16} />
                   <span className="text-[10px] font-black uppercase tracking-widest">Monthly EMI</span>
                 </div>
@@ -185,7 +185,7 @@ export default function CompareOwnershipView({
               {/* Total Card */}
               <div className="rounded-2xl bg-linear-to-br from-slate-900 to-slate-800 p-5 shadow-xl">
                 <div className="flex items-center gap-2 text-slate-400 mb-3">
-                  <Sparkles size={16} className="text-sky-400" />
+                  <Sparkles size={16} className="text-emerald-400" />
                   <span className="text-[10px] font-black uppercase tracking-widest">Total Monthly</span>
                 </div>
                 <p className="text-2xl font-black text-white">₹{rupees(res.total)}</p>
@@ -204,7 +204,7 @@ function InputGroup({ label, value, children }: { label: string; value: string; 
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{label}</span>
-        <span className="text-xs font-black text-sky-600">{value}</span>
+        <span className="text-xs font-black text-emerald-600">{value}</span>
       </div>
       {children}
     </div>

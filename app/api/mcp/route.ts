@@ -150,13 +150,13 @@ const TOOLS = [
 const RESOURCES = [
   {
     uri: "ev://catalog",
-    name: "EVPULSE EV Catalog",
-    description: "Database of electric cars, scooters, and vehicles listed on EVPULSE",
+    name: "EVPLSE EV Catalog",
+    description: "Database of electric cars, scooters, and vehicles listed on EVPLSE",
     mimeType: "text/markdown",
   },
   {
     uri: "ev://stations",
-    name: "EVPULSE Charging Stations",
+    name: "EVPLSE Charging Stations",
     description: "Active EV charging stations across India",
     mimeType: "text/markdown",
   },
@@ -177,7 +177,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(
     {
       name: "evpulse-mcp",
-      title: "EVPULSE Model Context Protocol Server",
+      title: "EVPLSE Model Context Protocol Server",
       version: "1.0.0",
       description: "Connect Claude Desktop, Cursor, Gemini, and ChatGPT to live Indian EV data.",
       protocolVersion: "2024-11-05",

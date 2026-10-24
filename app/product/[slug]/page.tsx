@@ -1,3 +1,6 @@
+import ProductExtras from "../ProductExtras";
+import { ProductNav, ProductHighlights, ProductVariants, ProductEmi, ProductFaq } from "../ProductSections";
+import { buildProductFaqs } from "../../lib/product-faq";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -24,13 +27,13 @@ import MoreLikeThisSection from "../MoreLikeThisSection";
 import dynamic from "next/dynamic";
 
 const ProductDetailsSkeleton = () => (
-  <div className="mt-16 rounded-3xl border-2 border-slate-300 dark:border-zinc-800 bg-slate-100 dark:bg-zinc-900 px-5 py-8 md:px-10 md:py-10 shadow-sm animate-pulse">
+  <div className="mt-16 rounded-3xl border-2 border-slate-300 bg-slate-100  px-5 py-8 md:px-10 md:py-10 shadow-sm animate-pulse">
     <div className="flex justify-center mb-5">
-      <div className="h-8 w-48 bg-slate-300 dark:bg-zinc-700 rounded-lg"></div>
+      <div className="h-8 w-48 bg-slate-300 rounded-lg"></div>
     </div>
     <div className="space-y-3">
       {[1, 2, 3, 4].map((i) => (
-        <div key={i} className="h-[60px] w-full bg-slate-200 dark:bg-zinc-800 rounded-2xl border-2 border-slate-300 dark:border-zinc-700"></div>
+        <div key={i} className="h-[60px] w-full bg-slate-200 rounded-2xl border-2 border-slate-300 "></div>
       ))}
     </div>
   </div>
@@ -55,9 +58,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   try {
     const item = await fetchEvListingBySlugFromSupabase(slug);
-    if (!item) return { title: "EVPULSE" };
+    if (!item) return { title: "EVPLSE" };
     const canonicalSlug = item.slug || slug;
-    const cleanTitle = `${item.brand} ${item.title} | EVPULSE`;
+    const cleanTitle = `${item.brand} ${item.title} | EVPLSE`;
     const cleanDesc = `${item.brand} ${item.title} — ${item.types[0] ?? "EV"}. Starting at ${formatPricing(item.prices)}.`;
     const fallbackPhoto = getVehicleFallbackImage(item);
     const photoUrl = item.photo || (item.galleryImages && item.galleryImages[0]) || fallbackPhoto;
@@ -77,7 +80,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       },
     };
   } catch {
-    return { title: "EVPULSE" };
+    return { title: "EVPLSE" };
   }
 }
 
@@ -160,10 +163,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   };
 
   return (
-    <section className="min-h-screen bg-white dark:bg-[#0f1115] text-zinc-900 dark:text-white py-28 overflow-x-hidden relative transition-colors duration-300">
+    <section className="min-h-screen bg-white text-zinc-900  py-28 overflow-x-hidden relative transition-colors duration-300">
       {/* Decorative Ambient Glowing Blurs */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#a5e6d1]/15 dark:bg-[#a5e6d1]/5 rounded-full blur-[130px] pointer-events-none"></div>
-      <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-[#a5e6d1]/10 dark:bg-[#a5e6d1]/5 rounded-full blur-[130px] pointer-events-none"></div>
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#a5e6d1]/15 rounded-full blur-[130px] pointer-events-none"></div>
+      <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-[#a5e6d1]/10 rounded-full blur-[130px] pointer-events-none"></div>
 
       {/* JSON-LD Schema for AI Crawlers / SEO */}
       <script
@@ -174,14 +177,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
         {/* Breadcrumb row */}
         <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <nav className="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
-            <Link href="/" className="hover:text-[#10855f] dark:hover:text-[#34ebb1] transition-colors">Home</Link>
+          <nav className="flex items-center gap-2 text-sm text-zinc-500 ">
+            <Link href="/" className="hover:text-brand transition-colors">Home</Link>
             <span>/</span>
-            <Link href="/catalog" className="hover:text-[#10855f] dark:hover:text-[#34ebb1] transition-colors">Catalog</Link>
+            <Link href="/catalog" className="hover:text-brand transition-colors">Catalog</Link>
             <span>/</span>
-            <span className="font-semibold text-zinc-900 dark:text-white line-clamp-1">{item.brand} {item.title}</span>
+            <span className="font-semibold text-zinc-900 line-clamp-1">{item.brand} {item.title}</span>
           </nav>
-          <Link href="/catalog" className="shrink-0 inline-flex items-center gap-2 rounded-full border border-slate-350 bg-white px-4 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:bg-zinc-900 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800 transition">
+          <Link href="/catalog" className="shrink-0 inline-flex items-center gap-2 rounded-full border border-slate-350 bg-white px-4 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition">
             <ArrowLeft size={14} /> Back to Catalog
           </Link>
         </div>
@@ -198,26 +201,83 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <div className="flex flex-col gap-5">
 
             <div className="mb-2">
-              <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#10855f] mb-1">{item.brand}</p>
+              <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-brand mb-1">{item.brand}</p>
               <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-black tracking-tight text-slate-955 dark:text-white md:text-4xl">{item.title}</h1>
+                <h1 className="text-3xl font-extrabold tracking-tight text-ink md:text-5xl">{item.title}</h1>
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${launched ? "bg-brand-soft text-brand-deep" : "bg-ink text-white"}`}>
+                  <span className={`h-1.5 w-1.5 rounded-full ${launched ? "bg-brand" : "bg-volt"}`} /> {launched ? "Available now" : launchLabel || "Coming soon"}
+                </span>
+                {item.types?.slice(0, 2).map((t) => (
+                  <span key={t} className="rounded-full border border-line-strong bg-white px-3 py-1 text-xs font-bold text-ink-soft">{t}</span>
+                ))}
+                {(item.body_type || (item as any).bodyType) && (
+                  <span className="rounded-full border border-line-strong bg-white px-3 py-1 text-xs font-bold text-ink-soft">{item.body_type || (item as any).bodyType}</span>
+                )}
+                {item.baas && <span className="rounded-full bg-brand-deep px-3 py-1 text-xs font-bold text-white">BaaS available</span>}
+                <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-xs font-bold text-brand ring-1 ring-brand/30">✓ Verified specs</span>
               </div>
             </div>
 
             {/* Interactive Area (Battery Selection, Tabs, Ownership) */}
+            <ProductExtras slug={slug} title={`${item.brand} ${item.title}`.trim()} price={item.prices?.[0] ? formatPricing(item.prices) : undefined} />
             <ProductMainUI item={item} slug={slug} dbFuelPrices={dbFuelPrices} content={productContent} offers={offers} />
           </div>
         </div>
+        <ProductNav
+          title={`${item.brand} ${item.title}`.trim()}
+          sections={[
+            { id: "highlights", label: "Highlights" },
+            ...(item.batteryVariants?.length ? [{ id: "variants", label: "Variants & price" }] : []),
+            ...(item.prices?.length ? [{ id: "emi", label: "EMI" }] : []),
+            { id: "specs", label: "Specifications" },
+            { id: "faq", label: "FAQs" },
+            { id: "similar", label: "Similar EVs" },
+          ]}
+        />
+        <ProductHighlights item={item} />
+
+        {/* ── Variants + EMI (Equal 50/50 width) ── */}
+        <div className="grid gap-8 lg:gap-10 pt-16 lg:grid-cols-2 items-start">
+          <ProductVariants item={item} title={`${item.brand} ${item.title}`.trim()} />
+          <ProductEmi title={`${item.brand} ${item.title}`.trim()} />
+        </div>
+
         {/* ── Detailed Specs + Pros/Cons ── */}
-        <ProductDetails item={item} />
+        <div id="specs" className="scroll-mt-32 pt-4">
+          <ProductDetails item={item} />
+        </div>
         </ProductSelectionProvider>
+
+        {(() => {
+          const faqs = buildProductFaqs(item);
+          return (
+            <>
+              {faqs.length > 0 && (
+                <script
+                  type="application/ld+json"
+                  dangerouslySetInnerHTML={{
+                    __html: JSON.stringify({
+                      "@context": "https://schema.org",
+                      "@type": "FAQPage",
+                      mainEntity: faqs.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+                    }),
+                  }}
+                />
+              )}
+              <ProductFaq faqs={faqs} />
+            </>
+          );
+        })()}
 {/* ── Ownership — full width below the 2-col grid ── */}
         {/* <ProductOwnershipSection item={item} /> */}
 
         {/* Related */}
+        <div id="similar" className="scroll-mt-32" />
         <Suspense fallback={
           <div className="mt-20 sm:mt-32">
-            <h2 className="mb-6 text-2xl font-black text-zinc-900 dark:text-white">More like this</h2>
+            <h2 className="mb-6 text-2xl font-black text-zinc-900 ">More like this</h2>
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
               <ProductSkeleton />
               <div className="hidden sm:block"><ProductSkeleton /></div>
@@ -291,7 +351,7 @@ function checkSameBrand(a: any, b: any): boolean {
 async function RelatedListings({ slug, currentItem }: { slug: string; currentItem: any }) {
   let related: any[] = [];
   try {
-    const allSupabase = await fetchEvListingsFromSupabase(100);
+    const allSupabase = await fetchEvListingsFromSupabase(300);
     
     const targetPrice = currentItem.prices?.[0] ? parseFloat(currentItem.prices[0].replace(/[^\d.]/g, "")) : null;
     const currentCategory = getListingCategory(currentItem);
@@ -362,7 +422,7 @@ async function RelatedListings({ slug, currentItem }: { slug: string; currentIte
     return (
       <SmoothCollapseEmptyState>
         <div className="mt-20 sm:mt-32">
-          <h2 className="mb-6 text-2xl font-black text-zinc-900 dark:text-white">More like this</h2>
+          <h2 className="mb-6 text-2xl font-black text-zinc-900 ">More like this</h2>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             <ProductSkeleton />
             <div className="hidden sm:block"><ProductSkeleton /></div>

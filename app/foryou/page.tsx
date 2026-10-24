@@ -6,7 +6,7 @@ import { fetchEvListings } from "../lib/wordpress";
 export const revalidate = 300; // ISR - revalidate every 5 minutes
 
 export const metadata = {
-  title: "For You Recommendation | EVPULSE",
+  title: "For You Recommendation | EVPLSE",
   description: "Get personalized EV product and financing recommendations in India.",
 };
 

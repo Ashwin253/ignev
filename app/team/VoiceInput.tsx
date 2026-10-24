@@ -57,7 +57,7 @@ export function MicButton({ fieldId, isActive, onTap }: { fieldId: string; isAct
       type="button"
       onClick={(e) => { e.preventDefault(); onTap(); }}
       className={`shrink-0 flex items-center justify-center h-6 w-6 rounded-full transition-all ${
-        isActive ? "bg-rose-500 text-white animate-pulse" : "bg-slate-100 text-slate-400 hover:bg-sky-100 hover:text-sky-600"
+        isActive ? "bg-rose-500 text-white animate-pulse" : "bg-slate-100 text-ink-mute hover:bg-emerald-100 hover:text-emerald-600"
       }`}
       title={isActive ? "Stop" : "Speak"}
     >

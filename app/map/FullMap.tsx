@@ -189,7 +189,7 @@ function useLeafletMap(containerRef: React.RefObject<HTMLDivElement | null>) {
       try {
         const r = await fetch(
           `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(s)}&format=json&limit=1&countrycodes=in`,
-          { headers: { "Accept-Language": "en", "User-Agent": "EVPULSE/1.0" } }
+          { headers: { "Accept-Language": "en", "User-Agent": "EVPLSE/1.0" } }
         );
         const data = await r.json() as { lat: string; lon: string }[];
         return data[0] ? [parseFloat(data[0].lat), parseFloat(data[0].lon)] : null;
@@ -241,7 +241,7 @@ async function geocodeLocation(query: string): Promise<[number, number] | null> 
   try {
     const r = await fetch(
       `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&countrycodes=in`,
-      { headers: { "Accept-Language": "en", "User-Agent": "EVPULSE/1.0" } }
+      { headers: { "Accept-Language": "en", "User-Agent": "EVPLSE/1.0" } }
     );
     const data = await r.json() as { lat: string; lon: string }[];
     return data[0] ? [parseFloat(data[0].lat), parseFloat(data[0].lon)] : null;
@@ -326,7 +326,7 @@ function CostCalculator({ routeDistanceKm }: { routeDistanceKm: number | null })
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-sm font-semibold text-slate-900">Use my prices</p>
-            <p className="text-xs text-slate-500 mt-0.5">Override default rates.</p>
+            <p className="text-xs text-ink-mute mt-0.5">Override default rates.</p>
           </div>
           <button
             onClick={() => setCustomPricesEnabled((prev) => !prev)}
@@ -345,17 +345,17 @@ function CostCalculator({ routeDistanceKm }: { routeDistanceKm: number | null })
         {customPricesEnabled && (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
             <label className="space-y-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">EV (Rs/kWh)</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-ink-mute">EV (Rs/kWh)</span>
               <input value={evRatePerKwh} onChange={(e) => setEvRatePerKwh(e.target.value)} inputMode="decimal"
                 className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
             </label>
             <label className="space-y-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Petrol (Rs/L)</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-ink-mute">Petrol (Rs/L)</span>
               <input value={petrolPricePerL} onChange={(e) => setPetrolPricePerL(e.target.value)} inputMode="decimal"
                 className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
             </label>
             <label className="space-y-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Diesel (Rs/L)</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-ink-mute">Diesel (Rs/L)</span>
               <input value={dieselPricePerL} onChange={(e) => setDieselPricePerL(e.target.value)} inputMode="decimal"
                 className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
             </label>
@@ -365,7 +365,7 @@ function CostCalculator({ routeDistanceKm }: { routeDistanceKm: number | null })
 
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">
-          <p className="text-xs font-medium text-slate-500 mb-1">Distance</p>
+          <p className="text-xs font-medium text-ink-mute mb-1">Distance</p>
           <p className="text-2xl font-bold text-slate-900">{distanceKm.toFixed(1)} km</p>
         </div>
         <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3.5 shadow-sm">
@@ -378,21 +378,21 @@ function CostCalculator({ routeDistanceKm }: { routeDistanceKm: number | null })
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 flex items-center justify-between shadow-sm">
           <div>
             <p className="text-sm font-bold text-slate-900">EV</p>
-            <p className="text-xs text-slate-500 mt-0.5">Rs {activeEvRate}/kWh</p>
+            <p className="text-xs text-ink-mute mt-0.5">Rs {activeEvRate}/kWh</p>
           </div>
           <p className="text-lg font-bold text-emerald-600">Rs {fmt(evCost)}</p>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 flex items-center justify-between shadow-sm">
           <div>
             <p className="text-sm font-bold text-slate-900">Petrol</p>
-            <p className="text-xs text-slate-500 mt-0.5">Rs {activePetrolPrice}/L</p>
+            <p className="text-xs text-ink-mute mt-0.5">Rs {activePetrolPrice}/L</p>
           </div>
           <p className="text-lg font-bold text-rose-600">Rs {fmt(petrolCost)}</p>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 flex items-center justify-between shadow-sm">
           <div>
             <p className="text-sm font-bold text-slate-900">Diesel</p>
-            <p className="text-xs text-slate-500 mt-0.5">Rs {activeDieselPrice}/L</p>
+            <p className="text-xs text-ink-mute mt-0.5">Rs {activeDieselPrice}/L</p>
           </div>
           <p className="text-lg font-bold text-slate-600">Rs {fmt(dieselCost)}</p>
         </div>
@@ -478,20 +478,20 @@ function SidebarContent({
           <button key={t} onClick={() => { setFilterType(t); setSelectedId(null); }}
             className={`flex-grow py-2 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
               filterType === t
-                ? "bg-white text-blue-600 shadow-sm border border-slate-200/60"
-                : "text-slate-500 hover:text-slate-800 hover:bg-slate-200/50"
+                ? "bg-white text-emerald-600 shadow-sm border border-slate-200/60"
+                : "text-ink-mute hover:text-slate-800 hover:bg-slate-200/50"
             }`}>
             {t === "charging" && <Zap size={13} className={filterType === t ? "text-emerald-500" : ""} />}
             {t === "spare"    && <Wrench size={13} className={filterType === t ? "text-amber-500" : ""} />}
-            {t === "dealer"   && <Building2 size={13} className={filterType === t ? "text-violet-500" : ""} />}
+            {t === "dealer"   && <Building2 size={13} className={filterType === t ? "text-emerald-500" : ""} />}
             {t === "all" ? "All Points" : t === "charging" ? "Charging" : t === "spare" ? "Services" : "Dealers"}
           </button>
         ))}
       </div>
 
       <div className="relative flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2">
-        <Filter size={13} className="text-slate-400 shrink-0 pointer-events-none" />
-        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide shrink-0 pointer-events-none">Network</span>
+        <Filter size={13} className="text-ink-mute shrink-0 pointer-events-none" />
+        <span className="text-[10px] font-bold text-ink-mute uppercase tracking-wide shrink-0 pointer-events-none">Network</span>
         <select
           value={selectedNetwork}
           onChange={(e) => { setSelectedNetwork(e.target.value); setSelectedId(null); }}
@@ -502,13 +502,13 @@ function SidebarContent({
             <option key={net} value={net}>{net}</option>
           ))}
         </select>
-        <ChevronDown size={12} className="text-slate-400 absolute right-3 pointer-events-none" />
+        <ChevronDown size={12} className="text-ink-mute absolute right-3 pointer-events-none" />
       </div>
 
       {setSelectedVehicle && (
         <div className="relative flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2">
-          <Zap size={13} className="text-slate-400 shrink-0 pointer-events-none animate-pulse" />
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide shrink-0 pointer-events-none">Vehicle</span>
+          <Zap size={13} className="text-ink-mute shrink-0 pointer-events-none animate-pulse" />
+          <span className="text-[10px] font-bold text-ink-mute uppercase tracking-wide shrink-0 pointer-events-none">Vehicle</span>
           <select
             value={selectedVehicle || "all"}
             onChange={(e) => { setSelectedVehicle(e.target.value); setSelectedId?.(null); }}
@@ -519,7 +519,7 @@ function SidebarContent({
               <option key={v.slug} value={v.slug}>{v.brand} {v.title}</option>
             ))}
           </select>
-          <ChevronDown size={12} className="text-slate-400 absolute right-3 pointer-events-none" />
+          <ChevronDown size={12} className="text-ink-mute absolute right-3 pointer-events-none" />
         </div>
       )}
 
@@ -544,7 +544,7 @@ function SidebarContent({
 
   const locationList = (
     <>
-      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3 px-1">
+      <p className="text-[11px] font-bold text-ink-mute uppercase tracking-wider mb-3 px-1">
         {displayedLocations.length} match{displayedLocations.length !== 1 ? "es" : ""} found
       </p>
       {activeVehicle && (
@@ -563,22 +563,22 @@ function SidebarContent({
       )}
       {displayedLocations.length === 0 ? (
         <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-300">
-          <MapPin className="mx-auto h-8 w-8 mb-3 text-slate-300" />
-          <p className="text-sm font-medium text-slate-500">No locations found.</p>
+          <MapPin className="mx-auto h-8 w-8 mb-3 text-ink-soft" />
+          <p className="text-sm font-medium text-ink-mute">No locations found.</p>
         </div>
       ) : displayedLocations.map((loc) => (
         <div key={loc.id} onClick={() => setSelectedId(selectedId === loc.id ? null : loc.id)}
-          className={`p-4 rounded-xl cursor-pointer transition-all border ${selectedId === loc.id ? "bg-blue-50 border-blue-200 shadow-md" : "bg-white border-slate-200 shadow-sm hover:border-blue-300 hover:shadow-md"}`}>
+          className={`p-4 rounded-xl cursor-pointer transition-all border ${selectedId === loc.id ? "bg-emerald-50 border-emerald-200 shadow-md" : "bg-white border-slate-200 shadow-sm hover:border-brand hover:shadow-md"}`}>
           <div className="flex items-start gap-3">
-            <div className={`mt-0.5 shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${loc.type === "dealer" ? "bg-violet-100 text-violet-600" : loc.type === "charging" ? "bg-emerald-100 text-emerald-600" : "bg-amber-100 text-amber-600"}`}>
+            <div className={`mt-0.5 shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${loc.type === "dealer" ? "bg-emerald-100 text-emerald-600" : loc.type === "charging" ? "bg-emerald-100 text-emerald-600" : "bg-amber-100 text-amber-600"}`}>
               {loc.type === "dealer" ? <Building2 size={16} /> : loc.type === "charging" ? <Zap size={16} /> : <Wrench size={16} />}
             </div>
             <div className="min-w-0 flex-1">
               <p className="font-bold text-slate-900 truncate">{loc.name}</p>
-              <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{loc.address}</p>
+              <p className="text-xs text-ink-mute mt-0.5 line-clamp-2">{loc.address}</p>
               {loc.type === "dealer" && (
                 <>
-                  <p className="text-[11px] font-semibold text-violet-700 mt-1">{(loc.brands || []).join(", ") || "Dealer"}{loc.pincode ? ` · ${loc.pincode}` : ""}</p>
+                  <p className="text-[11px] font-semibold text-emerald-700 mt-1">{(loc.brands || []).join(", ") || "Dealer"}{loc.pincode ? ` · ${loc.pincode}` : ""}</p>
                   {(loc.offers || []).length > 0 && <p className="text-[11px] text-emerald-700 mt-1 line-clamp-2">Offers: {loc.offers?.join(" • ")}</p>}
                 </>
               )}
@@ -587,7 +587,7 @@ function SidebarContent({
           {selectedId === loc.id && (
             <div className="flex gap-2 mt-4 ml-11">
               <button onClick={(e) => { e.stopPropagation(); onRouteHere(loc); }}
-                className="flex-1 flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2.5 rounded-lg shadow-sm transition-all active:scale-95">
+                className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold py-2.5 rounded-lg shadow-sm transition-all active:scale-95">
                 <Navigation size={14} /> Route
               </button>
               <a href={`https://www.google.com/maps/dir/?api=1&destination=${loc.lat},${loc.lng}`}
@@ -614,16 +614,16 @@ function SidebarContent({
           <button key={tab} onClick={() => setActiveTab(tab)}
             className={`flex-1 py-4 text-xs font-bold flex items-center justify-center gap-2 transition-colors relative ${
               activeTab === tab
-                ? "text-blue-600"
-                : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
+                ? "text-emerald-600"
+                : "text-ink-mute hover:text-slate-800 hover:bg-slate-50"
             }`}>
             {tab === "route"   && <><Navigation size={14} /> Filter</>}
             {tab === "filters" && <><Filter size={14} /> Points</>}
-            {activeTab === tab && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-t-full" />}
+            {activeTab === tab && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 rounded-t-full" />}
           </button>
         ))}
         {onClose && (
-          <button onClick={onClose} className="px-5 text-slate-400 hover:text-slate-700 transition-colors">
+          <button onClick={onClose} className="px-5 text-ink-mute hover:text-slate-700 transition-colors">
             <ChevronDown size={20} />
           </button>
         )}
@@ -642,23 +642,23 @@ function SidebarContent({
                       My Location
                     </button>
                     <button onClick={() => setSelectingPoint(selectingPoint === "origin" ? null : "origin")}
-                      className={`px-2 py-1 rounded text-[10px] font-semibold transition-colors ${selectingPoint === "origin" ? "bg-blue-100 text-blue-700 border border-blue-200" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+                      className={`px-2 py-1 rounded text-[10px] font-semibold transition-colors ${selectingPoint === "origin" ? "bg-emerald-100 text-emerald-700 border border-emerald-200" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
                       {selectingPoint === "origin" ? "Click map…" : "Pick on map"}
                     </button>
                   </div>
                 </div>
                 <div className="relative">
-                  <div className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full border-2 border-white shadow-sm ${selectingPoint === "origin" ? "bg-blue-400 animate-pulse" : "bg-blue-500"}`} />
+                  <div className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full border-2 border-white shadow-sm ${selectingPoint === "origin" ? "bg-emerald-400 animate-pulse" : "bg-emerald-500"}`} />
                   <input value={originInput} onChange={(e) => setOriginInput(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && onFindRoute()}
                     placeholder="e.g. Connaught Place, Delhi"
-                    className={`w-full bg-slate-50 border rounded-xl py-3 pl-9 pr-4 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white transition-colors shadow-inner ${selectingPoint === "origin" ? "border-blue-400 ring-2 ring-blue-100" : "border-slate-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100"}`} />
+                    className={`w-full bg-slate-50 border rounded-xl py-3 pl-9 pr-4 text-sm font-medium text-slate-900 placeholder:text-ink-mute focus:outline-none focus:bg-white transition-colors shadow-inner ${selectingPoint === "origin" ? "border-brand ring-2 ring-emerald-100" : "border-slate-200 focus:border-brand focus:ring-2 focus:ring-emerald-100"}`} />
                 </div>
               </div>
 
               <div className="flex justify-center -my-3 relative z-10">
                 <button onClick={() => { setOriginInput(destInput); setDestInput(originInput); }}
-                  className="text-slate-500 hover:text-blue-600 bg-white border border-slate-200 shadow-sm hover:shadow rounded-full p-2 transition-all active:scale-95" title="Swap">
+                  className="text-ink-mute hover:text-emerald-600 bg-white border border-slate-200 shadow-sm hover:shadow rounded-full p-2 transition-all active:scale-95" title="Swap">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/>
                   </svg>
@@ -678,7 +678,7 @@ function SidebarContent({
                   <input value={destInput} onChange={(e) => setDestInput(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && onFindRoute()}
                     placeholder="e.g. Noida Sector 18"
-                    className={`w-full bg-slate-50 border rounded-xl py-3 pl-9 pr-4 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white transition-colors shadow-inner ${selectingPoint === "dest" ? "border-emerald-400 ring-2 ring-emerald-100" : "border-slate-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"}`} />
+                    className={`w-full bg-slate-50 border rounded-xl py-3 pl-9 pr-4 text-sm font-medium text-slate-900 placeholder:text-ink-mute focus:outline-none focus:bg-white transition-colors shadow-inner ${selectingPoint === "dest" ? "border-brand ring-2 ring-emerald-100" : "border-slate-200 focus:border-brand focus:ring-2 focus:ring-emerald-100"}`} />
                 </div>
               </div>
 
@@ -689,7 +689,7 @@ function SidebarContent({
               <div className="flex gap-2 pt-1">
                 {!routeActive ? (
                   <button onClick={onFindRoute} disabled={routeLoading || !originInput.trim() || !destInput.trim()}
-                    className="flex-1 bg-slate-900 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md active:scale-95">
+                    className="flex-1 bg-white hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md active:scale-95">
                     {routeLoading ? <><Loader2 size={18} className="animate-spin" /> Finding…</> : <><Search size={18} /> Find Route</>}
                   </button>
                 ) : (
@@ -702,11 +702,11 @@ function SidebarContent({
             {routeActive && (
               <div className="bg-white border-t border-slate-200">
                 <div className="flex border-b border-slate-100 shrink-0">
-                  <button onClick={() => setRouteSubTab("points")} className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors ${routeSubTab === "points" ? "border-emerald-600 text-emerald-600 bg-emerald-50/50" : "border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50"}`}>
+                  <button onClick={() => setRouteSubTab("points")} className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors ${routeSubTab === "points" ? "border-emerald-600 text-emerald-600 bg-emerald-50/50" : "border-transparent text-ink-mute hover:text-slate-800 hover:bg-slate-50"}`}>
                     <MapPin size={16} className="inline mr-1 -mt-0.5" /> Route Details
                   </button>
                   {/* HIDDEN TEMPORARILY
-                  <button onClick={() => setRouteSubTab("cost")} className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors relative flex items-center justify-center gap-2 ${routeSubTab === "cost" ? "border-emerald-600 text-emerald-600 bg-emerald-50/50" : "border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50"}`}>
+                  <button onClick={() => setRouteSubTab("cost")} className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors relative flex items-center justify-center gap-2 ${routeSubTab === "cost" ? "border-emerald-600 text-emerald-600 bg-emerald-50/50" : "border-transparent text-ink-mute hover:text-slate-800 hover:bg-slate-50"}`}>
                     <IndianRupee size={16} /> Trip Cost
                     <span className="absolute top-2 right-2 flex h-2 w-2">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -745,7 +745,7 @@ function SidebarContent({
         )}
       </div>
 
-      <div className="px-5 py-3 border-t border-slate-200 bg-slate-50 text-[10px] font-medium text-slate-400 shrink-0 text-center">
+      <div className="px-5 py-3 border-t border-slate-200 bg-slate-50 text-[10px] font-medium text-ink-mute shrink-0 text-center">
         Map © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" className="hover:text-slate-600 underline decoration-slate-300">OpenStreetMap</a> · Routing by <a href="https://project-osrm.org" target="_blank" rel="noopener noreferrer" className="hover:text-slate-600 underline decoration-slate-300">OSRM</a>
       </div>
     </div>
@@ -1158,45 +1158,45 @@ export default function FullMap() {
         {/* Quick map search */}
         <div className="absolute top-4 left-4 z-20 md:left-6 md:top-6">
           <div className="relative">
-            <div className="flex items-center gap-2 rounded-full border border-white/10 bg-slate-900/90 backdrop-blur-md shadow-[0_4px_20px_rgba(0,0,0,0.35)] px-3 py-2">
-              <MapPin size={16} className="text-sky-300 shrink-0" />
+            <div className="flex items-center gap-2 rounded-full border border-line bg-white  shadow-[0_4px_20px_rgba(0,0,0,0.35)] px-3 py-2">
+              <MapPin size={16} className="text-brand shrink-0" />
               <input
                 value={mapSearchQuery}
                 onChange={(e) => setMapSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleMapSearch()}
                 placeholder="Search location"
-                className="w-36 sm:w-52 bg-transparent text-sm text-white placeholder:text-gray-500 focus:outline-none"
+                className="w-36 sm:w-52 bg-transparent text-sm text-ink placeholder:text-gray-500 focus:outline-none"
               />
               <button
                 onClick={handleMapSearch}
                 disabled={mapSearchLoading || !mapSearchQuery.trim()}
-                className="inline-flex items-center justify-center rounded-full bg-sky-600 hover:bg-sky-700 disabled:opacity-50 disabled:cursor-not-allowed text-white p-2 transition-colors"
+                className="inline-flex items-center justify-center rounded-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white p-2 transition-colors"
                 aria-label="Search location"
               >
                 {mapSearchLoading ? <Loader2 size={15} className="animate-spin" /> : <Search size={15} />}
               </button>
             </div>
             {mapSearchSuggestions.length > 0 && (
-              <div className="absolute top-full mt-2 w-full overflow-hidden rounded-2xl border border-white/10 bg-slate-950/95 backdrop-blur-md shadow-2xl">
+              <div className="absolute top-full mt-2 w-full overflow-hidden rounded-2xl border border-line bg-white  shadow-card">
                 {mapSearchSuggestions.map((loc) => (
-                  <div key={loc.id} className="border-b border-white/5 last:border-b-0">
+                  <div key={loc.id} className="border-b border-line last:border-b-0">
                     <button
                       onClick={() => handleSuggestionPick(loc)}
-                    className="w-full px-4 py-3 text-left hover:bg-white/5 transition-colors"
+                    className="w-full px-4 py-3 text-left hover:bg-white transition-colors"
                   >
-                      <p className="text-sm font-medium text-white">{loc.name}</p>
+                      <p className="text-sm font-medium text-ink">{loc.name}</p>
                       <p className="text-xs text-gray-500 mt-1">{loc.address}</p>
                     </button>
                     <div className="flex gap-2 px-4 pb-3">
                       <button
                         onClick={() => applySearchToRoute(loc, "origin")}
-                        className="flex-1 rounded-lg border border-blue-500/20 bg-blue-500/10 px-3 py-2 text-[11px] font-semibold text-blue-300 hover:bg-blue-500/20 transition-colors"
+                        className="flex-1 rounded-lg border border-emerald-500/20 bg-brand-soft px-3 py-2 text-[11px] font-semibold text-brand hover:bg-brand-soft transition-colors"
                       >
                         Set as start
                       </button>
                       <button
                         onClick={() => applySearchToRoute(loc, "dest")}
-                        className="flex-1 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-[11px] font-semibold text-emerald-300 hover:bg-emerald-500/20 transition-colors"
+                        className="flex-1 rounded-lg border border-emerald-500/20 bg-brand-soft px-3 py-2 text-[11px] font-semibold text-brand-deep hover:bg-brand-soft transition-colors"
                       >
                         Set as destination
                       </button>
@@ -1207,7 +1207,7 @@ export default function FullMap() {
             )}
           </div>
           {mapSearchError && (
-            <p className="mt-2 text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-full px-3 py-1.5 w-fit">
+            <p className="mt-2 text-xs text-coral bg-rose-500/10 border border-rose-500/20 rounded-full px-3 py-1.5 w-fit">
               {mapSearchError}
             </p>
           )}
@@ -1216,16 +1216,16 @@ export default function FullMap() {
         {/* Pick-point hint */}
         {selectingPoint && (
           <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-            className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-slate-900/90 backdrop-blur-sm text-white text-sm font-medium px-5 py-2.5 rounded-full border border-white/20 shadow-xl pointer-events-none">
+            className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-white  text-ink text-sm font-medium px-5 py-2.5 rounded-full border border-line shadow-xl pointer-events-none">
             Tap map to set {selectingPoint === "origin" ? "starting point" : "destination"}
           </motion.div>
         )}
 
         {/* Route loading overlay */}
         {routeLoading && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/20 backdrop-blur-sm pointer-events-none">
-            <div className="bg-slate-900/90 text-white text-sm font-medium px-5 py-3 rounded-full flex items-center gap-2 border border-white/10">
-              <Loader2 size={16} className="animate-spin text-blue-400" /> Finding route…
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-paper  pointer-events-none">
+            <div className="bg-white text-ink text-sm font-medium px-5 py-3 rounded-full flex items-center gap-2 border border-line">
+              <Loader2 size={16} className="animate-spin text-brand" /> Finding route…
             </div>
           </div>
         )}
@@ -1235,7 +1235,7 @@ export default function FullMap() {
 
           <button
             onClick={() => { setActiveTab("route"); setSheetOpen(true); }}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2.5 rounded-full shadow-[0_4px_20px_rgba(59,130,246,0.5)] transition-all active:scale-95"
+            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-2.5 rounded-full shadow-[0_4px_20px_rgba(59,130,246,0.5)] transition-all active:scale-95"
           >
             <SlidersHorizontal size={17} />
             <span className="text-sm">Filter</span>

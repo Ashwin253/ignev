@@ -312,14 +312,14 @@ export default function CropModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto">
-      <div className="relative w-full max-w-4xl bg-slate-900 rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row border border-slate-800 my-auto max-h-[95vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80  p-3 sm:p-4 overflow-y-auto">
+      <div className="relative w-full max-w-4xl bg-white rounded-3xl overflow-hidden shadow-card flex flex-col md:flex-row border border-slate-800 my-auto max-h-[95vh]">
         
         {/* Left / Top: Interactive Viewport Area */}
-        <div className="flex-1 bg-slate-950 p-4 sm:p-6 flex flex-col items-center justify-center relative min-h-[320px] overflow-hidden">
+        <div className="flex-1 bg-white p-4 sm:p-6 flex flex-col items-center justify-center relative min-h-[320px] overflow-hidden">
           
           {/* Headline info for layout */}
-          <div className="absolute top-3 left-4 z-10 text-white/60 text-[10px] uppercase font-bold tracking-wider">
+          <div className="absolute top-3 left-4 z-10 text-ink-soft text-[10px] uppercase font-bold tracking-wider">
             {image.listingTitle} ({image.type})
           </div>
 
@@ -363,15 +363,15 @@ export default function CropModal({
             />
 
             {/* Subtle Overlay Guide lines (rule of thirds) */}
-            <div className="absolute inset-0 pointer-events-none border border-white/20">
-              <div className="absolute top-0 bottom-0 left-1/3 border-r border-white/10 border-dashed" />
-              <div className="absolute top-0 bottom-0 left-2/3 border-r border-white/10 border-dashed" />
-              <div className="absolute left-0 right-0 top-1/3 border-b border-white/10 border-dashed" />
-              <div className="absolute left-0 right-0 top-2/3 border-b border-white/10 border-dashed" />
+            <div className="absolute inset-0 pointer-events-none border border-line">
+              <div className="absolute top-0 bottom-0 left-1/3 border-r border-line border-dashed" />
+              <div className="absolute top-0 bottom-0 left-2/3 border-r border-line border-dashed" />
+              <div className="absolute left-0 right-0 top-1/3 border-b border-line border-dashed" />
+              <div className="absolute left-0 right-0 top-2/3 border-b border-line border-dashed" />
             </div>
           </div>
 
-          <div className="text-center text-slate-400 text-[10px] flex items-center gap-1.5 pointer-events-none mt-2">
+          <div className="text-center text-ink-mute text-[10px] flex items-center gap-1.5 pointer-events-none mt-2">
             <Move size={12} /> Drag image to position &bull; Use sliders on right to fine-tune
           </div>
         </div>
@@ -383,7 +383,7 @@ export default function CropModal({
               <h3 className="text-sm font-black text-slate-900">Crop &amp; Resize Vehicle Image</h3>
               <button
                 onClick={onClose}
-                className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                className="p-1 rounded-lg hover:bg-slate-100 text-ink-mute hover:text-slate-600 transition-colors cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -391,7 +391,7 @@ export default function CropModal({
 
             {/* Aspect Ratio */}
             <div className="mb-5">
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-ink-mute uppercase tracking-wider mb-2">
                 Aspect Ratio
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -401,7 +401,7 @@ export default function CropModal({
                     onClick={() => setAspectRatio(ratio)}
                     className={`py-2 px-3 text-xs font-bold border rounded-xl capitalize transition-all cursor-pointer ${
                       aspectRatio === ratio
-                        ? "bg-slate-900 border-slate-900 text-white"
+                        ? "bg-white border-slate-900 text-ink"
                         : "border-slate-200 text-slate-600 hover:bg-slate-50"
                     }`}
                   >
@@ -415,7 +415,7 @@ export default function CropModal({
             <div className="mb-4 bg-slate-50 p-3 rounded-xl border border-slate-100">
               <div className="flex justify-between items-center mb-1.5">
                 <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
-                  <ZoomIn size={13} className="text-sky-600" /> Zoom / Space
+                  <ZoomIn size={13} className="text-emerald-600" /> Zoom / Space
                 </label>
                 <div className="flex items-center gap-1">
                   <button
@@ -425,7 +425,7 @@ export default function CropModal({
                       setPanX(0);
                       setPanY(0);
                     }}
-                    className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-700 hover:bg-sky-100 hover:text-sky-700"
+                    className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-700 hover:bg-emerald-100 hover:text-emerald-700"
                     title="Zoom out to add space around vehicle"
                   >
                     Add Space
@@ -437,18 +437,18 @@ export default function CropModal({
                       setPanX(0);
                       setPanY(0);
                     }}
-                    className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-700 hover:bg-sky-100 hover:text-sky-700"
+                    className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-700 hover:bg-emerald-100 hover:text-emerald-700"
                   >
                     100%
                   </button>
-                  <span className="text-[10px] font-mono font-bold bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded">
+                  <span className="text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded">
                     {Math.round(zoom * 100)}%
                   </span>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold text-slate-400">Space</span>
-                <ZoomOut size={14} className="text-slate-400 shrink-0" />
+                <span className="text-[10px] font-bold text-ink-mute">Space</span>
+                <ZoomOut size={14} className="text-ink-mute shrink-0" />
                 <input
                   type="range"
                   min="0.2"
@@ -456,10 +456,10 @@ export default function CropModal({
                   step="0.02"
                   value={zoom}
                   onChange={(e) => setZoom(parseFloat(e.target.value))}
-                  className="flex-1 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-sky-600"
+                  className="flex-1 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
                 />
-                <ZoomIn size={14} className="text-slate-400 shrink-0" />
-                <span className="text-[10px] font-bold text-slate-400">Zoom</span>
+                <ZoomIn size={14} className="text-ink-mute shrink-0" />
+                <span className="text-[10px] font-bold text-ink-mute">Zoom</span>
               </div>
             </div>
 
@@ -501,9 +501,9 @@ export default function CropModal({
                     step={1}
                     value={panY}
                     onChange={(e) => setPanY(parseInt(e.target.value, 10))}
-                    className="flex-1 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-sky-600"
+                    className="flex-1 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
                   />
-                  <span className="text-[10px] font-mono text-slate-500 w-8 text-right">{panY}px</span>
+                  <span className="text-[10px] font-mono text-ink-mute w-8 text-right">{panY}px</span>
                 </div>
               </div>
 
@@ -543,16 +543,16 @@ export default function CropModal({
                     step={1}
                     value={panX}
                     onChange={(e) => setPanX(parseInt(e.target.value, 10))}
-                    className="flex-1 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-sky-600"
+                    className="flex-1 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
                   />
-                  <span className="text-[10px] font-mono text-slate-500 w-8 text-right">{panX}px</span>
+                  <span className="text-[10px] font-mono text-ink-mute w-8 text-right">{panX}px</span>
                 </div>
               </div>
             </div>
 
             {/* Background color for margins */}
             <div className="mb-6">
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-ink-mute uppercase tracking-wider mb-2">
                 Surrounding Area Fill
               </label>
               <div className="grid grid-cols-3 gap-1.5">
@@ -562,7 +562,7 @@ export default function CropModal({
                     onClick={() => setBgFill(fill)}
                     className={`py-1.5 text-xs font-bold border rounded-xl capitalize transition-all cursor-pointer ${
                       bgFill === fill
-                        ? "bg-slate-900 border-slate-900 text-white"
+                        ? "bg-white border-slate-900 text-ink"
                         : "border-slate-200 text-slate-600 hover:bg-slate-50"
                     }`}
                   >
@@ -586,7 +586,7 @@ export default function CropModal({
             <button
               onClick={handleApplyCrop}
               disabled={saving}
-              className="flex-1 flex items-center justify-center gap-2 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl text-xs font-bold transition-all disabled:bg-slate-400 cursor-pointer shadow-sm"
+              className="flex-1 flex items-center justify-center gap-2 py-3 bg-white hover:bg-white text-ink rounded-2xl text-xs font-bold transition-all disabled:bg-slate-400 cursor-pointer shadow-sm"
             >
               {saving ? (
                 <>

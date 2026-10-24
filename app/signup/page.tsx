@@ -158,7 +158,7 @@ export default function SignUpPage() {
         {/* Card */}
         <div className="rounded-3xl border border-zinc-200/60 bg-white/80 backdrop-blur-xl shadow-2xl p-6 sm:p-8">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-extrabold tracking-tight text-zinc-950">Join EVPULSE</h1>
+            <h1 className="text-3xl font-extrabold tracking-tight text-zinc-950">Join EVPLSE</h1>
             <p className="mt-2 text-sm text-zinc-500">Create an account to compare & buy EVs</p>
           </div>
 

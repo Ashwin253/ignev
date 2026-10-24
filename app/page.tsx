@@ -1,54 +1,29 @@
-import { getSiteContent } from "./lib/site-content";
-import {
-  fetchHomepageData,
-  formatLaunchDate, isLaunched,
-  formatPricing,
-  type EvListing,
-} from "./lib/wordpress";
-import { fetchEvListingsFromSupabase, fetchHeroBanners, fetchLatestUpdates, fetchBrandRankings, extractArticleMeta, stripMarkdown } from "./lib/supabase";
-import { getVehiclePhoto } from "./lib/vehicle-images";
 import { Suspense } from "react";
-import dynamic from "next/dynamic";
-import Hero from "./components/Hero";
-import FreshReleases from "./components/FreshReleases";
-import type { ComingSoonItem } from "./components/ComingSoonCars";
-
-const ComingSoonCars = dynamic(() => import("./components/ComingSoonCars"), {
-  loading: () => <div className="h-64" />,
-});
-const PopularBrands = dynamic(() => import("./components/PopularBrands"), {
-  loading: () => <div className="h-48" />,
-});
-const ElectricCore3D = dynamic(() => import("./components/ElectricCore3D"), {
-  loading: () => <div className="h-64" />,
-});
-const LatestUpdates = dynamic(() => import("./components/LatestUpdates"), {
-  loading: () => <div className="h-48" />,
-});
-const EcosystemSection = dynamic(() => import("./components/EcosystemSection"), {
-  loading: () => <div className="h-96 bg-[#07130E]" />,
-});
-const WhyEVPULSE = dynamic(() => import("./components/WhyIgnev"), {
-  loading: () => <div className="h-48" />,
-});
+import { fetchHomepageData, type EvListing } from "./lib/wordpress";
+import {
+  fetchEvListingsFromSupabase,
+  fetchHeroBanners,
+  fetchLatestUpdates,
+  fetchBrandRankings,
+  extractArticleMeta,
+  stripMarkdown,
+} from "./lib/supabase";
+import { sortVehiclesByBrandRank, type BrandRankItem } from "./lib/brand-rankings";
+import { matchesVehicleCategory } from "./lib/catalog-filters";
+import { toCatalogItem } from "./lib/catalog-map";
+import { toInternalHref } from "./lib/links";
+import { itemSlug } from "./lib/format";
+import LoadingSkeleton from "./loading";
+import HomeHero, { type HeroBannerLite } from "./components/home/HomeHero";
+import { QuickMatch, RecentlyViewed, Rail, SavingsTeaser, Showcase } from "./components/home/HomeInteractive";
+import ServicesOrbit from "./components/home/ServicesOrbit";
+import { HomeFaq, HowItWorks, StatsBand } from "./components/home/HomeExtras";
+import { BrandMarquee, NewsGrid, ToolsGrid, WhySection, type NewsItem } from "./components/home/HomeStatic";
 
 // ISR — revalidate every 5 minutes
 export const revalidate = 300;
 
-function toComingSoonItem(l: EvListing): ComingSoonItem {
-  return {
-    name:    l.title,
-    brand:   l.brand,
-    type:    l.types[0] ?? "",
-    pricing: l.prices.length ? formatPricing(l.prices) : "",
-    launch:  formatLaunchDate(l.launchdate),
-    photo:   getVehiclePhoto(l.photo, l),
-    slug:    l.slug,
-  };
-}
-
-import LoadingSkeleton from "./loading";
-import LazyViewport from "./components/LazyViewport";
+const FALLBACK_NEWS_PHOTO = "https://images.unsplash.com/photo-1563720223185-11003d516935?w=800&auto=format&fit=crop&q=80";
 
 export default function Home() {
   return (
@@ -59,112 +34,126 @@ export default function Home() {
 }
 
 async function HomeContent() {
-  // Try Supabase first (fast), then WP as fallback
   let listings: EvListing[] = [];
   let banners: any[] = [];
-  let updates: any[] = [];
-  let brandRankings: any[] = [];
+  let news: NewsItem[] = [];
+  let brandRankings: BrandRankItem[] = [];
 
+  // Supabase first (fast), WordPress as fallback
   try {
-    const sbListings = await fetchEvListingsFromSupabase(100);
+    const [sbListings, sbBanners, sbUpdates, sbRankings] = await Promise.all([
+      fetchEvListingsFromSupabase(300),
+      fetchHeroBanners(),
+      fetchLatestUpdates(3),
+      fetchBrandRankings(),
+    ]);
     if (sbListings.length) listings = sbListings;
-
-    const sbBanners = await fetchHeroBanners();
     if (sbBanners.length) banners = sbBanners;
-    
-    const sbUpdates = await fetchLatestUpdates(3);
+    if (sbRankings.length) brandRankings = sbRankings;
     if (sbUpdates.length) {
-      updates = sbUpdates.map((u: any) => {
+      news = sbUpdates.map((u: any) => {
         const meta = extractArticleMeta(u.body);
-        const cleanBody = meta.cleanBody || u.body || "";
-        const plainText = stripMarkdown(cleanBody);
-        const excerpt = plainText.length > 110 ? plainText.slice(0, 107) + "…" : plainText;
+        const plain = stripMarkdown(meta.cleanBody || u.body || "");
         return {
-          id: u.id,
+          id: String(u.id),
           title: u.title,
-          slug: u.product_slug || "",
           href: `/article/${u.slug || u.url || u.id}`,
-          excerpt,
+          excerpt: plain.length > 120 ? plain.slice(0, 117) + "…" : plain,
           date: u.created_at,
-          photo: u.thumbnail || "https://images.unsplash.com/photo-1563720223185-11003d516935?w=800&auto=format&fit=crop&q=80",
-          authorName: u.author_name || meta.authorName || "",
-          authorEmail: u.author_email || meta.authorEmail || "",
+          photo: u.thumbnail || FALLBACK_NEWS_PHOTO,
         };
       });
     }
-
-    const sbRankings = await fetchBrandRankings();
-    if (sbRankings.length) brandRankings = sbRankings;
-  } catch { /* Supabase not configured or failed */ }
-
-  // Fall back to WP if Supabase returned nothing
-  if (!listings.length) {
-    try {
-      const wpData = await fetchHomepageData();
-      listings = wpData.listings;
-      banners = wpData.banners;
-      updates = wpData.updates;
-    } catch { /* WP also failed */ }
-  } else {
-    // Still fetch banners/updates from WP (Supabase doesn't have them yet)
-    try {
-      const wpData = await fetchHomepageData();
-      if (!banners.length) banners = wpData.banners;
-      if (!updates.length) updates = wpData.updates;
-    } catch { /* use empty */ }
+  } catch {
+    /* Supabase not configured or failed */
   }
 
-  const content = await getSiteContent();
-  const featured = listings.slice(0, 4);
+  if (!listings.length || !banners.length || !news.length) {
+    try {
+      const wp = await fetchHomepageData();
+      if (!listings.length) listings = wp.listings;
+      if (!banners.length) banners = wp.banners;
+      if (!news.length) {
+        news = (wp.updates || []).slice(0, 3).map((u: any) => ({
+          id: String(u.id),
+          title: u.title,
+          href: u.href || `/article/${u.slug}`,
+          excerpt: u.excerpt || "",
+          date: u.date,
+          photo: u.photo || FALLBACK_NEWS_PHOTO,
+        }));
+      }
+    } catch {
+      /* WordPress also unavailable — render what we have */
+    }
+  }
 
-  // New Releases: vehicles launched in the last 2 months
-  const twoMonthsAgo = new Date();
-  twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
-  const freshReleases = listings.filter((l) => {
-    if (!l.launchdate) return false;
-    const d = new Date(l.launchdate);
-    return !isNaN(d.getTime()) && d <= new Date() && d >= twoMonthsAgo;
-  }).slice(0, 8);
+  const all = listings.map(toCatalogItem);
 
-  // Upcoming Releases: vehicles launching in the next 2 months
-  const twoMonthsFromNow = new Date();
-  twoMonthsFromNow.setMonth(twoMonthsFromNow.getMonth() + 2);
-  const upcoming = listings.filter((l) => {
-    if (!l.launchdate) return false;
-    const d = new Date(l.launchdate);
-    return !isNaN(d.getTime()) && d > new Date() && d <= twoMonthsFromNow;
-  }).slice(0, 8);
+  // Category showcase — ranked by brand priority (admin-managed), launched vehicles only
+  const launched = listings.filter((l) => !all[listings.indexOf(l)]?.upcoming);
+  const byCategory: Record<string, ReturnType<typeof toCatalogItem>[]> = {};
+  const counts: Record<string, number> = {};
+  for (const key of ["cars", "scooter", "bike", "commercial"]) {
+    const matched = listings.filter((l) => matchesVehicleCategory(l as any, key));
+    counts[key] = matched.length;
+    const pool = launched.filter((l) => matchesVehicleCategory(l as any, key));
+    byCategory[key] = sortVehiclesByBrandRank(pool.length ? pool : matched, key, brandRankings)
+      .slice(0, 8)
+      .map(toCatalogItem);
+  }
 
-  const wpUpcoming: ComingSoonItem[] = listings
-    .filter((l) => !isLaunched(l.launchdate))
-    .slice(0, 8)
-    .map(toComingSoonItem);
+  // Launch rails
+  const now = Date.now();
+  const twoMonthsAgo = now - 1000 * 60 * 60 * 24 * 62;
+  const fresh = all
+    .filter((i) => !i.upcoming && (i.launchTs ?? 0) >= twoMonthsAgo && (i.launchTs ?? 0) <= now)
+    .sort((a, b) => (b.launchTs ?? 0) - (a.launchTs ?? 0))
+    .slice(0, 10);
+  const upcoming = all
+    .filter((i) => i.upcoming)
+    .sort((a, b) => (a.launchTs || Infinity) - (b.launchTs || Infinity))
+    .slice(0, 10);
 
-  const comingSoonItems: ComingSoonItem[] = wpUpcoming.length > 0
-    ? wpUpcoming
-    : [
-        ...content.comingSoon.electric_cars.slice(0, 2),
-        ...content.comingSoon.electric_two_wheelers.slice(0, 1),
-        ...content.comingSoon.electric_autos.slice(0, 1),
-      ].map((c) => ({ name: c.name, brand: c.brand, type: c.type, pricing: c.pricing, launch: c.launch, photo: getVehiclePhoto(c.photo, c) }));
+  const heroBanners: HeroBannerLite[] = banners.map((b: any) => {
+    const href = toInternalHref(b.href || b.link || "");
+    let videoUrl = b.video_url || b.videoUrl || "";
+    if (!videoUrl && href.startsWith("/product/")) {
+      const slug = href.replace("/product/", "").split("?")[0].split("#")[0];
+      const matched = all.find((item) => itemSlug(item) === slug);
+      if (matched?.video_links?.[0]?.url) {
+        videoUrl = matched.video_links[0].url;
+      }
+    }
+    return {
+      id: String(b.id),
+      href,
+      cta: b.cta || "",
+      details: b.details || "",
+      label: b.label || "",
+      imageHorizontal: b.imageHorizontal || b.image_horizontal || "",
+      imageVertical: b.imageVertical || b.image_vertical || "",
+      videoUrl,
+    };
+  });
 
   return (
     <>
-      {/* <Hero products={content.products} listings={listings} freshReleases={freshReleases} upcoming={upcoming} banners={banners} /> */}
-
-       <EcosystemSection updates={updates} listings={listings} banners={banners} brandRankings={brandRankings} />
-{/*       
-      <LazyViewport fallback={<div className="h-48" />}>
-        <PopularBrands />
-      </LazyViewport>
-      
-      <LazyViewport fallback={<div className="h-64" />}>
-        <ElectricCore3D />
-      </LazyViewport>
-      
-      <LazyViewport fallback={<div className="h-48" />}>
-        <LatestUpdates updates={updates} />
-      </LazyViewport> */}
+      <HomeHero banners={heroBanners} modelCount={listings.length} />
+      <Showcase byCategory={byCategory} />
+      <Rail eyebrow="Just launched" title="New launches" description="Vehicles that hit the Indian market in the last two months." href="/new-launches" hrefLabel="All new launches" items={fresh} tone="tint" />
+      <QuickMatch items={all} />
+      <Rail eyebrow="Coming soon" title="Upcoming electric vehicles" description="Track what's launching next — and be first in line." href="/upcoming" hrefLabel="All upcoming" items={upcoming} />
+      <RecentlyViewed items={all} />
+      <BrandMarquee />
+      <SavingsTeaser />
+      <WhySection />
+      <StatsBand models={listings.length} brands={new Set(listings.map((l) => l.brand).filter(Boolean)).size} />
+      {/* <ServicesOrbit /> */}
+      <HowItWorks />
+      <NewsGrid items={news} />
+      <ToolsGrid />
+      <HomeFaq />
     </>
   );
 }

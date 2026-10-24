@@ -3,7 +3,7 @@ import { fetchOfferPages } from "../lib/wordpress";
 import OffersMainUI from "./OffersMainUI";
 
 export const metadata = {
-  title: "EV Offers & Bank Discounts | EVPULSE",
+  title: "EV Offers & Bank Discounts | EVPLSE",
   description: "Browse the latest electric vehicle offers, bank discounts, and city-wise promotions.",
 };
 

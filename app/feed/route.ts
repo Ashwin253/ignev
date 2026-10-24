@@ -37,7 +37,7 @@ export async function GET() {
     const slug = article.slug || article.url || article.id;
     const link = `${baseUrl}/article/${slug}`;
     const pubDate = article.created_at ? new Date(article.created_at) : new Date();
-    const author = article.author_name || meta.authorName || "EVPULSE Editorial";
+    const author = article.author_name || meta.authorName || "EVPLSE Editorial";
 
     return {
       title: article.title,
@@ -58,7 +58,7 @@ export async function GET() {
       title: wp.title,
       link,
       pubDate: isNaN(pubDate.getTime()) ? new Date() : pubDate,
-      author: "EVPULSE Editorial",
+      author: "EVPLSE Editorial",
       description,
       thumbnail: wp.photo || undefined,
     };
@@ -90,7 +90,7 @@ export async function GET() {
   const rssXml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>EVPULSE - Electric Vehicle News, Reviews &amp; Guides</title>
+    <title>EVPLSE - Electric Vehicle News, Reviews &amp; Guides</title>
     <link>${baseUrl}</link>
     <description>Latest news, reviews, policy updates, and insights from the electric vehicle world.</description>
     <language>en-IN</language>

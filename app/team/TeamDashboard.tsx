@@ -1742,18 +1742,18 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
   return (
     <div className="min-h-screen bg-slate-200 py-28 px-4">
       {showChangePassword && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white  p-4">
           <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl relative">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-slate-900">Change Password</h3>
-              <button onClick={() => setShowChangePassword(false)} className="text-slate-400 hover:text-slate-600"><X size={20} /></button>
+              <button onClick={() => setShowChangePassword(false)} className="text-ink-mute hover:text-slate-600"><X size={20} /></button>
             </div>
             <form onSubmit={handleUpdatePassword} className="space-y-4">
               <label className="block">
-                <span className="text-[10px] font-bold uppercase text-slate-500">New Password</span>
-                <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required minLength={6} className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-sky-400" />
+                <span className="text-[10px] font-bold uppercase text-ink-mute">New Password</span>
+                <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required minLength={6} className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-brand" />
               </label>
-              <button type="submit" disabled={loading} className="w-full rounded-xl bg-slate-900 py-3 text-sm font-bold text-white hover:bg-sky-600 disabled:opacity-50">
+              <button type="submit" disabled={loading} className="w-full rounded-xl bg-white py-3 text-sm font-bold text-white hover:bg-emerald-600 disabled:opacity-50">
                 {loading ? "Updating..." : "Update Password"}
               </button>
             </form>
@@ -1761,28 +1761,28 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
         </div>
       )}
       {showEditName && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white  p-4">
           <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl relative">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-slate-900">Edit Author Name</h3>
-              <button onClick={() => setShowEditName(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer"><X size={20} /></button>
+              <button onClick={() => setShowEditName(false)} className="text-ink-mute hover:text-slate-600 cursor-pointer"><X size={20} /></button>
             </div>
             <form onSubmit={handleUpdateName} className="space-y-4">
               <label className="block">
-                <span className="text-[10px] font-bold uppercase text-slate-500">Your Full Name / Author Name</span>
+                <span className="text-[10px] font-bold uppercase text-ink-mute">Your Full Name / Author Name</span>
                 <input
                   type="text"
                   value={userNameInput}
                   onChange={(e) => setUserNameInput(e.target.value)}
                   placeholder="e.g. Rahul Sharma"
                   required
-                  className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-sky-400"
+                  className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-brand"
                 />
               </label>
-              <p className="text-[11px] text-slate-500 leading-relaxed">
+              <p className="text-[11px] text-ink-mute leading-relaxed">
                 This name is automatically set as the author when you write new articles and content.
               </p>
-              <button type="submit" disabled={loading} className="w-full rounded-xl bg-slate-900 py-3 text-sm font-bold text-white hover:bg-sky-600 disabled:opacity-50 transition cursor-pointer">
+              <button type="submit" disabled={loading} className="w-full rounded-xl bg-white py-3 text-sm font-bold text-white hover:bg-emerald-600 disabled:opacity-50 transition cursor-pointer">
                 {loading ? "Updating..." : "Save Name"}
               </button>
             </form>
@@ -1797,7 +1797,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
               {deferredPrompt && (
                 <button
                   onClick={handleInstallClick}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-violet-600 hover:bg-violet-700 text-white text-[10px] sm:text-xs font-black uppercase px-3 py-1.5 transition-all active:scale-95 shadow-sm shadow-violet-100 cursor-pointer animate-pulse shrink-0"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] sm:text-xs font-black uppercase px-3 py-1.5 transition-all active:scale-95 shadow-sm shadow-emerald-100 cursor-pointer animate-pulse shrink-0"
                 >
                   <Download size={12} /> Install App
                 </button>
@@ -1805,20 +1805,20 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             </div>
             <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-600 mt-1">
               {currentUserName && <span className="font-semibold text-slate-900">{currentUserName}</span>}
-              {currentUserName && <span className="text-slate-300">•</span>}
-              <p className="text-slate-500 truncate max-w-[150px] sm:max-w-none">{user.email}</p>
+              {currentUserName && <span className="text-ink-soft">•</span>}
+              <p className="text-ink-mute truncate max-w-[150px] sm:max-w-none">{user.email}</p>
             </div>
             <div className="flex items-center gap-2.5 mt-1.5">
               <button 
                 onClick={() => { setUserNameInput(currentUserName); setShowEditName(true); }} 
-                className="text-[10px] sm:text-xs font-bold text-sky-600 hover:text-sky-700 transition cursor-pointer"
+                className="text-[10px] sm:text-xs font-bold text-emerald-600 hover:text-emerald-700 transition cursor-pointer"
               >
                 Edit Name
               </button>
               <span className="text-[10px] sm:text-xs text-slate-350">|</span>
               <button 
                 onClick={() => setShowChangePassword(true)} 
-                className="text-[10px] sm:text-xs font-bold text-sky-600 hover:text-sky-700 transition cursor-pointer"
+                className="text-[10px] sm:text-xs font-bold text-emerald-600 hover:text-emerald-700 transition cursor-pointer"
               >
                 Change Password
               </button>
@@ -1854,7 +1854,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   }}
                   className={`w-full appearance-none rounded-xl border pl-3.5 pr-9 py-2.5 text-xs font-bold outline-none cursor-pointer transition-colors shadow-sm ${
                     ["all_listings", "content", "media", "chargers"].includes(activeSection)
-                      ? "border-slate-900 bg-slate-900 text-white"
+                      ? "border-slate-900 bg-white text-ink"
                       : "border-slate-300 bg-white text-slate-800 hover:bg-slate-50"
                   }`}
                 >
@@ -1878,8 +1878,8 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   size={14}
                   className={`pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 ${
                     ["all_listings", "content", "media", "chargers"].includes(activeSection)
-                      ? "text-white"
-                      : "text-slate-500"
+                      ? "text-ink"
+                      : "text-ink-mute"
                   }`}
                 />
               </div>
@@ -1888,16 +1888,16 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
 
           {/* Desktop buttons */}
           <div className="hidden sm:flex gap-1.5 sm:gap-2 shrink-0">
-            <button onClick={() => { setActiveSection("all_listings"); setEditing(null); setSelectedBrand(""); setSelectedModelId(""); setTableBrandFilter(""); }} className={`inline-flex items-center gap-1 sm:gap-2 rounded-xl border px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold transition-colors ${activeSection === "all_listings" ? "border-slate-900 bg-slate-900 text-white shadow-sm" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>
+            <button onClick={() => { setActiveSection("all_listings"); setEditing(null); setSelectedBrand(""); setSelectedModelId(""); setTableBrandFilter(""); }} className={`inline-flex items-center gap-1 sm:gap-2 rounded-xl border px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold transition-colors ${activeSection === "all_listings" ? "border-slate-900 bg-white text-ink shadow-sm" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>
               All Listings
             </button>
-            <button onClick={() => { setActiveSection("content"); }} className={`inline-flex items-center gap-1 sm:gap-2 rounded-xl border px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold transition-colors ${activeSection === "content" ? "border-slate-900 bg-slate-900 text-white shadow-sm" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>
+            <button onClick={() => { setActiveSection("content"); }} className={`inline-flex items-center gap-1 sm:gap-2 rounded-xl border px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold transition-colors ${activeSection === "content" ? "border-slate-900 bg-white text-ink shadow-sm" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>
               All Content
             </button>
-            <button onClick={() => { setActiveSection("media"); }} className={`inline-flex items-center gap-1 sm:gap-2 rounded-xl border px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold transition-colors ${activeSection === "media" ? "border-slate-900 bg-slate-900 text-white shadow-sm" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>
+            <button onClick={() => { setActiveSection("media"); }} className={`inline-flex items-center gap-1 sm:gap-2 rounded-xl border px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold transition-colors ${activeSection === "media" ? "border-slate-900 bg-white text-ink shadow-sm" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>
               All Media
             </button>
-            <button onClick={() => { setActiveSection("chargers"); }} className={`inline-flex items-center gap-1 sm:gap-2 rounded-xl border px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold transition-colors ${activeSection === "chargers" ? "border-slate-900 bg-slate-900 text-white shadow-sm" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>
+            <button onClick={() => { setActiveSection("chargers"); }} className={`inline-flex items-center gap-1 sm:gap-2 rounded-xl border px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold transition-colors ${activeSection === "chargers" ? "border-slate-900 bg-white text-ink shadow-sm" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>
               All Chargers
             </button>
           </div>
@@ -1935,11 +1935,11 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
 
         <div className="hidden sm:flex gap-2 mb-6 overflow-x-auto">
           <button onClick={() => { setActiveSection("listings"); setSelectedBrand(""); setSelectedModelId(""); setEditing(null); }}
-            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${activeSection === "listings" ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-955 border border-slate-300"}`}>
+            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${activeSection === "listings" ? "bg-white text-ink shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-955 border border-slate-300"}`}>
             EV Listings
           </button>
           <button onClick={() => setActiveSection("leads")}
-            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 relative ${activeSection === "leads" ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-955 border border-slate-300"}`}>
+            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 relative ${activeSection === "leads" ? "bg-white text-ink shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-955 border border-slate-300"}`}>
             <MessageSquare size={14} /> Enquiries
             {(pendingEnquiriesCount > 0 || pendingForYouCount > 0) && (
               <span className="absolute top-0 right-0 -mt-1 -mr-1 flex h-3 w-3">
@@ -1949,23 +1949,23 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             )}
           </button>
           {/* <button onClick={() => setActiveSection("prices")}
-            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${activeSection === "prices" ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-955 border border-slate-300"}`}>
+            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${activeSection === "prices" ? "bg-white text-ink shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-955 border border-slate-300"}`}>
             ⛽ Fuel Prices
           </button> */}
           <button onClick={() => setActiveSection("analytics")}
-            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${activeSection === "analytics" ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-955 border border-slate-300"}`}>
+            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${activeSection === "analytics" ? "bg-white text-ink shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-955 border border-slate-300"}`}>
             📊 Analytics
           </button>
           <button onClick={() => setActiveSection("map")}
-            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${activeSection === "map" ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-955 border border-slate-300"}`}>
+            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${activeSection === "map" ? "bg-white text-ink shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-955 border border-slate-300"}`}>
             📍 Map
           </button>
           <button onClick={() => setActiveSection("banners")}
-            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${activeSection === "banners" ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-955 border border-slate-300"}`}>
+            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${activeSection === "banners" ? "bg-white text-ink shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-955 border border-slate-300"}`}>
             🖼️ Banners & Offers
           </button>
           <button onClick={() => setActiveSection("approvals")}
-            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${(activeSection === "approvals" || activeSection === "vehicle_approvals") ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-955 border border-slate-300"}`}>
+            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${(activeSection === "approvals" || activeSection === "vehicle_approvals") ? "bg-white text-ink shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-955 border border-slate-300"}`}>
             🛡️ Approvals
           </button>
         </div>
@@ -1976,7 +1976,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             <div className="flex flex-wrap items-center gap-2 mb-6 bg-slate-100/90 p-1.5 rounded-2xl border border-slate-200/80 w-fit shadow-xs">
               <button
                 onClick={() => setEnquiriesSubTab("general")}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${enquiriesSubTab === "general" ? "bg-slate-950 text-white shadow-md" : "text-slate-600 hover:text-slate-900 hover:bg-white/70"}`}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${enquiriesSubTab === "general" ? "bg-white text-ink shadow-md" : "text-slate-600 hover:text-slate-900 hover:bg-white/70"}`}
               >
                 <MessageSquare size={14} /> General Enquiries
                 {pendingEnquiriesCount > 0 && (
@@ -1985,11 +1985,11 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
               </button>
               <button
                 onClick={() => setEnquiriesSubTab("foryou")}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${enquiriesSubTab === "foryou" ? "bg-violet-700 text-white shadow-md" : "text-slate-600 hover:text-slate-900 hover:bg-white/70"}`}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${enquiriesSubTab === "foryou" ? "bg-emerald-700 text-white shadow-md" : "text-slate-600 hover:text-slate-900 hover:bg-white/70"}`}
               >
                 <Sparkles size={14} /> For You Leads
                 {pendingForYouCount > 0 && (
-                  <span className="ml-1 inline-flex items-center justify-center rounded-full bg-violet-500 text-white text-[10px] font-bold px-1.5 py-0.5 min-w-5 h-5">{pendingForYouCount}</span>
+                  <span className="ml-1 inline-flex items-center justify-center rounded-full bg-emerald-500 text-white text-[10px] font-bold px-1.5 py-0.5 min-w-5 h-5">{pendingForYouCount}</span>
                 )}
               </button>
             </div>
@@ -2004,13 +2004,13 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             <div className="flex flex-wrap items-center gap-2 mb-6 bg-slate-100/90 p-1.5 rounded-2xl border border-slate-200/80 w-fit shadow-xs">
               <button
                 onClick={() => setApprovalsSubTab("b2b")}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${approvalsSubTab === "b2b" ? "bg-slate-950 text-white shadow-md" : "text-slate-600 hover:text-slate-900 hover:bg-white/70"}`}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${approvalsSubTab === "b2b" ? "bg-white text-ink shadow-md" : "text-slate-600 hover:text-slate-900 hover:bg-white/70"}`}
               >
                 🛡️ B2B Approvals
               </button>
               <button
                 onClick={() => setApprovalsSubTab("vehicle")}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${approvalsSubTab === "vehicle" ? "bg-slate-950 text-white shadow-md" : "text-slate-600 hover:text-slate-900 hover:bg-white/70"}`}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${approvalsSubTab === "vehicle" ? "bg-white text-ink shadow-md" : "text-slate-600 hover:text-slate-900 hover:bg-white/70"}`}
               >
                 🚗 Vehicle Approvals
               </button>
@@ -2094,7 +2094,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm whitespace-nowrap">
-                <thead className="bg-slate-50 text-slate-500 font-bold text-xs uppercase tracking-wider">
+                <thead className="bg-slate-50 text-ink-mute font-bold text-xs uppercase tracking-wider">
                   <tr>
                     <th className="px-6 py-3">Brand</th>
                     <th className="px-6 py-3">Model</th>
@@ -2125,7 +2125,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                     return (
                       <tr key={l.id} className="hover:bg-slate-50 transition-colors">
                         <td className="px-6 py-3 font-bold text-slate-900">{l.brand}</td>
-                        <td className="px-6 py-3 font-bold text-sky-700">
+                        <td className="px-6 py-3 font-bold text-emerald-700">
                           {l.title} 
                           {l.deleted ? (
                             <span className="ml-2 text-[10px] bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded border border-rose-200 uppercase tracking-wider font-bold">
@@ -2137,7 +2137,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                             </span>
                           ) : null}
                         </td>
-                        <td className="px-6 py-3 text-slate-500">{l.variants?.length || 0} variants</td>
+                        <td className="px-6 py-3 text-ink-mute">{l.variants?.length || 0} variants</td>
                         <td className="px-6 py-3">
                           {!l.deleted && (
                             <input
@@ -2153,7 +2153,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                                   setListings(prev => prev.map(item => item.id === l.id ? { ...item, featured: newFeatured } : item));
                                 }
                               }}
-                              className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 cursor-pointer"
+                              className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
                             />
                           )}
                         </td>
@@ -2176,7 +2176,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                           ) : (
                             <button 
                               onClick={() => { setActiveSection("listings"); setSelectedBrand(l.brand); setSelectedModelId(l.id); }}
-                              className="inline-flex items-center gap-1 text-xs font-bold text-sky-600 hover:text-sky-700 bg-sky-50 hover:bg-sky-100 px-2.5 py-1.5 rounded transition-colors cursor-pointer"
+                              className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1.5 rounded transition-colors cursor-pointer"
                             >
                               Manage
                             </button>
@@ -2196,7 +2196,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
               <div className="p-4 border-t border-slate-100 flex justify-center bg-slate-50">
                 <button 
                   onClick={() => setVisibleAllListingsCount(prev => prev + 10)}
-                  className="rounded-xl border border-slate-200 bg-white px-6 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-sky-600 transition-colors shadow-sm cursor-pointer"
+                  className="rounded-xl border border-slate-200 bg-white px-6 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-emerald-600 transition-colors shadow-sm cursor-pointer"
                 >
                   Load More
                 </button>
@@ -2213,19 +2213,19 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             <div className="flex flex-wrap items-center gap-2 bg-slate-100/90 p-1.5 rounded-2xl border border-slate-200/80 shadow-xs">
               <button
                 onClick={() => setListingsSubTab("editor")}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${listingsSubTab === "editor" ? "bg-slate-950 text-white shadow-md" : "text-slate-600 hover:text-slate-900 hover:bg-white/70"}`}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${listingsSubTab === "editor" ? "bg-white text-ink shadow-md" : "text-slate-600 hover:text-slate-900 hover:bg-white/70"}`}
               >
                 🚗 EV Listings
               </button>
               <button
                 onClick={() => setListingsSubTab("pricing")}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${listingsSubTab === "pricing" ? "bg-slate-950 text-white shadow-md" : "text-slate-600 hover:text-slate-900 hover:bg-white/70"}`}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${listingsSubTab === "pricing" ? "bg-white text-ink shadow-md" : "text-slate-600 hover:text-slate-900 hover:bg-white/70"}`}
               >
                 💰 Vehicle Pricing
               </button>
               <button
                 onClick={() => setListingsSubTab("brands")}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${listingsSubTab === "brands" ? "bg-slate-950 text-white shadow-md" : "text-slate-600 hover:text-slate-900 hover:bg-white/70"}`}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${listingsSubTab === "brands" ? "bg-white text-ink shadow-md" : "text-slate-600 hover:text-slate-900 hover:bg-white/70"}`}
               >
                 🏷️ Brand Rankings
               </button>
@@ -2245,7 +2245,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
           <div className="mb-6 rounded-2xl border border-slate-300 bg-white p-5 shadow-sm">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-ink-mute mt-1">
                   Rebuild structured files (`summary.json` and `llms.txt`) for external AI crawlers (ChatGPT, Gemini, Perplexity).
                 </p>
               </div>
@@ -2253,7 +2253,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                 type="button"
                 onClick={handleRebuildAI}
                 disabled={rebuildingAI}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50 transition-colors px-4 py-2.5 text-xs font-bold shrink-0 cursor-pointer"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-white text-ink hover:bg-white disabled:opacity-50 transition-colors px-4 py-2.5 text-xs font-bold shrink-0 cursor-pointer"
               >
                 {rebuildingAI ? "Rebuilding..." : "Rebuild AI Files"}
               </button>
@@ -2264,13 +2264,13 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
         {!editing && (() => {
           if (listings.length === 0) {
             return (
-              <div className="mb-6 rounded-2xl border border-sky-200 bg-sky-50 p-8 flex flex-col items-center justify-center">
-                <div className="w-16 h-16 bg-sky-100 text-sky-500 rounded-full flex items-center justify-center mb-4">
+              <div className="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-8 flex flex-col items-center justify-center">
+                <div className="w-16 h-16 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mb-4">
                   <Plus size={32} />
                 </div>
                 <h3 className="text-lg font-bold text-slate-900 mb-2">No EV Listings Found</h3>
-                <p className="text-slate-500 mb-6 text-sm text-center max-w-md">Get started by adding your very first brand and EV model to the platform.</p>
-                <button onClick={startNew} className="inline-flex items-center justify-center gap-2 rounded-xl bg-sky-600 px-6 py-3 text-sm font-bold text-white hover:bg-sky-700 transition-colors shadow-sm cursor-pointer">
+                <p className="text-ink-mute mb-6 text-sm text-center max-w-md">Get started by adding your very first brand and EV model to the platform.</p>
+                <button onClick={startNew} className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white hover:bg-emerald-700 transition-colors shadow-sm cursor-pointer">
                   <Plus size={18} /> Add First Brand & Model
                 </button>
               </div>
@@ -2279,12 +2279,12 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
           const selectedModel = listings.find((l) => l.id === selectedModelId);
           return (
             <>
-            <div className="mb-6 rounded-2xl border border-sky-200 bg-sky-50 p-5">
+            <div className="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
               <div className="grid gap-4 sm:grid-cols-2 mb-4">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-sky-700 mb-1">Select Brand</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-emerald-700 mb-1">Select Brand</label>
                   <select
-                    className="w-full rounded-xl border border-sky-200 bg-white px-4 py-3 text-sm font-bold text-slate-800 outline-none cursor-pointer"
+                    className="w-full rounded-xl border border-emerald-200 bg-white px-4 py-3 text-sm font-bold text-slate-800 outline-none cursor-pointer"
                     value={selectedBrand}
                     onChange={(e) => { setSelectedBrand(e.target.value); setSelectedModelId(""); }}
                   >
@@ -2297,10 +2297,10 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                 
                 {selectedBrand ? (
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-sky-700 mb-1">Select Model</label>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-emerald-700 mb-1">Select Model</label>
                     <div className="flex flex-col sm:flex-row gap-2">
                       <select
-                        className="w-full sm:flex-1 min-w-0 rounded-xl border border-sky-200 bg-white px-4 py-3 text-sm font-bold text-slate-800 outline-none cursor-pointer"
+                        className="w-full sm:flex-1 min-w-0 rounded-xl border border-emerald-200 bg-white px-4 py-3 text-sm font-bold text-slate-800 outline-none cursor-pointer"
                         value={selectedModelId}
                         onChange={(e) => setSelectedModelId(e.target.value)}
                       >
@@ -2314,14 +2314,14 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                           );
                         })}
                       </select>
-                      <button onClick={startNew} className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-xl bg-sky-600 px-3.5 py-3 text-xs sm:text-sm font-bold text-white hover:bg-sky-700 transition-colors shrink-0">
+                      <button onClick={startNew} className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-xl bg-emerald-600 px-3.5 py-3 text-xs sm:text-sm font-bold text-white hover:bg-emerald-700 transition-colors shrink-0">
                         <Plus size={16} /> Add Model
                       </button>
                     </div>
                   </div>
                 ) : (
                   <div className="flex items-end">
-                    <button onClick={startNew} className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-xl bg-sky-600 px-4 py-3 text-sm font-bold text-white hover:bg-sky-700 transition-colors">
+                    <button onClick={startNew} className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-700 transition-colors">
                       <Plus size={16} /> Add Brand
                     </button>
                   </div>
@@ -2329,7 +2329,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
               </div>
 
               {selectedBrand && (
-                <div className="mt-4 pt-4 border-t border-sky-200/50">
+                <div className="mt-4 pt-4 border-t border-emerald-200/50">
                   <div className="flex items-center gap-1.5 mb-3">
                     {selectedModel && (
                       <button 
@@ -2340,7 +2340,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                         <Trash2 size={16} />
                       </button>
                     )}
-                    <p className="text-sm font-bold text-sky-700 flex items-center flex-wrap gap-2">
+                    <p className="text-sm font-bold text-emerald-700 flex items-center flex-wrap gap-2">
                       {selectedModel ? `${selectedModel.brand} ${selectedModel.title}` : `Manage Models (${selectedBrand})`}
                       {selectedModel && (selectedModel as any).discontinued && (
                         <span className="inline-flex items-center gap-1 rounded bg-rose-100 px-2 py-0.5 text-xs font-bold text-rose-700 border border-rose-200">
@@ -2354,7 +2354,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                     {selectedModel && (
                       <>
                         <button onClick={() => { startEdit(selectedModel); setListingFormTab("variants"); setEditingVariantId(null); }}
-                          className="inline-flex items-center gap-1 sm:gap-2 rounded-xl bg-sky-600 px-2.5 py-1.5 sm:px-4 sm:py-3 text-xs sm:text-sm font-bold text-white hover:bg-sky-700 shrink-0">
+                          className="inline-flex items-center gap-1 sm:gap-2 rounded-xl bg-emerald-600 px-2.5 py-1.5 sm:px-4 sm:py-3 text-xs sm:text-sm font-bold text-white hover:bg-emerald-700 shrink-0">
                           <Plus size={14} /> Add Variant
                         </button>
                         <button onClick={() => { startEdit(selectedModel); setListingFormTab("core"); setEditingVariantId(null); }}
@@ -2381,7 +2381,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                             <div>
                               <p className="text-sm font-extrabold text-slate-900 flex items-center flex-wrap gap-1.5">
                                 {v.variant_name}
-                                {(v as any).version_name && <span className="text-xs font-bold text-sky-700 bg-sky-100 px-2 py-0.5 rounded border border-sky-200">{(v as any).version_name}</span>}
+                                {(v as any).version_name && <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200">{(v as any).version_name}</span>}
                                 {v.model_year && <span className="text-xs font-bold text-slate-850 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-300">{v.model_year}</span>}
                                 {(v as any).discontinued && <span className="text-xs font-bold text-rose-700 bg-rose-100 px-1.5 py-0.5 rounded border border-rose-300">Discontinued</span>}
                               </p>
@@ -2390,14 +2390,14 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                           </div>
                           <div className="flex gap-2">
                             <button onClick={() => { startEdit(selectedModel); setListingFormTab("variants"); setEditingVariantId(v.id); }}
-                              className="text-xs font-bold text-sky-600 hover:text-sky-700 cursor-pointer">Edit</button>
+                              className="text-xs font-bold text-emerald-600 hover:text-emerald-700 cursor-pointer">Edit</button>
                           </div>
                         </div>
                       ))}
                     </div>
                   )}
                   {selectedModel && selectedModel.variants.length === 0 && (
-                    <p className="text-xs text-slate-400 text-center py-4">No variants yet. Click &quot;Add Variant&quot; to add one.</p>
+                    <p className="text-xs text-ink-mute text-center py-4">No variants yet. Click &quot;Add Variant&quot; to add one.</p>
                   )}
                 </div>
               )}
@@ -2432,18 +2432,18 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                       Paste Format
                     </button>
                   </div>
-                  <label className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 cursor-pointer select-none">
+                  <label className="flex items-center gap-1.5 text-[10px] font-bold text-ink-mute cursor-pointer select-none">
                     <input
                       type="checkbox"
                       checked={copyDetailedVariant}
                       onChange={(e) => setCopyDetailedVariant(e.target.checked)}
-                      className="rounded border-slate-300 text-sky-600 focus:ring-sky-500 h-3.5 w-3.5"
+                      className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 h-3.5 w-3.5"
                     />
                     Detailed variant
                   </label>
                 </div>
               </div>
-              <button onClick={() => setEditing(null)} className="text-slate-400 hover:text-slate-600 cursor-pointer"><X size={20} /></button>
+              <button onClick={() => setEditing(null)} className="text-ink-mute hover:text-slate-600 cursor-pointer"><X size={20} /></button>
             </div>
 
             {/* Tab dropdown for mobile */}
@@ -2476,14 +2476,14 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   onClick={() => setListingFormTab(tab.id)}
                   className={`flex-1 min-w-[120px] rounded-lg px-4 py-3 text-sm font-extrabold transition-colors ${
                     listingFormTab === tab.id
-                      ? "bg-slate-950 text-white shadow-md"
+                      ? "bg-white text-ink shadow-md"
                       : "text-slate-800 hover:bg-slate-200/80 hover:text-slate-950"
                   }`}
                 >
                   {tab.label}
                   {tab.count != null && tab.count > 0 && (
                     <span className={`ml-1.5 inline-flex min-w-[1.25rem] justify-center rounded-full px-2 py-0.5 text-xs font-bold ${
-                      listingFormTab === tab.id ? "bg-slate-800 text-white" : "bg-slate-400/50 text-slate-900"
+                      listingFormTab === tab.id ? "bg-white text-ink" : "bg-slate-400/50 text-slate-900"
                     }`}>
                       {tab.count}
                     </span>
@@ -2547,7 +2547,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                 {(() => {
                   const computedListingSlug = form.slug || getListingSlug(form.brand, form.title);
                   if (!computedListingSlug) {
-                    return <span className="text-[10px] text-slate-400">ℹ️ Slug will be auto-generated from Brand & Model</span>;
+                    return <span className="text-[10px] text-ink-mute">ℹ️ Slug will be auto-generated from Brand & Model</span>;
                   }
                   const clashing = listings.find((l) => l.id !== editing && l.slug === computedListingSlug);
                   if (clashing) {
@@ -2572,7 +2572,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                             });
                             setVariants(updatedVariants);
                           }}
-                          className="text-sky-600 hover:text-sky-700 underline text-left cursor-pointer"
+                          className="text-emerald-600 hover:text-emerald-700 underline text-left cursor-pointer"
                         >
                           Use recommended slug: {recommended}
                         </button>
@@ -2615,7 +2615,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                 />
                 {uniqueBrands.length > 0 && (
                   <div className="flex items-center gap-1.5 mt-1">
-                    <span className="text-[10px] text-slate-400 font-semibold shrink-0">Quick Select:</span>
+                    <span className="text-[10px] text-ink-mute font-semibold shrink-0">Quick Select:</span>
                     <select
                       value=""
                       onChange={(e) => {
@@ -2698,7 +2698,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
               </label>
               <label className="block">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-700">Launch Date</span>
-                <input type="text" placeholder="e.g. 2024, Oct 2024, 2024-10-15" value={form.launchdate ?? ""} onChange={(e) => setForm({ ...form, launchdate: e.target.value || null })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none placeholder:text-slate-400" />
+                <input type="text" placeholder="e.g. 2024, Oct 2024, 2024-10-15" value={form.launchdate ?? ""} onChange={(e) => setForm({ ...form, launchdate: e.target.value || null })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none placeholder:text-ink-mute" />
               </label>
               <label className="block">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-700">Parent Model (Optional)</span>
@@ -2762,7 +2762,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             <div className="mt-4 rounded-xl border-2 border-slate-300 bg-slate-200 p-4">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-xs font-bold uppercase tracking-wider text-slate-600">Colors</p>
-                <button onClick={() => setForm({ ...form, colors: [...form.colors, ""] })} className="text-[10px] font-bold text-sky-600">+ Add Color</button>
+                <button onClick={() => setForm({ ...form, colors: [...form.colors, ""] })} className="text-[10px] font-bold text-emerald-600">+ Add Color</button>
               </div>
               <div className="flex flex-wrap gap-2.5">
                 {form.colors.map((colorVal, i) => {
@@ -2842,7 +2842,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                         )}
                         
                         {/* Remove color box */}
-                        <button type="button" onClick={() => setForm({ ...form, colors: form.colors.filter((_, j) => j !== i) })} className="ml-2 text-rose-400 hover:text-rose-600 text-xs font-bold shrink-0 cursor-pointer">×</button>
+                        <button type="button" onClick={() => setForm({ ...form, colors: form.colors.filter((_, j) => j !== i) })} className="ml-2 text-coral hover:text-rose-600 text-xs font-bold shrink-0 cursor-pointer">×</button>
                       </div>
 
                       {/* Dualtone Toggle Actions */}
@@ -2858,7 +2858,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                             }
                             setForm({ ...form, colors: arr });
                           }}
-                          className="text-[9px] font-semibold text-sky-600 hover:text-sky-700 cursor-pointer"
+                          className="text-[9px] font-semibold text-emerald-600 hover:text-emerald-700 cursor-pointer"
                         >
                           {isDual ? "Revert to Single" : "Split Dualtone"}
                         </button>
@@ -2893,15 +2893,15 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                       <button
                         type="button"
                         onClick={() => setForm({ ...form, featured_photos: [...form.featured_photos, { url: "", variantId: null }] })}
-                        className="text-xs font-bold text-sky-600 hover:text-sky-700 cursor-pointer"
+                        className="text-xs font-bold text-emerald-600 hover:text-emerald-700 cursor-pointer"
                       >
                         + Add Photo
                       </button>
-                      <span className="text-slate-300 text-xs">|</span>
+                      <span className="text-ink-soft text-xs">|</span>
                       <button
                         type="button"
                         onClick={() => setForm({ ...form, video_links: [...form.video_links, { url: "", title: "", variantId: null, variantName: null }] })}
-                        className="text-xs font-bold text-sky-600 hover:text-sky-700 cursor-pointer"
+                        className="text-xs font-bold text-emerald-600 hover:text-emerald-700 cursor-pointer"
                       >
                         + Add Video
                       </button>
@@ -2912,7 +2912,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                     {/* Photos Sub-list */}
                     {form.featured_photos.length > 0 && (
                       <div className="space-y-2">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Photos</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-mute">Photos</p>
                         <div className="space-y-3">
                           {form.featured_photos.map((item, idx) => (
                             <div key={`photo-${idx}`} className="flex flex-col sm:flex-row gap-3 rounded-lg border border-slate-200 bg-white p-3 items-start sm:items-center">
@@ -2936,7 +2936,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                                         setForm({ ...form, featured_photos: arr });
                                       }
                                     }}
-                                    className="w-full sm:w-auto text-xs cursor-pointer file:mr-2 file:rounded-md file:border-0 file:bg-sky-50 file:px-2 file:py-1 file:text-[10px] file:font-bold file:text-sky-600 min-w-0"
+                                    className="w-full sm:w-auto text-xs cursor-pointer file:mr-2 file:rounded-md file:border-0 file:bg-emerald-50 file:px-2 file:py-1 file:text-[10px] file:font-bold file:text-emerald-600 min-w-0"
                                   />
                                   <input
                                     type="text"
@@ -2952,7 +2952,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                                 </div>
                                 
                                 <div className="flex items-center gap-2">
-                                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Variant:</span>
+                                  <span className="text-[10px] font-bold text-ink-mute uppercase tracking-wider">Variant:</span>
                                   <select
                                     value={item.variantId || item.variantName || ""}
                                     onChange={(e) => {
@@ -2983,16 +2983,16 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                                       type="button"
                                       onClick={() => handleRemoveBg(item.url, "featured", idx)}
                                       disabled={bgRemovingId !== null || flippingId !== null}
-                                      className="flex-1 flex items-center justify-center gap-1.5 p-2 rounded-lg bg-slate-100 hover:bg-violet-50 hover:text-violet-700 text-slate-650 text-[10px] font-bold transition-colors border border-slate-200 cursor-pointer whitespace-nowrap disabled:opacity-50"
+                                      className="flex-1 flex items-center justify-center gap-1.5 p-2 rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-650 text-[10px] font-bold transition-colors border border-slate-200 cursor-pointer whitespace-nowrap disabled:opacity-50"
                                     >
                                       {bgRemovingId === `featured-${idx}` ? (
                                         <>
-                                          <Loader2 size={12} className="animate-spin text-violet-600" />
+                                          <Loader2 size={12} className="animate-spin text-emerald-600" />
                                           <span>{bgRemoveProgress}</span>
                                         </>
                                       ) : (
                                         <>
-                                          <Sparkles size={12} className="text-violet-600" />
+                                          <Sparkles size={12} className="text-emerald-600" />
                                           Remove BG
                                         </>
                                       )}
@@ -3014,13 +3014,13 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                                       type="button"
                                       onClick={() => handleFlipHorizontal(item.url, "featured", idx)}
                                       disabled={bgRemovingId !== null || flippingId !== null}
-                                      className="flex-1 flex items-center justify-center gap-1.5 p-2 rounded-lg bg-slate-100 hover:bg-sky-50 hover:text-sky-700 text-slate-650 text-[10px] font-bold transition-colors border border-slate-200 cursor-pointer whitespace-nowrap disabled:opacity-50"
+                                      className="flex-1 flex items-center justify-center gap-1.5 p-2 rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-650 text-[10px] font-bold transition-colors border border-slate-200 cursor-pointer whitespace-nowrap disabled:opacity-50"
                                     >
                                       {flippingId === `featured-${idx}` ? (
-                                        <Loader2 size={12} className="animate-spin text-sky-600" />
+                                        <Loader2 size={12} className="animate-spin text-emerald-600" />
                                       ) : (
                                         <>
-                                          <FlipHorizontal size={12} className="text-sky-600" />
+                                          <FlipHorizontal size={12} className="text-emerald-600" />
                                           Flip
                                         </>
                                       )}
@@ -3031,7 +3031,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                               <button
                                 type="button"
                                 onClick={() => setForm({ ...form, featured_photos: form.featured_photos.filter((_, i) => i !== idx) })}
-                                className="text-rose-400 hover:text-rose-600 text-sm font-bold shrink-0 self-start sm:self-center"
+                                className="text-coral hover:text-rose-600 text-sm font-bold shrink-0 self-start sm:self-center"
                               >
                                 × Remove
                               </button>
@@ -3044,7 +3044,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                     {/* Videos Sub-list */}
                     {form.video_links.length > 0 && (
                       <div className="space-y-2">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Videos</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-mute">Videos</p>
                         <div className="space-y-3">
                           {form.video_links.map((item, idx) => (
                             <div key={`video-${idx}`} className="flex flex-col gap-2 rounded-lg border border-slate-200 bg-white p-3">
@@ -3074,14 +3074,14 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                                 <button
                                   type="button"
                                   onClick={() => setForm({ ...form, video_links: form.video_links.filter((_, i) => i !== idx) })}
-                                  className="text-rose-400 hover:text-rose-600 text-sm font-bold shrink-0 self-end sm:self-center"
+                                  className="text-coral hover:text-rose-600 text-sm font-bold shrink-0 self-end sm:self-center"
                                 >
                                   × Remove
                                 </button>
                               </div>
                               
                               <div className="flex items-center gap-2 text-xs pt-1 border-t border-slate-100">
-                                <span className="text-[10px] font-bold text-slate-500 uppercase">Variant</span>
+                                <span className="text-[10px] font-bold text-ink-mute uppercase">Variant</span>
                                 <select
                                   value={item.variantId || item.variantName || ""}
                                   onChange={(e) => {
@@ -3111,7 +3111,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
 
                     {/* Empty state when neither photos nor videos exist */}
                     {form.featured_photos.length === 0 && form.video_links.length === 0 && (
-                      <div className="text-center py-4 text-xs text-slate-500 bg-white/50 rounded-lg border border-dashed border-slate-300">
+                      <div className="text-center py-4 text-xs text-ink-mute bg-white/50 rounded-lg border border-dashed border-slate-300">
                         No featured media added yet. Use &quot;+ Add Photo&quot; or &quot;+ Add Video&quot; above.
                       </div>
                     )}
@@ -3125,7 +3125,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                     <button
                       type="button"
                       onClick={() => setForm({ ...form, gallery_images: [...form.gallery_images, { url: "", type: "", colorCode: "", variantId: null }] })}
-                      className="text-xs font-bold text-sky-600 hover:text-sky-700 cursor-pointer"
+                      className="text-xs font-bold text-emerald-600 hover:text-emerald-700 cursor-pointer"
                     >
                       + Add Image
                     </button>
@@ -3162,7 +3162,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                                     setForm({ ...form, gallery_images: arr });
                                   }
                                 }}
-                                className="text-xs max-w-xs cursor-pointer file:mr-2 file:rounded-md file:border-0 file:bg-sky-50 file:px-2 file:py-1 file:text-[10px] file:font-bold file:text-sky-600 min-w-0"
+                                className="text-xs max-w-xs cursor-pointer file:mr-2 file:rounded-md file:border-0 file:bg-emerald-50 file:px-2 file:py-1 file:text-[10px] file:font-bold file:text-emerald-600 min-w-0"
                               />
                               <input
                                 type="text"
@@ -3179,7 +3179,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                             <button
                               type="button"
                               onClick={() => setForm({ ...form, gallery_images: form.gallery_images.filter((_, i) => i !== idx) })}
-                              className="text-rose-400 hover:text-rose-600 text-sm font-bold shrink-0 self-start sm:self-center"
+                              className="text-coral hover:text-rose-600 text-sm font-bold shrink-0 self-start sm:self-center"
                             >
                               × Remove
                             </button>
@@ -3187,7 +3187,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                           
                           <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-slate-100 text-xs">
                             <div className="flex items-center gap-1.5">
-                              <span className="text-[10px] font-bold text-slate-500 uppercase">Tag:</span>
+                              <span className="text-[10px] font-bold text-ink-mute uppercase">Tag:</span>
                               <select
                                 value={imgType}
                                 onChange={(e) => {
@@ -3206,7 +3206,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                             
                             {imgType === "color" && (
                               <div className="flex items-center gap-1.5">
-                                <span className="text-[10px] font-bold text-slate-500 uppercase">Color:</span>
+                                <span className="text-[10px] font-bold text-ink-mute uppercase">Color:</span>
                                 <select
                                   value={colorCode}
                                   onChange={(e) => {
@@ -3226,7 +3226,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                             )}
 
                             <div className="flex items-center gap-1.5">
-                              <span className="text-[10px] font-bold text-slate-500 uppercase">Variant:</span>
+                              <span className="text-[10px] font-bold text-ink-mute uppercase">Variant:</span>
                               <select
                                 value={variantId || variantName || ""}
                                 onChange={(e) => {
@@ -3260,16 +3260,16 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                                 type="button"
                                 onClick={() => handleRemoveBg(url, "gallery", idx)}
                                 disabled={bgRemovingId !== null || flippingId !== null}
-                                className="flex-1 flex items-center justify-center gap-1.5 p-2 rounded-lg bg-slate-100 hover:bg-violet-50 hover:text-violet-700 text-slate-650 text-[10px] font-bold transition-colors border border-slate-200 cursor-pointer whitespace-nowrap disabled:opacity-50"
+                                className="flex-1 flex items-center justify-center gap-1.5 p-2 rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-650 text-[10px] font-bold transition-colors border border-slate-200 cursor-pointer whitespace-nowrap disabled:opacity-50"
                               >
                                 {bgRemovingId === `gallery-${idx}` ? (
                                   <>
-                                    <Loader2 size={12} className="animate-spin text-violet-600" />
+                                    <Loader2 size={12} className="animate-spin text-emerald-600" />
                                     <span>{bgRemoveProgress}</span>
                                   </>
                                 ) : (
                                   <>
-                                    <Sparkles size={12} className="text-violet-600" />
+                                    <Sparkles size={12} className="text-emerald-600" />
                                     Remove BG
                                   </>
                                 )}
@@ -3291,13 +3291,13 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                                 type="button"
                                 onClick={() => handleFlipHorizontal(url, "gallery", idx)}
                                 disabled={bgRemovingId !== null || flippingId !== null}
-                                className="flex-1 flex items-center justify-center gap-1.5 p-2 rounded-lg bg-slate-100 hover:bg-sky-50 hover:text-sky-700 text-slate-650 text-[10px] font-bold transition-colors border border-slate-200 cursor-pointer whitespace-nowrap disabled:opacity-50"
+                                className="flex-1 flex items-center justify-center gap-1.5 p-2 rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-650 text-[10px] font-bold transition-colors border border-slate-200 cursor-pointer whitespace-nowrap disabled:opacity-50"
                               >
                                 {flippingId === `gallery-${idx}` ? (
-                                  <Loader2 size={12} className="animate-spin text-sky-600" />
+                                  <Loader2 size={12} className="animate-spin text-emerald-600" />
                                 ) : (
                                   <>
-                                    <FlipHorizontal size={12} className="text-sky-600" />
+                                    <FlipHorizontal size={12} className="text-emerald-600" />
                                     Flip
                                   </>
                                 )}
@@ -3308,7 +3308,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                       );
                     })}
                     {form.gallery_images.length === 0 && (
-                      <div className="text-center py-4 text-xs text-slate-500 bg-white/50 rounded-lg border border-dashed border-slate-300">
+                      <div className="text-center py-4 text-xs text-ink-mute bg-white/50 rounded-lg border border-dashed border-slate-300">
                         No gallery images added yet. Click "+ Add Image" to add one, or select files.
                       </div>
                     )}
@@ -3332,7 +3332,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                         }
                         setForm({ ...form, gallery_images: [...form.gallery_images, ...urls] });
                       }}
-                      className="w-full text-xs rounded-lg border border-slate-200 bg-white px-3 py-2 file:mr-2 file:rounded-md file:border-0 file:bg-sky-50 file:px-2 file:py-1 file:text-[10px] file:font-bold file:text-sky-600"
+                      className="w-full text-xs rounded-lg border border-slate-200 bg-white px-3 py-2 file:mr-2 file:rounded-md file:border-0 file:bg-emerald-50 file:px-2 file:py-1 file:text-[10px] file:font-bold file:text-emerald-600"
                     />
                   </div>
                 </div>
@@ -3342,28 +3342,28 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             )}
 
             {listingFormTab === "variants" && (
-            <div className="rounded-xl border-2 border-sky-300 bg-sky-100 p-4">
+            <div className="rounded-xl border-2 border-brand bg-emerald-100 p-4">
               <div className="flex items-center justify-between mb-3">
-                <p className="text-sm font-bold text-sky-700">
+                <p className="text-sm font-bold text-emerald-700">
                   {editingVariantId ? `Editing: ${variants.find((v) => (v as any).id === editingVariantId)?.variant_name || "Variant"}` : `Variants (${variants.length})`}
                 </p>
               </div>
               {/* Actions row */}
-              <div className="grid grid-cols-2 gap-2 mb-4 rounded-xl bg-white border border-sky-200 p-3 sm:flex sm:flex-wrap">
+              <div className="grid grid-cols-2 gap-2 mb-4 rounded-xl bg-white border border-emerald-200 p-3 sm:flex sm:flex-wrap">
                 <button onClick={() => { setVariants([...variants, { ...emptyVariant }]); setActiveVariantIndex(variants.length); setEditingVariantId(null); }}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-sky-600 px-3 py-2 text-xs font-bold text-white hover:bg-sky-700 cursor-pointer transition-colors w-full sm:w-auto">
+                  className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-700 cursor-pointer transition-colors w-full sm:w-auto">
                   <Plus size={12} className="shrink-0" /> Add New
                 </button>
                 <button onClick={() => { const current = variants[activeVariantIndex]; if (current) { const clone = { ...current, variant_name: `${current.variant_name} (Copy)`, slug: "", id: undefined } as any; delete clone.id; setVariants([...variants, clone]); setActiveVariantIndex(variants.length); setEditingVariantId(null); } }}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-sky-200 bg-white px-3 py-2 text-xs font-bold text-sky-600 hover:bg-sky-50 cursor-pointer transition-colors w-full sm:w-auto">
+                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-xs font-bold text-emerald-600 hover:bg-emerald-50 cursor-pointer transition-colors w-full sm:w-auto">
                   <Copy size={12} className="shrink-0" /> Clone Current
                 </button>
                 <button onClick={handleCopyVariant}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-sky-200 bg-white px-3 py-2 text-xs font-bold text-sky-600 hover:bg-sky-50 cursor-pointer transition-colors w-full sm:w-auto">
+                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-xs font-bold text-emerald-600 hover:bg-emerald-50 cursor-pointer transition-colors w-full sm:w-auto">
                   <Clipboard size={12} className="shrink-0" /> Copy Variant
                 </button>
                 <button onClick={() => { setPastedVariantJson(""); setIsPasteVariantModalOpen(true); }}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-sky-200 bg-white px-3 py-2 text-xs font-bold text-sky-600 hover:bg-sky-50 cursor-pointer transition-colors w-full sm:w-auto">
+                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-xs font-bold text-emerald-600 hover:bg-emerald-50 cursor-pointer transition-colors w-full sm:w-auto">
                   <Clipboard size={12} className="shrink-0 opacity-70" /> Paste Variant
                 </button>
                 {variants.length > 1 && (
@@ -3374,7 +3374,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                 )}
                 {editingVariantId && (
                   <button onClick={() => setEditingVariantId(null)}
-                    className="col-span-2 inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50 cursor-pointer transition-colors w-full sm:col-span-auto sm:w-auto">
+                    className="col-span-2 inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-ink-mute hover:bg-slate-50 cursor-pointer transition-colors w-full sm:col-span-auto sm:w-auto">
                     <Eye size={12} className="shrink-0" /> Show All
                   </button>
                 )}
@@ -3385,7 +3385,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   <select
                     value={activeVariantIndex}
                     onChange={(e) => setActiveVariantIndex(Number(e.target.value))}
-                    className="w-full rounded-xl border-2 border-sky-400 bg-white px-4 py-3 text-sm font-bold text-sky-900 outline-none shadow-md focus:border-sky-500 focus:ring-4 focus:ring-sky-100 transition-all cursor-pointer"
+                    className="w-full rounded-xl border-2 border-brand bg-white px-4 py-3 text-sm font-bold text-emerald-900 outline-none shadow-md focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all cursor-pointer"
                   >
                     {variants.map((v, idx) => (
                       <option key={idx} value={idx}>
@@ -3402,7 +3402,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   <div className="flex items-center justify-between px-4 py-3 bg-slate-200 border-b border-slate-300">
                     <span className="text-sm font-bold text-slate-700 flex items-center gap-2">
                       {v.variant_name || `Variant ${i + 1}`}
-                      {v.price ? <span className="text-[10px] font-medium text-slate-400">₹{v.price}L</span> : null}
+                      {v.price ? <span className="text-[10px] font-medium text-ink-mute">₹{v.price}L</span> : null}
                     </span>
                   </div>
                   <div className="p-4">
@@ -3424,7 +3424,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                         const computedVariantSlug = v.slug || getVariantSlug(parentSlug, v);
                         
                         if (!computedVariantSlug) {
-                          return <span className="text-[10px] text-slate-400">ℹ️ Auto-generated on save</span>;
+                          return <span className="text-[10px] text-ink-mute">ℹ️ Auto-generated on save</span>;
                         }
                         
                         const localClashIdx = variants.findIndex((varItem, idx) => {
@@ -3458,7 +3458,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                               <button
                                 type="button"
                                 onClick={() => updateVariantField(i, { slug: recommended })}
-                                className="text-sky-600 hover:text-sky-700 underline text-left cursor-pointer"
+                                className="text-emerald-600 hover:text-emerald-700 underline text-left cursor-pointer"
                               >
                                 Use recommended slug: {recommended}
                               </button>
@@ -3511,7 +3511,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                             arr[i] = { ...arr[i], has_exclusive_color: e.target.checked };
                             setVariants(arr);
                           }}
-                          className="rounded border-slate-300 text-sky-600 focus:ring-sky-500 h-4 w-4"
+                          className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 h-4 w-4"
                         />
                         Has Exclusive Color
                       </label>
@@ -3553,7 +3553,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">
                         {/* 1. Upfront Price */}
                         <div className="rounded-xl bg-white border border-slate-200 p-3 shadow-xs">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Upfront Price (Ex-Battery)</span>
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-ink-mute block mb-1">Upfront Price (Ex-Battery)</span>
                           <input
                             type="text"
                             value={v.baas_upfront_price ?? ""}
@@ -3569,7 +3569,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
 
                         {/* 2. Capacity */}
                         <div className="rounded-xl bg-white border border-slate-200 p-3 shadow-xs">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Battery Capacity (kWh)</span>
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-ink-mute block mb-1">Battery Capacity (kWh)</span>
                           <input
                             type="text"
                             value={v.battery_capacity_kwh ?? ""}
@@ -3585,7 +3585,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
 
                         {/* 3. Range */}
                         <div className="rounded-xl bg-white border border-slate-200 p-3 shadow-xs">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Driving Range (km)</span>
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-ink-mute block mb-1">Driving Range (km)</span>
                           <input
                             type="text"
                             value={v.driving_range_km ?? ""}
@@ -3601,7 +3601,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
 
                         {/* 4. Charge */}
                         <div className="rounded-xl bg-white border border-slate-200 p-3 shadow-xs">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">DC Charging Time (mins)</span>
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-ink-mute block mb-1">DC Charging Time (mins)</span>
                           <input
                             type="text"
                             value={v.charging_time_mins ?? ""}
@@ -3617,7 +3617,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
 
                         {/* 5. Rental Rate */}
                         <div className="rounded-xl bg-white border border-slate-200 p-3 shadow-xs">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Rental Rate (₹/km)</span>
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-ink-mute block mb-1">Rental Rate (₹/km)</span>
                           <input
                             type="text"
                             value={v.baas_price_per_km ?? ""}
@@ -3633,7 +3633,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
 
                         {/* 6. Min. Commitment */}
                         <div className="rounded-xl bg-white border border-slate-200 p-3 shadow-xs">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Min. Commitment (km/mo)</span>
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-ink-mute block mb-1">Min. Commitment (km/mo)</span>
                           <input
                             type="text"
                             value={(() => {
@@ -3660,7 +3660,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
 
                         {/* 7. Min. Monthly Bill (₹/mo) */}
                         <div className="rounded-xl bg-white border border-slate-200 p-3 shadow-xs">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Min. Monthly Bill (₹/mo)</span>
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-ink-mute block mb-1">Min. Monthly Bill (₹/mo)</span>
                           <input
                             type="text"
                             value={v.baas_monthly_rental ?? ""}
@@ -3678,7 +3678,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                         {/* 8. Battery Ownership */}
                         <div className="rounded-xl bg-white border border-slate-200 p-3 shadow-xs flex flex-col justify-between">
                           <div>
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Battery Ownership</span>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-ink-mute block mb-1">Battery Ownership</span>
                             <p className="text-xs font-black text-slate-800 leading-tight">
                               Leased ({v.baas_model_name || "OEM"} Leasing Partner)
                             </p>
@@ -3692,13 +3692,13 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                               setVariants(arr);
                             }}
                             placeholder="Partner Name (e.g. OEM)"
-                            className="w-full bg-transparent text-xs font-medium outline-none text-slate-500 mt-2 border-t border-slate-100 pt-1"
+                            className="w-full bg-transparent text-xs font-medium outline-none text-ink-mute mt-2 border-t border-slate-100 pt-1"
                           />
                         </div>
 
                         {/* 9. Battery Warranty */}
                         <div className="rounded-xl bg-slate-50 border border-slate-200 p-3 shadow-xs opacity-75">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Battery Warranty (Preview)</span>
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-ink-mute block mb-1">Battery Warranty (Preview)</span>
                           <p className="text-xs font-black text-slate-700 leading-tight">
                             Lifetime Warranty <span className="text-[9px] font-bold text-emerald-600 block mt-0.5">(Free Replacement &lt;70% Health)</span>
                           </p>
@@ -3858,11 +3858,11 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   <>
                   <div className="mt-4 flex flex-wrap items-end gap-2">
                     <label className="block flex-1 min-w-[160px]">
-                      <span className="text-[8px] font-bold uppercase text-slate-400">Spec section</span>
+                      <span className="text-[8px] font-bold uppercase text-ink-mute">Spec section</span>
                       <select
                         value={resolvedSpec}
                         onChange={(e) => setActiveSpec(e.target.value)}
-                        className="mt-0.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-sky-400"
+                        className="mt-0.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-brand"
                       >
                         {specOptions.map((o) => (
                           <option key={o.value} value={o.value}>{o.label}</option>
@@ -3879,25 +3879,25 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                     <button
                       type="button"
                       onClick={() => pushExtra("field")}
-                      className="shrink-0 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2.5 text-[11px] font-bold text-sky-700 hover:bg-sky-100"
+                      className="shrink-0 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-[11px] font-bold text-emerald-700 hover:bg-emerald-100"
                     >
                       + Extra field
                     </button>
                     <button
                       type="button"
                       onClick={() => pushExtra("checkbox")}
-                      className="shrink-0 rounded-lg border border-violet-200 bg-violet-50 px-3 py-2.5 text-[11px] font-bold text-violet-700 hover:bg-violet-100"
+                      className="shrink-0 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-[11px] font-bold text-emerald-700 hover:bg-emerald-100"
                     >
                       + Extra checkbox
                     </button>
                   </div>
 
                   {resolvedSpec === "motor" && (
-                  <div className="mt-4 rounded-xl border-2 border-sky-300 bg-sky-100 p-4">
+                  <div className="mt-4 rounded-xl border-2 border-brand bg-emerald-100 p-4">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-xs font-bold uppercase tracking-wider text-sky-600">⚡ Motor & Engine</p>
+                      <p className="text-xs font-bold uppercase tracking-wider text-emerald-600">⚡ Motor & Engine</p>
                       <div className="flex items-center gap-3">
-                        <button type="button" onClick={() => setMotorClipboard({ max_power_bhp: v.max_power_bhp, max_torque_nm: v.max_torque_nm, top_speed: v.top_speed, battery_capacity_kwh: v.battery_capacity_kwh, driving_range_km: v.driving_range_km, extra_motor: (v as any).extra_motor })} className="text-[10px] font-bold text-sky-600 hover:text-sky-700">📋 Copy</button>
+                        <button type="button" onClick={() => setMotorClipboard({ max_power_bhp: v.max_power_bhp, max_torque_nm: v.max_torque_nm, top_speed: v.top_speed, battery_capacity_kwh: v.battery_capacity_kwh, driving_range_km: v.driving_range_km, extra_motor: (v as any).extra_motor })} className="text-[10px] font-bold text-emerald-600 hover:text-emerald-700">📋 Copy</button>
                         {motorClipboard && (
                           <button type="button" onClick={() => {
                             setVariants(prev => prev.map((vr, vi) => {
@@ -3914,9 +3914,9 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                               }
                               return vr;
                             }));
-                          }} className="text-[10px] font-bold text-sky-600 hover:text-sky-700">📋 Paste</button>
+                          }} className="text-[10px] font-bold text-emerald-600 hover:text-emerald-700">📋 Paste</button>
                         )}
-                        <label className="flex items-center gap-1 text-[10px] font-bold text-violet-600 cursor-pointer">
+                        <label className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 cursor-pointer">
                           <input
                             type="checkbox"
                             checked={sameForAllMotor}
@@ -3950,7 +3950,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                     </div>
                     <VariantExtrasEditor
                       extras={normalizeExtras((v as any).extra_motor)}
-                      inputBorder="border-sky-200"
+                      inputBorder="border-emerald-200"
                       onChange={(next) => updateVariantMotorExtra(i, next)}
                     />
                   </div>
@@ -3958,7 +3958,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
 
                   {resolvedSpec === "charging" && (
                   <>
-                  <div className="mt-4 rounded-xl border-2 border-emerald-300 bg-emerald-100 p-4">
+                  <div className="mt-4 rounded-xl border-2 border-brand bg-emerald-100 p-4">
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-xs font-bold uppercase tracking-wider text-emerald-600">🔋 Charging</p>
                       <div className="flex items-center gap-3">
@@ -3984,7 +3984,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                             }));
                           }} className="text-[10px] font-bold text-emerald-700 hover:text-emerald-800">📋 Paste</button>
                         )}
-                        <label className="flex items-center gap-1 text-[10px] font-bold text-violet-600 cursor-pointer">
+                        <label className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 cursor-pointer">
                           <input
                             type="checkbox"
                             checked={sameForAllCharging}
@@ -4038,7 +4038,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                           const next = [...((v as any).extra_charging || [])];
                           next.splice(ei, 1);
                           updateVariantChargingExtra(i, next);
-                        }} className="text-rose-400 text-xs">×</button>
+                        }} className="text-coral text-xs">×</button>
                       </div>
                     ))}
                   </div>
@@ -4072,7 +4072,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                             }));
                           }} className="text-[10px] font-bold text-slate-600 hover:text-slate-700">📋 Paste</button>
                         )}
-                        <label className="flex items-center gap-1 text-[10px] font-bold text-violet-600 cursor-pointer">
+                        <label className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 cursor-pointer">
                           <input
                             type="checkbox"
                             checked={sameForAllDimensions}
@@ -4144,7 +4144,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                               const src = (variants[0] as any).extra_sections || [];
                               setVariants(variants.map((vr, vi) => vi === 0 ? vr : { ...vr, extra_sections: JSON.parse(JSON.stringify(src)) } as any));
                             }}
-                            className="text-[8px] font-bold text-violet-600 hover:text-violet-700"
+                            className="text-[8px] font-bold text-emerald-600 hover:text-emerald-700"
                           >
                             📋 Copy to all
                           </button>
@@ -4184,11 +4184,11 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   )}
 
                   {resolvedSpec === "extra_specs" && (
-                  <div className="mt-4 rounded-xl border-2 border-violet-300 bg-violet-100 p-4">
-                    <p className="text-xs font-bold uppercase tracking-wider text-violet-600 mb-2">Extra Specs</p>
+                  <div className="mt-4 rounded-xl border-2 border-emerald-300 bg-emerald-100 p-4">
+                    <p className="text-xs font-bold uppercase tracking-wider text-emerald-600 mb-2">Extra Specs</p>
                     <VariantExtrasEditor
                       extras={normalizeExtras((v as any).custom_fields)}
-                      inputBorder="border-violet-200"
+                      inputBorder="border-emerald-200"
                       onChange={(next) => {
                         const arr = [...variants];
                         (arr[i] as any).custom_fields = next;
@@ -4272,7 +4272,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                         ))}
                       </div>
                       <div className="mt-3 pt-3 border-t border-slate-200">
-                        <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Extra Features</p>
+                        <p className="text-xs font-bold uppercase tracking-wider text-ink-mute mb-2">Extra Features</p>
                         <VariantExtrasEditor extras={normalizeExtras((v.features as any)?.extra_features)} inputBorder="border-slate-300" onChange={(next) => { const arr = [...variants]; arr[i] = { ...arr[i], features: { ...defaultFeatures, ...arr[i].features, extra_features: next } }; setVariants(arr); }} />
                       </div>
                     </div>
@@ -4309,14 +4309,14 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                           <button
                             type="button"
                             onClick={() => pushExtra("checkbox")}
-                            className="rounded-md border border-violet-300 bg-violet-50 px-2.5 py-1 text-[10px] font-bold text-violet-700 hover:bg-violet-100 cursor-pointer shadow-xs"
+                            className="rounded-md border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700 hover:bg-emerald-100 cursor-pointer shadow-xs"
                           >
                             + Add Mode Checkbox
                           </button>
                           <button
                             type="button"
                             onClick={() => pushExtra("field")}
-                            className="rounded-md border border-sky-300 bg-sky-50 px-2.5 py-1 text-[10px] font-bold text-sky-700 hover:bg-sky-100 cursor-pointer shadow-xs"
+                            className="rounded-md border border-brand bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700 hover:bg-emerald-100 cursor-pointer shadow-xs"
                           >
                             + Add Mode Field
                           </button>
@@ -4422,14 +4422,14 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   }
                 };
                 return (
-                  <div className="mb-4 p-4 bg-sky-50 rounded-xl border border-sky-200">
-                    <p className="text-xs font-extrabold text-sky-800 uppercase tracking-wider mb-3">Quick Add Recommended Presets ({getBracketLabel(form.price_bracket)}):</p>
+                  <div className="mb-4 p-4 bg-emerald-50 rounded-xl border border-emerald-200">
+                    <p className="text-xs font-extrabold text-emerald-800 uppercase tracking-wider mb-3">Quick Add Recommended Presets ({getBracketLabel(form.price_bracket)}):</p>
                     <div className="grid gap-3 sm:grid-cols-2">
                       {matchedPresets.map((pc) => {
                         const brandParts = pc.model.split(" ");
                         const brand = brandParts[0] || "";
                         return (
-                          <div key={pc.model} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2 bg-white rounded-lg border border-sky-100 shadow-xs">
+                          <div key={pc.model} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2 bg-white rounded-lg border border-emerald-100 shadow-xs">
                             <span className="text-xs font-bold text-slate-800">{pc.model}</span>
                             <div className="flex flex-wrap gap-1.5">
                               {pc.variants.petrol && (
@@ -4483,7 +4483,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                                 </div>
                               )}
                               {pc.variants.ev && (
-                                <div className="flex items-center gap-1 bg-sky-50 text-sky-900 border border-sky-200 rounded-md px-1.5 py-0.5 text-[10px] font-bold">
+                                <div className="flex items-center gap-1 bg-emerald-50 text-emerald-900 border border-emerald-200 rounded-md px-1.5 py-0.5 text-[10px] font-bold">
                                   <span>EV ({pc.variants.ev})</span>
                                   <button
                                     type="button"
@@ -4501,7 +4501,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                                         }
                                       ]);
                                     }}
-                                    className="bg-sky-600 hover:bg-sky-700 text-white font-extrabold rounded-md px-1.5 py-0.5 transition-colors cursor-pointer"
+                                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-md px-1.5 py-0.5 transition-colors cursor-pointer"
                                   >
                                     + Add
                                   </button>
@@ -4523,7 +4523,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                       setSelectedPresetType(e.target.value as any);
                       setSelectedPresetModel("");
                     }}
-                    className="text-xs px-3 py-2 rounded-lg border border-slate-300 bg-white font-bold text-slate-700 outline-none cursor-pointer focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                    className="text-xs px-3 py-2 rounded-lg border border-slate-300 bg-white font-bold text-slate-700 outline-none cursor-pointer focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                   >
                     <option value="">-- Vehicle Type --</option>
                     <option value="2 Wheeler">2 Wheeler</option>
@@ -4535,7 +4535,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                     value={selectedPresetModel}
                     onChange={(e) => setSelectedPresetModel(e.target.value)}
                     disabled={!selectedPresetType}
-                    className="text-xs px-3 py-2 rounded-lg border border-slate-300 bg-white font-bold text-slate-700 outline-none cursor-pointer disabled:opacity-50 focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                    className="text-xs px-3 py-2 rounded-lg border border-slate-300 bg-white font-bold text-slate-700 outline-none cursor-pointer disabled:opacity-50 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                   >
                     <option value="">-- Choose Model --</option>
                     {PRESET_COMPETITORS.filter(pc => pc.type === selectedPresetType).map((pc) => (
@@ -4565,7 +4565,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                         setEnergyComps(updated);
                         alert(`Applied ${cityName} fuel & electricity prices to all items!`);
                       }}
-                      className="text-xs px-3 py-2 rounded-lg border border-emerald-300 bg-emerald-50 font-bold text-emerald-800 outline-none cursor-pointer focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                      className="text-xs px-3 py-2 rounded-lg border border-brand bg-emerald-50 font-bold text-emerald-800 outline-none cursor-pointer focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                     >
                       <option value="">⚡ Apply City Rates</option>
                       {dbFuelPrices.map((p) => (
@@ -4574,7 +4574,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                     </select>
                   )}
 
-                  <button onClick={() => setEnergyComps([...energyComps, { category: "fuel", name: "", fuel_type: "Petrol", mileage: "", fuel_price: "", model_used: "", brand: "" }])} className="text-xs bg-slate-900 text-white font-bold px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors shadow-sm cursor-pointer">+ Custom Fuel Type</button>
+                  <button onClick={() => setEnergyComps([...energyComps, { category: "fuel", name: "", fuel_type: "Petrol", mileage: "", fuel_price: "", model_used: "", brand: "" }])} className="text-xs bg-white text-ink font-bold px-4 py-2 rounded-lg hover:bg-white transition-colors shadow-sm cursor-pointer">+ Custom Fuel Type</button>
                 </div>
               </div>
 
@@ -4584,13 +4584,13 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                 const brandParts = pc.model.split(" ");
                 const brand = brandParts[0] || "";
                 return (
-                  <div className="mb-4 p-4 bg-sky-50 rounded-xl border border-sky-200 shadow-sm flex flex-col gap-3">
-                    <div className="flex justify-between items-center border-b border-sky-100 pb-2">
-                      <span className="text-xs font-extrabold text-sky-900">Add Competitor Model: <span className="underline font-black">{pc.model}</span></span>
+                  <div className="mb-4 p-4 bg-emerald-50 rounded-xl border border-emerald-200 shadow-sm flex flex-col gap-3">
+                    <div className="flex justify-between items-center border-b border-emerald-100 pb-2">
+                      <span className="text-xs font-extrabold text-emerald-900">Add Competitor Model: <span className="underline font-black">{pc.model}</span></span>
                       <button
                         type="button"
                         onClick={() => setSelectedPresetModel("")}
-                        className="text-xs font-extrabold text-slate-500 hover:text-rose-500 bg-white border border-slate-200 hover:border-rose-200 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                        className="text-xs font-extrabold text-ink-mute hover:text-rose-500 bg-white border border-slate-200 hover:border-rose-200 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
                       >
                         Cancel
                       </button>
@@ -4651,8 +4651,8 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                         </div>
                       )}
                       {pc.variants.ev && (
-                        <div className="flex items-center gap-2 bg-white text-slate-900 border border-sky-200 rounded-lg p-2 text-xs font-bold shadow-xs">
-                          <span className="bg-sky-100 text-sky-800 px-2 py-1 rounded text-[10px]">EV</span>
+                        <div className="flex items-center gap-2 bg-white text-slate-900 border border-emerald-200 rounded-lg p-2 text-xs font-bold shadow-xs">
+                          <span className="bg-emerald-100 text-emerald-800 px-2 py-1 rounded text-[10px]">EV</span>
                           <span>{pc.variants.ev}</span>
                           <button
                             type="button"
@@ -4671,7 +4671,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                               ]);
                               setSelectedPresetModel("");
                             }}
-                            className="bg-sky-600 hover:bg-sky-700 text-white font-extrabold rounded-md px-2 py-1 transition-colors cursor-pointer text-[10px]"
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-md px-2 py-1 transition-colors cursor-pointer text-[10px]"
                           >
                             Add +
                           </button>
@@ -4686,7 +4686,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   <div className="flex items-center justify-between px-3 py-2 bg-slate-50 cursor-pointer" onClick={() => { const arr = [...energyComps]; (arr[i] as any).collapsed = !(arr[i] as any).collapsed; setEnergyComps(arr); }}>
                     <span className="text-xs font-bold text-slate-700 flex items-center gap-2">
                       {(ec as any).collapsed ? <ChevronDown size={12} /> : <ChevronUp size={12} />}
-                      {ec.name || "Untitled"} <span className={`text-[9px] px-1.5 py-0.5 rounded ${ec.category === "model" ? "bg-sky-100 text-sky-600" : "bg-amber-100 text-amber-600"}`}>{ec.fuel_type}</span>
+                      {ec.name || "Untitled"} <span className={`text-[9px] px-1.5 py-0.5 rounded ${ec.category === "model" ? "bg-emerald-100 text-emerald-600" : "bg-amber-100 text-amber-600"}`}>{ec.fuel_type}</span>
                     </span>
                     <button onClick={(e) => { e.stopPropagation(); setEnergyComps(energyComps.filter((_, j) => j !== i)); }} className="text-[10px] text-rose-500 font-bold">Remove</button>
                   </div>
@@ -4694,7 +4694,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   <div className="p-3">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     <MiniInput label="Name" value={ec.name} onChange={(val) => { const arr = [...energyComps]; arr[i] = { ...arr[i], name: val }; setEnergyComps(arr); }} />
-                    <label className="block"><span className="text-[10px] font-bold uppercase text-slate-400">Fuel Type</span><select value={ec.fuel_type} onChange={(e) => { const arr = [...energyComps]; arr[i] = { ...arr[i], fuel_type: e.target.value }; setEnergyComps(arr); }} className="mt-0.5 w-full rounded-md border border-slate-200 px-2.5 py-2 text-sm outline-none"><option value="self">Self (this EV)</option><option value="EV">EV</option><option value="Petrol">Petrol</option><option value="Diesel">Diesel</option><option value="CNG">CNG</option></select></label>
+                    <label className="block"><span className="text-[10px] font-bold uppercase text-ink-mute">Fuel Type</span><select value={ec.fuel_type} onChange={(e) => { const arr = [...energyComps]; arr[i] = { ...arr[i], fuel_type: e.target.value }; setEnergyComps(arr); }} className="mt-0.5 w-full rounded-md border border-slate-200 px-2.5 py-2 text-sm outline-none"><option value="self">Self (this EV)</option><option value="EV">EV</option><option value="Petrol">Petrol</option><option value="Diesel">Diesel</option><option value="CNG">CNG</option></select></label>
                     <MiniInput label={ec.fuel_type === "EV" || ec.fuel_type === "self" ? "Range (km) or Mileage (Rs/km)" : "Mileage (km/L)"} value={ec.mileage} onChange={(val) => { const arr = [...energyComps]; arr[i] = { ...arr[i], mileage: val }; setEnergyComps(arr); }} />
                     <MiniInput label={ec.fuel_type === "EV" || ec.fuel_type === "self" ? "₹/km (Running Cost)" : "₹/L or ₹/kg"} value={ec.fuel_price} onChange={(val) => { const arr = [...energyComps]; arr[i] = { ...arr[i], fuel_price: val }; setEnergyComps(arr); }} />
                     <MiniInput label="Model Used" value={ec.model_used} onChange={(val) => { const arr = [...energyComps]; arr[i] = { ...arr[i], model_used: val }; setEnergyComps(arr); }} />
@@ -4709,13 +4709,13 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             )}
 
             {listingFormTab === "pricing" && (
-            <div className="rounded-xl border-2 border-sky-300 bg-sky-100 p-4 space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-sky-200 pb-3">
+            <div className="rounded-xl border-2 border-brand bg-emerald-100 p-4 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-emerald-200 pb-3">
                 <div>
-                  <p className="text-xs font-black uppercase tracking-wider text-sky-800">
+                  <p className="text-xs font-black uppercase tracking-wider text-emerald-800">
                     Vehicle Pricing & Area Rules ({form.city_pricing?.length || 0} entries)
                   </p>
-                  <p className="text-[11px] text-sky-700 mt-0.5">
+                  <p className="text-[11px] text-emerald-700 mt-0.5">
                     Define custom city/district pricing, or auto-calculate on-road prices using Area Type % & Max Cap rules.
                   </p>
                 </div>
@@ -4727,7 +4727,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                       setActiveSection("listings");
                       setListingsSubTab("pricing");
                     }}
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-800 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 px-3 py-1.5 rounded-lg shadow-xs transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-800 bg-emerald-100 hover:bg-emerald-200 border border-brand px-3 py-1.5 rounded-lg shadow-xs transition-colors cursor-pointer"
                   >
                     💰 Open Area Pricing Panel
                   </button>
@@ -4800,7 +4800,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                     navigator.clipboard.writeText(JSON.stringify(exportData, null, 2))
                       .then(() => alert("Pricing template copied to clipboard!"))
                       .catch((err) => alert("Failed to copy pricing: " + err));
-                  }} className="inline-flex items-center gap-1.5 rounded-lg border border-sky-200 bg-white px-2.5 py-1.5 text-xs font-bold text-sky-600 hover:bg-sky-50 cursor-pointer shadow-xs transition-colors">
+                  }} className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-white px-2.5 py-1.5 text-xs font-bold text-emerald-600 hover:bg-emerald-50 cursor-pointer shadow-xs transition-colors">
                     <Copy size={12} /> Copy JSON
                   </button>
                   <button type="button" onClick={() => {
@@ -4906,7 +4906,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                     } catch (e: any) {
                       alert("Invalid JSON format: " + e.message);
                     }
-                  }} className="inline-flex items-center gap-1.5 rounded-lg border border-sky-200 bg-white px-2.5 py-1.5 text-xs font-bold text-sky-600 hover:bg-sky-50 cursor-pointer shadow-xs transition-colors">
+                  }} className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-white px-2.5 py-1.5 text-xs font-bold text-emerald-600 hover:bg-emerald-50 cursor-pointer shadow-xs transition-colors">
                     <Clipboard size={12} className="opacity-75" /> Paste JSON
                   </button>
                   <button type="button" onClick={() => {
@@ -4919,20 +4919,20 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                       variant_id: null,
                     };
                     setForm({ ...form, city_pricing: [...(form.city_pricing || []), newEntry] });
-                  }} className="inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-sky-700 cursor-pointer shadow-xs transition-colors">
+                  }} className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 cursor-pointer shadow-xs transition-colors">
                     <Plus size={12} /> Add Custom Entry
                   </button>
                 </div>
               </div>
 
               {/* ── Area Rule Auto-Calculator Bar ── */}
-              <div className="bg-white rounded-xl border border-sky-200 p-3.5 space-y-2 shadow-xs">
+              <div className="bg-white rounded-xl border border-emerald-200 p-3.5 space-y-2 shadow-xs">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-sky-600 text-white font-bold text-xs">⚡</span>
+                    <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-600 text-white font-bold text-xs">⚡</span>
                     <div>
                       <p className="text-xs font-bold text-slate-900">Auto-Apply Area Type Rule (% & Max Cap)</p>
-                      <p className="text-[11px] text-slate-500">Calculate on-road prices for 10 default cities using state EV policies (% Road Tax + Max Caps + Subsidies).</p>
+                      <p className="text-[11px] text-ink-mute">Calculate on-road prices for 10 default cities using state EV policies (% Road Tax + Max Caps + Subsidies).</p>
                     </div>
                   </div>
 
@@ -5006,7 +5006,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                         setForm({ ...form, city_pricing: generated });
                         alert(`Successfully auto-calculated ${generated.length} pricing entries across 10 cities and variants using Area Rules!`);
                       }}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-sky-700 shadow-xs transition-colors shrink-0 cursor-pointer"
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 shadow-xs transition-colors shrink-0 cursor-pointer"
                     >
                       <Sparkles size={12} /> Auto-Generate from Area Rules
                     </button>
@@ -5017,7 +5017,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
               {/* ── Pricing Entries Table ── */}
               <div className="space-y-3">
                 {form.city_pricing && form.city_pricing.map((p, index) => (
-                  <div key={p.id || index} className="rounded-xl border border-sky-200 bg-white p-3 shadow-xs">
+                  <div key={p.id || index} className="rounded-xl border border-emerald-200 bg-white p-3 shadow-xs">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
                       <MiniInput 
                         label="Location Name" 
@@ -5031,7 +5031,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                       />
 
                       <div className="flex flex-col gap-1">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Location Type</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-ink-mute">Location Type</span>
                         <select 
                           value={p.location_type} 
                           onChange={(e) => {
@@ -5047,7 +5047,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                       </div>
 
                       <div className="flex flex-col gap-1">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Apply To (Variant)</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-ink-mute">Apply To (Variant)</span>
                         <select 
                           value={p.variant_id || ""} 
                           onChange={(e) => {
@@ -5098,9 +5098,9 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   </div>
                 ))}
                 {(!form.city_pricing || form.city_pricing.length === 0) && (
-                  <div className="text-center py-8 bg-white/60 rounded-xl border border-dashed border-sky-300 text-sky-700 text-xs font-semibold space-y-2">
+                  <div className="text-center py-8 bg-white/60 rounded-xl border border-dashed border-brand text-emerald-700 text-xs font-semibold space-y-2">
                     <p>No city or district-wise pricing added yet.</p>
-                    <p className="text-[11px] text-slate-500">Click <strong>"Auto-Generate from Area Rules"</strong> to populate 10 cities with state policy calculations, or <strong>"+ Add Custom Entry"</strong> to enter manual pricing.</p>
+                    <p className="text-[11px] text-ink-mute">Click <strong>"Auto-Generate from Area Rules"</strong> to populate 10 cities with state policy calculations, or <strong>"+ Add Custom Entry"</strong> to enter manual pricing.</p>
                   </div>
                 )}
               </div>
@@ -5109,7 +5109,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             </div>
 
             <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t-2 border-slate-300 pt-4">
-              <p className="text-[10px] text-slate-500">Changes apply to all tabs when you save.</p>
+              <p className="text-[10px] text-ink-mute">Changes apply to all tabs when you save.</p>
               <div className="flex items-center gap-3">
                 {editing && editing !== "new" && (
                   <button
@@ -5147,14 +5147,14 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
         )}
 
         {/* Old listings table — hidden, using "Manage Variants" dropdown above */}
-        {loading && <div className="text-center py-12 text-slate-400">Loading...</div>}
-        {!loading && listings.length === 0 && !editing && <div className="text-center py-12 text-slate-400">No listings yet. Add your first one!</div>}
+        {loading && <div className="text-center py-12 text-ink-mute">Loading...</div>}
+        {!loading && listings.length === 0 && !editing && <div className="text-center py-12 text-ink-mute">No listings yet. Add your first one!</div>}
         </>)}{/* end listingsSubTab === "brands" else */}
         </>)}{/* end activeSection === "listings" */}
       </div>
 
       {isPasteModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white p-4 ">
           <div className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white p-6 shadow-xl flex flex-col max-h-[85vh]">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
               <h3 className="text-lg font-bold text-slate-950">Paste EV Listing JSON</h3>
@@ -5164,7 +5164,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   setIsPasteModalOpen(false);
                   setPastedJson("");
                 }}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors cursor-pointer"
+                className="rounded-lg p-1 text-ink-mute hover:bg-slate-100 hover:text-slate-600 transition-colors cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -5172,13 +5172,13 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
 
             <div className="flex-1 overflow-y-auto space-y-4 pr-1">
               <div>
-                <p className="text-xs font-semibold text-slate-500 mb-1.5">PASTE JSON DATA</p>
+                <p className="text-xs font-semibold text-ink-mute mb-1.5">PASTE JSON DATA</p>
                 <textarea
                   rows={8}
                   value={pastedJson}
                   onChange={(e) => setPastedJson(e.target.value)}
                   placeholder='Paste listing JSON here (e.g. {"form": {...}, "variants": [...]})'
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs font-mono text-slate-800 focus:bg-white focus:border-sky-500 focus:outline-none transition-colors resize-y"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs font-mono text-slate-800 focus:bg-white focus:border-emerald-500 focus:outline-none transition-colors resize-y"
                 />
               </div>
 
@@ -5186,7 +5186,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                 if (!pastedJson.trim()) {
                   return (
                     <div className="rounded-xl bg-slate-50 border border-dashed border-slate-200 p-4 text-center">
-                      <p className="text-xs text-slate-500">Paste valid listing JSON to see a preview of the contents.</p>
+                      <p className="text-xs text-ink-mute">Paste valid listing JSON to see a preview of the contents.</p>
                     </div>
                   );
                 }
@@ -5209,31 +5209,31 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                         <p className="font-bold text-slate-800 border-b border-slate-200 pb-2">Parsed Content Summary</p>
                         <div className="grid grid-cols-2 gap-2 text-slate-600">
                           <div>
-                            <span className="font-semibold text-slate-400">Model:</span> {formBrand} {formTitle}
+                            <span className="font-semibold text-ink-mute">Model:</span> {formBrand} {formTitle}
                           </div>
                           <div>
-                            <span className="font-semibold text-slate-400">Vehicle Type:</span> {formType}
+                            <span className="font-semibold text-ink-mute">Vehicle Type:</span> {formType}
                           </div>
                           <div>
-                            <span className="font-semibold text-slate-400">Price Bracket:</span> {parsed.form?.price_bracket || "N/A"}
+                            <span className="font-semibold text-ink-mute">Price Bracket:</span> {parsed.form?.price_bracket || "N/A"}
                           </div>
                           <div>
-                            <span className="font-semibold text-slate-400">Body Type:</span> {parsed.form?.body_type || "N/A"}
+                            <span className="font-semibold text-ink-mute">Body Type:</span> {parsed.form?.body_type || "N/A"}
                           </div>
                           <div>
-                            <span className="font-semibold text-slate-400">Variants:</span> {numVariants} variant(s)
+                            <span className="font-semibold text-ink-mute">Variants:</span> {numVariants} variant(s)
                           </div>
                           <div>
-                            <span className="font-semibold text-slate-400">Competitors:</span> {numEnergy} item(s)
+                            <span className="font-semibold text-ink-mute">Competitors:</span> {numEnergy} item(s)
                           </div>
                         </div>
 
                         {numVariants > 0 && (
                           <div className="pt-2 border-t border-slate-200">
-                            <p className="font-semibold text-slate-500 mb-1">Variants detected:</p>
+                            <p className="font-semibold text-ink-mute mb-1">Variants detected:</p>
                             <div className="flex flex-wrap gap-1.5">
                               {parsed.variants.map((v: any, idx: number) => (
-                                <span key={idx} className="bg-sky-50 border border-sky-100 text-sky-700 px-2 py-0.5 rounded text-[10px] font-medium">
+                                <span key={idx} className="bg-emerald-50 border border-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-medium">
                                   {v.variant_name || `Variant ${idx + 1}`}{v.version_name ? ` (${v.version_name})` : ""}{v.model_year ? ` '${String(v.model_year).slice(-2)}` : ""} {v.price ? `· ₹${v.price}L` : ""}
                                 </span>
                               ))}
@@ -5246,7 +5246,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                         <button
                           type="button"
                           onClick={() => handleApplyPaste(parsed)}
-                          className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-sky-700 transition-colors shadow-sm cursor-pointer"
+                          className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 transition-colors shadow-sm cursor-pointer"
                         >
                           Apply to Form
                         </button>
@@ -5268,7 +5268,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
       )}
 
       {isPasteVariantModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white p-4 ">
           <div className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white p-6 shadow-xl flex flex-col max-h-[85vh]">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
               <h3 className="text-lg font-bold text-slate-950">Paste EV Variant JSON</h3>
@@ -5278,7 +5278,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   setIsPasteVariantModalOpen(false);
                   setPastedVariantJson("");
                 }}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors cursor-pointer"
+                className="rounded-lg p-1 text-ink-mute hover:bg-slate-100 hover:text-slate-600 transition-colors cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -5286,13 +5286,13 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
 
             <div className="flex-1 overflow-y-auto space-y-4 pr-1">
               <div>
-                <p className="text-xs font-semibold text-slate-500 mb-1.5">PASTE VARIANT JSON DATA</p>
+                <p className="text-xs font-semibold text-ink-mute mb-1.5">PASTE VARIANT JSON DATA</p>
                 <textarea
                   rows={8}
                   value={pastedVariantJson}
                   onChange={(e) => setPastedVariantJson(e.target.value)}
                   placeholder='Paste variant JSON here (e.g. {"variant_name": "Pro", "price": 15, "driving_range_km": "400", "features": {...}})'
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs font-mono text-slate-800 focus:bg-white focus:border-sky-500 focus:outline-none transition-colors resize-y"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs font-mono text-slate-800 focus:bg-white focus:border-emerald-500 focus:outline-none transition-colors resize-y"
                 />
               </div>
 
@@ -5300,7 +5300,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                 if (!pastedVariantJson.trim()) {
                   return (
                     <div className="rounded-xl bg-slate-50 border border-dashed border-slate-200 p-4 text-center">
-                      <p className="text-xs text-slate-500">Paste valid variant JSON to see a preview of the contents.</p>
+                      <p className="text-xs text-ink-mute">Paste valid variant JSON to see a preview of the contents.</p>
                     </div>
                   );
                 }
@@ -5324,31 +5324,31 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                         <p className="font-bold text-slate-800 border-b border-slate-200 pb-2">Parsed Variant Summary</p>
                         <div className="grid grid-cols-2 gap-2 text-slate-600">
                           <div>
-                            <span className="font-semibold text-slate-400">Variant Name:</span> {varName}
+                            <span className="font-semibold text-ink-mute">Variant Name:</span> {varName}
                           </div>
                           <div>
-                            <span className="font-semibold text-slate-400">Version:</span> {parsed.version_name || "N/A"}
+                            <span className="font-semibold text-ink-mute">Version:</span> {parsed.version_name || "N/A"}
                           </div>
                           <div>
-                            <span className="font-semibold text-slate-400">Price:</span> {price}
+                            <span className="font-semibold text-ink-mute">Price:</span> {price}
                           </div>
                           <div>
-                            <span className="font-semibold text-slate-400">Model Year:</span> {modelYear}
+                            <span className="font-semibold text-ink-mute">Model Year:</span> {modelYear}
                           </div>
                           <div>
-                            <span className="font-semibold text-slate-400">Driving Range:</span> {drivingRange}
+                            <span className="font-semibold text-ink-mute">Driving Range:</span> {drivingRange}
                           </div>
                           <div>
-                            <span className="font-semibold text-slate-400">Battery Capacity:</span> {batteryCapacity}
+                            <span className="font-semibold text-ink-mute">Battery Capacity:</span> {batteryCapacity}
                           </div>
                           <div>
-                            <span className="font-semibold text-slate-400">Has BAAS:</span> {hasBaas}
+                            <span className="font-semibold text-ink-mute">Has BAAS:</span> {hasBaas}
                           </div>
                           <div>
-                            <span className="font-semibold text-slate-400">Top Speed:</span> {parsed.top_speed || "N/A"}
+                            <span className="font-semibold text-ink-mute">Top Speed:</span> {parsed.top_speed || "N/A"}
                           </div>
                           <div>
-                            <span className="font-semibold text-slate-400">Drivetrain:</span> {parsed.features?.drivetrain || "N/A"}
+                            <span className="font-semibold text-ink-mute">Drivetrain:</span> {parsed.features?.drivetrain || "N/A"}
                           </div>
                         </div>
                       </div>
@@ -5357,7 +5357,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                         <button
                           type="button"
                           onClick={() => handleApplyPasteVariant(parsed)}
-                          className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-sky-700 transition-colors shadow-sm cursor-pointer"
+                          className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 transition-colors shadow-sm cursor-pointer"
                         >
                           Apply to Active Variant
                         </button>
@@ -5415,7 +5415,7 @@ function Field({ label, value, onChange, placeholder }: { label: string; value: 
     r.onend = () => setMicActive(false); r.onerror = () => setMicActive(false);
     r.start(); setMicActive(true);
   };
-  return (<label className="block"><span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-800">{label}</span><div className="mt-1 flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2.5"><input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="flex-1 text-sm sm:text-base font-semibold text-slate-900 outline-none bg-transparent" /><button type="button" onClick={startMic} className={`shrink-0 h-6 w-6 rounded-full flex items-center justify-center transition-all ${micActive ? "bg-rose-500 text-white animate-pulse" : "bg-slate-100 text-slate-400 hover:bg-sky-100 hover:text-sky-600"}`}>{micActive ? <MicOff size={10} /> : <Mic size={10} />}</button></div></label>);
+  return (<label className="block"><span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-800">{label}</span><div className="mt-1 flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2.5"><input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="flex-1 text-sm sm:text-base font-semibold text-slate-900 outline-none bg-transparent" /><button type="button" onClick={startMic} className={`shrink-0 h-6 w-6 rounded-full flex items-center justify-center transition-all ${micActive ? "bg-rose-500 text-white animate-pulse" : "bg-slate-100 text-ink-mute hover:bg-emerald-100 hover:text-emerald-600"}`}>{micActive ? <MicOff size={10} /> : <Mic size={10} />}</button></div></label>);
 }
 
 function MiniInput({ label, value, onChange, placeholder, onBlur }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; onBlur?: () => void }) {
@@ -5452,7 +5452,7 @@ function MiniInput({ label, value, onChange, placeholder, onBlur }: { label: str
     r.onend = () => setMicActive(false); r.onerror = () => setMicActive(false);
     r.start(); setMicActive(true);
   };
-  return (<label className="block"><span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-800">{label}</span><div className="mt-1 flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2.5 py-2"><input value={localValue} onChange={(e) => { setLocalValue(e.target.value); onChange(e.target.value); }} onBlur={() => { if (onBlur) onBlur(); }} placeholder={placeholder} className="flex-1 text-sm sm:text-base font-semibold text-slate-900 outline-none bg-transparent min-w-0" /><button type="button" onClick={startMic} className={`shrink-0 h-5 w-5 rounded-full flex items-center justify-center transition-all ${micActive ? "bg-rose-500 text-white animate-pulse" : "bg-slate-100 text-slate-400 hover:bg-sky-100 hover:text-sky-600"}`}>{micActive ? <MicOff size={9} /> : <Mic size={9} />}</button></div></label>);
+  return (<label className="block"><span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-800">{label}</span><div className="mt-1 flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2.5 py-2"><input value={localValue} onChange={(e) => { setLocalValue(e.target.value); onChange(e.target.value); }} onBlur={() => { if (onBlur) onBlur(); }} placeholder={placeholder} className="flex-1 text-sm sm:text-base font-semibold text-slate-900 outline-none bg-transparent min-w-0" /><button type="button" onClick={startMic} className={`shrink-0 h-5 w-5 rounded-full flex items-center justify-center transition-all ${micActive ? "bg-rose-500 text-white animate-pulse" : "bg-slate-100 text-ink-mute hover:bg-emerald-100 hover:text-emerald-600"}`}>{micActive ? <MicOff size={9} /> : <Mic size={9} />}</button></div></label>);
 }
 
 function VariantExtrasEditor({
@@ -5492,7 +5492,7 @@ function VariantExtrasEditor({
               />
               Tick
             </label>
-            <button type="button" onClick={() => onChange(extras.filter((_, j) => j !== ei))} className="text-rose-400 text-xs">×</button>
+            <button type="button" onClick={() => onChange(extras.filter((_, j) => j !== ei))} className="text-coral text-xs">×</button>
           </div>
         ) : (
           <div key={ei} className="flex items-center gap-2">
@@ -5516,7 +5516,7 @@ function VariantExtrasEditor({
               placeholder="Value"
               className={`flex-1 rounded-md border ${inputBorder} bg-white px-3 py-2 text-xs outline-none`}
             />
-            <button type="button" onClick={() => onChange(extras.filter((_, j) => j !== ei))} className="text-rose-400 text-xs">×</button>
+            <button type="button" onClick={() => onChange(extras.filter((_, j) => j !== ei))} className="text-coral text-xs">×</button>
           </div>
         )
       ))}
@@ -5536,15 +5536,15 @@ function ExtraFieldRow({ label, value, onLabelChange, onValueChange, onRemove }:
   };
   return (
     <div className="flex items-center gap-1.5 mb-1.5">
-      <div className="flex-1 flex items-center gap-1 rounded-md border border-violet-200 bg-white px-2 py-1.5">
+      <div className="flex-1 flex items-center gap-1 rounded-md border border-emerald-200 bg-white px-2 py-1.5">
         <input value={label} onChange={(e) => onLabelChange(e.target.value)} placeholder="Label" className="flex-1 text-sm outline-none min-w-0" />
-        <button type="button" onClick={() => startMic("label")} className={`shrink-0 h-4 w-4 rounded-full flex items-center justify-center ${micField === "label" ? "bg-rose-500 text-white animate-pulse" : "bg-violet-100 text-violet-400 hover:bg-violet-200"}`}><Mic size={8} /></button>
+        <button type="button" onClick={() => startMic("label")} className={`shrink-0 h-4 w-4 rounded-full flex items-center justify-center ${micField === "label" ? "bg-rose-500 text-white animate-pulse" : "bg-emerald-100 text-emerald-400 hover:bg-emerald-200"}`}><Mic size={8} /></button>
       </div>
-      <div className="flex-1 flex items-center gap-1 rounded-md border border-violet-200 bg-white px-2 py-1.5">
+      <div className="flex-1 flex items-center gap-1 rounded-md border border-emerald-200 bg-white px-2 py-1.5">
         <input value={value} onChange={(e) => onValueChange(e.target.value)} placeholder="Value" className="flex-1 text-sm outline-none min-w-0" />
-        <button type="button" onClick={() => startMic("value")} className={`shrink-0 h-4 w-4 rounded-full flex items-center justify-center ${micField === "value" ? "bg-rose-500 text-white animate-pulse" : "bg-violet-100 text-violet-400 hover:bg-violet-200"}`}><Mic size={8} /></button>
+        <button type="button" onClick={() => startMic("value")} className={`shrink-0 h-4 w-4 rounded-full flex items-center justify-center ${micField === "value" ? "bg-rose-500 text-white animate-pulse" : "bg-emerald-100 text-emerald-400 hover:bg-emerald-200"}`}><Mic size={8} /></button>
       </div>
-      <button onClick={onRemove} className="text-rose-400 text-xs shrink-0">×</button>
+      <button onClick={onRemove} className="text-coral text-xs shrink-0">×</button>
     </div>
   );
 }
@@ -5564,7 +5564,7 @@ function ProConInput({ value, onChange, onRemove, color }: { value: string; onCh
     <div className="flex items-center gap-1.5 mb-1.5">
       <input value={value} onChange={(e) => onChange(e.target.value)} className={`flex-1 rounded-md border bg-white px-2 py-1.5 text-sm outline-none ${color === "emerald" ? "border-emerald-200" : "border-amber-200"}`} />
       <button type="button" onClick={startMic} className={`shrink-0 h-5 w-5 rounded-full flex items-center justify-center transition-all ${mic ? "bg-rose-500 text-white animate-pulse" : color === "emerald" ? "bg-emerald-100 text-emerald-500 hover:bg-emerald-200" : "bg-amber-100 text-amber-500 hover:bg-amber-200"}`}><Mic size={9} /></button>
-      <button onClick={onRemove} className="text-rose-400 text-xs">×</button>
+      <button onClick={onRemove} className="text-coral text-xs">×</button>
     </div>
   );
 }
@@ -5590,38 +5590,38 @@ function LoginScreen({ supabase, loginError, setLoginError, onSuccess }: { supab
     <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
       <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-8 shadow-lg">
         <h1 className="text-2xl font-black text-slate-900 mb-2">Team Login</h1>
-        <p className="text-sm text-slate-500 mb-6">Access the EV Listings dashboard</p>
+        <p className="text-sm text-ink-mute mb-6">Access the EV Listings dashboard</p>
         {loginError && <p className="text-sm text-rose-600 mb-4 rounded-lg bg-rose-50 px-3 py-2">{loginError}</p>}
         {message && <p className="text-sm text-emerald-600 mb-4 rounded-lg bg-emerald-50 px-3 py-2">{message}</p>}
         <div className="flex rounded-xl bg-slate-100 p-1 gap-1 mb-6">
-          <button onClick={() => { setMode("password"); setLoginError(""); setMessage(""); }} className={`flex-1 rounded-lg py-2 text-xs font-bold transition-all ${mode === "password" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"}`}>Password</button>
-          <button onClick={() => { setMode("otp"); setLoginError(""); setMessage(""); }} className={`flex-1 rounded-lg py-2 text-xs font-bold transition-all ${mode === "otp" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"}`}>Email OTP</button>
+          <button onClick={() => { setMode("password"); setLoginError(""); setMessage(""); }} className={`flex-1 rounded-lg py-2 text-xs font-bold transition-all ${mode === "password" ? "bg-white text-slate-900 shadow-sm" : "text-ink-mute"}`}>Password</button>
+          <button onClick={() => { setMode("otp"); setLoginError(""); setMessage(""); }} className={`flex-1 rounded-lg py-2 text-xs font-bold transition-all ${mode === "otp" ? "bg-white text-slate-900 shadow-sm" : "text-ink-mute"}`}>Email OTP</button>
         </div>
         {mode === "password" && (
           <form onSubmit={handlePasswordLogin} className="space-y-4">
-            <label className="block"><span className="text-[10px] font-bold uppercase text-slate-500">Email</span><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-sky-400" /></label>
-            <label className="block"><span className="text-[10px] font-bold uppercase text-slate-500">Password</span><input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-sky-400" /></label>
-            <button type="submit" disabled={loading} className="w-full rounded-xl bg-slate-900 py-3 text-sm font-bold text-white hover:bg-sky-600 disabled:opacity-50">{loading ? "Signing in..." : "Sign In"}</button>
-            <button type="button" onClick={() => { setMode("forgot"); setLoginError(""); setMessage(""); }} className="w-full text-center text-xs text-sky-600 font-medium">Forgot password?</button>
+            <label className="block"><span className="text-[10px] font-bold uppercase text-ink-mute">Email</span><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-brand" /></label>
+            <label className="block"><span className="text-[10px] font-bold uppercase text-ink-mute">Password</span><input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-brand" /></label>
+            <button type="submit" disabled={loading} className="w-full rounded-xl bg-white py-3 text-sm font-bold text-white hover:bg-emerald-600 disabled:opacity-50">{loading ? "Signing in..." : "Sign In"}</button>
+            <button type="button" onClick={() => { setMode("forgot"); setLoginError(""); setMessage(""); }} className="w-full text-center text-xs text-emerald-600 font-medium">Forgot password?</button>
           </form>
         )}
         {mode === "otp" && !message && (
           <form onSubmit={handleSendOtp} className="space-y-4">
-            <label className="block"><span className="text-[10px] font-bold uppercase text-slate-500">Email</span><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-sky-400" /></label>
-            <button type="submit" disabled={loading} className="w-full rounded-xl bg-slate-900 py-3 text-sm font-bold text-white hover:bg-sky-600 disabled:opacity-50">{loading ? "Sending..." : "Send Login Code"}</button>
+            <label className="block"><span className="text-[10px] font-bold uppercase text-ink-mute">Email</span><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-brand" /></label>
+            <button type="submit" disabled={loading} className="w-full rounded-xl bg-white py-3 text-sm font-bold text-white hover:bg-emerald-600 disabled:opacity-50">{loading ? "Sending..." : "Send Login Code"}</button>
           </form>
         )}
         {mode === "otp" && message && (
           <form onSubmit={handleVerifyOtp} className="space-y-4">
-            <label className="block"><span className="text-[10px] font-bold uppercase text-slate-500">6-digit code</span><input type="text" value={otp} onChange={(e) => setOtp(e.target.value)} required maxLength={6} inputMode="numeric" className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-center font-mono tracking-[0.5em] outline-none focus:border-sky-400" /></label>
+            <label className="block"><span className="text-[10px] font-bold uppercase text-ink-mute">6-digit code</span><input type="text" value={otp} onChange={(e) => setOtp(e.target.value)} required maxLength={6} inputMode="numeric" className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-center font-mono tracking-[0.5em] outline-none focus:border-brand" /></label>
             <button type="submit" disabled={loading} className="w-full rounded-xl bg-emerald-600 py-3 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-50">{loading ? "Verifying..." : "Verify & Login"}</button>
           </form>
         )}
         {mode === "forgot" && (
           <form onSubmit={handleForgotPassword} className="space-y-4">
-            <label className="block"><span className="text-[10px] font-bold uppercase text-slate-500">Email</span><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-sky-400" /></label>
-            <button type="submit" disabled={loading} className="w-full rounded-xl bg-slate-900 py-3 text-sm font-bold text-white hover:bg-sky-600 disabled:opacity-50">{loading ? "Sending..." : "Send Reset"}</button>
-            <button type="button" onClick={() => { setMode("password"); setMessage(""); }} className="w-full text-center text-xs text-slate-500">← Back to login</button>
+            <label className="block"><span className="text-[10px] font-bold uppercase text-ink-mute">Email</span><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-brand" /></label>
+            <button type="submit" disabled={loading} className="w-full rounded-xl bg-white py-3 text-sm font-bold text-white hover:bg-emerald-600 disabled:opacity-50">{loading ? "Sending..." : "Send Reset"}</button>
+            <button type="button" onClick={() => { setMode("password"); setMessage(""); }} className="w-full text-center text-xs text-ink-mute">← Back to login</button>
           </form>
         )}
       </div>

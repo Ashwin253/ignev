@@ -5,7 +5,7 @@ export const revalidate = 60; // Cache for 60 seconds
 
 export async function GET() {
   try {
-    const listings = await fetchEvListingsFromSupabase(100);
+    const listings = await fetchEvListingsFromSupabase(300);
     
     if (!listings || listings.length === 0) {
       return new Response("No listings found in database", { status: 404 });
@@ -55,8 +55,8 @@ export async function GET() {
     });
 
     // Generate llms.txt content
-    let llmsContent = `# EVPULSE EV Catalog Database\n\n`;
-    llmsContent += `> Welcome to EVPULSE, a clean electric vehicle directory cataloging cars, scooters, and autos with detailed pricing, real range, specifications, battery capacities, and reviews.\n\n`;
+    let llmsContent = `# EVPLSE EV Catalog Database\n\n`;
+    llmsContent += `> Welcome to EVPLSE, a clean electric vehicle directory cataloging cars, scooters, and autos with detailed pricing, real range, specifications, battery capacities, and reviews.\n\n`;
     llmsContent += `## AI Integration & Model Context Protocol (MCP)\n`;
     llmsContent += `AI assistants (Claude, Cursor, ChatGPT, Gemini) can query our live database with tool calls:\n`;
     llmsContent += `- Model Context Protocol (MCP) Endpoint: /api/mcp\n`;

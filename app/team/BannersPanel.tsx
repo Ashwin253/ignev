@@ -179,13 +179,13 @@ export default function BannersPanel({ supabase }: { supabase: any }) {
       <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl p-1.5 w-fit">
         <button
           onClick={() => { setPanelMode("hero"); setEditing(null); }}
-          className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${panelMode === "hero" ? "bg-slate-900 text-white shadow-sm" : "text-slate-500 hover:text-slate-800"}`}
+          className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${panelMode === "hero" ? "bg-white text-ink shadow-sm" : "text-ink-mute hover:text-slate-800"}`}
         >
           🖼️ Hero Banners
         </button>
         <button
           onClick={() => { setPanelMode("offer_popup"); setEditing(null); }}
-          className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${panelMode === "offer_popup" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-500 hover:text-slate-800"}`}
+          className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${panelMode === "offer_popup" ? "bg-emerald-600 text-white shadow-sm" : "text-ink-mute hover:text-slate-800"}`}
         >
           🎁 Offer Popup
         </button>
@@ -203,16 +203,16 @@ export default function BannersPanel({ supabase }: { supabase: any }) {
           <span className="font-bold text-slate-900">{banners.length}</span>{" "}
           {panelMode === "offer_popup" ? "offer popup banner" : "banner"}{banners.length !== 1 ? "s" : ""}
         </p>
-        <button onClick={startNew} className="inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-3 py-2 text-xs font-bold text-white hover:bg-sky-700">
+        <button onClick={startNew} className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-700">
           <Plus size={12} /> {panelMode === "offer_popup" ? "Set Offer Popup" : "Add Banner"}
         </button>
       </div>
 
       {editing && (
-        <div className="rounded-2xl border border-sky-200 bg-sky-50 p-5 mb-6">
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <p className="text-sm font-bold text-sky-700">{editing === "new" ? "New Banner" : "Edit Banner"}</p>
-            <button onClick={() => setEditing(null)} className="text-slate-400 hover:text-slate-600"><X size={16} /></button>
+            <p className="text-sm font-bold text-emerald-700">{editing === "new" ? "New Banner" : "Edit Banner"}</p>
+            <button onClick={() => setEditing(null)} className="text-ink-mute hover:text-slate-600"><X size={16} /></button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <label className="block"><span className="text-xs font-bold text-slate-600">Call to Action (CTA)</span><input value={form.cta} onChange={(e) => setForm({ ...form, cta: e.target.value })} placeholder="e.g. Explore catalog" className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none" /></label>
@@ -230,7 +230,7 @@ export default function BannersPanel({ supabase }: { supabase: any }) {
             <label className="block sm:col-span-2">
               <span className="text-xs font-bold text-slate-600">Video URL (.mp4 or similar)</span>
               <div className="flex gap-2">
-                <input value={form.video_url || ""} onChange={(e) => setForm({ ...form, video_url: e.target.value })} placeholder="e.g. https://.../video.mp4 (Takes priority over images)" className="mt-1 flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none bg-sky-50" />
+                <input value={form.video_url || ""} onChange={(e) => setForm({ ...form, video_url: e.target.value })} placeholder="e.g. https://.../video.mp4 (Takes priority over images)" className="mt-1 flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none bg-emerald-50" />
                 <label className="mt-1 flex items-center justify-center rounded-lg bg-slate-100 px-3 py-2 text-xs font-bold text-slate-600 cursor-pointer hover:bg-slate-200 border border-slate-200 shrink-0">
                   {uploadingField === "video_url" ? <Loader2 size={14} className="animate-spin" /> : "Upload"}
                   <input type="file" accept="video/*" className="hidden" onChange={(e) => handleUpload(e, "video_url")} />
@@ -239,7 +239,7 @@ export default function BannersPanel({ supabase }: { supabase: any }) {
             </label>
 
             {/* Desktop / Horizontal Image */}
-            <div className="p-3.5 rounded-xl bg-white border border-sky-100 shadow-xs space-y-2">
+            <div className="p-3.5 rounded-xl bg-white border border-emerald-100 shadow-xs space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-700">Image (Horizontal / Desktop)</span>
                 {form.image_horizontal?.toLowerCase().endsWith(".avif") && (
@@ -266,7 +266,7 @@ export default function BannersPanel({ supabase }: { supabase: any }) {
                   <button
                     type="button"
                     onClick={() => setCropModalData({ url: form.image_horizontal, field: "image_horizontal" })}
-                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold shadow-xs transition-colors"
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow-xs transition-colors"
                   >
                     <Crop size={14} /> Crop, Resize &amp; Add Space
                   </button>
@@ -284,7 +284,7 @@ export default function BannersPanel({ supabase }: { supabase: any }) {
             </div>
 
             {/* Mobile / Vertical Image */}
-            <div className="p-3.5 rounded-xl bg-white border border-sky-100 shadow-xs space-y-2">
+            <div className="p-3.5 rounded-xl bg-white border border-emerald-100 shadow-xs space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-700">Image (Vertical / Mobile)</span>
                 {form.image_vertical?.toLowerCase().endsWith(".avif") && (
@@ -316,7 +316,7 @@ export default function BannersPanel({ supabase }: { supabase: any }) {
                         field: "image_vertical",
                       })
                     }
-                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold shadow-xs transition-colors"
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow-xs transition-colors"
                   >
                     {form.image_vertical ? (
                       <>
@@ -397,14 +397,14 @@ export default function BannersPanel({ supabase }: { supabase: any }) {
         </div>
       )}
 
-      {loading ? <p className="text-slate-400 text-sm text-center py-8">Loading banners...</p> : (
+      {loading ? <p className="text-ink-mute text-sm text-center py-8">Loading banners...</p> : (
         <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
           {banners.map((b, idx) => (
             <div key={b.id} className={`flex items-center justify-between px-4 py-3 border-b border-slate-100 last:border-0 ${!b.is_active ? "opacity-50" : ""}`}>
               <div className="flex items-center gap-4">
                 <div className="flex flex-col items-center gap-1 bg-slate-50 p-1 rounded border border-slate-100">
-                  <button onClick={() => moveBanner(idx, -1)} disabled={idx === 0} className="text-slate-400 hover:text-sky-600 disabled:opacity-30 disabled:hover:text-slate-400"><ArrowUp size={14} /></button>
-                  <button onClick={() => moveBanner(idx, 1)} disabled={idx === banners.length - 1} className="text-slate-400 hover:text-sky-600 disabled:opacity-30 disabled:hover:text-slate-400"><ArrowDown size={14} /></button>
+                  <button onClick={() => moveBanner(idx, -1)} disabled={idx === 0} className="text-ink-mute hover:text-emerald-600 disabled:opacity-30 disabled:hover:text-ink-mute"><ArrowUp size={14} /></button>
+                  <button onClick={() => moveBanner(idx, 1)} disabled={idx === banners.length - 1} className="text-ink-mute hover:text-emerald-600 disabled:opacity-30 disabled:hover:text-ink-mute"><ArrowDown size={14} /></button>
                 </div>
                 <div className="h-12 w-20 rounded bg-slate-100 overflow-hidden relative shrink-0 border border-slate-200">
                   {b.image_horizontal && <img src={b.image_horizontal} alt={b.cta} className="object-cover w-full h-full" loading="lazy" />}
@@ -427,12 +427,12 @@ export default function BannersPanel({ supabase }: { supabase: any }) {
                 </div>
                 <div>
                   <p className="text-sm font-bold text-slate-800">
-                    <span className="mr-2 inline-flex items-center justify-center bg-slate-100 text-slate-500 rounded-full h-5 w-5 text-[10px] font-bold">
+                    <span className="mr-2 inline-flex items-center justify-center bg-slate-100 text-ink-mute rounded-full h-5 w-5 text-[10px] font-bold">
                       {idx + 1}
                     </span>
                     {b.cta || "(No CTA)"}
                   </p>
-                  <p className="text-xs text-slate-500 mt-0.5">Links to: {b.href}</p>
+                  <p className="text-xs text-ink-mute mt-0.5">Links to: {b.href}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
@@ -445,22 +445,22 @@ export default function BannersPanel({ supabase }: { supabase: any }) {
                         field: b.image_horizontal ? "image_horizontal" : "image_vertical",
                       });
                     }}
-                    className="flex items-center gap-1 px-2 py-1 rounded bg-sky-50 hover:bg-sky-100 text-sky-700 text-[11px] font-bold border border-sky-200 transition-colors"
+                    className="flex items-center gap-1 px-2 py-1 rounded bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[11px] font-bold border border-emerald-200 transition-colors"
                     title="Crop, resize or convert banner"
                   >
                     <Crop size={12} /> Crop
                   </button>
                 )}
-                <button onClick={() => startEdit(b)} className="p-1.5 rounded hover:bg-slate-100 text-slate-500 font-bold hover:text-sky-600" title="Edit banner">
+                <button onClick={() => startEdit(b)} className="p-1.5 rounded hover:bg-slate-100 text-ink-mute font-bold hover:text-emerald-600" title="Edit banner">
                   <Pencil size={13} />
                 </button>
-                <button onClick={() => handleDelete(b.id)} className="p-1.5 rounded hover:bg-rose-50 text-slate-500 font-bold hover:text-rose-500" title="Delete banner">
+                <button onClick={() => handleDelete(b.id)} className="p-1.5 rounded hover:bg-rose-50 text-ink-mute font-bold hover:text-rose-500" title="Delete banner">
                   <Trash2 size={13} />
                 </button>
               </div>
             </div>
           ))}
-          {banners.length === 0 && <p className="text-sm text-slate-400 text-center py-8">No banners configured</p>}
+          {banners.length === 0 && <p className="text-sm text-ink-mute text-center py-8">No banners configured</p>}
         </div>
       )}
 

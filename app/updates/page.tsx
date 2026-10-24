@@ -9,7 +9,7 @@ export const revalidate = 60;
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "EV Updates & Articles | EVPULSE",
+  title: "EV Updates & Articles | EVPLSE",
   description: "Latest news, reviews, policy updates, and insights from the electric vehicle world.",
 };
 
@@ -114,7 +114,7 @@ export default async function UpdatesPage() {
         <div className="mb-12">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-sm font-medium text-sky-600 hover:text-sky-700 mb-6"
+            className="inline-flex items-center gap-2 text-sm font-medium text-emerald-600 hover:text-emerald-700 mb-6"
           >
             <ArrowLeft size={16} /> Back to home
           </Link>
@@ -132,7 +132,7 @@ export default async function UpdatesPage() {
               </p>
             </div>
             <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-500 shadow-sm shrink-0">
-              <Rss size={15} className="text-sky-500" />
+              <Rss size={15} className="text-emerald-500" />
               {combinedUpdates.length} articles
             </div>
           </div> */}
@@ -163,7 +163,7 @@ export default async function UpdatesPage() {
                       unoptimized={!update.photo.includes("supabase.co") && !update.photo.includes("unsplash.com") && !update.photo.includes("evplse.online")}
                     />
                   ) : (
-                    <div className="absolute inset-0 bg-gradient-to-br from-sky-50 to-slate-100 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 to-slate-100 flex items-center justify-center">
                       <Rss size={32} className="text-slate-300" />
                     </div>
                   )}
@@ -181,12 +181,12 @@ export default async function UpdatesPage() {
                     </div>
                     {update.authorName && (
                       <div className="flex items-center gap-1 text-slate-600 font-semibold truncate max-w-[150px]">
-                        <User size={12} className="text-[#10855f] shrink-0" />
+                        <User size={12} className="text-brand shrink-0" />
                         <span className="truncate">{update.authorName}</span>
                       </div>
                     )}
                   </div>
-                  <h2 className="text-lg font-semibold text-slate-900 leading-snug group-hover:text-sky-600 transition-colors line-clamp-3 flex-1">
+                  <h2 className="text-lg font-semibold text-slate-900 leading-snug group-hover:text-emerald-600 transition-colors line-clamp-3 flex-1">
                     {update.title}
                   </h2>
                   {update.excerpt && (

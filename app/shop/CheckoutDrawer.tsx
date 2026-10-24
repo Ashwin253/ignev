@@ -139,7 +139,7 @@ export default function CheckoutDrawer({
         key: orderData.keyId,
         amount: orderData.amount,
         currency: orderData.currency,
-        name: "EVPULSE",
+        name: "EVPLSE",
         description: product.name,
         order_id: orderData.razorpayOrderId,
         prefill: {
@@ -202,7 +202,7 @@ export default function CheckoutDrawer({
       >
         <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
           <div className="flex items-center gap-3">
-            <ShoppingBag size={20} className="text-sky-600" />
+            <ShoppingBag size={20} className="text-emerald-600" />
             <h2 className="text-lg font-semibold text-slate-900">Checkout</h2>
           </div>
           <button
@@ -224,7 +224,7 @@ export default function CheckoutDrawer({
             <div className="min-w-0">
               <p className="font-semibold text-slate-900 line-clamp-1">{product.name}</p>
               <div className="flex items-baseline gap-2 mt-0.5">
-                <span className="text-sky-600 font-bold">{product.price}</span>
+                <span className="text-emerald-600 font-bold">{product.price}</span>
                 {product.onSale && product.regularPrice && (
                   <span className="text-xs text-slate-400 line-through">{product.regularPrice}</span>
                 )}
@@ -253,7 +253,7 @@ export default function CheckoutDrawer({
                     <User size={12} /> Full name *
                   </span>
                   <input required value={form.name} onChange={set("name")} placeholder="Rahul Sharma"
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all" />
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all" />
                 </label>
 
                 <div className="grid grid-cols-2 gap-3">
@@ -262,14 +262,14 @@ export default function CheckoutDrawer({
                       <Phone size={12} /> Phone *
                     </span>
                     <input required type="tel" pattern="[6-9][0-9]{9}" value={form.phone} onChange={set("phone")} placeholder="9876543210"
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all" />
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all" />
                   </label>
                   <label className="block">
                     <span className="text-xs font-medium text-slate-600 mb-1.5 flex items-center gap-1.5">
                       <Mail size={12} /> Email
                     </span>
                     <input type="email" value={form.email} onChange={set("email")} placeholder="you@email.com"
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all" />
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all" />
                   </label>
                 </div>
 
@@ -279,32 +279,32 @@ export default function CheckoutDrawer({
                   </span>
                   <textarea required value={form.address} onChange={set("address")} rows={2}
                     placeholder="House no., Street, Area"
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all resize-none" />
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all resize-none" />
                 </label>
 
                 <div className="grid grid-cols-2 gap-3">
                   <label className="block">
                     <span className="text-xs font-medium text-slate-600 mb-1.5 block">City *</span>
                     <input required value={form.city} onChange={set("city")} placeholder="Mumbai"
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all" />
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all" />
                   </label>
                   <label className="block">
                     <span className="text-xs font-medium text-slate-600 mb-1.5 block">Pincode *</span>
                     <input required pattern="[1-9][0-9]{5}" value={form.pincode} onChange={set("pincode")} placeholder="400001"
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all" />
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all" />
                   </label>
                 </div>
 
                 <label className="block">
                   <span className="text-xs font-medium text-slate-600 mb-1.5 block">State *</span>
                   <select required value={form.state} onChange={set("state")}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all">
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all">
                     {INDIAN_STATES.map((s) => <option key={s}>{s}</option>)}
                   </select>
                 </label>
 
                 <button type="submit"
-                  className="w-full mt-2 rounded-2xl bg-sky-600 hover:bg-sky-700 text-white font-bold py-4 text-sm transition-colors shadow-sm active:scale-[0.98]">
+                  className="w-full mt-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 text-sm transition-colors shadow-sm active:scale-[0.98]">
                   {paymentMethod === "cod" ? `Place COD order · ${product?.price}` : `Pay ${product?.price} with Razorpay →`}
                 </button>
 
@@ -328,7 +328,7 @@ export default function CheckoutDrawer({
             {step === "processing" && (
               <motion.div key="processing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="flex flex-col items-center justify-center h-64 gap-4 px-6">
-                <Loader2 size={36} className="text-sky-500 animate-spin" />
+                <Loader2 size={36} className="text-emerald-500 animate-spin" />
                 <p className="text-slate-600 font-medium">Opening payment...</p>
               </motion.div>
             )}
@@ -368,7 +368,7 @@ export default function CheckoutDrawer({
                   <p className="text-slate-500 text-sm">{errorMsg || "Something went wrong. Please try again."}</p>
                 </div>
                 <button onClick={() => setStep("form")}
-                  className="rounded-full bg-sky-600 hover:bg-sky-700 text-white px-6 py-2.5 text-sm font-semibold transition-colors">
+                  className="rounded-full bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 text-sm font-semibold transition-colors">
                   Try again
                 </button>
               </motion.div>

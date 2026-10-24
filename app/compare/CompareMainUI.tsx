@@ -56,7 +56,7 @@ export default function CompareMainUI({
             <select 
               value={selectedVariants[p.slug] ?? 0}
               onChange={(e) => setSelectedVariants(prev => ({ ...prev, [p.slug]: parseInt(e.target.value) }))}
-              className="w-full rounded-lg bg-sky-50 border border-sky-100 px-3 py-2 text-xs font-black text-sky-700 outline-none cursor-pointer hover:bg-sky-100 transition-colors"
+              className="w-full rounded-lg bg-emerald-50 border border-emerald-100 px-3 py-2 text-xs font-black text-emerald-700 outline-none cursor-pointer hover:bg-emerald-100 transition-colors"
             >
               {p.batteryVariants.map((v: any, idx: number) => (
                 <option key={idx} value={idx}>{v.modelName || `${v.capacity} kWh`}</option>
@@ -112,7 +112,7 @@ export default function CompareMainUI({
         const { variant } = getProductData(p);
         const val = variant ? variant.range : v;
         return (
-          <div className="flex items-center gap-2 text-sky-600">
+          <div className="flex items-center gap-2 text-emerald-600">
             <MapPin size={14} />
             <span className="font-bold">{val} km</span>
           </div>
@@ -222,10 +222,10 @@ export default function CompareMainUI({
                     <Image src={getVehiclePhoto(p.photo, p)} alt={p.title} fill className="object-cover" />
                   </div>
                   <div className="space-y-1">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-sky-600">{p.brand}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600">{p.brand}</p>
                     <h3 className="text-lg font-bold text-slate-900 leading-tight">{p.title}</h3>
                   </div>
-                  <Link href={`/product/${p.slug}`} className="block text-xs font-bold text-sky-600 hover:underline">
+                  <Link href={`/product/${p.slug}`} className="block text-xs font-bold text-emerald-600 hover:underline">
                     View Details
                   </Link>
                 </div>

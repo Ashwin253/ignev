@@ -5,7 +5,7 @@ import WooShopClient from "../../shop/WooShopClient";
 import ShopClient from "../../shop/ShopClient";
 
 export const metadata = {
-  title: "EV Accessories | EVPULSE",
+  title: "EV Accessories | EVPLSE",
   description: "Premium EV accessories. Secure on-page checkout powered by Razorpay.",
 };
 

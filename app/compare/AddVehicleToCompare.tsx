@@ -63,7 +63,7 @@ export default function AddVehicleToCompare({
     <div className="relative">
       <button
         onClick={() => setIsOpen(true)}
-        className="flex aspect-video w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 text-slate-400 hover:border-sky-400 hover:bg-sky-50 hover:text-sky-600 transition-all group"
+        className="flex aspect-video w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 text-slate-400 hover:border-emerald-400 hover:bg-emerald-50 hover:text-emerald-600 transition-all group"
       >
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm group-hover:scale-110 transition-transform">
           <Plus size={20} />
@@ -122,10 +122,10 @@ export default function AddVehicleToCompare({
                           <Image src={getVehiclePhoto(p.photo, p)} alt={p.title} fill className="object-cover" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-[10px] font-bold uppercase tracking-wider text-sky-600">{p.brand}</p>
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600">{p.brand}</p>
                           <p className="text-sm font-bold text-slate-900 truncate">{p.title}</p>
                         </div>
-                        <div className="h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-400 group-hover:bg-sky-600 group-hover:text-white transition-colors flex">
+                        <div className="h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-400 group-hover:bg-emerald-600 group-hover:text-white transition-colors flex">
                           <Plus size={16} />
                         </div>
                       </button>

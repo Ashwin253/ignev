@@ -64,7 +64,7 @@ export async function searchEvs(params: SearchEvsParams = {}) {
     limit = 20,
   } = params;
 
-  const listings = await fetchEvListingsFromSupabase(150);
+  const listings = await fetchEvListingsFromSupabase(300);
   if (!listings || listings.length === 0) {
     return { count: 0, results: [] };
   }
@@ -160,7 +160,7 @@ export async function getEvDetails(slugOrName: string) {
 
   // 2. If not found, search in all listings by title/brand
   if (!listing) {
-    const all = await fetchEvListingsFromSupabase(150);
+    const all = await fetchEvListingsFromSupabase(300);
     const target = slugOrName.toLowerCase().replace(/[-_]/g, " ").trim();
     listing = all.find((l) => {
       const title = `${l.brand} ${l.title}`.toLowerCase();
@@ -383,10 +383,10 @@ export function calculateSavings(params: CalculateSavingsParams) {
 }
 
 export async function getCatalogResource(): Promise<string> {
-  const listings = await fetchEvListingsFromSupabase(100);
-  if (!listings || listings.length === 0) return "# EVPULSE EV Catalog\n\nNo vehicles found.";
+  const listings = await fetchEvListingsFromSupabase(300);
+  if (!listings || listings.length === 0) return "# EVPLSE EV Catalog\n\nNo vehicles found.";
 
-  let md = `# EVPULSE EV Catalog Database\n\nTotal vehicles: ${listings.length}\n\n`;
+  let md = `# EVPLSE EV Catalog Database\n\nTotal vehicles: ${listings.length}\n\n`;
   listings.forEach((l) => {
     const pricing = formatPricing(l.prices) || "TBD";
     const range = getVehicleMaxRange(l);
@@ -402,9 +402,9 @@ export async function getCatalogResource(): Promise<string> {
 
 export async function getStationsResource(): Promise<string> {
   const { stations } = await findChargingStations({ limit: 50 });
-  if (!stations || stations.length === 0) return "# EVPULSE Charging Stations\n\nNo stations available.";
+  if (!stations || stations.length === 0) return "# EVPLSE Charging Stations\n\nNo stations available.";
 
-  let md = `# EVPULSE Charging Network\n\nAvailable stations (sample 50):\n\n`;
+  let md = `# EVPLSE Charging Network\n\nAvailable stations (sample 50):\n\n`;
   (stations || []).forEach((s: any) => {
     md += `- **${s.name}** (${s.network || "Public"}) - ${s.city}: ${s.address} [${s.powerKw ? `${s.powerKw}kW` : "Fast Charger"}]\n`;
   });

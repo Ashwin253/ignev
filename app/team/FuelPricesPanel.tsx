@@ -203,23 +203,23 @@ export default function FuelPricesPanel({ supabase, userEmail }: { supabase: any
     }
   };
 
-  if (loading) return <div className="text-center py-12 text-slate-400">Loading prices...</div>;
+  if (loading) return <div className="text-center py-12 text-ink-mute">Loading prices...</div>;
 
   return (
     <div className="space-y-6">
       {/* Live Lookup Card */}
-      <div className="rounded-2xl border-2 border-sky-300 bg-sky-50/50 p-5 shadow-sm">
+      <div className="rounded-2xl border-2 border-brand bg-emerald-50/50 p-5 shadow-sm">
         <div className="flex items-center gap-2 mb-3">
-          <Sparkles className="text-sky-600 w-5 h-5 animate-pulse" />
-          <h2 className="text-sm font-extrabold uppercase tracking-wider text-sky-800">Live Indian Fuel Price Lookup</h2>
+          <Sparkles className="text-emerald-600 w-5 h-5 animate-pulse" />
+          <h2 className="text-sm font-extrabold uppercase tracking-wider text-emerald-800">Live Indian Fuel Price Lookup</h2>
         </div>
-        <p className="text-xs text-sky-700/80 mb-4">Query real-time average rates for petrol, diesel, and CNG across Indian cities (or fall back to curated averages).</p>
+        <p className="text-xs text-emerald-700/80 mb-4">Query real-time average rates for petrol, diesel, and CNG across Indian cities (or fall back to curated averages).</p>
         
         <div className="flex flex-wrap items-center gap-3">
           <select
             value={lookupCity}
             onChange={(e) => setLookupCity(e.target.value)}
-            className="text-xs px-3 py-2.5 rounded-lg border border-sky-200 bg-white font-bold text-slate-700 outline-none cursor-pointer focus:border-sky-500"
+            className="text-xs px-3 py-2.5 rounded-lg border border-emerald-200 bg-white font-bold text-slate-700 outline-none cursor-pointer focus:border-emerald-500"
           >
             {LOOKUP_CITIES.map((c) => (
               <option key={c.value} value={c.value}>{c.label}</option>
@@ -228,16 +228,16 @@ export default function FuelPricesPanel({ supabase, userEmail }: { supabase: any
           <button
             onClick={handleFetchLivePrice}
             disabled={fetchingLive}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-sky-600 hover:bg-sky-700 disabled:opacity-50 px-4 py-2.5 text-xs font-bold text-white shadow-xs cursor-pointer"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 px-4 py-2.5 text-xs font-bold text-white shadow-xs cursor-pointer"
           >
             {fetchingLive ? <Loader2 size={12} className="animate-spin" /> : "Fetch Prices"}
           </button>
         </div>
 
         {liveData && (
-          <div className="mt-4 p-4 rounded-xl bg-white border border-sky-200 shadow-xs space-y-3">
+          <div className="mt-4 p-4 rounded-xl bg-white border border-emerald-200 shadow-xs space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-black text-sky-800 uppercase tracking-widest">{liveData.city} Prices</span>
+              <span className="text-xs font-black text-emerald-800 uppercase tracking-widest">{liveData.city} Prices</span>
               <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${liveData.source === "live" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
                 Source: {liveData.source === "live" ? "Live Scraping" : "Curated Fallback"}
               </span>
@@ -245,19 +245,19 @@ export default function FuelPricesPanel({ supabase, userEmail }: { supabase: any
             
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="rounded-lg bg-slate-50 p-2.5 border border-slate-100">
-                <span className="block text-[9px] font-extrabold text-slate-400 uppercase">Petrol</span>
+                <span className="block text-[9px] font-extrabold text-ink-mute uppercase">Petrol</span>
                 <span className="text-sm font-black text-slate-800">₹ {liveData.petrol.toFixed(2)}</span>
               </div>
               <div className="rounded-lg bg-slate-50 p-2.5 border border-slate-100">
-                <span className="block text-[9px] font-extrabold text-slate-400 uppercase">Diesel</span>
+                <span className="block text-[9px] font-extrabold text-ink-mute uppercase">Diesel</span>
                 <span className="text-sm font-black text-slate-800">₹ {liveData.diesel.toFixed(2)}</span>
               </div>
               <div className="rounded-lg bg-slate-50 p-2.5 border border-slate-100">
-                <span className="block text-[9px] font-extrabold text-slate-400 uppercase">CNG</span>
+                <span className="block text-[9px] font-extrabold text-ink-mute uppercase">CNG</span>
                 <span className="text-sm font-black text-slate-800">₹ {liveData.cng.toFixed(2)}</span>
               </div>
               <div className="rounded-lg bg-slate-50 p-2.5 border border-slate-100">
-                <span className="block text-[9px] font-extrabold text-slate-400 uppercase">Electricity</span>
+                <span className="block text-[9px] font-extrabold text-ink-mute uppercase">Electricity</span>
                 <span className="text-sm font-black text-slate-800">₹ {liveData.electricity.toFixed(2)}</span>
               </div>
             </div>
@@ -265,7 +265,7 @@ export default function FuelPricesPanel({ supabase, userEmail }: { supabase: any
             <div className="flex gap-2 justify-end">
               <button
                 onClick={() => setLiveData(null)}
-                className="text-xs font-bold text-slate-500 hover:text-slate-700 px-3 py-1.5"
+                className="text-xs font-bold text-ink-mute hover:text-slate-700 px-3 py-1.5"
               >
                 Cancel
               </button>
@@ -285,7 +285,7 @@ export default function FuelPricesPanel({ supabase, userEmail }: { supabase: any
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-2xs">
         <div>
           <h2 className="text-sm font-extrabold text-slate-800">City-wise Saved Prices</h2>
-          <p className="text-xs text-slate-500 mt-0.5">Manage rates used across model comparators and calculator modules.</p>
+          <p className="text-xs text-ink-mute mt-0.5">Manage rates used across model comparators and calculator modules.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <button onClick={handleCopyJSON} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-xs font-extrabold text-slate-700 hover:bg-slate-50 shadow-2xs cursor-pointer">
@@ -294,7 +294,7 @@ export default function FuelPricesPanel({ supabase, userEmail }: { supabase: any
           <button onClick={handlePasteJSON} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-xs font-extrabold text-slate-700 hover:bg-slate-50 shadow-2xs cursor-pointer">
             <Clipboard size={13} /> Paste JSON
           </button>
-          <button onClick={addCity} className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3.5 py-2 text-xs font-extrabold text-white hover:bg-slate-800 shadow-2xs cursor-pointer">
+          <button onClick={addCity} className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3.5 py-2 text-xs font-extrabold text-ink hover:bg-white shadow-2xs cursor-pointer">
             <Plus size={13} /> Add City
           </button>
         </div>
@@ -305,30 +305,30 @@ export default function FuelPricesPanel({ supabase, userEmail }: { supabase: any
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-base font-extrabold text-slate-900">{p.city}</h3>
             <div className="flex items-center gap-2">
-              <p className="text-[9px] font-bold text-slate-400">Last updated: {p.updated_by_email ? `${p.updated_by_email} · ` : ""}{new Date(p.updated_at).toLocaleDateString()}</p>
-              <button onClick={() => deleteCity(p.id)} className="text-rose-400 hover:text-rose-600 cursor-pointer"><Trash2 size={14} /></button>
+              <p className="text-[9px] font-bold text-ink-mute">Last updated: {p.updated_by_email ? `${p.updated_by_email} · ` : ""}{new Date(p.updated_at).toLocaleDateString()}</p>
+              <button onClick={() => deleteCity(p.id)} className="text-coral hover:text-rose-600 cursor-pointer"><Trash2 size={14} /></button>
             </div>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <label className="block">
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-700">⛽ Petrol (₹/L)</span>
               <input type="number" step="0.01" value={p.petrol_per_litre} onChange={(e) => updatePrice(p.id, "petrol_per_litre", Number(e.target.value))}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm font-bold text-slate-900 outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400" />
+                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm font-bold text-slate-900 outline-none focus:border-brand focus:ring-1 focus:ring-emerald-400" />
             </label>
             <label className="block">
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-700">🛢️ Diesel (₹/L)</span>
               <input type="number" step="0.01" value={p.diesel_per_litre} onChange={(e) => updatePrice(p.id, "diesel_per_litre", Number(e.target.value))}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm font-bold text-slate-900 outline-none focus:border-sky-400" />
+                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm font-bold text-slate-900 outline-none focus:border-brand" />
             </label>
             <label className="block">
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-700">🔵 CNG (₹/kg)</span>
               <input type="number" step="0.01" value={p.cng_per_kg} onChange={(e) => updatePrice(p.id, "cng_per_kg", Number(e.target.value))}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm font-bold text-slate-900 outline-none focus:border-sky-400" />
+                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm font-bold text-slate-900 outline-none focus:border-brand" />
             </label>
             <label className="block">
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-700">⚡ Electricity (₹/kWh)</span>
               <input type="number" step="0.01" value={p.electricity_per_kwh} onChange={(e) => updatePrice(p.id, "electricity_per_kwh", Number(e.target.value))}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm font-bold text-slate-900 outline-none focus:border-sky-400" />
+                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm font-bold text-slate-900 outline-none focus:border-brand" />
             </label>
           </div>
           <button onClick={() => savePrice(p)} disabled={saving === p.id}
@@ -339,7 +339,7 @@ export default function FuelPricesPanel({ supabase, userEmail }: { supabase: any
       ))}
 
       {prices.length === 0 && (
-        <div className="text-center py-8 text-slate-400 text-sm border-2 border-dashed border-slate-200 rounded-2xl">No cities added. Click "Add City" to start.</div>
+        <div className="text-center py-8 text-ink-mute text-sm border-2 border-dashed border-slate-200 rounded-2xl">No cities added. Click "Add City" to start.</div>
       )}
     </div>
   );

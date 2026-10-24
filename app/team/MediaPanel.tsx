@@ -997,7 +997,7 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           <h2 className="text-lg font-black text-slate-900">Media Manager</h2>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-ink-mute">
             View, replace, download, and delete photos across all EV listings.
           </p>
         </div>
@@ -1007,7 +1007,7 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
           <button
             onClick={() => setBgType("checkerboard")}
             className={`px-3 py-1.5 text-xs font-extrabold rounded-xl transition-all ${
-              bgType === "checkerboard" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800"
+              bgType === "checkerboard" ? "bg-white text-slate-900 shadow-sm" : "text-ink-mute hover:text-slate-800"
             }`}
           >
             🏁 Checkerboard
@@ -1015,7 +1015,7 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
           <button
             onClick={() => setBgType("white")}
             className={`px-3 py-1.5 text-xs font-extrabold rounded-xl transition-all ${
-              bgType === "white" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800"
+              bgType === "white" ? "bg-white text-slate-900 shadow-sm" : "text-ink-mute hover:text-slate-800"
             }`}
           >
             ⚪ White
@@ -1023,7 +1023,7 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
           <button
             onClick={() => setBgType("dark")}
             className={`px-3 py-1.5 text-xs font-extrabold rounded-xl transition-all ${
-              bgType === "dark" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800"
+              bgType === "dark" ? "bg-white text-slate-900 shadow-sm" : "text-ink-mute hover:text-slate-800"
             }`}
           >
             ⚫ Dark
@@ -1036,20 +1036,20 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
         {/* Search */}
         <div className="relative">
           <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 focus-within:border-slate-400 focus-within:bg-white transition-all">
-            <Search size={16} className="text-slate-400 shrink-0" />
+            <Search size={16} className="text-ink-mute shrink-0" />
             <input
               type="text"
               placeholder="Search by listing name or brand..."
               value={searchQuery}
               onChange={(e) => { setSearchQuery(e.target.value); setVisibleMediaCount(10); }}
-              className="flex-1 bg-transparent text-sm outline-none text-slate-800 placeholder:text-slate-400"
+              className="flex-1 bg-transparent text-sm outline-none text-slate-800 placeholder:text-ink-mute"
             />
           </div>
         </div>
 
         {/* Brand Filter */}
         <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-          <span className="text-xs font-bold text-slate-400 uppercase shrink-0">Brand</span>
+          <span className="text-xs font-bold text-ink-mute uppercase shrink-0">Brand</span>
           <select
             value={selectedBrand}
             onChange={(e) => { setSelectedBrand(e.target.value); setVisibleMediaCount(10); }}
@@ -1064,7 +1064,7 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
 
         {/* Type Filter */}
         <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-          <span className="text-xs font-bold text-slate-400 uppercase shrink-0">Type</span>
+          <span className="text-xs font-bold text-ink-mute uppercase shrink-0">Type</span>
           <select
             value={selectedType}
             onChange={(e) => { setSelectedType(e.target.value); setVisibleMediaCount(10); }}
@@ -1083,7 +1083,7 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
           className="flex items-center justify-center p-3 rounded-2xl border border-slate-200 hover:bg-slate-50 transition-colors"
           title="Refresh Media"
         >
-          <RefreshCw size={16} className="text-slate-500" />
+          <RefreshCw size={16} className="text-ink-mute" />
         </button>
       </div>
 
@@ -1124,16 +1124,16 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
       {/* Main Grid */}
       {loading ? (
         <div className="py-20 flex flex-col items-center justify-center">
-          <Loader2 size={36} className="animate-spin text-slate-400 mb-4" />
-          <p className="text-sm text-slate-500">Loading EV media assets...</p>
+          <Loader2 size={36} className="animate-spin text-ink-mute mb-4" />
+          <p className="text-sm text-ink-mute">Loading EV media assets...</p>
         </div>
       ) : filteredImages.length === 0 ? (
         <div className="py-20 text-center border border-dashed border-slate-200 rounded-3xl">
-          <p className="text-sm text-slate-500">No media assets found matching the filters.</p>
+          <p className="text-sm text-ink-mute">No media assets found matching the filters.</p>
         </div>
       ) : (
         <>
-          <div className="mb-4 text-xs font-bold text-slate-400 uppercase">
+          <div className="mb-4 text-xs font-bold text-ink-mute uppercase">
             Showing {filteredImages.length} images
           </div>
 
@@ -1171,7 +1171,7 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
                     />
 
                     {/* Image Type Badge */}
-                    <div className="absolute top-3 left-3 px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider bg-slate-900/80 text-white backdrop-blur-md">
+                    <div className="absolute top-3 left-3 px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider bg-white text-ink ">
                       {img.type === "main" ? "Main Photo" : img.type === "featured" ? "Variant Photo" : "Gallery Image"}
                     </div>
 
@@ -1180,7 +1180,7 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
                       {/* Download */}
                       <button
                         onClick={() => handleDownload(img.url, filename)}
-                        className="p-1.5 rounded-lg bg-slate-900/85 hover:bg-sky-600 text-white backdrop-blur-md transition-colors cursor-pointer shadow-sm flex items-center justify-center"
+                        className="p-1.5 rounded-lg bg-white hover:bg-emerald-600 text-white  transition-colors cursor-pointer shadow-sm flex items-center justify-center"
                         title="Download Image"
                       >
                         <Download size={13} />
@@ -1190,11 +1190,11 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
                       <button
                         onClick={() => handleDelete(img)}
                         disabled={deletingId !== null || bgRemovingId !== null || uploadingId !== null}
-                        className="p-1.5 rounded-lg bg-slate-900/85 hover:bg-rose-600 text-white backdrop-blur-md transition-colors cursor-pointer shadow-sm flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="p-1.5 rounded-lg bg-white hover:bg-rose-600 text-white  transition-colors cursor-pointer shadow-sm flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                         title="Delete Image"
                       >
                         {deletingId === img.id ? (
-                          <Loader2 size={13} className="animate-spin text-white" />
+                          <Loader2 size={13} className="animate-spin text-ink" />
                         ) : (
                           <Trash2 size={13} />
                         )}
@@ -1205,18 +1205,18 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
                   {/* Info block */}
                   <div className="p-4 flex-1 flex flex-col justify-between">
                     <div>
-                      <div className="text-[10px] font-extrabold uppercase tracking-widest text-[#10855f] truncate">
+                      <div className="text-[10px] font-extrabold uppercase tracking-widest text-brand truncate">
                         {img.listingBrand}
                       </div>
                       <h3 className="text-sm font-bold text-slate-800 mt-0.5 line-clamp-1">
                         {img.listingTitle}
                       </h3>
                       {img.type === "featured" && img.rawItem?.variantName && (
-                        <p className="text-[10px] text-slate-500 mt-0.5 font-medium truncate">
+                        <p className="text-[10px] text-ink-mute mt-0.5 font-medium truncate">
                           Variant: {img.rawItem.variantName}
                         </p>
                       )}
-                      <p className="text-[9.5px] text-slate-400 font-mono mt-1 select-all truncate bg-slate-100 rounded px-1.5 py-0.5" title={`Signature: ${sig}`}>
+                      <p className="text-[9.5px] text-ink-mute font-mono mt-1 select-all truncate bg-slate-100 rounded px-1.5 py-0.5" title={`Signature: ${sig}`}>
                         {sig}
                       </p>
                     </div>
@@ -1246,16 +1246,16 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
                       <button
                         onClick={() => handleRemoveBg(img)}
                         disabled={bgRemovingId !== null || uploadingId !== null || deletingId !== null || bulkProcessing}
-                        className="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-100 hover:bg-violet-50 hover:text-violet-700 text-slate-650 text-[10px] font-extrabold transition-colors border border-slate-200 cursor-pointer text-center"
+                        className="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-650 text-[10px] font-extrabold transition-colors border border-slate-200 cursor-pointer text-center"
                       >
                         {bgRemovingId === img.id ? (
                           <div className="flex flex-col items-center">
-                            <Loader2 size={14} className="animate-spin text-violet-600 mb-0.5" />
+                            <Loader2 size={14} className="animate-spin text-emerald-600 mb-0.5" />
                             <span className="text-[8px] font-medium leading-none truncate max-w-[70px]">{bgRemoveProgress}</span>
                           </div>
                         ) : (
                           <>
-                            <Sparkles size={14} className="text-violet-600 mb-1 animate-pulse" />
+                            <Sparkles size={14} className="text-emerald-600 mb-1 animate-pulse" />
                             Remove BG
                           </>
                         )}
@@ -1275,13 +1275,13 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
                       <button
                         onClick={() => handleFlipHorizontal(img)}
                         disabled={flippingId !== null || bgRemovingId !== null || uploadingId !== null || deletingId !== null}
-                        className="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-650 text-[10px] font-extrabold transition-colors border border-slate-200 cursor-pointer text-center"
+                        className="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-650 text-[10px] font-extrabold transition-colors border border-slate-200 cursor-pointer text-center"
                       >
                         {flippingId === img.id ? (
-                          <Loader2 size={14} className="animate-spin text-indigo-600" />
+                          <Loader2 size={14} className="animate-spin text-emerald-600" />
                         ) : (
                           <>
-                            <FlipHorizontal size={14} className="mb-1 text-indigo-600" />
+                            <FlipHorizontal size={14} className="mb-1 text-emerald-600" />
                             Flip Horiz.
                           </>
                         )}
@@ -1297,13 +1297,13 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
                           deletingId !== null ||
                           getFileExtension(img.url) === "avif"
                         }
-                        className="flex items-center justify-center gap-1 p-2 rounded-xl bg-slate-100 hover:bg-sky-50 hover:text-sky-700 text-slate-650 text-[10px] font-extrabold transition-colors border border-slate-200 cursor-pointer text-center disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="flex items-center justify-center gap-1 p-2 rounded-xl bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-650 text-[10px] font-extrabold transition-colors border border-slate-200 cursor-pointer text-center disabled:opacity-60 disabled:cursor-not-allowed"
                       >
                         {convertingAvifId === img.id ? (
-                          <Loader2 size={14} className="animate-spin text-sky-600 animate-pulse" />
+                          <Loader2 size={14} className="animate-spin text-emerald-600 animate-pulse" />
                         ) : (
                           <>
-                            <FileImage size={14} className="text-sky-600" />
+                            <FileImage size={14} className="text-emerald-600" />
                             {getFileExtension(img.url) === "avif" ? "AVIF" : "Convert AVIF"}
                           </>
                         )}
@@ -1319,13 +1319,13 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
                           deletingId !== null ||
                           convertingAvifId !== null
                         }
-                        className="flex items-center justify-center gap-1.5 p-2 rounded-xl bg-slate-100 hover:bg-violet-50 hover:text-violet-700 text-slate-650 text-[10px] font-extrabold transition-colors border border-slate-200 cursor-pointer text-center disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="flex items-center justify-center gap-1.5 p-2 rounded-xl bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-650 text-[10px] font-extrabold transition-colors border border-slate-200 cursor-pointer text-center disabled:opacity-60 disabled:cursor-not-allowed"
                       >
                         {upscalingId === img.id ? (
-                          <Loader2 size={14} className="animate-spin text-violet-600" />
+                          <Loader2 size={14} className="animate-spin text-emerald-600" />
                         ) : (
                           <>
-                            <Sparkles size={14} className="text-violet-600 animate-pulse" />
+                            <Sparkles size={14} className="text-emerald-600 animate-pulse" />
                             Super-Res 2x
                           </>
                         )}
@@ -1341,7 +1341,7 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
             <div className="mt-8 flex justify-center">
               <button
                 onClick={() => setVisibleMediaCount(prev => prev + 10)}
-                className="rounded-xl border border-slate-200 bg-white px-8 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-sky-600 transition-colors shadow-sm cursor-pointer"
+                className="rounded-xl border border-slate-200 bg-white px-8 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-emerald-600 transition-colors shadow-sm cursor-pointer"
               >
                 Load More
               </button>
@@ -1352,19 +1352,19 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
 
       {/* Bulk Progress Log Modal */}
       {showBulkModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-white  z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl shadow-xl w-full max-w-lg border border-slate-200 overflow-hidden flex flex-col max-h-[80vh]">
             <div className="p-6 border-b border-slate-100 flex items-center justify-between">
               <div>
                 <h3 className="text-base font-black text-slate-900">Bulk Replace Progress</h3>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-ink-mute">
                   Replacing files based on filename signatures matching the DB.
                 </p>
               </div>
               {!bulkProcessing && (
                 <button 
                   onClick={() => setShowBulkModal(false)} 
-                  className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-655 cursor-pointer"
+                  className="p-1 rounded-lg hover:bg-slate-100 text-ink-mute hover:text-slate-655 cursor-pointer"
                 >
                   <X size={20} />
                 </button>
@@ -1374,7 +1374,7 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
             {/* Logs List */}
             <div className="flex-1 p-6 overflow-y-auto font-mono text-xs space-y-2 bg-slate-50 border-b border-slate-100">
               {bulkLog.length === 0 ? (
-                <div className="text-slate-400 text-center py-6">Initializing bulk replaces...</div>
+                <div className="text-ink-mute text-center py-6">Initializing bulk replaces...</div>
               ) : (
                 bulkLog.map((log, idx) => (
                   <div 
@@ -1413,8 +1413,8 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
                 onClick={() => setShowBulkModal(false)}
                 className={`px-5 py-2.5 text-xs font-bold rounded-xl transition-all ${
                   bulkProcessing 
-                    ? "bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200" 
-                    : "bg-slate-900 text-white hover:bg-slate-800 cursor-pointer shadow-sm"
+                    ? "bg-slate-100 text-ink-mute cursor-not-allowed border border-slate-200" 
+                    : "bg-white text-ink hover:bg-white cursor-pointer shadow-sm"
                 }`}
               >
                 Close Logs
@@ -1438,7 +1438,7 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
       {/* Lightbox Modal Enlarger */}
       <AnimatePresence>
         {enlargedImage && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-white  p-4">
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -1447,12 +1447,12 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
             >
               <button 
                 onClick={() => setEnlargedImage(null)}
-                className="absolute -top-12 right-0 rounded-full bg-white/10 hover:bg-white/20 text-white p-2.5 transition cursor-pointer"
+                className="absolute -top-12 right-0 rounded-full bg-white hover:bg-white/20 text-ink p-2.5 transition cursor-pointer"
                 aria-label="Close image preview"
               >
                 <X size={20} />
               </button>
-              <div className="rounded-2xl overflow-hidden border border-white/10 bg-zinc-950/60 p-2 shadow-2xl flex items-center justify-center max-h-[75vh]">
+              <div className="rounded-2xl overflow-hidden border border-line bg-white/60 p-2 shadow-card flex items-center justify-center max-h-[75vh]">
                 <img 
                   src={enlargedImage} 
                   alt="Enlarged EV preview" 
@@ -1464,13 +1464,13 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
                   href={enlargedImage} 
                   target="_blank" 
                   rel="noreferrer" 
-                  className="rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs px-4 py-2.5 transition flex items-center gap-1.5"
+                  className="rounded-xl bg-white hover:bg-white/20 text-ink font-bold text-xs px-4 py-2.5 transition flex items-center gap-1.5"
                 >
                   Open Original Link
                 </a>
                 <button 
                   onClick={() => setEnlargedImage(null)} 
-                  className="rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs px-6 py-2.5 transition cursor-pointer"
+                  className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-6 py-2.5 transition cursor-pointer"
                 >
                   Close Preview
                 </button>

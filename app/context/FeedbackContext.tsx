@@ -7,10 +7,11 @@ import { playClickSound, playTabSound, playHaptic } from '../lib/feedback';
 interface FeedbackContextType {
   soundEnabled: boolean;
   hapticsEnabled: boolean;
-  theme: "light" | "dark";
+  /** The site is light-only; kept for backwards compatibility. */
+  theme: "light";
   setSoundEnabled: (enabled: boolean) => void;
   setHapticsEnabled: (enabled: boolean) => void;
-  setTheme: (theme: "light" | "dark") => void;
+  setTheme: (theme: "light" | "dark") => void; // no-op: light only
   triggerFeedback: (type: 'click' | 'tab') => void;
 }
 
@@ -20,7 +21,6 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
   // Use state with default values, and load from localStorage in useEffect to avoid SSR mismatch
   const [soundEnabled, setSoundEnabledState] = useState(true);
   const [hapticsEnabled, setHapticsEnabledState] = useState(true);
-  const [theme, setThemeState] = useState<"light" | "dark">("dark");
   const [isLoaded, setIsLoaded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -34,7 +34,8 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
         setIsMobile(window.innerWidth < 768);
         const storedSound = localStorage.getItem('feedback_sound_enabled');
         const storedHaptics = localStorage.getItem('feedback_haptics_enabled');
-        const storedTheme = localStorage.getItem('theme_preference');
+        // Light-only site: clear any legacy theme preference
+        localStorage.removeItem('theme_preference');
 
         if (storedSound !== null) {
           setSoundEnabledState(storedSound === 'true');
@@ -42,42 +43,11 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
         if (storedHaptics !== null) {
           setHapticsEnabledState(storedHaptics === 'true');
         }
-        if (storedTheme === 'light' || storedTheme === 'dark') {
-          setThemeState(storedTheme);
-          document.documentElement.classList.remove('light', 'dark');
-          document.documentElement.classList.add(storedTheme);
-        } else {
-          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          const systemTheme = prefersDark ? 'dark' : 'light';
-          setThemeState(systemTheme);
-          document.documentElement.classList.remove('light', 'dark');
-          document.documentElement.classList.add(systemTheme);
-        }
       } catch (e) {
         console.warn('Could not read feedback settings from localStorage', e);
       }
       setIsLoaded(true);
     }
-  }, []);
-
-  // Listen to browser/system theme changes
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleSystemThemeChange = (e: MediaQueryListEvent) => {
-      const storedTheme = localStorage.getItem('theme_preference');
-      // Only update if the user has not explicitly set a manual preference
-      if (!storedTheme) {
-        const systemTheme = e.matches ? 'dark' : 'light';
-        setThemeState(systemTheme);
-        document.documentElement.classList.remove('light', 'dark');
-        document.documentElement.classList.add(systemTheme);
-      }
-    };
-    
-    mediaQuery.addEventListener('change', handleSystemThemeChange);
-    return () => mediaQuery.removeEventListener('change', handleSystemThemeChange);
   }, []);
 
   const setSoundEnabled = (enabled: boolean) => {
@@ -102,17 +72,8 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const setTheme = (newTheme: "light" | "dark") => {
-    setThemeState(newTheme);
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.setItem('theme_preference', newTheme);
-        document.documentElement.classList.remove('light', 'dark');
-        document.documentElement.classList.add(newTheme);
-      } catch (e) {
-        console.error(e);
-      }
-    }
+  const setTheme = (_newTheme: "light" | "dark") => {
+    // Light-only site — nothing to do.
   };
 
   const triggerFeedback = (type: 'click' | 'tab') => {
@@ -214,7 +175,7 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
       value={{
         soundEnabled,
         hapticsEnabled,
-        theme,
+        theme: "light",
         setSoundEnabled,
         setHapticsEnabled,
         setTheme,

@@ -684,7 +684,7 @@ export default function ProfilePage() {
                               <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
                                 {enq.source}
                               </span>
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
                                 Claimed
                               </span>
                             </div>
@@ -801,7 +801,7 @@ export default function ProfilePage() {
                             <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
                               enq.service_type === "scrap" 
                                 ? "text-rose-700 bg-rose-50 border-rose-100" 
-                                : "text-blue-700 bg-blue-50 border-blue-100"
+                                : "text-emerald-700 bg-emerald-50 border-emerald-100"
                             }`}>
                               {enq.service_type === "scrap" ? "Scrap Request" : "Sale Request"}
                             </span>
@@ -820,7 +820,7 @@ export default function ProfilePage() {
                           <p><strong>Owner Name:</strong> {enq.name || "Anonymous Client"}</p>
                           <p className="flex items-center gap-1">
                             <Phone size={12} className="text-zinc-400 animate-pulse" /> 
-                            <a href={`tel:${enq.phone}`} className="text-sky-600 font-bold hover:underline">{enq.phone}</a>
+                            <a href={`tel:${enq.phone}`} className="text-emerald-600 font-bold hover:underline">{enq.phone}</a>
                           </p>
                           <p className="flex items-center gap-1">
                             <MapPin size={12} className="text-zinc-400" /> {enq.pincode || "Not specified"}
@@ -1159,7 +1159,7 @@ export default function ProfilePage() {
                                 isScrap 
                                   ? "text-rose-700 bg-rose-50 border-rose-100" 
                                   : isValuation 
-                                    ? "text-blue-700 bg-blue-50 border-blue-100" 
+                                    ? "text-emerald-700 bg-emerald-50 border-emerald-100" 
                                     : "text-emerald-700 bg-emerald-50 border-emerald-100"
                               }`}>
                                 {enq.source}
@@ -1212,7 +1212,7 @@ export default function ProfilePage() {
                                   currentStep >= 2 
                                     ? "bg-emerald-500 border-emerald-500 text-white" 
                                     : currentStep === 1 
-                                      ? "bg-white border-blue-500 text-blue-600 animate-pulse" 
+                                      ? "bg-white border-emerald-500 text-emerald-600 animate-pulse" 
                                       : "bg-white border-zinc-200 text-zinc-400"
                                 }`}>
                                   {currentStep >= 2 ? <Check size={14} /> : 2}
@@ -1226,7 +1226,7 @@ export default function ProfilePage() {
                                   currentStep >= 3 
                                     ? "bg-emerald-500 border-emerald-500 text-white" 
                                     : currentStep === 2 
-                                      ? "bg-white border-blue-500 text-blue-600 animate-pulse" 
+                                      ? "bg-white border-emerald-500 text-emerald-600 animate-pulse" 
                                       : "bg-white border-zinc-200 text-zinc-400"
                                 }`}>
                                   {currentStep >= 3 ? <Check size={14} /> : 3}
@@ -1284,8 +1284,8 @@ export default function ProfilePage() {
                               </>
                             ) : (
                               <>
-                                <Loader2 size={13} className="animate-spin text-blue-600 shrink-0" />
-                                <span className="text-blue-700 font-bold">Matching with local EV Expert/Dealer advisor...</span>
+                                <Loader2 size={13} className="animate-spin text-emerald-600 shrink-0" />
+                                <span className="text-emerald-700 font-bold">Matching with local EV Expert/Dealer advisor...</span>
                               </>
                             )}
                           </div>

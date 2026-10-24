@@ -12,11 +12,11 @@ export default function InsurancePage() {
         
         {/* Header */}
         <div className="mb-10 text-center sm:text-left">
-          <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-indigo-700 hover:text-indigo-800 transition">
+          <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-700 hover:text-emerald-800 transition">
             <ArrowLeft size={16} /> Back to Home
           </Link>
           <div className="mt-4">
-            <p className="text-xs font-bold uppercase tracking-wider text-indigo-600">Service Subcategory</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-emerald-600">Service Subcategory</p>
             <h1 className="mt-1 text-4xl font-extrabold tracking-tight text-zinc-900 sm:text-5xl">
               EV Insurance
             </h1>
@@ -29,8 +29,8 @@ export default function InsurancePage() {
         {/* EV Insurances benefits */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
           {[
-            { title: "Battery & Motor Cover", desc: "Covers accidental damage, water ingress, and short circuits in battery/motor assembly.", icon: ShieldCheck, color: "text-indigo-600 bg-indigo-50 border-indigo-100" },
-            { title: "Zero Depreciation", desc: "No deduction for depreciation on parts replacement in case of claims.", icon: Sparkles, color: "text-sky-600 bg-sky-50 border-sky-100" },
+            { title: "Battery & Motor Cover", desc: "Covers accidental damage, water ingress, and short circuits in battery/motor assembly.", icon: ShieldCheck, color: "text-emerald-600 bg-emerald-50 border-emerald-100" },
+            { title: "Zero Depreciation", desc: "No deduction for depreciation on parts replacement in case of claims.", icon: Sparkles, color: "text-emerald-600 bg-emerald-50 border-emerald-100" },
             { title: "Charger & Cables Protection", desc: "Protects your home/portable wallbox charger against theft or electrical damage.", icon: HeartHandshake, color: "text-emerald-600 bg-emerald-50 border-emerald-100" },
             { title: "24/7 Roadside Assist", desc: "Includes towing to nearest EV charging station if battery drains mid-trip.", icon: Info, color: "text-amber-600 bg-amber-50 border-amber-100" }
           ].map((benefit, idx) => (

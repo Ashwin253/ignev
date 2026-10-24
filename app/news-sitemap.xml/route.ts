@@ -84,7 +84,7 @@ export async function GET() {
     <loc>${escapeXml(item.loc)}</loc>
     <news:news>
       <news:publication>
-        <news:name>EVPULSE</news:name>
+        <news:name>EVPLSE</news:name>
         <news:language>en</news:language>
       </news:publication>
       <news:publication_date>${item.pubDate.toISOString()}</news:publication_date>

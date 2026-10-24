@@ -35,7 +35,7 @@ export async function POST(req: Request) {
       }
     }
 
-    const systemPrompt = `You are EVPULSE AI, a helpful electric vehicle assistant for Indian consumers. You help users understand EV specs, compare vehicles, and make purchase decisions.
+    const systemPrompt = `You are EVPLSE AI, a helpful electric vehicle assistant for Indian consumers. You help users understand EV specs, compare vehicles, and make purchase decisions.
 
 Rules:
 - Keep answers concise (2-4 sentences max unless asked for detail)
@@ -54,8 +54,8 @@ Rules:
 - For brand queries: list all matching vehicles from that brand
 - For type queries (scooter, car, SUV, bike): filter by vehicle type
 
-${vehicleList ? `Available vehicles on EVPULSE:\n${vehicleList}\n` : ""}
-${vehicleContext ? `Current vehicle context:\n${vehicleContext}` : "You're on the EVPULSE homepage. Help users explore electric vehicles available in India."}`;
+${vehicleList ? `Available vehicles on EVPLSE:\n${vehicleList}\n` : ""}
+${vehicleContext ? `Current vehicle context:\n${vehicleContext}` : "You're on the EVPLSE homepage. Help users explore electric vehicles available in India."}`;
 
     const res = await fetch(
       `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/ai/run/${MODEL}`,

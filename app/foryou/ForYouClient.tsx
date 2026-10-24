@@ -380,7 +380,7 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
   return (
     <section className="min-h-screen bg-slate-50 text-slate-800 py-24 sm:py-32 relative overflow-hidden flex flex-col items-center justify-center px-4">
       {/* Dynamic Background Blurs */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-violet-400/10 rounded-full blur-[130px] pointer-events-none" />
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-400/10 rounded-full blur-[130px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-400/10 rounded-full blur-[130px] pointer-events-none" />
 
       <div className="w-full max-w-2xl relative z-10">
@@ -389,7 +389,7 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
           <div className="mb-8 space-y-4">
             <div className="flex justify-between items-center text-xs font-bold text-slate-500 uppercase tracking-widest">
               <span>Recommendation Wizard</span>
-              <span className="text-violet-600">Step {
+              <span className="text-emerald-600">Step {
                 answers.loanNeeded === "yes"
                   ? ["type", "commute", "parking", "budget", "location", "loan", "loan_details"].indexOf(currentStep) + 1
                   : ["type", "commute", "parking", "budget", "location", "loan"].indexOf(currentStep) + 1
@@ -399,7 +399,7 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
             {/* Progress Bar Container */}
             <div className="h-1.5 w-full bg-slate-200/80 rounded-full overflow-hidden border border-slate-350/10">
               <motion.div 
-                className="h-full bg-gradient-to-r from-violet-500 to-emerald-500 rounded-full"
+                className="h-full bg-gradient-to-r from-emerald-500 to-emerald-500 rounded-full"
                 initial={{ width: 0 }}
                 animate={{ width: `${getStepProgress()}%` }}
                 transition={{ duration: 0.3 }}
@@ -420,14 +420,14 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
               transition={{ duration: 0.3 }}
               className="bg-white/80 border border-slate-200/60 rounded-[32px] p-8 sm:p-12 backdrop-blur-xl shadow-xl shadow-slate-100 text-center space-y-8"
             >
-              <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
+              <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
                 <Sparkles size={30} className="text-white" />
               </div>
 
               <div className="space-y-3">
                 <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900 leading-tight">
                   Find Your Perfect <br/>
-                  <span className="bg-gradient-to-r from-emerald-600 to-violet-600 bg-clip-text text-transparent">EV & Loan Match</span>
+                  <span className="bg-gradient-to-r from-emerald-600 to-emerald-600 bg-clip-text text-transparent">EV & Loan Match</span>
                 </h1>
                 <p className="text-slate-600 text-sm sm:text-base max-w-md mx-auto leading-relaxed">
                   Answer a few simple questions about your commute, parking space, and budget. Our matchmaking engine will sort matches instantly.
@@ -477,11 +477,11 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
                         onClick={() => handleSelect("usageType", opt.id)}
                         className={`flex flex-col items-center justify-center p-3.5 rounded-2xl border text-center transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer ${
                           isSelected 
-                            ? "bg-violet-50/80 border-violet-500 text-slate-900 shadow-sm"
+                            ? "bg-emerald-50/80 border-emerald-500 text-slate-900 shadow-sm"
                             : "bg-slate-50 border-slate-200/80 text-slate-600 hover:bg-slate-100/50"
                         }`}
                       >
-                        <Icon size={16} className={isSelected ? "text-violet-600" : "text-slate-400"} />
+                        <Icon size={16} className={isSelected ? "text-emerald-600" : "text-slate-400"} />
                         <span className="font-bold text-xs mt-1.5">{opt.label}</span>
                       </button>
                     );
@@ -516,11 +516,11 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
                               onClick={() => handleSelect("vehicleType", opt.id)}
                               className={`flex items-start gap-3 p-4 rounded-xl border text-left transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer ${
                                 isSelected 
-                                  ? "bg-violet-50/50 border-violet-500 text-slate-955 shadow-sm"
+                                  ? "bg-emerald-50/50 border-emerald-500 text-slate-955 shadow-sm"
                                   : "bg-slate-50 border-slate-200/80 text-slate-700 hover:bg-slate-100/50"
                               }`}
                             >
-                              <div className={`p-2 rounded-lg ${isSelected ? "bg-violet-600 text-white" : "bg-slate-200/80 text-slate-500"}`}>
+                              <div className={`p-2 rounded-lg ${isSelected ? "bg-emerald-600 text-white" : "bg-slate-200/80 text-slate-500"}`}>
                                 <Icon size={16} />
                               </div>
                               <div>
@@ -546,11 +546,11 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
                               onClick={() => handleSelect("vehicleType", opt.id)}
                               className={`flex items-start gap-3 p-4 rounded-xl border text-left transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer ${
                                 isSelected 
-                                  ? "bg-violet-50/50 border-violet-500 text-slate-955 shadow-sm"
+                                  ? "bg-emerald-50/50 border-emerald-500 text-slate-955 shadow-sm"
                                   : "bg-slate-50 border-slate-200/80 text-slate-700 hover:bg-slate-100/50"
                               }`}
                             >
-                              <div className={`p-2 rounded-lg ${isSelected ? "bg-violet-600 text-white" : "bg-slate-200/80 text-slate-500"}`}>
+                              <div className={`p-2 rounded-lg ${isSelected ? "bg-emerald-600 text-white" : "bg-slate-200/80 text-slate-500"}`}>
                                 <Icon size={16} />
                               </div>
                               <div>
@@ -578,11 +578,11 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
                               onClick={() => handleSelect("vehicleType", opt.id)}
                               className={`flex items-start gap-3 p-4 rounded-xl border text-left transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer ${
                                 isSelected 
-                                  ? "bg-violet-50/50 border-violet-500 text-slate-955 shadow-sm"
+                                  ? "bg-emerald-50/50 border-emerald-500 text-slate-955 shadow-sm"
                                   : "bg-slate-50 border-slate-200/80 text-slate-700 hover:bg-slate-100/50"
                               }`}
                             >
-                              <div className={`p-2 rounded-lg ${isSelected ? "bg-violet-600 text-white" : "bg-slate-200/80 text-slate-500"}`}>
+                              <div className={`p-2 rounded-lg ${isSelected ? "bg-emerald-600 text-white" : "bg-slate-200/80 text-slate-500"}`}>
                                 <Icon size={16} />
                               </div>
                               <div>
@@ -604,13 +604,13 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
                 </button>
                 <div className="text-center">
                   <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 bg-slate-100/85 px-2.5 py-1 rounded-full border border-slate-200/50 whitespace-nowrap">
-                    Found <strong className="text-violet-600 font-extrabold">{displayCount}</strong> vehicles
+                    Found <strong className="text-emerald-600 font-extrabold">{displayCount}</strong> vehicles
                   </span>
                 </div>
                 <button
                   onClick={nextStep}
                   disabled={!answers.usageType || !answers.vehicleType}
-                  className="inline-flex items-center gap-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs px-6 py-3 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-6 py-3 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
                 >
                   Continue <ArrowRight size={14} />
                 </button>
@@ -649,7 +649,7 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
                       onClick={() => handleSelect("commute", opt.id)}
                       className={`w-full flex items-center justify-between p-5 rounded-2xl border text-left transition-all active:scale-[0.99] cursor-pointer ${
                         isSelected 
-                          ? "bg-violet-50/50 border-violet-500 text-slate-950 shadow-md shadow-violet-500/5"
+                          ? "bg-emerald-50/50 border-emerald-500 text-slate-950 shadow-md shadow-emerald-500/5"
                           : "bg-slate-50 border-slate-200/80 text-slate-700 hover:bg-slate-100/50"
                       }`}
                     >
@@ -657,7 +657,7 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
                         <div className="font-bold text-sm text-slate-900">{opt.label}</div>
                         <div className="text-[11px] text-slate-500 mt-1">{opt.desc}</div>
                       </div>
-                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ml-4 ${isSelected ? "border-violet-500 bg-violet-600 text-white" : "border-slate-300 bg-white"}`}>
+                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ml-4 ${isSelected ? "border-emerald-500 bg-emerald-600 text-white" : "border-slate-300 bg-white"}`}>
                         {isSelected && <Check size={12} className="stroke-[3px]" />}
                       </div>
                     </button>
@@ -671,13 +671,13 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
                 </button>
                 <div className="text-center">
                   <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 bg-slate-100/85 px-2.5 py-1 rounded-full border border-slate-200/50 whitespace-nowrap">
-                    Found <strong className="text-violet-600 font-extrabold">{displayCount}</strong> vehicles
+                    Found <strong className="text-emerald-600 font-extrabold">{displayCount}</strong> vehicles
                   </span>
                 </div>
                 <button
                   onClick={nextStep}
                   disabled={!answers.commute}
-                  className="inline-flex items-center gap-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs px-6 py-3 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-6 py-3 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
                 >
                   Continue <ArrowRight size={14} />
                 </button>
@@ -716,7 +716,7 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
                       onClick={() => handleSelect("parking", opt.id)}
                       className={`w-full flex items-center justify-between p-5 rounded-2xl border text-left transition-all active:scale-[0.99] cursor-pointer ${
                         isSelected 
-                          ? "bg-violet-50/50 border-violet-500 text-slate-950 shadow-md shadow-violet-500/5"
+                          ? "bg-emerald-50/50 border-emerald-500 text-slate-950 shadow-md shadow-emerald-500/5"
                           : "bg-slate-50 border-slate-200/80 text-slate-700 hover:bg-slate-100/50"
                       }`}
                     >
@@ -724,7 +724,7 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
                         <div className="font-bold text-sm text-slate-900">{opt.label}</div>
                         <div className="text-[11px] text-slate-500 mt-1">{opt.desc}</div>
                       </div>
-                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ml-4 ${isSelected ? "border-violet-500 bg-violet-600 text-white" : "border-slate-300 bg-white"}`}>
+                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ml-4 ${isSelected ? "border-emerald-500 bg-emerald-600 text-white" : "border-slate-300 bg-white"}`}>
                         {isSelected && <Check size={12} className="stroke-[3px]" />}
                       </div>
                     </button>
@@ -738,13 +738,13 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
                 </button>
                 <div className="text-center">
                   <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 bg-slate-100/85 px-2.5 py-1 rounded-full border border-slate-200/50 whitespace-nowrap">
-                    Found <strong className="text-violet-600 font-extrabold">{displayCount}</strong> vehicles
+                    Found <strong className="text-emerald-600 font-extrabold">{displayCount}</strong> vehicles
                   </span>
                 </div>
                 <button
                   onClick={nextStep}
                   disabled={!answers.parking}
-                  className="inline-flex items-center gap-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs px-6 py-3 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-6 py-3 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
                 >
                   Continue <ArrowRight size={14} />
                 </button>
@@ -785,14 +785,14 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
                           key={opt.id}
                           onClick={() => handleSelect("budget", opt.id)}
                           className={`w-full flex items-center justify-between p-5 rounded-2xl border text-left transition-all active:scale-[0.99] cursor-pointer ${
-                            isSelected ? "bg-violet-50/50 border-violet-500 text-slate-950" : "bg-slate-50 border-slate-200 text-slate-700"
+                            isSelected ? "bg-emerald-50/50 border-emerald-500 text-slate-950" : "bg-slate-50 border-slate-200 text-slate-700"
                           }`}
                         >
                           <div>
                             <div className="font-bold text-sm text-slate-900">{opt.label}</div>
                             <div className="text-[11px] text-slate-500 mt-0.5">{opt.desc}</div>
                           </div>
-                          <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ml-4 ${isSelected ? "border-violet-500 bg-violet-600 text-white" : "border-slate-300 bg-white"}`}>
+                          <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ml-4 ${isSelected ? "border-emerald-500 bg-emerald-600 text-white" : "border-slate-300 bg-white"}`}>
                             {isSelected && <Check size={12} />}
                           </div>
                         </button>
@@ -813,14 +813,14 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
                           key={opt.id}
                           onClick={() => handleSelect("budget", opt.id)}
                           className={`w-full flex items-center justify-between p-5 rounded-2xl border text-left transition-all active:scale-[0.99] cursor-pointer ${
-                            isSelected ? "bg-violet-50/50 border-violet-500 text-slate-950" : "bg-slate-50 border-slate-200 text-slate-700"
+                            isSelected ? "bg-emerald-50/50 border-emerald-500 text-slate-950" : "bg-slate-50 border-slate-200 text-slate-700"
                           }`}
                         >
                           <div>
                             <div className="font-bold text-sm text-slate-900">{opt.label}</div>
                             <div className="text-[11px] text-slate-500 mt-0.5">{opt.desc}</div>
                           </div>
-                          <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ml-4 ${isSelected ? "border-violet-500 bg-violet-600 text-white" : "border-slate-300 bg-white"}`}>
+                          <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ml-4 ${isSelected ? "border-emerald-500 bg-emerald-600 text-white" : "border-slate-300 bg-white"}`}>
                             {isSelected && <Check size={12} />}
                           </div>
                         </button>
@@ -840,14 +840,14 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
                           key={opt.id}
                           onClick={() => handleSelect("budget", opt.id)}
                           className={`w-full flex items-center justify-between p-5 rounded-2xl border text-left transition-all active:scale-[0.99] cursor-pointer ${
-                            isSelected ? "bg-violet-50/50 border-violet-500 text-slate-950" : "bg-slate-50 border-slate-200 text-slate-700"
+                            isSelected ? "bg-emerald-50/50 border-emerald-500 text-slate-950" : "bg-slate-50 border-slate-200 text-slate-700"
                           }`}
                         >
                           <div>
                             <div className="font-bold text-sm text-slate-900">{opt.label}</div>
                             <div className="text-[11px] text-slate-500 mt-0.5">{opt.desc}</div>
                           </div>
-                          <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ml-4 ${isSelected ? "border-violet-500 bg-violet-600 text-white" : "border-slate-300 bg-white"}`}>
+                          <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ml-4 ${isSelected ? "border-emerald-500 bg-emerald-600 text-white" : "border-slate-300 bg-white"}`}>
                             {isSelected && <Check size={12} />}
                           </div>
                         </button>
@@ -868,14 +868,14 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
                           key={opt.id}
                           onClick={() => handleSelect("budget", opt.id)}
                           className={`w-full flex items-center justify-between p-5 rounded-2xl border text-left transition-all active:scale-[0.99] cursor-pointer ${
-                            isSelected ? "bg-violet-50/50 border-violet-500 text-slate-955" : "bg-slate-50 border-slate-200 text-slate-700"
+                            isSelected ? "bg-emerald-50/50 border-emerald-500 text-slate-955" : "bg-slate-50 border-slate-200 text-slate-700"
                           }`}
                         >
                           <div>
                             <div className="font-bold text-sm text-slate-900">{opt.label}</div>
                             <div className="text-[11px] text-slate-500 mt-0.5">{opt.desc}</div>
                           </div>
-                          <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ml-4 ${isSelected ? "border-violet-500 bg-violet-600 text-white" : "border-slate-300 bg-white"}`}>
+                          <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ml-4 ${isSelected ? "border-emerald-500 bg-emerald-600 text-white" : "border-slate-300 bg-white"}`}>
                             {isSelected && <Check size={12} />}
                           </div>
                         </button>
@@ -891,13 +891,13 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
                 </button>
                 <div className="text-center">
                   <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 bg-slate-100/85 px-2.5 py-1 rounded-full border border-slate-200/50 whitespace-nowrap">
-                    Found <strong className="text-violet-600 font-extrabold">{displayCount}</strong> vehicles
+                    Found <strong className="text-emerald-600 font-extrabold">{displayCount}</strong> vehicles
                   </span>
                 </div>
                 <button
                   onClick={nextStep}
                   disabled={!answers.budget}
-                  className="inline-flex items-center gap-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs px-6 py-3 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-6 py-3 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
                 >
                   Continue <ArrowRight size={14} />
                 </button>
@@ -928,7 +928,7 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
                 type="button"
                 onClick={autoDetectLocation}
                 disabled={detectingLocation}
-                className="w-full flex items-center justify-center gap-2 rounded-2xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs py-3.5 transition-all shadow-md active:scale-[0.98] disabled:opacity-60 cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-3.5 transition-all shadow-md active:scale-[0.98] disabled:opacity-60 cursor-pointer"
               >
                 {detectingLocation ? (
                   <>
@@ -956,11 +956,11 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
                       onClick={() => handleSelect("location", loc)}
                       className={`flex items-center gap-3 p-4 rounded-xl border text-left transition-all active:scale-[0.99] cursor-pointer ${
                         isSelected 
-                          ? "bg-violet-50/50 border-violet-500 text-slate-955"
+                          ? "bg-emerald-50/50 border-emerald-500 text-slate-955"
                           : "bg-slate-50 border-slate-200/80 text-slate-700 hover:bg-slate-100/50"
                       }`}
                     >
-                      <MapPin size={16} className={isSelected ? "text-violet-600" : "text-slate-400"} />
+                      <MapPin size={16} className={isSelected ? "text-emerald-600" : "text-slate-400"} />
                       <span className="font-bold text-sm text-slate-900">{loc}</span>
                     </button>
                   );
@@ -982,7 +982,7 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
                       value={customLocation}
                       onChange={(e) => setCustomLocation(e.target.value)}
                       placeholder="Enter state name (e.g. Gujarat, Kerala)"
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-violet-500 focus:bg-white transition-all font-bold"
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:bg-white transition-all font-bold"
                     />
                   </motion.div>
                 )}
@@ -994,13 +994,13 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
                 </button>
                 <div className="text-center">
                   <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 bg-slate-100/85 px-2.5 py-1 rounded-full border border-slate-200/50 whitespace-nowrap">
-                    Found <strong className="text-violet-600 font-extrabold">{displayCount}</strong> vehicles
+                    Found <strong className="text-emerald-600 font-extrabold">{displayCount}</strong> vehicles
                   </span>
                 </div>
                 <button
                   onClick={nextStep}
                   disabled={!answers.location || (answers.location === "Other State" && !customLocation.trim())}
-                  className="inline-flex items-center gap-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs px-6 py-3 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-6 py-3 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
                 >
                   Continue <ArrowRight size={14} />
                 </button>
@@ -1035,7 +1035,7 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
                       onClick={() => handleSelect("loanNeeded", opt.id)}
                       className={`w-full flex items-center justify-between p-5 rounded-2xl border text-left transition-all active:scale-[0.99] cursor-pointer ${
                         isSelected 
-                          ? "bg-violet-50/50 border-violet-500 text-slate-955 shadow-md"
+                          ? "bg-emerald-50/50 border-emerald-500 text-slate-955 shadow-md"
                           : "bg-slate-50 border-slate-200/80 text-slate-700 hover:bg-slate-100/50"
                       }`}
                     >
@@ -1043,7 +1043,7 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
                         <div className="font-bold text-sm text-slate-900">{opt.label}</div>
                         <div className="text-[11px] text-slate-500 mt-1">{opt.desc}</div>
                       </div>
-                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ml-4 ${isSelected ? "border-violet-500 bg-violet-600 text-white" : "border-slate-300 bg-white"}`}>
+                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ml-4 ${isSelected ? "border-emerald-500 bg-emerald-600 text-white" : "border-slate-300 bg-white"}`}>
                         {isSelected && <Check size={12} />}
                       </div>
                     </button>
@@ -1057,13 +1057,13 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
                 </button>
                 <div className="text-center">
                   <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 bg-slate-100/85 px-2.5 py-1 rounded-full border border-slate-200/50 whitespace-nowrap">
-                    Found <strong className="text-violet-600 font-extrabold">{displayCount}</strong> vehicles
+                    Found <strong className="text-emerald-600 font-extrabold">{displayCount}</strong> vehicles
                   </span>
                 </div>
                 <button
                   onClick={nextStep}
                   disabled={!answers.loanNeeded}
-                  className="inline-flex items-center gap-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs px-6 py-3 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-6 py-3 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
                 >
                   {answers.loanNeeded === "yes" ? "Continue" : "Get Matches"} <ArrowRight size={14} />
                 </button>
@@ -1103,7 +1103,7 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
                           key={opt.id}
                           onClick={() => handleSelect("maxEmi", opt.id)}
                           className={`p-3 rounded-xl border text-center transition-all text-xs font-bold active:scale-95 cursor-pointer ${
-                            isSelected ? "bg-violet-50/50 border-violet-500 text-slate-950 shadow-sm" : "bg-slate-50 border-slate-200 text-slate-600"
+                            isSelected ? "bg-emerald-50/50 border-emerald-500 text-slate-950 shadow-sm" : "bg-slate-50 border-slate-200 text-slate-600"
                           }`}
                         >
                           {opt.label}
@@ -1129,7 +1129,7 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
                           key={opt.id}
                           onClick={() => handleSelect("downPayment", opt.id)}
                           className={`p-3 rounded-xl border text-center transition-all text-xs font-bold active:scale-95 cursor-pointer ${
-                            isSelected ? "bg-violet-50/50 border-violet-500 text-slate-950 shadow-sm" : "bg-slate-50 border-slate-200 text-slate-600"
+                            isSelected ? "bg-emerald-50/50 border-emerald-500 text-slate-950 shadow-sm" : "bg-slate-50 border-slate-200 text-slate-600"
                           }`}
                         >
                           {opt.label}
@@ -1146,13 +1146,13 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
                 </button>
                 <div className="text-center">
                   <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 bg-slate-100/85 px-2.5 py-1 rounded-full border border-slate-200/50 whitespace-nowrap">
-                    Found <strong className="text-violet-600 font-extrabold">{displayCount}</strong> vehicles
+                    Found <strong className="text-emerald-600 font-extrabold">{displayCount}</strong> vehicles
                   </span>
                 </div>
                 <button
                   onClick={nextStep}
                   disabled={!answers.maxEmi || !answers.downPayment}
-                  className="inline-flex items-center gap-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs px-6 py-3 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-6 py-3 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
                 >
                   Get Matches <ArrowRight size={14} />
                 </button>
@@ -1170,7 +1170,7 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
               className="fixed inset-0 z-50 bg-slate-50 flex flex-col items-center justify-center text-center px-4"
             >
               {/* Spinning Glow Effects */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-violet-500/5 rounded-full blur-[80px]" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-emerald-500/5 rounded-full blur-[80px]" />
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200px] h-[200px] bg-[#34ebb1]/10 rounded-full blur-[60px] animate-pulse" />
 
               <div className="space-y-8 relative z-10 max-w-md">
@@ -1179,9 +1179,9 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
                   <motion.div
                     animate={{ rotate: 360 }}
                     transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
-                    className="w-20 h-20 border-[3px] border-violet-500/10 border-t-violet-600 border-r-emerald-500 rounded-full"
+                    className="w-20 h-20 border-[3px] border-emerald-500/10 border-t-emerald-600 border-r-emerald-500 rounded-full"
                   />
-                  <Sparkles size={28} className="absolute text-violet-600 animate-pulse" />
+                  <Sparkles size={28} className="absolute text-emerald-600 animate-pulse" />
                 </div>
 
                 <div className="space-y-2">
@@ -1247,7 +1247,7 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
                         value={contact.name}
                         onChange={(e) => setContact(prev => ({ ...prev, name: e.target.value }))}
                         placeholder="Enter your name"
-                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 pl-10 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-violet-500 focus:bg-white transition-all"
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 pl-10 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:bg-white transition-all"
                       />
                     </div>
                   </div>
@@ -1271,7 +1271,7 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
                         maxLength={10}
                         pattern="[0-9]{10}"
                         title="Please enter a valid 10-digit mobile number."
-                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 pl-10 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-violet-500 focus:bg-white transition-all"
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 pl-10 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:bg-white transition-all"
                       />
                     </div>
                   </div>
@@ -1287,7 +1287,7 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
                         value={contact.email}
                         onChange={(e) => setContact(prev => ({ ...prev, email: e.target.value }))}
                         placeholder="Enter your email"
-                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 pl-10 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-violet-500 focus:bg-white transition-all"
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 pl-10 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:bg-white transition-all"
                       />
                     </div>
                   </div>
@@ -1302,7 +1302,7 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
                   <button
                     type="submit"
                     disabled={formSubmitting}
-                    className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 text-white font-black text-sm px-6 py-3.5 transition-all active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-black text-sm px-6 py-3.5 transition-all active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
                   >
                     {formSubmitting ? (
                       <>
@@ -1350,7 +1350,7 @@ export default function ForYouClient({ initialVehicles }: ForYouClientProps) {
                 </Link>
                 <Link
                   href="/catalog"
-                  className="inline-flex items-center justify-center rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs px-6 py-3 transition-all cursor-pointer"
+                  className="inline-flex items-center justify-center rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-6 py-3 transition-all cursor-pointer"
                 >
                   Browse Catalog
                 </Link>

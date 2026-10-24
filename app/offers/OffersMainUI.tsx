@@ -35,12 +35,12 @@ export default function OffersMainUI({ offers }: { offers: WPOfferPage[] }) {
     <div className="space-y-12">
       {/* Header Section */}
       {/* <div className="text-center space-y-6 pt-12">
-        <div className="inline-flex items-center gap-2 rounded-full bg-sky-50 px-4 py-1.5 text-xs font-black uppercase tracking-widest text-sky-600 border border-sky-100">
+        <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-1.5 text-xs font-black uppercase tracking-widest text-emerald-600 border border-emerald-100">
           <Tag size={12} />
           <span>Exclusive Promotions</span>
         </div>
         <h1 className="text-5xl md:text-7xl font-black tracking-tight text-slate-900">
-          Best <span className="text-sky-600">EV Offers</span>
+          Best <span className="text-emerald-600">EV Offers</span>
         </h1>
         <p className="max-w-2xl mx-auto text-lg text-slate-500 font-medium leading-relaxed">
           Unlock exclusive bank discounts and brand cashbacks available in your city.
@@ -69,11 +69,11 @@ export default function OffersMainUI({ offers }: { offers: WPOfferPage[] }) {
 
         {/* City Dropdown */}
         <div className="relative w-full max-w-[250px]">
-          <MapPin size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-sky-500" />
+          <MapPin size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500" />
           <select
             value={selectedCity}
             onChange={(e) => setSelectedCity(e.target.value)}
-            className="w-full appearance-none rounded-2xl border-2 border-slate-100 bg-white py-4 pl-12 pr-10 text-sm font-black text-slate-900 outline-none focus:border-sky-500 transition-all cursor-pointer shadow-sm"
+            className="w-full appearance-none rounded-2xl border-2 border-slate-100 bg-white py-4 pl-12 pr-10 text-sm font-black text-slate-900 outline-none focus:border-emerald-500 transition-all cursor-pointer shadow-sm"
           >
             <option value="All">All Cities</option>
             {cities.filter(c => c !== "All").map(city => (
@@ -93,7 +93,7 @@ export default function OffersMainUI({ offers }: { offers: WPOfferPage[] }) {
             <div
               key={offer.id}
               onClick={() => setSelectedOffer(offer)}
-              className="group relative overflow-hidden rounded-[2.5rem] bg-white border border-slate-100 shadow-2xl shadow-slate-200/50 hover:shadow-sky-500/20 transition-all duration-500 cursor-pointer"
+              className="group relative overflow-hidden rounded-[2.5rem] bg-white border border-slate-100 shadow-2xl shadow-slate-200/50 hover:shadow-emerald-500/20 transition-all duration-500 cursor-pointer"
             >
               <div className="relative aspect-video sm:aspect-4/3 lg:aspect-video overflow-hidden">
                 {offer.image ? (
@@ -116,7 +116,7 @@ export default function OffersMainUI({ offers }: { offers: WPOfferPage[] }) {
                       {offer.detail}
                     </p>
                     <div className="flex items-center justify-between">
-                      <span className="px-3 py-1 rounded-full bg-sky-500 text-[10px] font-black uppercase tracking-widest text-white shadow-lg">
+                      <span className="px-3 py-1 rounded-full bg-emerald-500 text-[10px] font-black uppercase tracking-widest text-white shadow-lg">
                         {offer.location}
                       </span>
                       <Maximize2 size={20} className="text-white/80" />
@@ -170,7 +170,7 @@ export default function OffersMainUI({ offers }: { offers: WPOfferPage[] }) {
               {/* Details Side */}
               <div className="p-8 md:p-12 lg:col-span-4 flex flex-col justify-center">
                 <div className="space-y-6">
-                  <div className="inline-flex items-center gap-2 rounded-full bg-sky-50 px-4 py-1.5 text-xs font-black uppercase tracking-widest text-sky-600 border border-sky-100">
+                  <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-1.5 text-xs font-black uppercase tracking-widest text-emerald-600 border border-emerald-100">
                     <Tag size={12} />
                     <span>Special Deal</span>
                   </div>
@@ -181,7 +181,7 @@ export default function OffersMainUI({ offers }: { offers: WPOfferPage[] }) {
 
                   <div className="flex flex-wrap gap-3">
                     <div className="flex items-center gap-2 rounded-xl bg-slate-50 px-4 py-2 border border-slate-100">
-                      <MapPin size={16} className="text-sky-500" />
+                      <MapPin size={16} className="text-emerald-500" />
                       <span className="text-sm font-black text-slate-700">{selectedOffer.location}</span>
                     </div>
                     <div className="flex items-center gap-2 rounded-xl bg-slate-50 px-4 py-2 border border-slate-100">
@@ -197,7 +197,7 @@ export default function OffersMainUI({ offers }: { offers: WPOfferPage[] }) {
                   <div className="pt-8">
                     <button
                       onClick={() => setSelectedOffer(null)}
-                      className="w-full rounded-2xl bg-slate-900 py-4 text-sm font-black text-white hover:bg-sky-600 transition-all shadow-xl shadow-slate-900/20"
+                      className="w-full rounded-2xl bg-slate-900 py-4 text-sm font-black text-white hover:bg-emerald-600 transition-all shadow-xl shadow-slate-900/20"
                     >
                       Enquire Now
                     </button>
@@ -213,7 +213,7 @@ export default function OffersMainUI({ offers }: { offers: WPOfferPage[] }) {
       <div className="mt-24 rounded-3xl border border-slate-100 bg-slate-50/50 p-8 text-center backdrop-blur-sm max-w-4xl mx-auto">
         <p className="text-xs font-medium text-slate-400 leading-relaxed uppercase tracking-widest">
           * Offers are subject to terms and conditions. Valid for a limited period only.
-          <span className="block mt-2 font-bold text-sky-600">Please contact our team for exact on-road pricing and active deal verification.</span>
+          <span className="block mt-2 font-bold text-emerald-600">Please contact our team for exact on-road pricing and active deal verification.</span>
         </p>
       </div>
     </div>

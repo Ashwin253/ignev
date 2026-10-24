@@ -30,14 +30,14 @@ export async function generateMetadata({
   if (sbArticle) {
     const meta = extractArticleMeta(sbArticle.body);
     const cleanBody = meta.cleanBody || sbArticle.body || "";
-    const description = cleanBody.replace(/[#*`_\[\]]/g, "").slice(0, 160).trim() || `Read about ${sbArticle.title} on EVPULSE`;
+    const description = cleanBody.replace(/[#*`_\[\]]/g, "").slice(0, 160).trim() || `Read about ${sbArticle.title} on EVPLSE`;
     const articleSlug = sbArticle.slug || sbArticle.url || sbArticle.id;
     const articleUrl = `${baseUrl}/article/${articleSlug}`;
     const images = sbArticle.thumbnail ? [sbArticle.thumbnail] : [`${baseUrl}/og-image.jpg`];
-    const authorName = sbArticle.author_name || meta.authorName || "EVPULSE Editorial";
+    const authorName = sbArticle.author_name || meta.authorName || "EVPLSE Editorial";
 
     return {
-      title: `${sbArticle.title} | EVPULSE`,
+      title: `${sbArticle.title} | EVPLSE`,
       description,
       alternates: {
         canonical: articleUrl,
@@ -46,7 +46,7 @@ export async function generateMetadata({
         title: sbArticle.title,
         description,
         url: articleUrl,
-        siteName: "EVPULSE",
+        siteName: "EVPLSE",
         type: "article",
         publishedTime: sbArticle.created_at,
         authors: [authorName],
@@ -77,10 +77,10 @@ export async function generateMetadata({
 
   const pageUrl = `${baseUrl}/updates/${slug}`;
   const images = update.photo ? [update.photo] : [`${baseUrl}/og-image.jpg`];
-  const description = update.excerpt || `Read the latest update on ${update.title} at EVPULSE.`;
+  const description = update.excerpt || `Read the latest update on ${update.title} at EVPLSE.`;
 
   return {
-    title: `${update.title} | EVPULSE Updates`,
+    title: `${update.title} | EVPLSE Updates`,
     description,
     alternates: {
       canonical: pageUrl,
@@ -89,10 +89,10 @@ export async function generateMetadata({
       title: update.title,
       description,
       url: pageUrl,
-      siteName: "EVPULSE",
+      siteName: "EVPLSE",
       type: "article",
       publishedTime: update.date,
-      authors: ["EVPULSE Editorial"],
+      authors: ["EVPLSE Editorial"],
       images: images.map((img: string) => ({ url: img, alt: update.title })),
     },
     twitter: {
@@ -160,11 +160,11 @@ export default async function UpdateDetailPage({
     "dateModified": update.date || new Date().toISOString(),
     "author": {
       "@type": "Person",
-      "name": "EVPULSE Editorial",
+      "name": "EVPLSE Editorial",
     },
     "publisher": {
       "@type": "Organization",
-      "name": "EVPULSE",
+      "name": "EVPLSE",
       "url": baseUrl,
       "logo": {
         "@type": "ImageObject",
@@ -277,14 +277,14 @@ export default async function UpdateDetailPage({
                         className="object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                     ) : (
-                      <div className="absolute inset-0 bg-linear-to-br from-sky-50 to-slate-100" />
+                      <div className="absolute inset-0 bg-linear-to-br from-emerald-50 to-slate-100" />
                     )}
                   </div>
                   <div className="p-5">
                     <div className="flex items-center gap-2 text-xs text-slate-400 mb-2">
                       <Calendar size={12} /> {formatDate(rel.date)}
                     </div>
-                    <h3 className="text-base font-semibold text-slate-900 group-hover:text-sky-600 transition-colors line-clamp-2">
+                    <h3 className="text-base font-semibold text-slate-900 group-hover:text-emerald-600 transition-colors line-clamp-2">
                       {rel.title}
                     </h3>
                   </div>

@@ -30,7 +30,7 @@ export default function ScrapPage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
           {[
             { title: "Eco-Friendly Recycling", desc: "95% of vehicle materials are recovered and repurposed, reducing environmental impact.", icon: Recycle, color: "text-emerald-700 bg-emerald-50 border-emerald-100" },
-            { title: "Registration Waiver", desc: "Get zero registration fees on your new EV by presenting your Certificate of Deposit.", icon: BadgePercent, color: "text-sky-700 bg-sky-50 border-sky-100" },
+            { title: "Registration Waiver", desc: "Get zero registration fees on your new EV by presenting your Certificate of Deposit.", icon: BadgePercent, color: "text-emerald-700 bg-emerald-50 border-emerald-100" },
             { title: "Fair Scrap Value", desc: "Receive transparent metal-weight valuation and prompt payment on pickup.", icon: Shield, color: "text-amber-700 bg-amber-50 border-amber-100" },
           ].map((benefit, idx) => (
             <div key={idx} className="p-4 border rounded-2xl bg-white/60 backdrop-blur-md flex flex-col items-center sm:items-start text-center sm:text-left">

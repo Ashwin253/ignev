@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { toast } from "../lib/toast";
 
 interface CompareContextType {
   selectedSlugs: string[];
@@ -34,7 +35,7 @@ export function CompareProvider({ children }: { children: React.ReactNode }) {
 
   const addToCompare = (slug: string) => {
     if (selectedSlugs.length >= 4) {
-      alert("You can compare up to 4 vehicles at a time.");
+      toast("You can compare up to 4 vehicles at a time.", "warn");
       return;
     }
     if (!selectedSlugs.includes(slug)) {

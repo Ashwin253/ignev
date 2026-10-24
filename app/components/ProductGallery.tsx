@@ -205,10 +205,10 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
     <div className="flex flex-col gap-4 w-full max-w-full overflow-hidden">
       {/* Main image */}
       <div 
-        className="relative aspect-4/3 overflow-hidden rounded-[1.75rem] bg-transparent select-none ring-1 ring-zinc-200/60 shadow-[4px_4px_0px_rgba(0,0,0,1)] border-2 border-black"
+        className="relative aspect-4/3 overflow-hidden rounded-[1.75rem] bg-transparent select-none ring-1 ring-zinc-200/60 shadow-card border border-line-strong"
         style={{ backgroundImage: `url('${currentBg}')`, backgroundSize: "cover", backgroundPosition: "center" }}
       >
-        <div className="absolute inset-0 bg-[#f0fdf9]/85 backdrop-blur-[1px]" />
+        <div className="absolute inset-0 bg-brand-soft/85 backdrop-blur-[1px]" />
         
         {mounted && isFullscreen && createPortal(
           <div className="fixed inset-0 z-[99999] bg-black/95 flex items-center justify-center p-4 backdrop-blur-sm">
@@ -352,7 +352,7 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
               {resolvedPhotos.map((_, i) => (
                 <button key={i}
                   onClick={() => { setDirection(i > current ? 1 : -1); setCurrent(i); }}
-                  className={`h-1.5 rounded-full transition-all duration-300 ${i === current ? "w-5 bg-[#10855f] shadow-[0_0_8px_rgba(16,133,95,0.4)]" : "w-1.5 bg-slate-350 hover:bg-slate-400"}`}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${i === current ? "w-5 bg-brand shadow-[0_0_8px_rgba(16,133,95,0.4)]" : "w-1.5 bg-slate-350 hover:bg-slate-400"}`}
                 />
               ))}
             </div>
@@ -376,9 +376,9 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
             <button
               onClick={() => { setShowColors(!showColors); setShowThumbs(false); }}
               className={`flex items-center gap-1.5 rounded-full px-3 py-2 text-[10px] font-bold shadow-md transition-all ${
-                showColors
+ showColors
                   ? "bg-slate-900 text-white"
-                  : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700 dark:hover:bg-zinc-700"
+                  : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200    "
               }`}
             >
               <Palette size={13} />
@@ -391,9 +391,9 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
             <button
               onClick={() => { setShowThumbs(!showThumbs); setShowColors(false); }}
               className={`hidden items-center gap-1.5 rounded-full px-3 py-2 text-[10px] font-bold shadow-md transition-all ${
-                showThumbs
+ showThumbs
                   ? "bg-slate-900 text-white"
-                  : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700 dark:hover:bg-zinc-700"
+                  : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200    "
               }`}
             >
               <LayoutGrid size={13} />
@@ -409,7 +409,7 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              className="hidden md:flex absolute bottom-24 right-3 z-10 gap-2 rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-slate-200 dark:border-zinc-800 p-2.5 shadow-xl"
+              className="hidden md:flex absolute bottom-24 right-3 z-10 gap-2 rounded-2xl bg-white/95 backdrop-blur-md border border-slate-200  p-2.5 shadow-xl"
             >
               {resolvedColors.map((hex, i) => {
                 const splitColors = hex.includes("/") ? hex.split("/") : hex.includes(",") ? hex.split(",") : [hex];
@@ -421,7 +421,7 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
                     key={i}
                     onClick={() => handleColorClick(i)}
                     className={`h-7 w-7 rounded-lg border-2 transition-all hover:scale-110 ${
-                      i === current ? "border-slate-900 shadow-md ring-2 ring-slate-100" : "border-slate-350 shadow-sm"
+ i === current ? "border-slate-900 shadow-md ring-2 ring-slate-100" : "border-slate-350 shadow-sm"
                     }`}
                     style={{ background: backgroundStyle }}
                   />
@@ -437,14 +437,14 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              className="hidden md:flex absolute bottom-24 right-3 z-10 gap-1.5 rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-slate-200 dark:border-zinc-800 p-2 shadow-xl max-w-[75%] overflow-x-auto"
+              className="hidden md:flex absolute bottom-24 right-3 z-10 gap-1.5 rounded-2xl bg-white/95 backdrop-blur-md border border-slate-200  p-2 shadow-xl max-w-[75%] overflow-x-auto"
             >
               {resolvedPhotos.map((photo, i) => (
                 <button
                   key={i}
                   onClick={() => { setDirection(i > current ? 1 : -1); setCurrent(i); setShowThumbs(false); }}
                   className={`shrink-0 h-12 w-16 overflow-hidden rounded-lg border-2 bg-transparent transition-all ${
-                    i === current ? "border-[#34ebb1] shadow-sm" : "border-transparent opacity-75 hover:opacity-100"
+ i === current ? "border-[#34ebb1] shadow-sm" : "border-transparent opacity-75 hover:opacity-100"
                   }`}
                 >
                   {photo.startsWith("video::") ? (
@@ -468,9 +468,9 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
             <button
               onClick={() => { setShowColors(!showColors); setShowThumbs(false); }}
               className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold shadow-sm transition-all ${
-                showColors
+ showColors
                   ? "bg-slate-900 text-white"
-                  : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700 dark:hover:bg-zinc-700"
+                  : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200    "
               }`}
             >
               <Palette size={14} />
@@ -482,9 +482,9 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
             <button
               onClick={() => { setShowThumbs(!showThumbs); setShowColors(false); }}
               className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold shadow-sm transition-all ${
-                showThumbs
+ showThumbs
                   ? "bg-slate-900 text-white"
-                  : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700 dark:hover:bg-zinc-700"
+                  : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200    "
               }`}
             >
               <LayoutGrid size={14} />
@@ -500,7 +500,7 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="flex flex-wrap gap-2 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-3 shadow-sm overflow-hidden"
+              className="flex flex-wrap gap-2 rounded-2xl bg-white border border-slate-200  p-3 shadow-sm overflow-hidden"
             >
               {resolvedColors.map((hex, i) => {
                 const splitColors = hex.includes("/") ? hex.split("/") : hex.includes(",") ? hex.split(",") : [hex];
@@ -512,7 +512,7 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
                     key={i}
                     onClick={() => handleColorClick(i)}
                     className={`h-8 w-8 rounded-full border-2 transition-all hover:scale-110 ${
-                      i === current ? "border-slate-900 shadow-md ring-2 ring-slate-100" : "border-slate-200 shadow-sm"
+ i === current ? "border-slate-900 shadow-md ring-2 ring-slate-100" : "border-slate-200 shadow-sm"
                     }`}
                     style={{ background: backgroundStyle }}
                   />
@@ -528,14 +528,14 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="flex gap-2 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-3 shadow-sm overflow-x-auto"
+              className="flex gap-2 rounded-2xl bg-white border border-slate-200  p-3 shadow-sm overflow-x-auto"
             >
               {resolvedPhotos.map((photo, i) => (
                 <button
                   key={i}
                   onClick={() => { setDirection(i > current ? 1 : -1); setCurrent(i); setShowThumbs(false); }}
                   className={`shrink-0 h-14 w-20 overflow-hidden rounded-xl border-2 bg-transparent transition-all ${
-                    i === current ? "border-[#34ebb1] shadow-sm" : "border-transparent opacity-75 hover:opacity-100"
+ i === current ? "border-[#34ebb1] shadow-sm" : "border-transparent opacity-75 hover:opacity-100"
                   }`}
                 >
                   {photo.startsWith("video::") ? (
@@ -560,7 +560,7 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
               key={i}
               onClick={() => { setDirection(i > current ? 1 : -1); setCurrent(i); }}
               className={`shrink-0 h-20 w-28 overflow-hidden rounded-xl border-2 bg-transparent transition-all duration-200 ${
-                i === current ? "border-[#34ebb1] shadow-md" : "border-transparent opacity-60 hover:opacity-100"
+ i === current ? "border-[#34ebb1] shadow-md" : "border-transparent opacity-60 hover:opacity-100"
               }`}
             >
               {photo.startsWith("video::") ? (

@@ -46,7 +46,7 @@ export default function EnquiryModal() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 40, scale: 0.98 }}
             transition={{ type: "spring", damping: 28, stiffness: 300 }}
-            className="relative w-full sm:max-w-lg bg-white text-[#0A2A1E] sm:rounded-3xl rounded-t-3xl shadow-2xl border border-[#D0E2CC] overflow-hidden max-h-[92vh] flex flex-col z-10"
+            className="relative w-full sm:max-w-lg bg-white text-ink sm:rounded-3xl rounded-t-3xl shadow-2xl border border-line overflow-hidden max-h-[92vh] flex flex-col z-10"
           >
             {/* Drag handle — mobile only */}
             <div className="sm:hidden flex justify-center pt-3 pb-1 shrink-0 bg-white">
@@ -54,13 +54,13 @@ export default function EnquiryModal() {
             </div>
 
             {/* Header */}
-            <div className="flex items-start justify-between px-6 pt-4 pb-4 sm:pt-6 shrink-0 border-b border-[#E5EFE2] bg-gradient-to-b from-[#F2F8F0] to-white">
+            <div className="flex items-start justify-between px-6 pt-4 pb-4 sm:pt-6 shrink-0 border-b border-line bg-gradient-to-b from-paper to-white">
               <div>
-                <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#1F7A4D] uppercase tracking-wider mb-1">
+                <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-brand uppercase tracking-wider mb-1">
                   <Sparkles className="w-3.5 h-3.5" />
                   EV Assistant
                 </div>
-                <h2 className="text-xl font-extrabold text-[#0A2A1E] leading-tight">
+                <h2 className="text-xl font-extrabold text-ink leading-tight">
                   Interested in {source}?
                 </h2>
                 <p className="text-xs text-[#526B60] mt-1 font-medium">
@@ -69,7 +69,7 @@ export default function EnquiryModal() {
               </div>
               <button
                 onClick={() => setIsOpen(false)}
-                className="ml-4 shrink-0 h-9 w-9 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-[#0A2A1E] hover:text-black transition-colors cursor-pointer"
+                className="ml-4 shrink-0 h-9 w-9 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-ink hover:text-black transition-colors cursor-pointer"
                 aria-label="Close"
               >
                 <X size={18} />
@@ -77,7 +77,7 @@ export default function EnquiryModal() {
             </div>
 
             {/* Scrollable form body */}
-            <div className="overflow-y-auto flex-1 px-6 py-5 bg-white text-[#0A2A1E]">
+            <div className="overflow-y-auto flex-1 px-6 py-5 bg-white text-ink">
               <EnquiryForm
                 source={source}
                 compact

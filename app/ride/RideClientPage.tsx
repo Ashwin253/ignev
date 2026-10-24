@@ -40,36 +40,36 @@ export default function RideClientPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.2),_transparent_35%),linear-gradient(180deg,#07111f_0%,#0f172a_55%,#111827_100%)] text-white">
+    <div className="min-h-screen pt-20 text-ink">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <p className="text-xs uppercase tracking-[0.35em] text-sky-300/80">RIDE REQUEST</p>
+          <p className="text-xs uppercase tracking-[0.35em] text-brand">RIDE REQUEST</p>
           <h1 className="mt-3 text-3xl font-semibold sm:text-5xl">Outstation, rental, and book a ride</h1>
-          <p className="mt-4 max-w-3xl text-sm leading-6 text-slate-300">
+          <p className="mt-4 max-w-3xl text-sm leading-6 text-ink-soft">
             Pick a location on the map or use your current location, choose instant or timed pickup, and send the request through Formspree.
           </p>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-          <section className={`rounded-3xl border border-white/10 bg-white/5 p-5 shadow-2xl backdrop-blur ${mobileTab === "map" ? "hidden lg:block" : "block"}`}>
-            <div className="mb-4 flex rounded-full border border-white/10 bg-white/5 p-1 lg:hidden">
+          <section className={`rounded-3xl border border-line bg-white p-5 shadow-card  ${mobileTab === "map" ? "hidden lg:block" : "block"}`}>
+            <div className="mb-4 flex rounded-full border border-line bg-white p-1 lg:hidden">
               <button
                 type="button"
                 onClick={() => setMobileTab("form")}
-                className={`flex-1 rounded-full px-3 py-2 text-sm font-semibold transition-colors ${mobileTab === "form" ? "bg-sky-600 text-white" : "text-slate-300"}`}
+                className={`flex-1 rounded-full px-3 py-2 text-sm font-semibold transition-colors ${mobileTab === "form" ? "bg-emerald-600 text-white" : "text-ink-soft"}`}
               >
                 Form
               </button>
               <button
                 type="button"
                 onClick={() => setMobileTab("map")}
-                className={`flex-1 rounded-full px-3 py-2 text-sm font-semibold transition-colors ${mobileTab === "map" ? "bg-sky-600 text-white" : "text-slate-300"}`}
+                className={`flex-1 rounded-full px-3 py-2 text-sm font-semibold transition-colors ${mobileTab === "map" ? "bg-emerald-600 text-white" : "text-ink-soft"}`}
               >
                 Map & time
               </button>
             </div>
 
-            <div className="flex items-center gap-2 text-sky-300">
+            <div className="flex items-center gap-2 text-brand">
               <MapPin size={18} />
               <h2 className="text-lg font-semibold">Trip details</h2>
             </div>
@@ -101,14 +101,14 @@ export default function RideClientPage() {
               <button
                 type="submit"
                 disabled={!canSubmit || formState.submitting}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-sky-600 px-5 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-emerald-600 px-5 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {formState.submitting ? <Sparkles size={16} className="animate-pulse" /> : <CarFront size={16} />}
                 {formState.submitting ? "Sending request..." : "Send ride request"}
               </button>
 
               {formState.succeeded && (
-                <p className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-xs text-emerald-100">
+                <p className="rounded-2xl border border-brand bg-brand-soft px-4 py-3 text-xs text-brand-deep">
                   Request sent. Our team will contact you shortly.
                 </p>
               )}
@@ -122,42 +122,42 @@ export default function RideClientPage() {
             </form>
           </section>
 
-          <section className={`rounded-3xl border border-white/10 bg-slate-950/70 p-5 shadow-2xl ${mobileTab === "form" ? "hidden lg:block" : "block"}`}>
-            <div className="flex items-center gap-2 text-emerald-300">
+          <section className={`rounded-3xl border border-line bg-white p-5 shadow-card ${mobileTab === "form" ? "hidden lg:block" : "block"}`}>
+            <div className="flex items-center gap-2 text-brand-deep">
               <MapPin size={18} />
               <h2 className="text-lg font-semibold">Map picker & preferred time</h2>
             </div>
 
-            <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4">
+            <div className="mt-5 rounded-2xl border border-line bg-paper p-4">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-sm font-semibold text-white">Map picker</p>
-                  <p className="mt-1 text-xs text-slate-400">Tap the map to choose pickup or dropoff.</p>
+                  <p className="text-sm font-semibold text-ink">Map picker</p>
+                  <p className="mt-1 text-xs text-ink-mute">Tap the map to choose pickup or dropoff.</p>
                 </div>
-                <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 p-1">
+                <div className="flex items-center gap-2 rounded-full border border-line bg-white p-1">
                   <button
                     type="button"
                     onClick={() => setActivePicker("pickup")}
-                    className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${activePicker === "pickup" ? "bg-sky-600 text-white" : "text-slate-300 hover:text-white"}`}
+                    className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${activePicker === "pickup" ? "bg-emerald-600 text-white" : "text-ink-soft hover:text-white"}`}
                   >
                     Pickup
                   </button>
                   <button
                     type="button"
                     onClick={() => setActivePicker("dropoff")}
-                    className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${activePicker === "dropoff" ? "bg-emerald-600 text-white" : "text-slate-300 hover:text-white"}`}
+                    className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${activePicker === "dropoff" ? "bg-emerald-600 text-white" : "text-ink-soft hover:text-white"}`}
                   >
                     Dropoff
                   </button>
                 </div>
               </div>
-              <div className="mt-4 h-72 overflow-hidden rounded-2xl border border-white/10 bg-slate-950">
+              <div className="mt-4 h-72 overflow-hidden rounded-2xl border border-line bg-white">
                 <RideMapPicker pickedPoint={pickedPoint} onPick={applyPickedPoint} onMapReady={(map) => { mapRef.current = map; }} />
               </div>
-              <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+              <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl border border-line bg-white px-4 py-3">
                 <div>
-                  <p className="text-xs uppercase tracking-wider text-slate-400">Selected point</p>
-                  <p className="mt-1 text-sm font-medium text-white">{pickedPoint.address || "No point picked yet"}</p>
+                  <p className="text-xs uppercase tracking-wider text-ink-mute">Selected point</p>
+                  <p className="mt-1 text-sm font-medium text-ink">{pickedPoint.address || "No point picked yet"}</p>
                 </div>
                 <button
                   type="button"
@@ -168,7 +168,7 @@ export default function RideClientPage() {
                       mapRef.current?.setView([pos.coords.latitude, pos.coords.longitude], 14);
                     });
                   }}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-2 text-xs font-semibold text-slate-100 transition-colors hover:bg-white/15"
+                  className="inline-flex items-center gap-2 rounded-full border border-line bg-white px-3 py-2 text-xs font-semibold text-ink-soft transition-colors hover:bg-white"
                 >
                   <Target size={14} />
                   Use my location
@@ -176,20 +176,20 @@ export default function RideClientPage() {
               </div>
             </div>
 
-            <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
-              <p className="text-xs uppercase tracking-wider text-slate-400">Preferred time</p>
+            <div className="mt-4 rounded-2xl border border-line bg-paper p-4">
+              <p className="text-xs uppercase tracking-wider text-ink-mute">Preferred time</p>
               <div className="mt-3 flex gap-2">
                 <button
                   type="button"
                   onClick={() => setPreferredMode("now")}
-                  className={`flex-1 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${preferredMode === "now" ? "border-emerald-400 bg-emerald-500/20 text-emerald-100" : "border-white/15 bg-white/10 text-slate-100 hover:bg-white/15"}`}
+                  className={`flex-1 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${preferredMode === "now" ? "border-brand bg-brand-soft text-brand-deep" : "border-line bg-white text-ink-soft hover:bg-white"}`}
                 >
                   Instant
                 </button>
                 <button
                   type="button"
                   onClick={() => setPreferredMode("schedule")}
-                  className={`flex-1 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${preferredMode === "schedule" ? "border-sky-400 bg-sky-500/20 text-sky-100" : "border-white/15 bg-white/10 text-slate-100 hover:bg-white/15"}`}
+                  className={`flex-1 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${preferredMode === "schedule" ? "border-brand bg-brand-soft text-emerald-100" : "border-line bg-white text-ink-soft hover:bg-white"}`}
                 >
                   Timing
                 </button>
@@ -200,13 +200,13 @@ export default function RideClientPage() {
                     type="date"
                     value={preferredDate}
                     onChange={(e) => setPreferredDate(e.target.value)}
-                    className="w-full rounded-2xl border border-white/20 bg-white/90 px-4 py-3 text-sm text-slate-900 outline-none focus:border-sky-400/60"
+                    className="w-full rounded-2xl border border-line bg-white/90 px-4 py-3 text-sm text-slate-900 outline-none focus:border-brand"
                   />
                   <input
                     type="time"
                     value={preferredTime}
                     onChange={(e) => setPreferredTime(e.target.value)}
-                    className="w-full rounded-2xl border border-white/20 bg-white/90 px-4 py-3 text-sm text-slate-900 outline-none focus:border-sky-400/60"
+                    className="w-full rounded-2xl border border-line bg-white/90 px-4 py-3 text-sm text-slate-900 outline-none focus:border-brand"
                   />
                 </div>
               )}
@@ -232,12 +232,12 @@ function Input({
 }) {
   return (
     <label className="grid gap-2">
-      <span className="text-xs uppercase tracking-wider text-slate-400">{label}</span>
+      <span className="text-xs uppercase tracking-wider text-ink-mute">{label}</span>
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-sky-400/60"
+        className="rounded-2xl border border-line bg-white px-4 py-3 text-sm text-ink outline-none placeholder:text-ink-mute focus:border-brand"
       />
     </label>
   );
@@ -259,7 +259,7 @@ function RideTypeButton({
       type="button"
       onClick={onClick}
       className={`flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition-colors ${
-        active ? "border-sky-400 bg-sky-500/15 text-sky-100" : "border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+        active ? "border-brand bg-emerald-500/15 text-emerald-100" : "border-line bg-white text-ink-soft hover:bg-white"
       }`}
     >
       <IconComponent size={16} />

@@ -259,7 +259,7 @@ export default function AiChatPopup({ vehicleContext }: { vehicleContext?: strin
                 : "bottom-0 left-0 right-0 h-[55vh] rounded-t-2xl md:inset-auto md:bottom-6 md:left-6 md:w-[380px] md:h-[500px] md:rounded-2xl border-0 md:border border-slate-200"
             }`}>
           {/* Header */}
-          <div className={`flex items-center justify-between px-4 py-3 shrink-0 ${isComparePage ? "bg-sky-500" : "bg-[#34ebb1]"}`}>
+          <div className={`flex items-center justify-between px-4 py-3 shrink-0 ${isComparePage ? "bg-emerald-500" : "bg-[#34ebb1]"}`}>
             <div className="flex items-center gap-2" onClick={() => minimized && setMinimized(false)} role={minimized ? "button" : undefined}>
               <Sparkles size={18} className={isComparePage ? "text-white" : "text-slate-900"} />
               <span className={`text-sm font-bold ${isComparePage ? "text-white" : "text-slate-900"}`}>
@@ -297,10 +297,10 @@ export default function AiChatPopup({ vehicleContext }: { vehicleContext?: strin
 
           {/* Compare page: Vehicle badges */}
           {isComparePage && messages.length === 0 && (
-            <div className="px-4 py-2 bg-sky-50 border-b border-sky-100 flex flex-wrap gap-1.5">
+            <div className="px-4 py-2 bg-emerald-50 border-b border-emerald-100 flex flex-wrap gap-1.5">
               {compareSlugs.map((slug, i) => (
-                <span key={slug} className="inline-flex items-center gap-1 rounded-full bg-white border border-sky-200 px-2.5 py-0.5 text-[10px] font-semibold text-sky-700">
-                  <span className="w-4 h-4 rounded-full bg-sky-500 text-white text-[9px] flex items-center justify-center font-bold">{i + 1}</span>
+                <span key={slug} className="inline-flex items-center gap-1 rounded-full bg-white border border-emerald-200 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-700">
+                  <span className="w-4 h-4 rounded-full bg-emerald-500 text-white text-[9px] flex items-center justify-center font-bold">{i + 1}</span>
                   {slug.replace(/-/g, " ").slice(0, 20)}
                 </span>
               ))}
@@ -311,14 +311,14 @@ export default function AiChatPopup({ vehicleContext }: { vehicleContext?: strin
           <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
             {messages.length === 0 && (
               <div className="text-center py-8">
-                <Sparkles size={32} className={`mx-auto mb-3 ${isComparePage ? "text-sky-500" : "text-[#34ebb1]"}`} />
+                <Sparkles size={32} className={`mx-auto mb-3 ${isComparePage ? "text-emerald-500" : "text-[#34ebb1]"}`} />
                 <p className="text-sm font-bold text-slate-700">Ask Plse</p>
                 <p className="text-xs text-slate-500 mt-1">{getWelcomeMessage()}</p>
                 <div className="flex flex-wrap gap-1.5 justify-center mt-4">
                   {getQuickSuggestions().map((q) => (
                     <button key={q} onClick={() => { setInput(q); }} className={`rounded-full border px-3 py-1 text-[10px] font-medium transition-colors ${
                       isComparePage 
-                        ? "border-sky-200 text-sky-700 hover:bg-sky-50" 
+                        ? "border-emerald-200 text-emerald-700 hover:bg-emerald-50" 
                         : "border-slate-200 text-slate-600 hover:bg-slate-50"
                     }`}>
                       {q}
@@ -355,12 +355,12 @@ export default function AiChatPopup({ vehicleContext }: { vehicleContext?: strin
                 onChange={(e) => setInput(e.target.value)}
                 placeholder={isComparePage ? "Ask about these vehicles..." : "Ask about EVs..."}
                 className={`flex-1 rounded-xl border bg-slate-50 px-4 py-2.5 text-sm outline-none ${
-                  isComparePage ? "border-sky-200 focus:border-sky-400" : "border-slate-200 focus:border-[#34ebb1]"
+                  isComparePage ? "border-emerald-200 focus:border-emerald-400" : "border-slate-200 focus:border-[#34ebb1]"
                 }`}
               />
               <button type="submit" disabled={loading || !input.trim()}
                 className={`flex h-10 w-10 items-center justify-center rounded-xl text-white disabled:opacity-40 transition-colors ${
-                  isComparePage ? "bg-sky-500 hover:bg-sky-600" : "bg-[#34ebb1] hover:bg-[#2dd9a0] text-slate-900"
+                  isComparePage ? "bg-emerald-500 hover:bg-emerald-600" : "bg-[#34ebb1] hover:bg-[#2dd9a0] text-slate-900"
                 }`}>
                 <Send size={16} />
               </button>

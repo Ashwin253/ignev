@@ -6,7 +6,7 @@ export const revalidate = 60; // Cache for 60 seconds
 
 export async function GET() {
   try {
-    const listings = await fetchEvListingsFromSupabase(100);
+    const listings = await fetchEvListingsFromSupabase(300);
     
     if (!listings || listings.length === 0) {
       return NextResponse.json({ success: false, message: "No listings found in database" }, { status: 404 });

@@ -13,18 +13,18 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.evplse.com").replace(/\/+$/, "");
   try {
     const article = await fetchArticleById(id);
-    if (!article) return { title: "Article Not Found | EVPULSE" };
+    if (!article) return { title: "Article Not Found | EVPLSE" };
 
     const meta = extractArticleMeta(article.body);
     const cleanBody = meta.cleanBody || article.body || "";
-    const description = cleanBody.replace(/[#*`_\[\]]/g, "").slice(0, 160).trim() || `Read about ${article.title} on EVPULSE`;
-    const authorName = article.author_name || meta.authorName || "EVPULSE Editorial";
+    const description = cleanBody.replace(/[#*`_\[\]]/g, "").slice(0, 160).trim() || `Read about ${article.title} on EVPLSE`;
+    const authorName = article.author_name || meta.authorName || "EVPLSE Editorial";
     const articleSlug = article.slug || article.url || article.id;
     const articleUrl = `${baseUrl}/article/${articleSlug}`;
     const images = article.thumbnail ? [article.thumbnail] : [`${baseUrl}/og-image.jpg`];
 
     return {
-      title: `${article.title} | EVPULSE`,
+      title: `${article.title} | EVPLSE`,
       description,
       alternates: {
         canonical: articleUrl,
@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
         title: article.title,
         description,
         url: articleUrl,
-        siteName: "EVPULSE",
+        siteName: "EVPLSE",
         type: "article",
         publishedTime: article.created_at,
         authors: [authorName],
@@ -61,7 +61,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       },
     };
   } catch {
-    return { title: "Article | EVPULSE" };
+    return { title: "Article | EVPLSE" };
   }
 }
 
@@ -118,7 +118,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ id: st
     },
     "publisher": {
       "@type": "Organization",
-      "name": "EVPULSE",
+      "name": "EVPLSE",
       "url": baseUrl,
       "logo": {
         "@type": "ImageObject",
@@ -142,7 +142,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ id: st
         
         {/* Navigation / Back Links */}
         <div className="flex items-center gap-3 mb-8 flex-wrap">
-          <Link href="/updates" className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#10855f] hover:text-sky-600 transition-colors">
+          <Link href="/updates" className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand hover:text-emerald-600 transition-colors">
             <ArrowLeft size={16} /> Back to Updates
           </Link>
           <span className="text-slate-300">•</span>
@@ -163,7 +163,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ id: st
           <div className="flex items-center justify-center gap-3 text-sm font-medium text-slate-500 flex-wrap">
             {authorName && (
               <span className="flex items-center gap-1.5 font-bold text-slate-800">
-                <User size={15} className="text-[#10855f]" />
+                <User size={15} className="text-brand" />
                 <span>By {authorName}</span>
               </span>
             )}
@@ -202,14 +202,14 @@ export default async function ArticlePage({ params }: { params: Promise<{ id: st
           <section className="mt-14 pt-10 border-t border-slate-200/80">
             <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
               <div>
-                <span className="text-xs font-bold uppercase tracking-wider text-[#10855f] flex items-center gap-1.5 mb-1">
+                <span className="text-xs font-bold uppercase tracking-wider text-brand flex items-center gap-1.5 mb-1">
                   <Sparkles size={13} /> More Stories
                 </span>
                 <h2 className="text-2xl font-black text-slate-900 tracking-tight">Recent Updates</h2>
               </div>
               <Link
                 href="/updates"
-                className="inline-flex items-center gap-1.5 text-sm font-bold text-[#10855f] hover:text-[#0b6346] transition-colors group"
+                className="inline-flex items-center gap-1.5 text-sm font-bold text-brand hover:text-[#0b6346] transition-colors group"
               >
                 <span>View all updates</span>
                 <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
@@ -262,7 +262,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ id: st
                         )}
                       </div>
 
-                      <h3 className="text-lg font-bold text-slate-900 leading-snug group-hover:text-[#10855f] transition-colors line-clamp-2 mb-2">
+                      <h3 className="text-lg font-bold text-slate-900 leading-snug group-hover:text-brand transition-colors line-clamp-2 mb-2">
                         {item.title}
                       </h3>
 

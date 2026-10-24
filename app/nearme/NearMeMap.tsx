@@ -249,7 +249,7 @@ export default function NearMeMap() {
               </Source>
               
               <Marker latitude={centerPoint[0]} longitude={centerPoint[1]} anchor="center">
-                <div className="w-5 h-5 bg-blue-500 rounded-full border-4 border-white shadow-lg animate-pulse" />
+                <div className="w-5 h-5 bg-emerald-500 rounded-full border-4 border-white shadow-lg animate-pulse" />
               </Marker>
             </>
           )}
@@ -271,8 +271,8 @@ export default function NearMeMap() {
                 className={`flex items-center justify-center cursor-pointer transition-transform duration-300 ease-out drop-shadow-md ${selectedId === loc.id ? 'scale-110 z-50' : 'scale-100'} ${loc.type === "charging" ? "text-emerald-500" : "text-amber-500"}`}
                 style={{ transformOrigin: "bottom center" }}
               >
-                <MapPin size={selectedId === loc.id ? 38 : 32} fill="currentColor" className="text-white" />
-                <div className="absolute top-[25%] left-1/2 -translate-x-1/2 text-white">
+                <MapPin size={selectedId === loc.id ? 38 : 32} fill="currentColor" className="text-ink" />
+                <div className="absolute top-[25%] left-1/2 -translate-x-1/2 text-ink">
                   {loc.type === "charging" ? <Zap size={selectedId === loc.id ? 14 : 12} /> : <Wrench size={selectedId === loc.id ? 14 : 12} />}
                 </div>
               </div>
@@ -282,7 +282,7 @@ export default function NearMeMap() {
       </div>
 
       {/* Bottom Panel */}
-      <div className={`z-10 w-full md:w-[600px] md:mx-auto md:absolute md:bottom-6 md:left-1/2 md:-translate-x-1/2 bg-white/95 backdrop-blur-md rounded-t-3xl md:rounded-3xl shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] md:shadow-2xl flex flex-col transition-all duration-300 ease-in-out border-t md:border border-slate-200 ${
+      <div className={`z-10 w-full md:w-[600px] md:mx-auto md:absolute md:bottom-6 md:left-1/2 md:-translate-x-1/2 bg-white/95  rounded-t-3xl md:rounded-3xl shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] md:shadow-card flex flex-col transition-all duration-300 ease-in-out border-t md:border border-slate-200 ${
         isMinimized 
           ? "h-[80px] md:h-[80px] overflow-hidden" 
           : "h-[45vh] md:h-auto md:max-h-[80vh]"
@@ -308,13 +308,13 @@ export default function NearMeMap() {
           <div className="flex gap-2 bg-slate-100 p-1 rounded-xl">
             <button
               onClick={() => setActiveTab("charging")}
-              className={`flex-1 py-2 text-sm font-bold rounded-lg flex items-center justify-center gap-2 transition-all ${activeTab === "charging" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+              className={`flex-1 py-2 text-sm font-bold rounded-lg flex items-center justify-center gap-2 transition-all ${activeTab === "charging" ? "bg-white text-emerald-600 shadow-sm" : "text-ink-mute hover:text-slate-700"}`}
             >
               <Zap size={16} /> Charger
             </button>
             <button
               onClick={() => setActiveTab("spare")}
-              className={`flex-1 py-2 text-sm font-bold rounded-lg flex items-center justify-center gap-2 transition-all ${activeTab === "spare" ? "bg-white text-amber-600 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+              className={`flex-1 py-2 text-sm font-bold rounded-lg flex items-center justify-center gap-2 transition-all ${activeTab === "spare" ? "bg-white text-amber-600 shadow-sm" : "text-ink-mute hover:text-slate-700"}`}
             >
               <Wrench size={16} /> Repair
             </button>
@@ -326,7 +326,7 @@ export default function NearMeMap() {
           isMinimized ? "opacity-0 pointer-events-none h-0 p-0 overflow-hidden" : ""
         }`}>
           <div className="flex items-center justify-between mb-3 px-1">
-            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+            <p className="text-[11px] font-bold text-ink-mute uppercase tracking-wider">
               {displayedLocations.length} {activeTab === "charging" ? "Charger" : "Repair"} station{displayedLocations.length !== 1 ? "s" : ""} within 5km
             </p>
             {/* Tiny Dropdown Filter */}
@@ -341,14 +341,14 @@ export default function NearMeMap() {
                   <option key={net} value={net}>{net}</option>
                 ))}
               </select>
-              <ChevronDown size={10} className="text-slate-400 absolute right-2 pointer-events-none" />
+              <ChevronDown size={10} className="text-ink-mute absolute right-2 pointer-events-none" />
             </div>
           </div>
           
           {displayedLocations.length === 0 ? (
             <div className="text-center py-6">
-              <MapPin className="mx-auto h-8 w-8 mb-3 text-slate-300" />
-              <p className="text-sm font-medium text-slate-500">No {activeTab === "charging" ? "chargers" : "repair stations"} found nearby.</p>
+              <MapPin className="mx-auto h-8 w-8 mb-3 text-ink-soft" />
+              <p className="text-sm font-medium text-ink-mute">No {activeTab === "charging" ? "chargers" : "repair stations"} found nearby.</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -356,7 +356,7 @@ export default function NearMeMap() {
                 const dist = getDistanceFromLatLonInKm(activeCenter[0], activeCenter[1], loc.lat, loc.lng);
                 return (
                   <div key={loc.id} onClick={() => { setSelectedId(selectedId === loc.id ? null : loc.id); panTo(loc.lat, loc.lng); }}
-                    className={`p-4 rounded-2xl cursor-pointer transition-all border ${selectedId === loc.id ? "bg-emerald-50/80 border-emerald-300 shadow-md" : "bg-white border-slate-200 shadow-sm hover:border-emerald-400 hover:shadow-md"}`}>
+                    className={`p-4 rounded-2xl cursor-pointer transition-all border ${selectedId === loc.id ? "bg-emerald-50/80 border-brand shadow-md" : "bg-white border-slate-200 shadow-sm hover:border-brand hover:shadow-md"}`}>
                     <div className="flex items-start gap-3">
                       <div className={`mt-0.5 shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${loc.type === "charging" ? "bg-emerald-100 text-emerald-600" : "bg-amber-100 text-amber-600"}`}>
                         {loc.type === "charging" ? <Zap size={18} /> : <Wrench size={18} />}
@@ -366,7 +366,7 @@ export default function NearMeMap() {
                           <p className="font-bold text-slate-900 truncate pr-2 text-[15px]">{loc.name}</p>
                           <span className="text-[11px] font-bold text-emerald-700 shrink-0 bg-emerald-100/80 px-2.5 py-1 rounded-full">{dist.toFixed(1)} km</span>
                         </div>
-                        <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">{loc.address}</p>
+                        <p className="text-xs text-ink-mute mt-1 line-clamp-2 leading-relaxed">{loc.address}</p>
                       </div>
                     </div>
                     {selectedId === loc.id && (
@@ -391,7 +391,7 @@ export default function NearMeMap() {
 
         {/* Bottom Actions */}
         <div className="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-white via-white to-transparent md:rounded-b-3xl flex items-center gap-3">
-          <button className="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl shadow-[0_4px_14px_0_rgba(15,23,42,0.39)] transition-all active:scale-95 flex items-center justify-center gap-2">
+          <button className="flex-1 bg-white hover:bg-white text-ink font-bold py-3.5 rounded-xl shadow-[0_4px_14px_0_rgba(15,23,42,0.39)] transition-all active:scale-95 flex items-center justify-center gap-2">
             Pick Me UP
           </button>
           <button
@@ -408,7 +408,7 @@ export default function NearMeMap() {
                 alert("Copied location to share!");
               }
             }}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-[0_4px_14px_0_rgba(37,99,235,0.39)] transition-all active:scale-95 flex items-center justify-center gap-2"
+            className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl shadow-[0_4px_14px_0_rgba(37,99,235,0.39)] transition-all active:scale-95 flex items-center justify-center gap-2"
             title="Share my exact location"
           >
             <Share2 size={16} /> Share DIGIPIN

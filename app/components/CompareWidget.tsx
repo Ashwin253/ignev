@@ -22,7 +22,7 @@ export default function CompareWidget() {
         <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_24px_48px_rgba(15,23,42,0.15)] backdrop-blur-xl">
           <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-5 py-3">
             <div className="flex items-center gap-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-sky-600 text-white">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600 text-white">
                 <GitCompare size={14} />
               </div>
               <span className="text-sm font-bold text-slate-900">
@@ -61,7 +61,7 @@ export default function CompareWidget() {
 
             <Link
               href={`/compare?slugs=${selectedSlugs.join(",")}`}
-              className="flex h-12 items-center gap-2 rounded-2xl bg-sky-600 px-6 text-sm font-bold text-white shadow-lg shadow-sky-200 hover:bg-sky-700 active:scale-95 transition-all shrink-0"
+              className="flex h-12 items-center gap-2 rounded-2xl bg-emerald-600 px-6 text-sm font-bold text-white shadow-lg shadow-emerald-200 hover:bg-emerald-700 active:scale-95 transition-all shrink-0"
             >
               Compare <ArrowRight size={16} />
             </Link>

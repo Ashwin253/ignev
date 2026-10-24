@@ -208,7 +208,7 @@ export default function BatterySelector({
       {!hideVariantSelector && activeVariants.length > 1 && (
         <div>
           <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 shadow-xs">
-            <BatteryCharging size={14} className="text-[#10855f]" />
+            <BatteryCharging size={14} className="text-brand" />
             <select
               value={selectedIndex}
               onChange={(e) => onSelect(Number(e.target.value))}
@@ -310,16 +310,16 @@ export default function BatterySelector({
               {/* On-Road Price */}
               {hasOnRoad && (
                 <div className="rounded-xl bg-[#a5e6d1]/10 border border-[#a5e6d1]/30 p-3 flex flex-col justify-between shadow-xs">
-                  <div className="flex items-center justify-between text-[#10855f] mb-0.5">
+                  <div className="flex items-center justify-between text-brand mb-0.5">
                     <div className="flex items-center gap-1">
-                      <MapPin size={11} className="text-[#10855f]" />
+                      <MapPin size={11} className="text-brand" />
                       <span className="text-[9px] font-bold uppercase tracking-wider">On-Road</span>
                     </div>
                     {!hideCityDropdown && availableCities.length > 1 ? (
                       <select
                         value={activeCity}
                         onChange={(e) => setSelectedCity(e.target.value)}
-                        className="bg-transparent text-[9px] font-bold text-[#10855f] outline-none cursor-pointer border-none p-0 max-w-[65px] text-right"
+                        className="bg-transparent text-[9px] font-bold text-brand outline-none cursor-pointer border-none p-0 max-w-[65px] text-right"
                       >
                         {availableCities.map(city => (
                           <option key={city} value={city} className="bg-white text-slate-900">{city}</option>
@@ -327,7 +327,7 @@ export default function BatterySelector({
                       </select>
                     ) : (
                       activeCity && (
-                        <span className="text-[9px] font-bold text-[#10855f] truncate max-w-[80px] text-right">
+                        <span className="text-[9px] font-bold text-brand truncate max-w-[80px] text-right">
                           {activeCity}
                         </span>
                       )
@@ -350,7 +350,7 @@ export default function BatterySelector({
               <div className="grid gap-2 grid-cols-1 sm:grid-cols-3 mt-2">
                 {/* Rental Rate */}
                 <div className="rounded-xl bg-[#a5e6d1]/15 border border-[#a5e6d1]/30 p-3 shadow-xs">
-                  <div className="flex items-center gap-1 text-[#10855f] mb-0.5">
+                  <div className="flex items-center gap-1 text-brand mb-0.5">
                     <IndianRupee size={11} />
                     <span className="text-[9px] font-bold uppercase tracking-wider">Rental Rate</span>
                   </div>

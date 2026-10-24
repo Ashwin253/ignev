@@ -3,8 +3,14 @@ import type { EvListing, BatteryVariant, BatterySpec, ChargingSpec } from "./wor
 
 // ── Supabase Client (server-side) ────────────────────────────────────────────
 
-const supabaseUrl = process.env.NEXT_SUPABASE_URL ?? "";
-const supabaseAnonKey = process.env.NEXT_SUPABASE_PUBLISHABLE_KEY ?? "";
+// Falls back to the same public (publishable) project the browser client already uses,
+// so the site builds and runs even before a .env file is created.
+const supabaseUrl =
+  process.env.NEXT_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "https://ijkofkibmxlqwolknosi.supabase.co";
+const supabaseAnonKey =
+  process.env.NEXT_SUPABASE_PUBLISHABLE_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  "sb_publishable_rqrDDLSjIbOL3eaq1Q_JRg_B4jVnxGU";
 
 export const supabase = (supabaseUrl && supabaseAnonKey)
   ? createClient(supabaseUrl, supabaseAnonKey)
@@ -582,13 +588,16 @@ export async function fetchEvListingsFromSupabase(limit = 50): Promise<EvListing
 
   if (error || !listings?.length) return [];
 
-  // Fetch all variants for these listings in one query
+  // Fetch variants in chunks (a single .in() with hundreds of UUIDs can exceed URL limits)
   const listingIds = listings.map((l: EvListingRow) => l.id);
-  const { data: allVariants } = await supabase
-    .from("ev_variants")
-    .select("*")
-    .in("listing_id", listingIds)
-    .order("price", { ascending: true });
+  const chunks: string[][] = [];
+  for (let i = 0; i < listingIds.length; i += 80) chunks.push(listingIds.slice(i, i + 80));
+  const variantChunks = await Promise.all(
+    chunks.map((ids) =>
+      supabase.from("ev_variants").select("*").in("listing_id", ids).order("price", { ascending: true })
+    )
+  );
+  const allVariants = variantChunks.flatMap((r: any) => r.data ?? []);
 
   const variantsByListing = new Map<string, EvVariantRow[]>();
   for (const v of (allVariants ?? []) as EvVariantRow[]) {

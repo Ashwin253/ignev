@@ -64,7 +64,7 @@ export default function ShopClient({ products }: { products: LocalProduct[] }) {
                 </p>
                 <button
                   onClick={() => openCheckout(product)}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white px-4 py-2.5 text-sm font-semibold transition-all active:scale-95 shadow-sm"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 text-sm font-semibold transition-all active:scale-95 shadow-sm"
                 >
                   <ShoppingCart size={15} /> Buy Now
                 </button>

@@ -24,11 +24,11 @@ import { isCheckboxExtra, isExtraChecked, normalizeExtras } from "../lib/spec-ex
 function SpecList({ rows }: { rows: { label: string; value: string }[] }) {
   if (!rows || rows.length === 0) return null;
   return (
-    <div className="divide-y divide-zinc-200/60 dark:divide-zinc-800">
+    <div className="divide-y divide-zinc-200/60 ">
       {rows.map((r, i) => (
         <div key={i} className="flex justify-between items-center py-2.5 group">
-          <span className="text-[13px] font-medium text-zinc-500 dark:text-zinc-400 w-1/2 group-hover:text-zinc-700 transition-colors">{r.label}</span>
-          <span className="text-[13px] font-semibold text-zinc-900 dark:text-zinc-100 w-1/2 text-right break-words">{r.value}</span>
+          <span className="text-[13px] font-medium text-zinc-500 w-1/2 group-hover:text-zinc-700 transition-colors">{r.label}</span>
+          <span className="text-[13px] font-semibold text-zinc-900 w-1/2 text-right break-words">{r.value}</span>
         </div>
       ))}
     </div>
@@ -38,9 +38,9 @@ function SpecList({ rows }: { rows: { label: string; value: string }[] }) {
 function SpecCheckboxChips({ labels, noBorderTop = false }: { labels: string[]; noBorderTop?: boolean }) {
   if (!labels || labels.length === 0) return null;
   return (
-    <div className={`flex flex-wrap gap-2 ${noBorderTop ? "" : "mt-4 pt-4 border-t border-zinc-200/60 dark:border-zinc-800"}`}>
+    <div className={`flex flex-wrap gap-2 ${noBorderTop ? "" : "mt-4 pt-4 border-t border-zinc-200/60 "}`}>
       {labels.map((lbl, i) => (
-        <span key={i} className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50/80 px-2.5 py-1.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-900/30">
+        <span key={i} className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50/80 px-2.5 py-1.5 text-[11px] font-bold text-emerald-700 border border-emerald-200/60 ">
           <CheckCircle2 size={12} className="text-emerald-500" />
           {lbl}
         </span>
@@ -304,9 +304,9 @@ export default function ProductDetails({ item }: { item: EvListing }) {
       content: (
         <div className="grid sm:grid-cols-2 gap-3">
           {relevantCityPricing.map((row, i) => (
-            <div key={i} className="flex justify-between items-center rounded-xl bg-zinc-50 dark:bg-zinc-850 px-4 py-3 border-2 border-zinc-200/60 dark:border-zinc-800/80">
-              <span className="text-sm text-zinc-650 dark:text-zinc-400">{row.location_name}</span>
-              <span className="text-sm font-bold text-zinc-900 dark:text-white">₹{row.on_road_price} L</span>
+            <div key={i} className="flex justify-between items-center rounded-xl bg-zinc-50 px-4 py-3 border-2 border-zinc-200/60 ">
+              <span className="text-sm text-zinc-650 ">{row.location_name}</span>
+              <span className="text-sm font-bold text-zinc-900 ">₹{row.on_road_price} L</span>
             </div>
           ))}
         </div>
@@ -320,7 +320,7 @@ export default function ProductDetails({ item }: { item: EvListing }) {
       content: (
         <ul className="space-y-3">
           {item.pros.map((p, i) => (
-            <li key={i} className="flex gap-3 text-sm font-medium text-zinc-800 dark:text-zinc-200 bg-emerald-50/50 dark:bg-emerald-950/20 p-3 rounded-xl border border-emerald-100 dark:border-emerald-900/30">
+            <li key={i} className="flex gap-3 text-sm font-medium text-zinc-800 bg-emerald-50/50  p-3 rounded-xl border border-emerald-100 ">
               <CheckCircle2 size={18} className="text-emerald-600 shrink-0" />{p}
             </li>
           ))}
@@ -335,7 +335,7 @@ export default function ProductDetails({ item }: { item: EvListing }) {
       content: (
         <ul className="space-y-3">
           {item.cons.map((c, i) => (
-            <li key={i} className="flex gap-3 text-sm font-medium text-zinc-800 dark:text-zinc-200 bg-rose-50/50 dark:bg-rose-950/20 p-3 rounded-xl border border-rose-100 dark:border-rose-900/30">
+            <li key={i} className="flex gap-3 text-sm font-medium text-zinc-800 bg-rose-50/50  p-3 rounded-xl border border-rose-100 ">
               <CircleMinus size={18} className="text-rose-500 shrink-0" />{c}
             </li>
           ))}
@@ -352,7 +352,7 @@ export default function ProductDetails({ item }: { item: EvListing }) {
           {relevantVideos.map((v, i) => {
             const url = getEmbedUrl(v.url);
             return url ? (
-              <div key={i} className="aspect-video w-full overflow-hidden rounded-2xl border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,1)]">
+              <div key={i} className="aspect-video w-full overflow-hidden rounded-2xl border border-line-strong shadow-card">
                 <iframe src={url} className="w-full h-full" allowFullScreen />
               </div>
             ) : null;
@@ -430,50 +430,50 @@ export default function ProductDetails({ item }: { item: EvListing }) {
   };
 
   return (
-    <div className="mt-12 rounded-[28px] border-2 border-black dark:border-zinc-800 bg-white/70 backdrop-blur-xl shadow-[4px_4px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_rgba(255,255,255,0.05)] dark:bg-zinc-900/60 p-6 md:p-8">
+    <div className="mt-12 rounded-[28px] border border-line-strong bg-white/70 backdrop-blur-xl shadow-card   p-6 md:p-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-          <h2 className="text-[28px] font-semibold tracking-tight text-zinc-900 dark:text-white">Specifications & Details</h2>
+          <h2 className="text-[28px] font-semibold tracking-tight text-zinc-900 ">Specifications & Details</h2>
           <p className="text-sm text-zinc-500 mt-1">Detailed tech for {item.brand} {item.title}</p>
         </div>
         
         {variants.length > 0 && (
-          <label className="relative inline-flex items-center gap-2.5 rounded-2xl border-2 border-black dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 shadow-[2px_2px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_rgba(255,255,255,0.05)] shrink-0">
+          <label className="relative inline-flex items-center gap-2.5 rounded-2xl border border-line-strong bg-white  px-4 py-2.5 shadow-card  shrink-0">
             <Gauge size={15} className="text-emerald-600 shrink-0" />
             {variants.length > 1 ? (
               <select
                 value={selectedVariant}
                 onChange={(e) => { setLocalSelectedVariant(e.target.value); selectVariantByName(e.target.value); }}
-                className="bg-transparent text-sm font-bold text-zinc-900 outline-none pr-6 dark:text-white cursor-pointer [&>option]:text-black dark:[&>option]:text-white dark:[&>option]:bg-zinc-800"
+                className="bg-transparent text-sm font-bold text-zinc-900 outline-none pr-6 cursor-pointer [&>option]:text-black  "
               >
                 {variants.map((v) => <option key={v} value={v}>{v}</option>)}
               </select>
             ) : (
-              <span className="text-sm font-bold text-zinc-900 dark:text-white pr-4">{variants[0]}</span>
+              <span className="text-sm font-bold text-zinc-900 pr-4">{variants[0]}</span>
             )}
-            {variants.length > 1 && <ChevronDown size={14} className="text-zinc-900 dark:text-white absolute right-3 pointer-events-none" />}
+            {variants.length > 1 && <ChevronDown size={14} className="text-zinc-900 absolute right-3 pointer-events-none" />}
           </label>
         )}
       </div>
 
-      <div className="flex flex-col md:flex-row gap-6 md:h-[520px]">
+      <div className="flex flex-col md:flex-row md:items-start gap-6">
         {/* Mobile Dropdown / Horizontal Tabs */}
         <div className="md:hidden relative">
           <select 
              value={activeTabId} 
              onChange={(e) => setActiveTabId(e.target.value)}
-             className="w-full rounded-2xl border-2 border-black dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white px-4 py-3.5 font-bold shadow-[2px_2px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_rgba(255,255,255,0.05)] outline-none appearance-none cursor-pointer"
+             className="w-full rounded-2xl border border-line-strong bg-white  text-zinc-900  px-4 py-3.5 font-bold shadow-card  outline-none appearance-none cursor-pointer"
           >
              {sections.map(s => <option key={s.id} value={s.id}>{s.title}</option>)}
           </select>
-          <ChevronDown size={16} className="text-zinc-900 dark:text-white absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <ChevronDown size={16} className="text-zinc-900 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
 
         {/* Desktop Vertical Tabs Card */}
-        <div className="hidden md:flex flex-col w-72 shrink-0 h-full rounded-2xl border-2 border-black dark:border-zinc-800 bg-white dark:bg-zinc-900/40 p-3.5 shadow-[4px_4px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_rgba(255,255,255,0.05)] relative overflow-hidden">
-          <div className="flex items-center justify-between pb-3 mb-2 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
-            <span className="text-xs font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Sections</span>
-            <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">
+        <div className="hidden md:flex flex-col w-72 shrink-0 md:sticky md:top-36 md:max-h-[calc(100vh-10rem)] rounded-2xl border border-line-strong bg-white  p-3.5 shadow-card  relative overflow-hidden">
+          <div className="flex items-center justify-between pb-3 mb-2 border-b border-zinc-100 shrink-0">
+            <span className="text-xs font-black uppercase tracking-wider text-zinc-500 ">Sections</span>
+            <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-600 ">
               {sections.length}
             </span>
           </div>
@@ -481,36 +481,36 @@ export default function ProductDetails({ item }: { item: EvListing }) {
           <div 
             ref={leftListRef}
             onScroll={checkLeftScroll}
-            className="flex-1 min-h-0 overflow-y-auto space-y-1.5 p-1 pr-1.5 pb-8 scroll-smooth [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-zinc-300 dark:[&::-webkit-scrollbar-thumb]:bg-zinc-700 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-zinc-400 dark:hover:[&::-webkit-scrollbar-thumb]:bg-zinc-600"
+            className="flex-1 min-h-0 overflow-y-auto space-y-1.5 p-1 pr-1.5 pb-8 scroll-smooth [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-zinc-300 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-zinc-400 "
           >
             {sections.map(s => (
               <button
                 key={s.id}
                 onClick={() => setActiveTabId(s.id)}
                 className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl border-2 transition-all shrink-0 text-left cursor-pointer ${
-                  activeTabId === s.id 
-                  ? 'border-black dark:border-zinc-750 bg-white dark:bg-zinc-800 shadow-[2px_2px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_rgba(255,255,255,0.05)]' 
-                  : 'border-transparent hover:border-black/20 dark:hover:border-white/20 hover:bg-white/50 dark:hover:bg-zinc-800/50 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+ activeTabId === s.id 
+                  ? 'border-ink  bg-white  shadow-card ' 
+                  : 'border-transparent hover:border-line-strong  hover:bg-white/50  text-zinc-500  hover:text-zinc-900 '
                 }`}
               >
-                <div className={activeTabId === s.id ? "text-emerald-600 dark:text-emerald-400 shrink-0" : "text-zinc-400 dark:text-zinc-500 shrink-0"}>{s.icon}</div>
-                <span className={`font-bold text-[13px] truncate flex-1 ${activeTabId === s.id ? "text-zinc-900 dark:text-white" : ""}`}>{s.title}</span>
+                <div className={activeTabId === s.id ? "text-emerald-600  shrink-0" : "text-zinc-400  shrink-0"}>{s.icon}</div>
+                <span className={`font-bold text-[13px] truncate flex-1 ${activeTabId === s.id ? "text-zinc-900 " : ""}`}>{s.title}</span>
               </button>
             ))}
           </div>
 
           {canScrollLeftDown && (
             <>
-              <div className="pointer-events-none absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-white via-white/80 to-transparent dark:from-zinc-900 dark:via-zinc-900/80 rounded-b-2xl z-10" />
+              <div className="pointer-events-none absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-white via-white/80 to-transparent rounded-b-2xl z-10" />
               <div className="absolute bottom-2.5 inset-x-0 flex justify-center pointer-events-none z-20">
                 <button
                   onClick={scrollLeftDown}
                   type="button"
                   aria-label="Scroll down for more sections"
-                  className="pointer-events-auto flex items-center gap-1.5 px-3 py-1 rounded-full bg-white dark:bg-zinc-800 border-2 border-black dark:border-zinc-700 shadow-[2px_2px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_rgba(255,255,255,0.08)] text-[11px] font-bold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all cursor-pointer animate-bounce"
+                  className="pointer-events-auto flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-line-strong  shadow-card  text-[11px] font-bold text-zinc-800  hover:bg-zinc-50  transition-all cursor-pointer animate-bounce"
                 >
                   <span>More</span>
-                  <ChevronDown size={13} className="text-emerald-600 dark:text-emerald-400" />
+                  <ChevronDown size={13} className="text-emerald-600 " />
                 </button>
               </div>
             </>
@@ -518,33 +518,33 @@ export default function ProductDetails({ item }: { item: EvListing }) {
         </div>
 
         {/* Tab Content Card */}
-        <div className="flex-1 min-w-0 h-[480px] md:h-full">
-          <div className="h-full flex flex-col rounded-2xl border-2 border-black dark:border-zinc-800 bg-white dark:bg-zinc-900/40 p-5 md:p-7 shadow-[4px_4px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_rgba(255,255,255,0.05)] relative overflow-hidden">
-            <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-5 flex items-center gap-2 border-b border-zinc-100 dark:border-zinc-850 pb-4 shrink-0">
-               <span className="text-emerald-600 dark:text-emerald-400">{sections.find(s => s.id === activeTabId)?.icon}</span>
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-col rounded-2xl border border-line-strong bg-white  p-5 md:p-7 md:min-h-[420px] shadow-card  relative overflow-hidden">
+            <h3 className="text-lg font-bold text-zinc-900 mb-5 flex items-center gap-2 border-b border-zinc-100  pb-4 shrink-0">
+               <span className="text-emerald-600 ">{sections.find(s => s.id === activeTabId)?.icon}</span>
                {sections.find(s => s.id === activeTabId)?.title}
             </h3>
             
             <div 
               ref={rightContentRef}
               onScroll={checkRightScroll}
-              className="flex-1 min-h-0 overflow-y-auto pr-2 pb-8 [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-zinc-300 dark:[&::-webkit-scrollbar-thumb]:bg-zinc-700 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-zinc-400 dark:hover:[&::-webkit-scrollbar-thumb]:bg-zinc-600"
+              className="flex-1 pb-4"
             >
               {sections.find(s => s.id === activeTabId)?.content}
             </div>
 
             {canScrollRightDown && (
               <>
-                <div className="pointer-events-none absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-white via-white/80 to-transparent dark:from-zinc-900 dark:via-zinc-900/80 rounded-b-2xl z-10" />
+                <div className="pointer-events-none absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-white via-white/80 to-transparent rounded-b-2xl z-10" />
                 <div className="absolute bottom-3 inset-x-0 flex justify-center pointer-events-none z-20">
                   <button
                     onClick={scrollRightDown}
                     type="button"
                     aria-label="Scroll down for more details"
-                    className="pointer-events-auto flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white dark:bg-zinc-800 border-2 border-black dark:border-zinc-700 shadow-[2px_2px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_rgba(255,255,255,0.08)] text-xs font-bold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all cursor-pointer animate-bounce"
+                    className="pointer-events-auto flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white border border-line-strong  shadow-card  text-xs font-bold text-zinc-800  hover:bg-zinc-50  transition-all cursor-pointer animate-bounce"
                   >
                     <span>More details below</span>
-                    <ChevronDown size={14} className="text-emerald-600 dark:text-emerald-400" />
+                    <ChevronDown size={14} className="text-emerald-600 " />
                   </button>
                 </div>
               </>
@@ -560,4 +560,4 @@ function getEmbedUrl(url: string): string | null {
   const m = url.match(/(?:youtube\.com\/(?:.*v=|embed\/)|youtu\.be\/)([^"&?\/\s]{11})/);
   return m ? `https://www.youtube.com/embed/${m[1]}` : null;
 }
-
+

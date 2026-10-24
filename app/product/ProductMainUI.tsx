@@ -9,7 +9,7 @@ import CompareButton from "./CompareButton";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  ArrowLeft, Gauge, Tag,
+  ArrowLeft, Gauge, Tag, Shield,
   BatteryCharging, Fuel, Zap, ChevronDown, Share2, Navigation, X, MapPin,
 } from "lucide-react";
 import type { EvListing } from "../lib/wordpress";
@@ -357,24 +357,24 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
   };
 
   return (
-    <div className="flex flex-col gap-6 text-zinc-900 dark:text-zinc-100">
-      <div className="rounded-[28px] border-2 border-black bg-white/70 backdrop-blur-xl shadow-[4px_4px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_rgba(255,255,255,0.05)] dark:bg-zinc-900/60 dark:border-zinc-800 p-5 sm:p-6">
+    <div className="flex flex-col gap-6 text-zinc-900 ">
+      <div className="rounded-[28px] border border-line-strong bg-white/70 backdrop-blur-xl shadow-card p-5 sm:p-6">
 
         {/* selectors */}
         <div className={`mb-4 grid ${hasUsageType ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"} gap-3`}>
           {/* Model Selector */}
-          <div className="relative flex items-center gap-2.5 rounded-2xl border border-zinc-200/70 bg-zinc-50/80 px-3.5 py-3 dark:bg-zinc-800/50 dark:border-zinc-700">
+          <div className="relative flex items-center gap-2.5 rounded-2xl border border-zinc-200/70 bg-zinc-50/80 px-3.5 py-3 ">
             <BatteryCharging size={16} className="text-emerald-600 shrink-0 pointer-events-none" />
             <div className="flex-1 flex flex-col min-w-0">
               <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 leading-none mb-0.5 pointer-events-none">Model</span>
               <select
                 value={selectedIndex}
                 onChange={e => onSelect(Number(e.target.value))}
-                className="w-full bg-transparent text-sm font-semibold outline-none appearance-none pr-6 dark:text-white cursor-pointer relative z-10"
+                className="w-full bg-transparent text-sm font-semibold outline-none appearance-none pr-6 cursor-pointer relative z-10"
               >
                 {filteredVariants.map(v => {
                   const idx = activeVariants.indexOf(v);
-                  return <option key={idx} value={idx} className="dark:bg-zinc-900">{v.modelName || `${v.capacity} kWh`}</option>
+                  return <option key={idx} value={idx} className="">{v.modelName || `${v.capacity} kWh`}</option>
                 })}
               </select>
             </div>
@@ -383,17 +383,17 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
 
           {/* Usage Selector */}
           {hasUsageType && (
-            <div className="relative flex items-center gap-2.5 rounded-2xl border border-zinc-200/70 bg-zinc-50/80 px-3.5 py-3 dark:bg-zinc-800/50 dark:border-zinc-700">
+            <div className="relative flex items-center gap-2.5 rounded-2xl border border-zinc-200/70 bg-zinc-50/80 px-3.5 py-3 ">
               <div className="flex-1 flex flex-col min-w-0">
                 <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 leading-none mb-0.5 pointer-events-none">Usage</span>
                 <select
                   value={usageFilter}
                   onChange={e => setUsageFilter(e.target.value)}
-                  className="w-full bg-transparent text-sm font-semibold outline-none appearance-none pr-6 dark:text-white cursor-pointer relative z-10"
+                  className="w-full bg-transparent text-sm font-semibold outline-none appearance-none pr-6 cursor-pointer relative z-10"
                 >
-                  <option className="dark:bg-zinc-900">All</option>
-                  <option className="dark:bg-zinc-900">Passenger</option>
-                  <option className="dark:bg-zinc-900">Goods</option>
+                  <option className="">All</option>
+                  <option className="">Passenger</option>
+                  <option className="">Goods</option>
                 </select>
               </div>
               <ChevronDown size={14} className="text-zinc-400 absolute right-3 pointer-events-none" />
@@ -402,30 +402,30 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
         </div>
 
         {/* tabs */}
-        <div className="flex rounded-2xl bg-zinc-100 p-1 dark:bg-zinc-800">
+        <div className="flex rounded-2xl bg-zinc-100 p-1 ">
           {TABS.map(t => (
-            <button key={t.key} onClick={() => setActiveTab(t.key)} className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-medium transition ${activeTab === t.key? "bg-white shadow-sm text-zinc-900 dark:bg-zinc-700 dark:text-white" : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400"}`}>
+            <button key={t.key} onClick={() => setActiveTab(t.key)} className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-medium transition ${activeTab === t.key? "bg-white shadow-sm text-zinc-900  " : "text-zinc-600 hover:text-zinc-900 "}`}>
               <t.icon size={16} />{t.label}
             </button>
           ))}
         </div>
 
-        <div className="pt-6">
+        <div className="pt-6 min-h-[380px] sm:min-h-[400px]">
           {activeTab === "pricing" && (
-            <div className="space-y-5">
-              <div className="rounded-2xl bg-gradient-to-br from-zinc-50 to-white p-5 border border-zinc-200/60 dark:from-zinc-800/50 dark:to-zinc-900/50 dark:border-zinc-800 space-y-3.5">
+            <div className="space-y-4">
+              <div className="rounded-2xl bg-gradient-to-br from-zinc-50 to-white p-5 border border-zinc-200/60 space-y-3.5">
                 {/* 40% width Price : 60% width CTA button */}
                 <div className="flex items-center justify-between gap-3">
                   <div className="w-[40%] shrink-0">
                     <p className="text-xs uppercase tracking-wide text-zinc-500 font-medium mb-1 truncate">
-                      {showBaas ? "BaaS Starting" : "Ex-Showroom"}
+                      {showBaas ? "BaaS Starting at" : "Starting at"}
                     </p>
                     {specificPriceStr ? (
                       <p className="text-2xl sm:text-[32px] font-semibold tracking-tight leading-none truncate">
                         ₹{specificPriceStr}<span className="text-base sm:text-lg font-medium text-zinc-500 ml-1">Lakh</span>
                       </p>
                     ) : (
-                      <p className="text-xl sm:text-2xl font-semibold tracking-tight leading-none text-zinc-700 dark:text-zinc-300">
+                      <p className="text-xl sm:text-2xl font-semibold tracking-tight leading-none text-zinc-700 ">
                         {isFuture ? "Coming Soon" : "TBA"}
                       </p>
                     )}
@@ -434,7 +434,7 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
                   <div className="w-[60%] flex justify-end">
                     <button
                       onClick={() => triggerEnquiryModal(`Offers: ${item.brand} ${item.title}`)}
-                      className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 px-3.5 py-3 sm:py-3.5 text-xs sm:text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:-translate-y-0.5 active:translate-y-0 transition cursor-pointer"
+                      className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-600 px-3.5 py-3 sm:py-3.5 text-xs sm:text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:-translate-y-0.5 active:translate-y-0 transition cursor-pointer"
                     >
                       <DotLottieReact src="/Giftpremiumanimation.lottie" loop autoplay className="h-6 w-6 shrink-0" />
                       <span className="truncate">For Latest Offers</span>
@@ -444,28 +444,28 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
 
                 {/* 80% width small text center : EMI start */}
                 {specificPriceStr && emiMonthly > 0 && (
-                  <div className="w-[80%] mx-auto pt-2.5 border-t border-zinc-200/60 dark:border-zinc-800/80 text-center">
-                    <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+                  <div className="w-[80%] mx-auto pt-2.5 border-t border-zinc-200/60 text-center">
+                    <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-xs text-zinc-500 ">
                       <span>
-                        EMI Starts at <span className="font-semibold text-zinc-800 dark:text-zinc-200">₹{rupees(emiMonthly)}/mo</span>
+                        EMI Starts at* <span className="font-semibold text-zinc-800 ">₹{rupees(emiMonthly)}/mo*</span>
                       </span>
                       {activePricingCity && (
                         <>
-                          <span className="text-zinc-300 dark:text-zinc-700">•</span>
-                          <label className="inline-flex items-center gap-1.5 font-medium text-zinc-500 dark:text-zinc-400">
+                          <span className="text-zinc-300 ">•</span>
+                          <label className="inline-flex items-center gap-1.5 font-medium text-zinc-500 ">
                             <MapPin size={12} className="text-emerald-600" />
                             <span>City:</span>
                             <select
                               value={activePricingCity}
                               onChange={(e) => setSelectedPricingCity(e.target.value)}
                               aria-label="Select city for on-road price"
-                              className="max-w-[130px] cursor-pointer rounded-md border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-xs font-bold text-emerald-700 outline-none dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-400"
+                              className="max-w-[130px] cursor-pointer rounded-md border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-xs font-bold text-emerald-700 outline-none "
                             >
                               {pricingCities.map((city) => <option key={city} value={city}>{city}</option>)}
                             </select>
                           </label>
                           {selectedOnRoadPrice && (
-                            <span className="font-semibold text-emerald-700 dark:text-emerald-400">On-road ₹{selectedOnRoadPrice} L</span>
+                            <span className="font-semibold text-emerald-700 ">On-road ₹{selectedOnRoadPrice} L</span>
                           )}
                         </>
                       )}
@@ -474,14 +474,14 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
                 )}
               </div>
 
-              {/* Brand Offers */}
-              {offers && offers.length > 0 && (
-                <div className="rounded-2xl border border-emerald-250 bg-emerald-50/20 p-5 dark:bg-emerald-950/10 dark:border-emerald-900/40 space-y-3">
+              {/* Brand Offers or Value Perks */}
+              {offers && offers.length > 0 ? (
+                <div className="rounded-2xl border border-emerald-250 bg-emerald-50/20 p-5 space-y-3">
                   <div className="flex items-center gap-2 mb-1">
-                    <Tag size={16} className="text-emerald-600 dark:text-emerald-400" />
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">Available Offers</h4>
+                    <Tag size={16} className="text-emerald-600 " />
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-700 ">Available Offers</h4>
                   </div>
-                  <div className="divide-y divide-emerald-100 dark:divide-emerald-900/30">
+                  <div className="divide-y divide-emerald-100 ">
                     {offers.map((offer, idx) => (
                       <div key={offer.id || idx} className="py-3 first:pt-0 last:pb-0 flex flex-col gap-2.5">
                         <div className="flex items-start gap-2.5">
@@ -489,15 +489,15 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
                             %
                           </span>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 leading-snug">{offer.text}</p>
-                            <div className="flex flex-wrap gap-2 mt-1.5 text-[10px] text-zinc-500 dark:text-zinc-400">
+                            <p className="text-sm font-semibold text-zinc-900 leading-snug">{offer.text}</p>
+                            <div className="flex flex-wrap gap-2 mt-1.5 text-[10px] text-zinc-500 ">
                               {offer.cities && (
-                                <span className="inline-flex rounded-md bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 font-medium">
+                                <span className="inline-flex rounded-md bg-zinc-100 px-2 py-0.5 font-medium">
                                   Cities: {offer.cities}
                                 </span>
                               )}
                               {offer.valid_until && (
-                                <span className="inline-flex rounded-md bg-rose-50 dark:bg-rose-950/20 px-2 py-0.5 font-medium text-rose-700 dark:text-rose-400">
+                                <span className="inline-flex rounded-md bg-rose-50 px-2 py-0.5 font-medium text-rose-700 ">
                                   Valid till: {new Date(offer.valid_until).toLocaleDateString()}
                                 </span>
                               )}
@@ -505,7 +505,7 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
                           </div>
                         </div>
                         {offer.image && (
-                          <div className="relative w-full h-24 mt-1 rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800">
+                          <div className="relative w-full h-24 mt-1 rounded-xl overflow-hidden border border-zinc-200 ">
                             <Image 
                               src={offer.image} 
                               alt="Offer Banner" 
@@ -518,6 +518,29 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
                     ))}
                   </div>
                 </div>
+              ) : (
+                <div className="rounded-2xl border border-zinc-200/70 bg-gradient-to-br from-emerald-50/30 via-white to-zinc-50/50 p-5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Shield size={16} className="text-emerald-600" />
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-800">EV Ownership Advantage</h4>
+                    </div>
+                    <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Starting estimate</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2.5 text-xs">
+                    <div className="rounded-xl border border-zinc-200/60 bg-white p-3">
+                      <p className="text-[11px] font-medium text-zinc-500">Road Tax &amp; Reg</p>
+                      <p className="mt-0.5 font-bold text-emerald-700">Subsidized / 0%*</p>
+                    </div>
+                    <div className="rounded-xl border border-zinc-200/60 bg-white p-3">
+                      <p className="text-[11px] font-medium text-zinc-500">Avg Running Cost</p>
+                      <p className="mt-0.5 font-bold text-emerald-700">~₹1.10 / km</p>
+                    </div>
+                  </div>
+                  <p className="text-[11px] leading-relaxed text-zinc-500 pt-0.5">
+                    *Starting ex-showroom price. Final on-road price includes insurance, registration, state subsidies &amp; dealer handling.
+                  </p>
+                </div>
               )}
             </div>
           )}
@@ -526,13 +549,13 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
             <div className="space-y-5">
               <BatterySelector standardVariants={item.batteryVariants} baasVariants={item.baasVariants} hasBaas={item.baas} selectedIndex={selectedIndex} onSelect={onSelect} showBaas={showBaas} onToggleBaas={onToggleBaas} hideVariantSelector hideOnRoad cityPricing={item.city_pricing} />
               
-              <div className="rounded-2xl border border-zinc-200/60 bg-white p-5 dark:bg-zinc-900/50 dark:border-zinc-800 flex items-center justify-between gap-4">
+              <div className="rounded-2xl border border-zinc-200/60 bg-white p-5 flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 text-[#10855f] dark:text-emerald-400 flex items-center justify-center shrink-0">
+                  <div className="h-10 w-10 rounded-xl bg-emerald-50 text-brand  flex items-center justify-center shrink-0">
                     <BatteryCharging size={20} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-zinc-900 dark:text-white">Compatible Charging Stations</h3>
+                    <h3 className="text-sm font-bold text-zinc-900 ">Compatible Charging Stations</h3>
                     <p className="text-xs text-zinc-500 mt-0.5">
                       {supportedStations.length > 0 
                         ? `${Math.min(4, Math.max(1, supportedStations.length))} station${Math.min(4, Math.max(1, supportedStations.length)) !== 1 ? 's' : ''} available within 5km`
@@ -543,7 +566,7 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
                 </div>
                 <Link
                   href={`/map?model=${item.slug}`}
-                  className="rounded-full bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100 px-4.5 py-2 text-xs font-bold transition shadow-md active:scale-95 shrink-0"
+                  className="rounded-full bg-slate-900 text-white hover:bg-slate-800 px-4.5 py-2 text-xs font-bold transition shadow-md active:scale-95 shrink-0"
                 >
                   Find on Map
                 </Link>
@@ -561,7 +584,7 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
         <CompareButton slug={slug} name={`${item.brand} ${item.title}`} />
         <button
           onClick={handleShare}
-          className="flex-1 inline-flex items-center justify-center gap-2 rounded-full border border-zinc-300 bg-white px-5 py-3 text-sm font-bold text-zinc-700 hover:bg-zinc-50 dark:bg-zinc-900 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800 transition active:scale-95 shadow-xs"
+          className="flex-1 inline-flex items-center justify-center gap-2 rounded-full border border-zinc-300 bg-white px-5 py-3 text-sm font-bold text-zinc-700 hover:bg-zinc-50 transition active:scale-95 shadow-xs"
         >
           <Share2 size={16} />
           {copied ? "Link Copied!" : "Share"}
@@ -571,15 +594,15 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
       {/* EMI Calculator Popup Modal */}
       {showEmiCalculator && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/55 backdrop-blur-xs p-4">
-          <div className="w-full max-w-xl rounded-3xl bg-white dark:bg-zinc-900 p-6 shadow-2xl relative border border-zinc-200 dark:border-zinc-800">
-            <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3 mb-4">
+          <div className="w-full max-w-xl rounded-3xl bg-white p-6 shadow-2xl relative border border-zinc-200 ">
+            <div className="flex items-center justify-between border-b border-zinc-100 pb-3 mb-4">
               <div>
-                <h3 className="text-base font-black text-slate-900 dark:text-white">EMI Calculator</h3>
-                <p className="text-xs text-zinc-555 dark:text-zinc-400">Calculate custom loan details for {item.brand} {item.title}</p>
+                <h3 className="text-base font-black text-slate-900 ">EMI Calculator</h3>
+                <p className="text-xs text-zinc-555 ">Calculate custom loan details for {item.brand} {item.title}</p>
               </div>
               <button 
                 onClick={() => setShowEmiCalculator(false)} 
-                className="text-slate-400 hover:text-slate-650 dark:text-zinc-500 dark:hover:text-zinc-350 transition p-1"
+                className="text-slate-400 hover:text-slate-650 transition p-1"
               >
                 <X size={18} />
               </button>
@@ -638,7 +661,7 @@ function EnergyTabContent({ item, evEfficiency, dbFuelPrices = [] }: { item: EvL
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 rounded-2xl border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 dark:bg-zinc-800 dark:border-zinc-700">
+      <div className="flex items-center gap-2 rounded-2xl border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 ">
         <span className="text-xs">⚡</span>
         <select value={selectedCity} onChange={e => setSelectedCity(e.target.value)} className="flex-1 bg-transparent text-sm font-medium outline-none cursor-pointer">
           <option value="">National Average</option>
@@ -646,9 +669,9 @@ function EnergyTabContent({ item, evEfficiency, dbFuelPrices = [] }: { item: EvL
         </select>
       </div>
 
-      <div className="flex rounded-xl bg-zinc-100 p-1 dark:bg-zinc-800">
-        <button onClick={() => setSubTab("fuel")} className={`flex-1 rounded-lg py-2 text-xs font-medium transition cursor-pointer ${subTab==="fuel"?"bg-white shadow-sm text-zinc-900 dark:bg-zinc-700 dark:text-white":"text-zinc-600 dark:text-zinc-400"}`}>Fuel Type</button>
-        <button onClick={() => setSubTab("models")} className={`flex-1 rounded-lg py-2 text-xs font-medium transition cursor-pointer ${subTab==="models"?"bg-white shadow-sm text-zinc-900 dark:bg-zinc-700 dark:text-white":"text-zinc-600 dark:text-zinc-400"}`}>Models</button>
+      <div className="flex rounded-xl bg-zinc-100 p-1 ">
+        <button onClick={() => setSubTab("fuel")} className={`flex-1 rounded-lg py-2 text-xs font-medium transition cursor-pointer ${subTab==="fuel"?"bg-white shadow-sm text-zinc-900  ":"text-zinc-600 "}`}>Fuel Type</button>
+        <button onClick={() => setSubTab("models")} className={`flex-1 rounded-lg py-2 text-xs font-medium transition cursor-pointer ${subTab==="models"?"bg-white shadow-sm text-zinc-900  ":"text-zinc-600 "}`}>Models</button>
       </div>
 
       {subTab === "fuel" && (
@@ -661,24 +684,24 @@ function EnergyTabContent({ item, evEfficiency, dbFuelPrices = [] }: { item: EvL
             <button
               type="button"
               onClick={cycleFuel}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition cursor-pointer"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-700 hover:text-emerald-600  transition cursor-pointer"
             >
-              <Fuel size={14} className="text-emerald-600 dark:text-emerald-400" />
+              <Fuel size={14} className="text-emerald-600 " />
               <span>Change fuel type</span>
               <ChevronDown size={13} className="text-zinc-400" />
             </button>
 
             {/* Toggle Pills */}
-            <div className="flex rounded-xl bg-zinc-100 p-1 dark:bg-zinc-800 border border-zinc-200/60 dark:border-zinc-700/60">
+            <div className="flex rounded-xl bg-zinc-100 p-1 border border-zinc-200/60 ">
               {(["petrol", "diesel", "cng"] as const).map((f) => (
                 <button
                   key={f}
                   type="button"
                   onClick={() => setSelectedFuel(f)}
                   className={`px-3 py-1 text-xs font-bold rounded-lg capitalize transition cursor-pointer ${
-                    selectedFuel === f
-                      ? "bg-white text-emerald-600 shadow-xs dark:bg-zinc-700 dark:text-emerald-400"
-                      : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300"
+ selectedFuel === f
+                      ? "bg-white text-emerald-600 shadow-xs  "
+                      : "text-zinc-500 hover:text-zinc-900 "
                   }`}
                 >
                   {f}
@@ -716,13 +739,13 @@ function EnergyTabContent({ item, evEfficiency, dbFuelPrices = [] }: { item: EvL
 
 function CurrentVehicleCostCard({ name, subtitle, costPerKm }: { name: string; subtitle: string; costPerKm: number }) {
   return (
-    <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 dark:bg-emerald-950/30 dark:border-emerald-900">
+    <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 ">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-emerald-600 flex items-center justify-center"><Zap size={18} className="text-white" /></div>
-          <div><p className="text-sm font-semibold">{name}</p><p className="text-xs text-zinc-600 dark:text-zinc-400">{subtitle}</p></div>
+          <div><p className="text-sm font-semibold">{name}</p><p className="text-xs text-zinc-600 ">{subtitle}</p></div>
         </div>
-        <div className="text-right"><p className="text-[10px] uppercase text-zinc-500">Cost/km</p><p className="text-2xl font-semibold text-emerald-700 dark:text-emerald-400">₹{costPerKm.toFixed(1)}</p></div>
+        <div className="text-right"><p className="text-[10px] uppercase text-zinc-500">Cost/km</p><p className="text-2xl font-semibold text-emerald-700 ">₹{costPerKm.toFixed(1)}</p></div>
       </div>
     </div>
   );
@@ -731,17 +754,17 @@ function CurrentVehicleCostCard({ name, subtitle, costPerKm }: { name: string; s
 function CompareCard({ name, subtitle, costPerKm, isEv, currentCostPerKm }: { name: string; subtitle: string; costPerKm: number; isEv: boolean; currentCostPerKm?: number }) {
   const savings = currentCostPerKm !== undefined && costPerKm > currentCostPerKm ? costPerKm - currentCostPerKm : 0;
   return (
-    <div className="rounded-2xl border border-zinc-200 bg-white p-4 dark:bg-zinc-900/50 dark:border-zinc-800">
+    <div className="rounded-2xl border border-zinc-200 bg-white p-4 ">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-zinc-100 flex items-center justify-center dark:bg-zinc-800">
+          <div className="h-10 w-10 rounded-xl bg-zinc-100 flex items-center justify-center ">
             {isEv? <Zap size={18} className="text-emerald-600" /> : <Fuel size={18} className="text-zinc-500" />}
           </div>
           <div>
             <p className="text-sm font-medium">{name}</p>
             <p className="text-xs text-zinc-500">{subtitle}</p>
             {savings > 0 && (
-              <p className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 mt-0.5">
+              <p className="text-[11px] font-semibold text-emerald-600 mt-0.5">
                 Save ₹{savings.toFixed(1)}/km with EV
               </p>
             )}

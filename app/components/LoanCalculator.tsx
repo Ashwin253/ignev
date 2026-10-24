@@ -75,8 +75,8 @@ export default function LoanCalculator({ initialPrice }: { initialPrice?: number
             key={item.name}
             onClick={() => setSelectedBank(item.name)}
             className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-bold transition-all ${
-              selectedBank === item.name
-                ? "border-sky-400 bg-sky-50 text-sky-700"
+ selectedBank === item.name
+                ? "border-emerald-400 bg-emerald-50 text-emerald-700"
                 : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
             }`}
           >
@@ -109,9 +109,9 @@ function MiniField({ label, value, onChange, placeholder, highlight }: {
         placeholder={placeholder}
         inputMode="decimal"
         className={`w-full rounded-xl border bg-white px-3 py-2.5 text-xs font-bold outline-none transition-all placeholder:text-slate-300 ${
-          highlight
-            ? "text-sky-700 border-sky-300 bg-sky-50"
-            : "text-slate-800 border-slate-200 focus:border-sky-400"
+ highlight
+            ? "text-emerald-700 border-emerald-300 bg-emerald-50"
+            : "text-slate-800 border-slate-200 focus:border-emerald-400"
         }`}
       />
     </label>
@@ -120,9 +120,9 @@ function MiniField({ label, value, onChange, placeholder, highlight }: {
 
 function OutputCard({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
-    <div className={`rounded-xl p-3 border ${highlight ? "border-sky-300 bg-sky-50" : "border-slate-200 bg-white"}`}>
+    <div className={`rounded-xl p-3 border ${highlight ? "border-emerald-300 bg-emerald-50" : "border-slate-200 bg-white"}`}>
       <p className="text-[9px] uppercase tracking-wider text-slate-400 font-bold mb-0.5">{label}</p>
-      <p className={`text-base font-black leading-tight ${highlight ? "text-sky-700" : "text-slate-900"}`}>{value}</p>
+      <p className={`text-base font-black leading-tight ${highlight ? "text-emerald-700" : "text-slate-900"}`}>{value}</p>
     </div>
   );
 }
@@ -145,10 +145,10 @@ function SliderField({
   displaySuffix?: string;
 }) {
   return (
-    <div className="flex flex-col gap-2 p-3 bg-slate-50 dark:bg-zinc-800/40 rounded-2xl border border-slate-100 dark:border-zinc-850">
+    <div className="flex flex-col gap-2 p-3 bg-slate-50 rounded-2xl border border-slate-100 ">
       <div className="flex items-center justify-between">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">{label}</span>
-        <span className="text-xs font-bold text-slate-900 dark:text-white">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 ">{label}</span>
+        <span className="text-xs font-bold text-slate-900 ">
           {value || min}{displaySuffix}
         </span>
       </div>
@@ -159,7 +159,7 @@ function SliderField({
         step={step}
         value={value || String(min)}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full h-1 bg-slate-200 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-sky-500"
+        className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-500"
       />
     </div>
   );

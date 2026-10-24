@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   const spec = {
     openapi: "3.1.0",
     info: {
-      title: "EVPULSE EV Database & Intelligence API",
+      title: "EVPLSE EV Database & Intelligence API",
       description:
         "Comprehensive live database of Electric Vehicles (cars, scooters, bikes) and charging stations in India. Provides vehicle search, specs, side-by-side comparisons, charging station finder, and fuel savings calculator for AI assistants like ChatGPT and Gemini.",
       version: "1.0.0",
@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
     servers: [
       {
         url: baseUrl,
-        description: "Live EVPULSE Production Server",
+        description: "Live EVPLSE Production Server",
       },
     ],
     paths: {

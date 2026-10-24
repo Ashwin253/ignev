@@ -31,8 +31,8 @@ export default function SellEvPage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
           {[
             { title: "Best Valuation", desc: "Get highly competitive offers based on real-time market data.", icon: DollarSign, color: "bg-emerald-50 text-emerald-700 border-emerald-100" },
-            { title: "Instant Approval", desc: "Get your vehicle inspected and approved within 24 hours.", icon: Sparkles, color: "bg-sky-50 text-sky-700 border-sky-100" },
-            { title: "Hassle-Free Transfer", desc: "We take care of all RC transfer paperwork and registration.", icon: CheckCircle2, color: "bg-violet-50 text-violet-700 border-violet-100" },
+            { title: "Instant Approval", desc: "Get your vehicle inspected and approved within 24 hours.", icon: Sparkles, color: "bg-emerald-50 text-emerald-700 border-emerald-100" },
+            { title: "Hassle-Free Transfer", desc: "We take care of all RC transfer paperwork and registration.", icon: CheckCircle2, color: "bg-emerald-50 text-emerald-700 border-emerald-100" },
           ].map((item, idx) => (
             <div key={idx} className={`p-4 border rounded-2xl ${item.color} flex flex-col items-center sm:items-start text-center sm:text-left`}>
               <div className="p-2.5 rounded-xl bg-white shadow-sm inline-flex mb-3">

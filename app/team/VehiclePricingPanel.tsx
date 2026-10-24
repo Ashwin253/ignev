@@ -505,7 +505,7 @@ export default function VehiclePricingPanel({
             <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
               City & On-Road Pricing
             </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-ink-mute mt-0.5">
               Select cities, toggle popular add-ons (% or max cap), or add custom extra charges.
             </p>
           </div>
@@ -556,7 +556,7 @@ export default function VehiclePricingPanel({
           <button
             type="button"
             onClick={() => setShowAddCity(!showAddCity)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-50 text-sky-700 hover:bg-sky-100 border border-sky-200 text-xs font-bold transition-colors cursor-pointer w-fit"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 text-xs font-bold transition-colors cursor-pointer w-fit"
           >
             <Plus size={13} /> Add New City
           </button>
@@ -564,20 +564,20 @@ export default function VehiclePricingPanel({
 
         {/* Add City Input Bar */}
         {showAddCity && (
-          <div className="flex items-center gap-2 p-3 bg-sky-50/70 rounded-xl border border-sky-200 animate-in fade-in duration-200">
+          <div className="flex items-center gap-2 p-3 bg-emerald-50/70 rounded-xl border border-emerald-200 animate-in fade-in duration-200">
             <input
               type="text"
               value={newCityName}
               onChange={e => setNewCityName(e.target.value)}
               onKeyDown={e => e.key === "Enter" && handleAddNewCity()}
               placeholder="Enter city name (e.g. Chandigarh, Lucknow, Indore)"
-              className="flex-1 bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-xs sm:text-sm font-semibold outline-none focus:border-sky-500"
+              className="flex-1 bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-xs sm:text-sm font-semibold outline-none focus:border-emerald-500"
               autoFocus
             />
             <button
               type="button"
               onClick={handleAddNewCity}
-              className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer shrink-0"
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer shrink-0"
             >
               Add City
             </button>
@@ -602,7 +602,7 @@ export default function VehiclePricingPanel({
                 onClick={() => setSelectedCityId(city.id)}
                 className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-xs ${
                   isSelected
-                    ? "bg-slate-950 text-white shadow-md scale-102"
+                    ? "bg-white text-ink shadow-md scale-102"
                     : "bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900 border border-slate-200/80"
                 }`}
               >
@@ -631,7 +631,7 @@ export default function VehiclePricingPanel({
                 <Sliders size={14} className="text-emerald-600" />
                 2. Popular & Common Add-ons
               </span>
-              <span className="text-[11px] text-slate-500">1-Click Add to {activeCity.cityName}</span>
+              <span className="text-[11px] text-ink-mute">1-Click Add to {activeCity.cityName}</span>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -647,11 +647,11 @@ export default function VehiclePricingPanel({
                     disabled={isAlreadyAdded}
                     className={`flex items-center gap-2 p-2.5 rounded-xl border text-left text-xs font-bold transition-all cursor-pointer ${
                       isAlreadyAdded
-                        ? "bg-slate-50 border-slate-200 text-slate-400 opacity-60 cursor-not-allowed"
+                        ? "bg-slate-50 border-slate-200 text-ink-mute opacity-60 cursor-not-allowed"
                         : "bg-emerald-50/50 hover:bg-emerald-100/70 border-emerald-200 text-emerald-950 shadow-xs"
                     }`}
                   >
-                    <Icon size={14} className={isAlreadyAdded ? "text-slate-400" : "text-emerald-600"} />
+                    <Icon size={14} className={isAlreadyAdded ? "text-ink-mute" : "text-emerald-600"} />
                     <span className="truncate">{preset.label}</span>
                     {isAlreadyAdded && <Check size={12} className="ml-auto text-emerald-600 shrink-0" />}
                   </button>
@@ -670,7 +670,7 @@ export default function VehiclePricingPanel({
                     {activeCity.cityName}
                   </span>
                 </h3>
-                <p className="text-[11px] text-slate-500 mt-0.5">
+                <p className="text-[11px] text-ink-mute mt-0.5">
                   Configure % rates with optional max caps, fixed amounts, or government subsidies.
                 </p>
               </div>
@@ -678,7 +678,7 @@ export default function VehiclePricingPanel({
               <button
                 type="button"
                 onClick={handleAddCustomExtra}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 text-white hover:bg-slate-800 text-xs font-bold transition-colors cursor-pointer shadow-xs"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white text-ink hover:bg-white text-xs font-bold transition-colors cursor-pointer shadow-xs"
               >
                 <Plus size={13} /> + Add Extra Item
               </button>
@@ -686,7 +686,7 @@ export default function VehiclePricingPanel({
 
             {/* List of Addons */}
             {activeCity.addons.length === 0 ? (
-              <div className="text-center py-8 text-slate-400 text-xs font-semibold">
+              <div className="text-center py-8 text-ink-mute text-xs font-semibold">
                 No charges added for {activeCity.cityName}. Click a popular preset above or "+ Add Extra Item".
               </div>
             ) : (
@@ -708,7 +708,7 @@ export default function VehiclePricingPanel({
                         
                         {/* Label */}
                         <div className="sm:col-span-4">
-                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                          <label className="text-[10px] font-bold text-ink-mute uppercase tracking-wider block mb-1">
                             Charge / Addon Name
                           </label>
                           <input
@@ -722,7 +722,7 @@ export default function VehiclePricingPanel({
 
                         {/* Type (% or Fixed) */}
                         <div className="sm:col-span-2">
-                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                          <label className="text-[10px] font-bold text-ink-mute uppercase tracking-wider block mb-1">
                             Type
                           </label>
                           <select
@@ -737,7 +737,7 @@ export default function VehiclePricingPanel({
 
                         {/* Rate / Amount */}
                         <div className={isPercent ? "sm:col-span-2" : "sm:col-span-4"}>
-                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                          <label className="text-[10px] font-bold text-ink-mute uppercase tracking-wider block mb-1">
                             {isPercent ? "Rate (%)" : "Amount (₹)"}
                           </label>
                           <div className="relative">
@@ -748,7 +748,7 @@ export default function VehiclePricingPanel({
                               className="w-full bg-white border border-slate-300 rounded-lg pl-2.5 pr-6 py-1.5 text-xs font-bold text-slate-900 outline-none focus:border-emerald-500"
                               placeholder={isPercent ? "4" : "1500"}
                             />
-                            <span className="absolute right-2 top-1.5 text-xs font-bold text-slate-400">
+                            <span className="absolute right-2 top-1.5 text-xs font-bold text-ink-mute">
                               {isPercent ? "%" : "₹"}
                             </span>
                           </div>
@@ -757,14 +757,14 @@ export default function VehiclePricingPanel({
                         {/* Max Cap (only for %) */}
                         {isPercent && (
                           <div className="sm:col-span-2">
-                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1" title="Maximum ₹ cap if % exceeds">
+                            <label className="text-[10px] font-bold text-ink-mute uppercase tracking-wider block mb-1" title="Maximum ₹ cap if % exceeds">
                               Max Cap (₹)
                             </label>
                             <input
                               type="number"
                               value={addon.max_cap || ""}
                               onChange={e => handleUpdateAddon(addon.id, { max_cap: e.target.value })}
-                              className="w-full bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-xs font-semibold text-slate-800 outline-none focus:border-emerald-500 placeholder:text-slate-400"
+                              className="w-full bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-xs font-semibold text-slate-800 outline-none focus:border-emerald-500 placeholder:text-ink-mute"
                               placeholder="No Cap"
                             />
                           </div>
@@ -785,7 +785,7 @@ export default function VehiclePricingPanel({
                           <button
                             type="button"
                             onClick={() => handleRemoveAddon(addon.id)}
-                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                            className="p-1.5 text-ink-mute hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
                             title="Remove charge"
                           >
                             <Trash2 size={14} />
@@ -794,7 +794,7 @@ export default function VehiclePricingPanel({
                       </div>
 
                       {/* Small Live Computed Note */}
-                      <div className="mt-1.5 flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-200/60 pt-1">
+                      <div className="mt-1.5 flex items-center justify-between text-[11px] text-ink-mute border-t border-slate-200/60 pt-1">
                         <span>
                           {isPercent ? `${addon.rate || 0}% of Ex-Showroom ${addon.max_cap ? `(Max Cap: ₹${Number(addon.max_cap).toLocaleString("en-IN")})` : ""}` : "Fixed standard charge"}
                         </span>
@@ -810,7 +810,7 @@ export default function VehiclePricingPanel({
 
             {/* Delete City Button */}
             <div className="pt-3 border-t border-slate-100 flex justify-between items-center">
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-ink-mute">
                 Rule ID: <code className="bg-slate-100 px-1.5 py-0.5 rounded text-[11px] font-mono">{activeCity.id}</code>
               </span>
               <button
@@ -826,76 +826,76 @@ export default function VehiclePricingPanel({
 
         {/* Right 5 cols: Live On-Road Price Preview & Breakdown */}
         <div className="lg:col-span-5 space-y-4">
-          <div className="bg-slate-950 text-white p-5 rounded-2xl shadow-lg border border-slate-800 space-y-4">
+          <div className="bg-white text-ink p-5 rounded-2xl shadow-lg border border-slate-800 space-y-4">
             
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400 font-bold text-xs">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-soft text-brand-deep font-bold text-xs">
                   ⚡
                 </span>
                 <div>
-                  <h4 className="text-sm font-extrabold text-white">Live On-Road Calculator</h4>
-                  <p className="text-[11px] text-slate-400">{activeCity.cityName} On-Road Breakdown</p>
+                  <h4 className="text-sm font-extrabold text-ink">Live On-Road Calculator</h4>
+                  <p className="text-[11px] text-ink-mute">{activeCity.cityName} On-Road Breakdown</p>
                 </div>
               </div>
-              <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold border border-emerald-500/30">
+              <span className="px-2.5 py-1 rounded-full bg-brand-soft text-brand-deep text-xs font-bold border border-emerald-500/30">
                 {activeCity.cityName}
               </span>
             </div>
 
             {/* Test Ex-Showroom Price Input */}
             <div className="space-y-1">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-ink-mute">
                 Test Ex-Showroom Price (₹)
               </label>
               <div className="relative">
-                <IndianRupee size={15} className="absolute left-3 top-2.5 text-slate-400" />
+                <IndianRupee size={15} className="absolute left-3 top-2.5 text-ink-mute" />
                 <input
                   type="number"
                   value={sampleShowroomPrice}
                   onChange={e => setSampleShowroomPrice(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-8 pr-3 py-2 text-sm font-bold text-white outline-none focus:border-emerald-500"
+                  className="w-full bg-white border border-slate-800 rounded-xl pl-8 pr-3 py-2 text-sm font-bold text-ink outline-none focus:border-emerald-500"
                   placeholder="1500000"
                 />
               </div>
-              <div className="flex justify-between items-center text-[11px] text-slate-400 pt-0.5">
+              <div className="flex justify-between items-center text-[11px] text-ink-mute pt-0.5">
                 <span>Quick test:</span>
                 <div className="flex gap-1.5">
-                  <button type="button" onClick={() => setSampleShowroomPrice("800000")} className="hover:text-emerald-400">8L</button>
+                  <button type="button" onClick={() => setSampleShowroomPrice("800000")} className="hover:text-brand-deep">8L</button>
                   <span>•</span>
-                  <button type="button" onClick={() => setSampleShowroomPrice("1500000")} className="hover:text-emerald-400">15L</button>
+                  <button type="button" onClick={() => setSampleShowroomPrice("1500000")} className="hover:text-brand-deep">15L</button>
                   <span>•</span>
-                  <button type="button" onClick={() => setSampleShowroomPrice("2500000")} className="hover:text-emerald-400">25L</button>
+                  <button type="button" onClick={() => setSampleShowroomPrice("2500000")} className="hover:text-brand-deep">25L</button>
                   <span>•</span>
-                  <button type="button" onClick={() => setSampleShowroomPrice("4500000")} className="hover:text-emerald-400">45L</button>
+                  <button type="button" onClick={() => setSampleShowroomPrice("4500000")} className="hover:text-brand-deep">45L</button>
                 </div>
               </div>
             </div>
 
             {/* Itemized Calculation Summary */}
-            <div className="space-y-2 bg-slate-900/80 p-3.5 rounded-xl border border-slate-800 text-xs">
-              <div className="flex justify-between items-center text-slate-300 font-semibold">
+            <div className="space-y-2 bg-white p-3.5 rounded-xl border border-slate-800 text-xs">
+              <div className="flex justify-between items-center text-ink-soft font-semibold">
                 <span>Ex-Showroom Price</span>
-                <span className="font-bold text-white">{fmtLakh(showroomNum)}</span>
+                <span className="font-bold text-ink">{fmtLakh(showroomNum)}</span>
               </div>
 
               <div className="border-t border-slate-800 my-1 pt-1 space-y-1.5">
                 {breakdown.rows.map((r, i) => (
                   <div key={i} className="flex justify-between items-center text-[11px]">
-                    <span className="text-slate-400 flex items-center gap-1">
+                    <span className="text-ink-mute flex items-center gap-1">
                       {r.isDeduction ? "🎁" : "+"} {r.label}
-                      {r.capHit && <span className="text-[9px] bg-amber-500/20 text-amber-300 px-1 rounded">Capped</span>}
+                      {r.capHit && <span className="text-[9px] bg-amber-500/20 text-[#0a4a30] px-1 rounded">Capped</span>}
                     </span>
-                    <span className={r.isDeduction ? "text-emerald-400 font-bold" : "text-slate-200"}>
+                    <span className={r.isDeduction ? "text-brand-deep font-bold" : "text-ink-soft"}>
                       {r.isDeduction ? "-" : "+"} {fmtLakh(r.finalAmount)}
                     </span>
                   </div>
                 ))}
               </div>
 
-              <div className="border-t border-slate-800 pt-2 flex justify-between items-center text-xs font-bold text-slate-300">
+              <div className="border-t border-slate-800 pt-2 flex justify-between items-center text-xs font-bold text-ink-soft">
                 <span>Total Net Additions</span>
-                <span className={breakdown.netAddons >= 0 ? "text-slate-200" : "text-emerald-400"}>
+                <span className={breakdown.netAddons >= 0 ? "text-ink-soft" : "text-brand-deep"}>
                   {breakdown.netAddons >= 0 ? "+" : "-"}{fmtLakh(Math.abs(breakdown.netAddons))}
                 </span>
               </div>
@@ -904,17 +904,17 @@ export default function VehiclePricingPanel({
             {/* Total On-Road Price Box */}
             <div className="bg-gradient-to-br from-emerald-950/80 to-slate-900 border border-emerald-500/40 p-4 rounded-xl flex items-center justify-between">
               <div>
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-brand-deep">
                   Estimated On-Road Price ({activeCity.cityName})
                 </span>
-                <h3 className="text-xl sm:text-2xl font-black text-white mt-0.5">
+                <h3 className="text-xl sm:text-2xl font-black text-ink mt-0.5">
                   {fmtLakh(breakdown.finalOnRoad)}
                 </h3>
               </div>
 
               <div className="text-right">
-                <span className="text-[11px] text-slate-400 block">Difference</span>
-                <span className="text-xs font-extrabold text-emerald-400">
+                <span className="text-[11px] text-ink-mute block">Difference</span>
+                <span className="text-xs font-extrabold text-brand-deep">
                   +{((breakdown.netAddons / (showroomNum || 1)) * 100).toFixed(1)}%
                 </span>
               </div>

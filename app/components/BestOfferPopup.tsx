@@ -17,8 +17,9 @@ import {
 import { trackSmartEvent, SMART_EVENTS } from "../lib/clarity-events";
 import { supabaseClient } from "../lib/supabase-client";
 const SESSION_KEY = "best_offer_dismissed";
-const DELAY_MS = 12000;
-const RETRY_DELAY_MS = 25 * 1000;
+// Routes where a promo popup would be disruptive (forms, maps, admin tools)
+const QUIET_ROUTES = ["/team", "/mis", "/login", "/signup", "/profile", "/map", "/nearme", "/ride", "/service", "/sell-ev", "/assist", "/shop"];
+const MIN_TIME_ON_PAGE_MS = 8000; // ignore accidental mouse-outs right after load
 
 type LocationState = "idle" | "fetching" | "done" | "error";
 
@@ -28,15 +29,6 @@ type OfferBanner = {
   image_horizontal: string;
   background_color?: string;
   href?: string;
-};
-
-// Module-level so timers survive React unmount/remount cycles
-let scheduleTimer: ReturnType<typeof setTimeout> | null = null;
-const clearSchedule = () => {
-  if (scheduleTimer) {
-    clearTimeout(scheduleTimer);
-    scheduleTimer = null;
-  }
 };
 
 export default function BestOfferPopup() {
@@ -66,25 +58,44 @@ export default function BestOfferPopup() {
     })();
   }, []);
 
-  // â”€â”€ Schedule helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  const scheduleShow = (delay: number) => {
-    clearSchedule();
-    scheduleTimer = setTimeout(() => {
-      scheduleTimer = null;
-      if (!sessionStorage.getItem(SESSION_KEY)) setVisible(true);
-    }, delay);
-  };
-
-  // â”€â”€ Initial schedule on mount â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──── Exit intent only ────
+  // Desktop: cursor leaves through the top of the window (heading for tabs / close / back).
+  // Touch: shown when the visitor switches away from the tab and comes back.
+  // Once per session, never on form-heavy routes, never in the first few seconds.
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (pathname?.startsWith("/team")) return;
-    if (sessionStorage.getItem(SESSION_KEY)) return;
-    scheduleShow(DELAY_MS);
-    return () => clearSchedule();
+    if (pathname && QUIET_ROUTES.some((r) => pathname.startsWith(r))) return;
+    try {
+      if (sessionStorage.getItem(SESSION_KEY)) return;
+    } catch {}
+    const mountedAt = Date.now();
+    const tryShow = () => {
+      if (Date.now() - mountedAt < MIN_TIME_ON_PAGE_MS) return;
+      try {
+        if (sessionStorage.getItem(SESSION_KEY)) return;
+      } catch {}
+      // don't stack on top of another open dialog
+      if (document.querySelector('[role="dialog"], [aria-modal="true"]')) return;
+      setVisible(true);
+    };
+    const onMouseOut = (e: MouseEvent) => {
+      if (e.relatedTarget || e.clientY > 0) return;
+      tryShow();
+    };
+    let wasHidden = false;
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") wasHidden = true;
+      else if (wasHidden && window.matchMedia("(pointer: coarse)").matches) tryShow();
+    };
+    document.addEventListener("mouseout", onMouseOut);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      document.removeEventListener("mouseout", onMouseOut);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, [pathname]);
 
-  // â”€â”€ Auto-fetch location each time the popup opens â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──── Auto-fetch location each time the popup opens ────
   useEffect(() => {
     if (!visible) return;
     setLocationState("idle");
@@ -115,22 +126,16 @@ export default function BestOfferPopup() {
     );
   };
 
-  // â”€â”€ Ask later â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  const askLater = () => {
-    clearSchedule();
-    setVisible(false);
-    if (pathname?.startsWith("/team")) return;
-    scheduleShow(RETRY_DELAY_MS);
-  };
-
-  // â”€â”€ Dismiss forever â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──── Close (both "Ask me later" and the backdrop) — don't show again this session ────
   const dismiss = () => {
     setVisible(false);
-    clearSchedule();
-    sessionStorage.setItem(SESSION_KEY, "1");
+    try {
+      sessionStorage.setItem(SESSION_KEY, "1");
+    } catch {}
   };
+  const askLater = dismiss;
 
-  // â”€â”€ Submit â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──── Submit ────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -161,7 +166,7 @@ export default function BestOfferPopup() {
 
   // Derived banner values with sensible defaults
   const popupTitle   = banner?.cta     || "Get the Best Offer";
-  const popupSub     = banner?.details || "Share your details and our EV expert will find you the best deal â€” no spam, ever.";
+  const popupSub     = banner?.details || "Share your details and our EV expert will find you the best deal — no spam, ever.";
   const popupImage   = banner?.image_horizontal || "";
   const popupBgColor = banner?.background_color || "";
 
@@ -202,12 +207,16 @@ export default function BestOfferPopup() {
                 askLater();
               }}
               aria-label="Ask me later"
-              className="absolute top-3 right-3 z-[80] inline-flex pointer-events-auto items-center gap-1 rounded-full bg-black/55 px-3 py-1.5 text-[11px] font-semibold text-white shadow-lg backdrop-blur-sm transition-colors hover:bg-black/75 focus:outline-none focus:ring-2 focus:ring-white/80 cursor-pointer"
+              className={
+                popupImage
+                  ? "absolute top-3 right-3 z-[80] inline-flex pointer-events-auto items-center gap-1 rounded-full bg-black/55 px-3 py-1.5 text-[11px] font-semibold text-white shadow-lg backdrop-blur-sm transition-colors hover:bg-black/75 focus:outline-none focus:ring-2 focus:ring-white/80 cursor-pointer"
+                  : "absolute top-3 right-3 z-[80] inline-flex pointer-events-auto items-center gap-1 rounded-full border border-line-strong bg-white/90 px-3 py-1.5 text-[11px] font-bold text-ink-soft shadow-xs backdrop-blur-sm transition-colors hover:bg-white hover:text-ink focus:outline-none focus:ring-2 focus:ring-brand/30 cursor-pointer"
+              }
             >
               Ask me later
             </button>
 
-            {/* â”€â”€ Header: photo (if set) OR gradient fallback â”€â”€ */}
+            {/* ──── Header: photo (if set) OR homepage-matching daylight aurora header ──── */}
             {popupImage ? (
               <div
                 className="relative h-44 sm:h-52 overflow-hidden"
@@ -224,9 +233,9 @@ export default function BestOfferPopup() {
 
                 {/* Title block over the image */}
                 <div className="absolute bottom-0 left-0 right-0 px-5 pb-5 z-10">
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#8FE24A]/20 border border-[#8FE24A]/40 mb-2">
-                    <Tag className="w-3 h-3 text-[#8FE24A]" />
-                    <span className="text-[#8FE24A] text-[10px] font-bold uppercase tracking-widest">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#8df0b0]/20 border border-[#8df0b0]/40 mb-2">
+                    <Tag className="w-3 h-3 text-[#8df0b0]" />
+                    <span className="text-[#8df0b0] text-[10px] font-bold uppercase tracking-widest">
                       Exclusive for you
                     </span>
                   </div>
@@ -239,34 +248,37 @@ export default function BestOfferPopup() {
                 </div>
               </div>
             ) : (
-              /* â”€â”€ Gradient fallback header (no photo set) â”€â”€ */
+              /* ──── Daylight aurora header matching homepage ──── */
               <div
-                className="relative px-6 pt-7 pb-6 overflow-hidden"
+                className="relative px-6 pt-7 pb-6 overflow-hidden border-b border-line"
                 style={
                   popupBgColor
-                    ? { background: `linear-gradient(135deg, ${popupBgColor}cc, ${popupBgColor})` }
-                    : { background: "linear-gradient(135deg, #0A2A1E, #1F7A4D, #0A2A1E)" }
+                    ? { background: `linear-gradient(135deg, ${popupBgColor}22, ${popupBgColor}44)` }
+                    : { background: "linear-gradient(135deg, #e3f6ec 0%, #ffffff 50%, #e8fbef 100%)" }
                 }
               >
-                <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full bg-[#8FE24A]/20 blur-2xl pointer-events-none" />
-                <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full bg-white/5 blur-xl pointer-events-none" />
+                <div className="absolute -top-10 -right-10 w-44 h-44 rounded-full bg-volt/35 blur-2xl pointer-events-none" />
+                <div className="absolute -bottom-10 -left-10 w-36 h-36 rounded-full bg-brand-soft blur-xl pointer-events-none" />
 
-                <div className="flex items-start gap-4 relative z-10">
-                  <div className="w-12 h-12 rounded-2xl bg-[#8FE24A] flex items-center justify-center shrink-0 shadow-lg shadow-[#8FE24A]/30">
-                    <Gift className="w-6 h-6 text-[#07130E]" />
+                <div className="flex items-start gap-4 relative z-10 pr-20">
+                  <div className="w-12 h-12 rounded-2xl bg-volt border border-brand/20 flex items-center justify-center shrink-0 shadow-sm text-ink">
+                    <Gift className="w-6 h-6 text-ink" />
                   </div>
                   <div>
-                    <p className="text-[#8FE24A] text-[11px] font-bold uppercase tracking-widest mb-0.5">
-                      Exclusive for you
-                    </p>
-                    <h2 className="text-white text-xl font-black leading-tight">{popupTitle}</h2>
-                    <p className="text-emerald-100/80 text-xs mt-1 leading-relaxed">{popupSub}</p>
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-brand-soft border border-brand/20 mb-1.5">
+                      <Tag className="w-3 h-3 text-brand" />
+                      <span className="text-brand text-[10px] font-extrabold uppercase tracking-widest">
+                        Exclusive for you
+                      </span>
+                    </div>
+                    <h2 className="text-ink text-xl font-extrabold leading-tight">{popupTitle}</h2>
+                    <p className="text-ink-soft text-xs mt-1 leading-relaxed">{popupSub}</p>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* â”€â”€ Body â”€â”€ */}
+            {/* ──── Body ──── */}
             <div className="bg-white px-6 py-5">
               {submitted ? (
                 <motion.div
@@ -275,15 +287,15 @@ export default function BestOfferPopup() {
                   className="flex flex-col items-center text-center py-6 gap-3"
                 >
                   <div className="w-14 h-14 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center">
-                    <CheckCircle2 className="w-7 h-7 text-[#1F7A4D]" />
+                    <CheckCircle2 className="w-7 h-7 text-brand" />
                   </div>
-                  <h3 className="text-lg font-black text-[#0A2A1E]">You're all set!</h3>
+                  <h3 className="text-lg font-black text-ink">You're all set!</h3>
                   <p className="text-[#526B60] text-sm max-w-xs leading-relaxed">
                     Our expert will reach out with the best offer just for you.
                   </p>
                   <button
                     onClick={dismiss}
-                    className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-[#1F7A4D] hover:underline cursor-pointer"
+                    className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-brand hover:underline cursor-pointer"
                   >
                     Continue browsing <ChevronRight size={13} />
                   </button>
@@ -292,29 +304,29 @@ export default function BestOfferPopup() {
                 <form onSubmit={handleSubmit} className="space-y-3.5">
                   {/* Name */}
                   <div>
-                    <label className="block text-[10px] font-bold text-[#3C5347] uppercase tracking-wider mb-1.5">
+                    <label className="block text-[10px] font-extrabold text-ink-soft uppercase tracking-wider mb-1.5">
                       Your name
                     </label>
                     <div className="relative">
-                      <User size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6C8377] pointer-events-none" />
+                      <User size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-mute pointer-events-none" />
                       <input
                         type="text"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         required
                         placeholder="Full name"
-                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-[#D0E2CC] bg-[#F8FAF7] text-sm text-[#0A2A1E] font-medium placeholder:text-[#8CA094] focus:outline-none focus:border-[#1F7A4D] focus:ring-2 focus:ring-[#1F7A4D]/20 focus:bg-white transition-all"
+                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-line bg-paper/70 text-sm text-ink font-medium placeholder:text-ink-mute focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 focus:bg-white transition-all"
                       />
                     </div>
                   </div>
 
                   {/* Mobile */}
                   <div>
-                    <label className="block text-[10px] font-bold text-[#3C5347] uppercase tracking-wider mb-1.5">
+                    <label className="block text-[10px] font-extrabold text-ink-soft uppercase tracking-wider mb-1.5">
                       Mobile number
                     </label>
                     <div className="relative">
-                      <Phone size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6C8377] pointer-events-none" />
+                      <Phone size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-mute pointer-events-none" />
                       <input
                         type="tel"
                         value={phone}
@@ -323,7 +335,7 @@ export default function BestOfferPopup() {
                         inputMode="numeric"
                         maxLength={13}
                         placeholder="+91 XXXXX XXXXX"
-                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-[#D0E2CC] bg-[#F8FAF7] text-sm text-[#0A2A1E] font-medium placeholder:text-[#8CA094] focus:outline-none focus:border-[#1F7A4D] focus:ring-2 focus:ring-[#1F7A4D]/20 focus:bg-white transition-all"
+                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-line bg-paper/70 text-sm text-ink font-medium placeholder:text-ink-mute focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 focus:bg-white transition-all"
                       />
                     </div>
                   </div>
@@ -331,26 +343,26 @@ export default function BestOfferPopup() {
                   {/* Pincode */}
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
-                      <label className="text-[10px] font-bold text-[#3C5347] uppercase tracking-wider">
+                      <label className="text-[10px] font-extrabold text-ink-soft uppercase tracking-wider">
                         Location (Pincode)
                       </label>
                       {locationState === "idle" || locationState === "error" ? (
-                        <button type="button" onClick={fetchLocation} className="inline-flex items-center gap-1 text-[10px] font-bold text-[#1F7A4D] hover:underline cursor-pointer">
+                        <button type="button" onClick={fetchLocation} className="inline-flex items-center gap-1 text-[10px] font-bold text-brand hover:underline cursor-pointer">
                           <LocateFixed size={11} />
                           {locationState === "error" ? "Retry" : "Auto-detect"}
                         </button>
                       ) : locationState === "fetching" ? (
-                        <span className="inline-flex items-center gap-1 text-[10px] text-[#6C8377]">
-                          <Loader2 size={11} className="animate-spin" /> Detectingâ€¦
+                        <span className="inline-flex items-center gap-1 text-[10px] text-ink-mute">
+                          <Loader2 size={11} className="animate-spin" /> Detecting…
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-[10px] text-[#1F7A4D] font-bold">
+                        <span className="inline-flex items-center gap-1 text-[10px] text-brand font-bold">
                           <CheckCircle2 size={11} /> Detected
                         </span>
                       )}
                     </div>
                     <div className="relative">
-                      <MapPin size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6C8377] pointer-events-none" />
+                      <MapPin size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-mute pointer-events-none" />
                       <input
                         type="text"
                         value={pincode}
@@ -358,10 +370,10 @@ export default function BestOfferPopup() {
                         inputMode="numeric"
                         maxLength={6}
                         placeholder="6-digit PIN code"
-                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-[#D0E2CC] bg-[#F8FAF7] text-sm text-[#0A2A1E] font-medium placeholder:text-[#8CA094] focus:outline-none focus:border-[#1F7A4D] focus:ring-2 focus:ring-[#1F7A4D]/20 focus:bg-white transition-all"
+                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-line bg-paper/70 text-sm text-ink font-medium placeholder:text-ink-mute focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 focus:bg-white transition-all"
                       />
                     </div>
-                    <p className="mt-1.5 text-[10px] text-[#6C8377] leading-snug">
+                    <p className="mt-1.5 text-[10px] text-ink-mute leading-snug">
                       Used to find offers near you. You can edit if auto-detect is wrong.
                     </p>
                   </div>
@@ -371,16 +383,16 @@ export default function BestOfferPopup() {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="w-full mt-1 flex items-center justify-center gap-2 bg-[#1F7A4D] hover:bg-[#18633e] disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-xl text-sm transition-all shadow-md shadow-[#1F7A4D]/25 active:scale-[0.98] cursor-pointer"
+                    className="w-full mt-1 flex items-center justify-center gap-2 bg-brand hover:bg-brand-deep disabled:opacity-60 disabled:cursor-not-allowed text-white font-extrabold py-3.5 rounded-xl text-sm transition-all shadow-md shadow-brand/20 active:scale-[0.98] cursor-pointer"
                   >
                     {submitting ? (
-                      <><Loader2 size={16} className="animate-spin" /> Please waitâ€¦</>
+                      <><Loader2 size={16} className="animate-spin" /> Please wait…</>
                     ) : (
                       <><Gift size={16} /> Get Best Offer</>
                     )}
                   </button>
 
-                  <p className="text-[10px] text-[#8CA094] text-center leading-relaxed">
+                  <p className="text-[10px] text-ink-mute text-center leading-relaxed">
                     No spam. Your details are only shared with our verified EV experts.
                   </p>
 

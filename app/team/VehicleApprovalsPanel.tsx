@@ -77,14 +77,14 @@ export default function VehicleApprovalsPanel({ supabase }: { supabase: any }) {
     <div className="space-y-6 animate-fade-in">
       <div>
         <h2 className="text-xl font-extrabold text-slate-900 flex items-center gap-2">
-          <Car className="text-sky-600 animate-pulse" size={22} /> Customer Vehicle Registrations
+          <Car className="text-emerald-600 animate-pulse" size={22} /> Customer Vehicle Registrations
         </h2>
-        <p className="text-xs text-slate-500 mt-1">Review, inspect, and approve customer cars registered for Selling or Scrapping.</p>
+        <p className="text-xs text-ink-mute mt-1">Review, inspect, and approve customer cars registered for Selling or Scrapping.</p>
       </div>
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="animate-spin text-sky-600" size={28} />
+          <Loader2 className="animate-spin text-emerald-600" size={28} />
         </div>
       ) : leads.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -96,7 +96,7 @@ export default function VehicleApprovalsPanel({ supabase }: { supabase: any }) {
                     <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
                       l.service_type === "scrap" 
                         ? "text-rose-700 bg-rose-50 border-rose-100" 
-                        : "text-blue-700 bg-blue-50 border-blue-100"
+                        : "text-emerald-700 bg-emerald-50 border-emerald-100"
                     }`}>
                       {l.service_type === "scrap" ? "Scrap Request" : "Sale Request"}
                     </span>
@@ -114,18 +114,18 @@ export default function VehicleApprovalsPanel({ supabase }: { supabase: any }) {
                 <div className="space-y-2 text-xs text-slate-600 bg-slate-50 p-3.5 rounded-xl border border-slate-100">
                   <p><strong>Owner Name:</strong> {l.name || "Anonymous Client"}</p>
                   <p className="flex items-center gap-1">
-                    <Phone size={12} className="text-slate-400" /> 
-                    <a href={`tel:${l.phone}`} className="text-sky-600 font-bold hover:underline">{l.phone}</a>
+                    <Phone size={12} className="text-ink-mute" /> 
+                    <a href={`tel:${l.phone}`} className="text-emerald-600 font-bold hover:underline">{l.phone}</a>
                   </p>
                   <p className="flex items-center gap-1">
-                    <MapPin size={12} className="text-slate-400" /> {l.pincode || "Not specified"}
+                    <MapPin size={12} className="text-ink-mute" /> {l.pincode || "Not specified"}
                   </p>
                   {l.message && (
-                    <p className="text-slate-500 italic mt-1 pt-1.5 border-t border-slate-200/50">
+                    <p className="text-ink-mute italic mt-1 pt-1.5 border-t border-slate-200/50">
                       "{l.message}"
                     </p>
                   )}
-                  <p className="flex items-center gap-1 text-slate-400 pt-1 border-t border-slate-200/50 mt-1">
+                  <p className="flex items-center gap-1 text-ink-mute pt-1 border-t border-slate-200/50 mt-1">
                     <Clock size={12} /> {new Date(l.created_at).toLocaleString()}
                   </p>
                 </div>
@@ -152,9 +152,9 @@ export default function VehicleApprovalsPanel({ supabase }: { supabase: any }) {
         </div>
       ) : (
         <div className="text-center py-20 flex flex-col items-center justify-center border border-dashed border-slate-200 bg-white rounded-2xl">
-          <Car className="text-slate-300" size={40} />
+          <Car className="text-ink-soft" size={40} />
           <h3 className="font-extrabold text-sm text-slate-700 mt-4">No pending vehicle requests</h3>
-          <p className="text-xs text-slate-400 max-w-xs mt-1 leading-relaxed">
+          <p className="text-xs text-ink-mute max-w-xs mt-1 leading-relaxed">
             All submitted car selling or scrapping requests are up to date.
           </p>
         </div>

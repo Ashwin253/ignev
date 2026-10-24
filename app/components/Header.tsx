@@ -23,7 +23,7 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [mega, setMega] = useState<MegaKey>(null);
   const [user, setUser] = useState<FirebaseUser | null>(null);
-  const [mobileSection, setMobileSection] = useState<string | null>("explore");
+  const [mobileSection, setMobileSection] = useState<string | null>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { slugs } = useShortlist();
 
@@ -43,6 +43,7 @@ export default function Header() {
   useEffect(() => {
     setMenuOpen(false);
     setMega(null);
+    setMobileSection(null);
   }, [pathname]);
 
   useEffect(() => {

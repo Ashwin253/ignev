@@ -149,7 +149,7 @@ async function HomeContent() {
       <SavingsTeaser />
       <WhySection />
       <StatsBand models={listings.length} brands={new Set(listings.map((l) => l.brand).filter(Boolean)).size} />
-      {/* <ServicesOrbit /> */}
+      <ServicesOrbit />
       <HowItWorks />
       <NewsGrid items={news} />
       <ToolsGrid />

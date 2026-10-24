@@ -6,6 +6,7 @@ import Image from "next/image";
 import { ArrowUpRight, Banknote, CarFront, Package, ShieldCheck, ShoppingCart, Wrench, Zap, ArrowLeftRight } from "lucide-react";
 import { Container, Eyebrow, cx } from "../ui/kit";
 import Reveal from "../ui/Reveal";
+import { toast } from "../../lib/toast";
 
 type Svc = {
   title: string;
@@ -19,22 +20,30 @@ type Svc = {
   d: number;
   tone: string;
   delay: string;
+  disabled?: boolean;
 };
 
 const SERVICES: Svc[] = [
   { title: "Buy", blurb: "Compare 100+ new EVs with verified specs & on-road prices.", href: "/catalog", icon: ShoppingCart, x: 17, y: 24, d: 150, tone: "bg-[#e3f6ec] text-brand-deep border-[#9ddcb9]", delay: "0s" },
-  { title: "Rent", blurb: "Flexible daily, weekly & monthly electric rentals.", href: "/assist", icon: CarFront, x: 42, y: 9, d: 112, tone: "bg-[#c9f1da] text-brand-deep border-[#78d79c]", delay: "-2s" },
-  { title: "Finance", blurb: "EMI plans, loan offers and a calculator that does the maths.", href: "/tools?tool=emi", icon: Banknote, x: 70, y: 13, d: 136, tone: "bg-[#d8f5e5] text-brand-deep border-[#8de0b1]", delay: "-4s" },
-  { title: "Insure", blurb: "EV-specific insurance with battery cover.", href: "/service/insurance", icon: ShieldCheck, x: 87, y: 40, d: 120, tone: "bg-[#bdeccf] text-brand-deep border-[#6bc995]", delay: "-1s" },
+  { title: "Rent", blurb: "Flexible daily, weekly & monthly electric rentals.", href: "/assist", icon: CarFront, x: 42, y: 9, d: 112, tone: "bg-[#c9f1da] text-brand-deep border-[#78d79c]", delay: "-2s", disabled: true },
+  { title: "Finance", blurb: "EMI plans, loan offers and a calculator that does the maths.", href: "/tools?tool=emi", icon: Banknote, x: 70, y: 13, d: 136, tone: "bg-[#d8f5e5] text-brand-deep border-[#8de0b1]", delay: "-4s", disabled: true },
+  { title: "Insure", blurb: "EV-specific insurance with battery cover.", href: "/service/insurance", icon: ShieldCheck, x: 87, y: 40, d: 120, tone: "bg-[#bdeccf] text-brand-deep border-[#6bc995]", delay: "-1s", disabled: true },
   { title: "Charge", blurb: "Find nearby charging stations and plan your route.", href: "/charging-station", icon: Zap, x: 82, y: 76, d: 148, tone: "bg-[#8df0b0] text-ink border-[#4ad67e]", delay: "-3s" },
-  { title: "Service", blurb: "Expert EV care from verified service partners.", href: "/service", icon: Wrench, x: 52, y: 90, d: 116, tone: "bg-[#e3f6ec] text-brand-deep border-[#9ddcb9]", delay: "-5s" },
-  { title: "Spare parts", blurb: "Genuine OEM parts, delivered to your door.", href: "/shop", icon: Package, x: 24, y: 80, d: 130, tone: "bg-[#d6f4e2] text-brand-deep border-[#87dbab]", delay: "-2.5s" },
+  { title: "Service", blurb: "Expert EV care from verified service partners.", href: "/service", icon: Wrench, x: 52, y: 90, d: 116, tone: "bg-[#e3f6ec] text-brand-deep border-[#9ddcb9]", delay: "-5s", disabled: true },
+  { title: "Spare parts", blurb: "Genuine OEM parts, delivered to your door.", href: "/shop", icon: Package, x: 24, y: 80, d: 130, tone: "bg-[#d6f4e2] text-brand-deep border-[#87dbab]", delay: "-2.5s", disabled: true },
   { title: "Sell", blurb: "Get the best resale value for your used EV.", href: "/sell-ev", icon: ArrowLeftRight, x: 9, y: 52, d: 112, tone: "bg-[#c9f1da] text-brand-deep border-[#78d79c]", delay: "-4.5s" },
 ];
 
 export default function ServicesOrbit() {
   const [active, setActive] = useState<string | null>(null);
   const cur = SERVICES.find((s) => s.title === active);
+
+  const handleClick = (e: React.MouseEvent, s: Svc) => {
+    if (s.disabled) {
+      e.preventDefault();
+      toast(`${s.title} is coming soon! Stay tuned.`, "info");
+    }
+  };
 
   return (
     <section className="relative overflow-hidden border-y border-line bg-gradient-to-b from-white via-[#f5fbf7] to-white py-16 sm:py-24" aria-labelledby="services-h">
@@ -79,9 +88,22 @@ export default function ServicesOrbit() {
             <div className="relative grid h-[190px] w-[190px] place-items-center rounded-full bg-white shadow-lift ring-8 ring-brand/15 border border-line-strong">
               <div className="text-center">
                 <Image src="/evplsenewlogo.png" alt="EVPLSE" width={130} height={34} className="mx-auto h-8 w-auto" style={{ width: "auto" }} />
-                <p className="mt-2 px-4 text-[11px] font-bold leading-tight text-ink">
-                  {cur ? cur.blurb : "Your EV, start to finish"}
-                </p>
+                {cur ? (
+                  <div className="mt-2 px-3">
+                    {cur.disabled && (
+                      <span className="inline-block mb-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-800">
+                        Coming Soon
+                      </span>
+                    )}
+                    <p className="text-[11px] font-bold leading-tight text-ink">
+                      {cur.blurb}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="mt-2 px-4 text-[11px] font-bold leading-tight text-ink">
+                    Your EV, start to finish
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -93,7 +115,8 @@ export default function ServicesOrbit() {
             return (
               <div key={s.title} className="absolute z-20" style={{ left: `${s.x}%`, top: `${s.y}%`, width: s.d, height: s.d, marginLeft: -s.d / 2, marginTop: -s.d / 2 }}>
                 <Link
-                  href={s.href}
+                  href={s.disabled ? "#" : s.href}
+                  onClick={(e) => handleClick(e, s)}
                   onMouseEnter={() => setActive(s.title)}
                   onMouseLeave={() => setActive(null)}
                   onFocus={() => setActive(s.title)}
@@ -102,12 +125,19 @@ export default function ServicesOrbit() {
                   className={cx(
                     "group flex h-full w-full animate-float-slow flex-col items-center justify-center gap-1.5 rounded-full border-2 shadow-card transition-all duration-300 hover:scale-110 hover:shadow-lift",
                     s.tone,
+                    s.disabled ? "cursor-default" : "cursor-pointer",
                     on && "ring-4 ring-brand/40 shadow-glow scale-105",
                   )}
                 >
                   <span className="grid h-11 w-11 place-items-center rounded-full bg-white/90 shadow-sm text-brand-deep"><Icon size={22} /></span>
                   <span className="text-[15px] font-extrabold">{s.title}</span>
-                  <ArrowUpRight size={14} className="-mt-0.5 opacity-0 transition group-hover:opacity-100" />
+                  {s.disabled ? (
+                    <span className="rounded-full bg-white/85 px-2 py-0.5 text-[10px] font-bold text-zinc-600 shadow-2xs">
+                      Soon
+                    </span>
+                  ) : (
+                    <ArrowUpRight size={14} className="-mt-0.5 opacity-0 transition group-hover:opacity-100" />
+                  )}
                 </Link>
               </div>
             );
@@ -125,8 +155,27 @@ export default function ServicesOrbit() {
             const Icon = s.icon;
             return (
               <Reveal key={s.title} delay={(i % 4) * 0.05} y={14}>
-                <Link href={s.href} className={cx("flex h-full flex-col items-start gap-3 rounded-3xl border-2 p-4 shadow-card transition active:scale-[0.98]", s.tone)}>
-                  <span className="grid h-10 w-10 place-items-center rounded-full bg-white/90 text-brand-deep"><Icon size={20} /></span>
+                <Link
+                  href={s.disabled ? "#" : s.href}
+                  onClick={(e) => handleClick(e, s)}
+                  className={cx(
+                    "flex h-full flex-col items-start gap-3 rounded-3xl border-2 p-4 shadow-card transition active:scale-[0.98]",
+                    s.tone,
+                    s.disabled ? "cursor-default" : "cursor-pointer"
+                  )}
+                >
+                  <div className="flex w-full items-center justify-between">
+                    <span className="grid h-10 w-10 place-items-center rounded-full bg-white/90 text-brand-deep">
+                      <Icon size={20} />
+                    </span>
+                    {s.disabled ? (
+                      <span className="rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-bold text-zinc-600 shadow-2xs">
+                        Soon
+                      </span>
+                    ) : (
+                      <ArrowUpRight size={15} className="text-brand-deep/60" />
+                    )}
+                  </div>
                   <span>
                     <span className="block text-base font-extrabold text-ink">{s.title}</span>
                     <span className="mt-0.5 block text-[12px] font-medium leading-snug text-ink/80">{s.blurb}</span>

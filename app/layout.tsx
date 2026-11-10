@@ -85,11 +85,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <Script src="https://news.google.com/swg/js/v1/swg-basic.js" strategy="afterInteractive" />
         <Script id="swg-basic-init" strategy="afterInteractive">
           {`
-            (self.SWG_BASIC = self.SWG_BASIC || []).push(function(basicSubscriptions) {
+            (self.SWG_BASIC = self.SWG_BASIC || []).push( basicSubscriptions => {
               basicSubscriptions.init({
                 type: "NewsArticle",
                 isPartOfType: ["Product"],
-                isPartOfProductId: "CAownrzHDA:openaccess",
+                isPartOfProductId: "CAowurzHDA:openaccess",
                 clientOptions: { theme: "light", lang: "en" },
               });
             });

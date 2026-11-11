@@ -78,6 +78,14 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en" className={`${display.variable} ${body.variable} h-full antialiased`} style={{ colorScheme: "only light" }}>
       <head>
+        <Script src="https://www.googletagmanager.com/gtm.js?id=GTM-5SRW277B" strategy="afterInteractive" />
+        <Script id="gtm-init" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+          `}
+        </Script>
         <meta name="google-adsense-account" content="ca-pub-4463436920905079" />
         <link rel="alternate" type="application/rss+xml" title="EVPLSE Articles & News" href="https://www.evplse.com/feed" />
         <Script src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4463436920905079" strategy="lazyOnload" crossOrigin="anonymous" />

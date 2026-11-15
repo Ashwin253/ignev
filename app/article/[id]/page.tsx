@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, CalendarDays, User, ArrowRight, Car, Sparkles } from "lucide-react";
-import { fetchArticleById, fetchLatestUpdates, extractArticleMeta, stripMarkdown } from "../../lib/supabase";
+import { fetchArticleById, fetchLatestUpdates, extractArticleMeta, getArticleAuthor, stripMarkdown } from "../../lib/supabase";
 import MarkdownRenderer from "../../components/MarkdownRenderer";
 
 export const revalidate = 60; // revalidate every minute
@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     const meta = extractArticleMeta(article.body);
     const cleanBody = meta.cleanBody || article.body || "";
     const description = cleanBody.replace(/[#*`_\[\]]/g, "").slice(0, 160).trim() || `Read about ${article.title} on EVPLSE`;
-    const authorName = article.author_name || meta.authorName || "EVPLSE Editorial";
+    const authorName = getArticleAuthor(article) || "Editorial Team";
     const articleSlug = article.slug || article.url || article.id;
     const articleUrl = `${baseUrl}/article/${articleSlug}`;
     const images = article.thumbnail ? [article.thumbnail] : [`${baseUrl}/og-image.jpg`];
@@ -73,7 +73,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ id: st
   if (!article || !article.is_active) notFound();
 
   const meta = extractArticleMeta(article.body);
-  const authorName = article.author_name || meta.authorName || "";
+  const authorName = getArticleAuthor(article);
   const displayBody = meta.cleanBody || article.body;
   const articleSlug = article.slug || article.url || article.id;
   const canonicalUrl = `${baseUrl}/article/${articleSlug}`;
@@ -221,7 +221,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ id: st
                 const itemMeta = extractArticleMeta(item.body);
                 const itemExcerpt = stripMarkdown(itemMeta.cleanBody || item.body || "").slice(0, 130).trim();
                 const itemSlug = item.slug || item.url || item.id;
-                const itemAuthor = item.author_name || itemMeta.authorName || "";
+                const itemAuthor = getArticleAuthor(item);
                 const itemDate = item.created_at
                   ? new Date(item.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
                   : "";

@@ -1,11 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, BadgeCheck, ChevronLeft, ChevronRight, Search, ShieldCheck, Sparkles, Zap } from "lucide-react";
+import { ArrowRight, BadgeCheck, ChevronLeft, ChevronRight, Search, ShieldCheck, Sparkles } from "lucide-react";
 import { btn, Container, cx } from "../ui/kit";
 import { isInternalHref, toInternalHref } from "../../lib/links";
 
@@ -85,18 +83,19 @@ function renderHeroMedia(banner: HeroBannerLite, isPriority: boolean) {
   );
 }
 
-const QUICK = [
-  { label: "Electric cars", href: "/catalog?type=cars" },
-  { label: "Scooters", href: "/catalog?type=scooter" },
-  { label: "Bikes", href: "/catalog?type=bike" },
-  { label: "Commercial", href: "/catalog?type=commercial" },
-  { label: "Under ₹1 lakh", href: "/catalog?price=max-1" },
-  { label: "Upcoming", href: "/upcoming" },
-];
-
+function BannerLink({ href, className, label, children }: { href: string; className?: string; label?: string; children?: React.ReactNode }) {
+  return isInternalHref(href) ? (
+    <Link href={toInternalHref(href)} className={className} aria-label={label}>
+      {children}
+    </Link>
+  ) : (
+    <a href={href} target="_blank" rel="noopener noreferrer" className={className} aria-label={label}>
+      {children}
+    </a>
+  );
+}
 
 export default function HomeHero({ banners, modelCount }: { banners: HeroBannerLite[]; modelCount: number }) {
-  const router = useRouter();
   const slides = (banners && banners.length ? banners : FALLBACK_BANNERS).filter(
     (b) => b.imageHorizontal || b.imageVertical || b.videoUrl
   );
@@ -122,178 +121,127 @@ export default function HomeHero({ banners, modelCount }: { banners: HeroBannerL
 
   return (
     <section
-      style={{ paddingTop: "calc(var(--header-h, 72px) + 2.5rem)" }}
-      className="hero-aurora relative overflow-hidden pt-28 sm:pt-32 lg:pt-36 pb-14 sm:pb-18 lg:pb-24"
+      style={{ paddingTop: "calc(var(--header-h, 72px) + 1rem)" }}
+      className="hero-aurora relative overflow-hidden pb-10 sm:pb-12 lg:pb-16"
     >
-      <div className="bg-dots pointer-events-none absolute inset-0 opacity-70 [mask-image:linear-gradient(to_bottom,black,transparent_80%)]" />
-      <div className="pointer-events-none absolute -right-40 top-10 hidden h-[620px] w-[620px] animate-spin-slow rounded-full border border-dashed border-brand/35 lg:block" />
-      <div className="pointer-events-none absolute -right-16 top-32 hidden h-[380px] w-[380px] rounded-full border border-brand/25 lg:block" />
       <Container className="relative">
-        <div className="grid items-center gap-10 lg:grid-cols-12 lg:gap-12">
-          <div className="lg:col-span-6">
-            <motion.span
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-2 rounded-full border border-line-strong bg-white py-1.5 pl-2.5 pr-4 text-xs font-extrabold text-ink shadow-sm"
+        {/* Banner: the hero */}
+        <div
+          className="group relative h-[60svh] min-h-[320px] max-h-[720px] w-full overflow-hidden rounded-[1.5rem] border border-line bg-gradient-to-br from-brand-soft to-white shadow-lift sm:rounded-[2rem]"
+          onMouseEnter={() => setPaused(true)}
+          onMouseLeave={() => setPaused(false)}
+        >
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={cur.id + idx}
+              initial={{ opacity: 0, scale: 1.03 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.55 }}
+              className="absolute inset-0"
             >
-              <span className="grid h-5 w-5 place-items-center rounded-full bg-volt text-ink"><Zap size={12} fill="currentColor" /></span>
-              {modelCount > 0 ? `${modelCount}+ electric vehicles, one honest platform` : "One honest platform for electric mobility"}
-            </motion.span>
+              {renderHeroMedia(cur, idx === 0)}
+            </motion.div>
+          </AnimatePresence>
 
+          {/* whole banner is clickable */}
+          {cur.href && (
+            <BannerLink
+              href={cur.href}
+              label={cur.cta || cur.details || "Open banner"}
+              className="absolute inset-0 z-[1]"
+            />
+          )}
+
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-2/5 bg-gradient-to-t from-ink/75 via-ink/30 to-transparent" />
+
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[3] flex flex-col gap-3 p-5 sm:flex-row sm:items-end sm:justify-between sm:p-8">
+            <p className="max-w-xl text-[15px] font-semibold leading-snug text-white drop-shadow sm:text-lg">
+              {cur.details || cur.label || "Discover the right EV for you."}
+            </p>
+            {cur.href && (
+              <BannerLink href={cur.href} className={cx(btn("volt", "md", "self-start"), "pointer-events-auto")}>
+                {cur.cta || "Explore"} <ArrowRight size={16} />
+              </BannerLink>
+            )}
+          </div>
+
+          {list.length > 1 && (
+            <>
+              <button
+                onClick={() => go(-1)}
+                aria-label="Previous banner"
+                className="absolute left-3 top-1/2 z-[4] grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-ink opacity-0 shadow-card transition group-hover:opacity-100 focus-visible:opacity-100 max-sm:opacity-100"
+              >
+                <ChevronLeft size={20} />
+              </button>
+              <button
+                onClick={() => go(1)}
+                aria-label="Next banner"
+                className="absolute right-3 top-1/2 z-[4] grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-ink opacity-0 shadow-card transition group-hover:opacity-100 focus-visible:opacity-100 max-sm:opacity-100"
+              >
+                <ChevronRight size={20} />
+              </button>
+              <div className="absolute right-5 top-5 z-[4] flex gap-1.5">
+                {list.map((b, i) => (
+                  <button
+                    key={b.id + i}
+                    onClick={() => setIdx(i)}
+                    aria-label={`Show banner ${i + 1}`}
+                    className={cx("h-1.5 rounded-full transition-all", i === idx % list.length ? "w-7 bg-white" : "w-3 bg-white/55 hover:bg-white/80")}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Headline + actions: compact row under the banner */}
+        <div className="mt-8 grid items-center gap-6 lg:grid-cols-12 lg:gap-10">
+          <div className="lg:col-span-7">
             <motion.h1
-              initial={{ opacity: 0, y: 18 }}
+              initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05, duration: 0.6 }}
-              className="mt-6 text-[2.6rem] font-extrabold leading-[1.04] text-ink sm:text-6xl lg:text-[4.2rem]"
+              transition={{ delay: 0.05, duration: 0.5 }}
+              className="hidden text-3xl font-extrabold leading-[1.1] text-ink sm:block sm:text-4xl lg:text-[2.75rem]"
             >
               India&apos;s <span className="text-gradient">trusted</span> electric mobility platform.
             </motion.h1>
-
-            <motion.p
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.12, duration: 0.6 }}
-              className="mt-5 max-w-xl text-base leading-relaxed text-ink-soft sm:text-lg"
-            >
-              Verified specs, on-road prices, offers, charging and finance — everything you need to choose, buy and run an EV, with no paid rankings.
-            </motion.p>
-
-            <div className="mt-7 flex flex-wrap items-center gap-3">
-              <motion.button
-                type="button"
-                onClick={openSearch}
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.18, duration: 0.6 }}
-                className="inline-flex items-center gap-2.5 rounded-full border border-line-strong bg-white px-5 py-3 text-sm font-extrabold text-ink shadow-sm transition hover:border-brand hover:bg-paper hover:text-brand cursor-pointer"
-                aria-label="Search electric vehicles (Ctrl K)"
-              >
-                <Search size={17} className="text-brand shrink-0" />
-                <span>Search EVs</span>
-                <kbd className="hidden sm:inline-flex items-center rounded-md border border-line bg-ink/5 px-1.5 py-0.5 font-mono text-[10px] font-bold text-ink-mute">
-                  Ctrl K
-                </kbd>
-              </motion.button>
-
-              <motion.button
-                type="button"
-                onClick={() => window.dispatchEvent(new CustomEvent("open-ai-chat"))}
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.22, duration: 0.6 }}
-                className="inline-flex items-center gap-2 rounded-full bg-ink px-5 py-3 text-sm font-extrabold text-white shadow-lift transition hover:bg-brand-deep active:scale-95 cursor-pointer border border-ink group"
-                aria-label="Ask Plse AI Assistant"
-              >
-                <Sparkles size={16} className="text-volt group-hover:rotate-12 transition-transform" />
-                <span>Ask Plse AI</span>
-              </motion.button>
-            </div>
-
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.28 }}
-              className="mt-5 flex flex-wrap gap-2"
-            >
-              {QUICK.map((c) => (
-                <Link
-                  key={c.href}
-                  href={c.href}
-                  className="rounded-full border border-line-strong bg-white px-3.5 py-1.5 text-[13px] font-bold text-ink shadow-xs transition hover:border-brand hover:bg-brand-soft hover:text-brand"
-                >
-                  {c.label}
-                </Link>
-              ))}
-            </motion.div>
-
-            <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm font-semibold text-ink-soft">
-              <span className="inline-flex items-center gap-2"><BadgeCheck size={18} className="text-brand" /> Verified information</span>
+            <div className="mt-4 hidden flex-wrap items-center gap-x-6 gap-y-2 text-sm font-semibold text-ink-soft sm:flex">
+              <span className="inline-flex items-center gap-2"><BadgeCheck size={18} className="text-brand" /> {modelCount > 0 ? `${modelCount}+ verified models` : "Verified information"}</span>
               <span className="inline-flex items-center gap-2"><ShieldCheck size={18} className="text-brand" /> No paid rankings</span>
             </div>
           </div>
 
-          {/* Banner carousel */}
-          <div className="relative lg:col-span-6">
-            <div
-              className="group relative aspect-[4/3] w-full overflow-hidden rounded-[2rem] border border-line bg-gradient-to-br from-brand-soft to-white shadow-lift sm:aspect-[16/11]"
-              onMouseEnter={() => setPaused(true)}
-              onMouseLeave={() => setPaused(false)}
+          <div className="flex flex-wrap items-center gap-3 lg:col-span-5 lg:justify-end">
+            <motion.button
+              type="button"
+              onClick={openSearch}
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15, duration: 0.5 }}
+              className="inline-flex items-center gap-2.5 rounded-full border border-line-strong bg-white px-5 py-3 text-sm font-extrabold text-ink shadow-sm transition hover:border-brand hover:bg-paper hover:text-brand cursor-pointer"
+              aria-label="Search electric vehicles (Ctrl K)"
             >
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={cur.id + idx}
-                  initial={{ opacity: 0, scale: 1.03 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.55 }}
-                  className="absolute inset-0"
-                >
-                  {renderHeroMedia(cur, idx === 0)}
-                </motion.div>
-              </AnimatePresence>
+              <Search size={17} className="text-brand shrink-0" />
+              <span>Search EVs</span>
+              <kbd className="hidden sm:inline-flex items-center rounded-md border border-line bg-ink/5 px-1.5 py-0.5 font-mono text-[10px] font-bold text-ink-mute">
+                Ctrl K
+              </kbd>
+            </motion.button>
 
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-ink/75 via-ink/30 to-transparent" />
-
-              <div className="absolute inset-x-0 bottom-0 flex flex-col gap-3 p-5 sm:flex-row sm:items-end sm:justify-between sm:p-7">
-                <p className="max-w-md text-[15px] font-semibold leading-snug text-white drop-shadow sm:text-base">
-                  {cur.details || cur.label || "Discover the right EV for you."}
-                </p>
-                {cur.href &&
-                  (isInternalHref(cur.href) ? (
-                    <Link href={toInternalHref(cur.href)} className={btn("volt", "md", "self-start")}>
-                      {cur.cta || "Explore"} <ArrowRight size={16} />
-                    </Link>
-                  ) : (
-                    <a href={cur.href} target="_blank" rel="noopener noreferrer" className={btn("volt", "md", "self-start")}>
-                      {cur.cta || "Explore"} <ArrowRight size={16} />
-                    </a>
-                  ))}
-              </div>
-
-              {list.length > 1 && (
-                <>
-                  <button
-                    onClick={() => go(-1)}
-                    aria-label="Previous banner"
-                    className="absolute left-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-ink opacity-0 shadow-card transition group-hover:opacity-100 focus-visible:opacity-100 max-sm:opacity-100"
-                  >
-                    <ChevronLeft size={20} />
-                  </button>
-                  <button
-                    onClick={() => go(1)}
-                    aria-label="Next banner"
-                    className="absolute right-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-ink opacity-0 shadow-card transition group-hover:opacity-100 focus-visible:opacity-100 max-sm:opacity-100"
-                  >
-                    <ChevronRight size={20} />
-                  </button>
-                  <div className="absolute right-5 top-5 flex gap-1.5">
-                    {list.map((b, i) => (
-                      <button
-                        key={b.id + i}
-                        onClick={() => setIdx(i)}
-                        aria-label={`Show banner ${i + 1}`}
-                        className={cx("h-1.5 rounded-full transition-all", i === idx % list.length ? "w-7 bg-white" : "w-3 bg-white/55 hover:bg-white/80")}
-                      />
-                    ))}
-                  </div>
-                </>
-              )}
-
-              <div className="absolute left-5 top-5 hidden items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-wider text-brand-deep shadow-sm sm:inline-flex">
-                <Sparkles size={12} /> Featured
-              </div>
-            </div>
-            {/* floating glass chips */}
-            <div className="pointer-events-none hidden lg:block">
-              <div className="absolute -bottom-5 -left-8 animate-float rounded-2xl border border-line-strong bg-white px-4 py-3 shadow-lift">
-                <p className="text-[10px] font-extrabold uppercase tracking-wider text-ink-mute">Verified models</p>
-                <p className="font-display text-2xl font-extrabold text-brand">{modelCount > 0 ? `${modelCount}+` : "100+"}</p>
-              </div>
-              <div className="absolute -right-5 -top-5 animate-float-slow rounded-2xl bg-gradient-to-br from-brand-deep to-brand px-4 py-3 text-white shadow-glow border border-brand/40">
-                <p className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-100">Paid rankings</p>
-                <p className="font-display text-2xl font-extrabold text-volt">Zero</p>
-              </div>
-            </div>
+            <motion.button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent("open-ai-chat"))}
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+              className="inline-flex items-center gap-2 rounded-full bg-ink px-5 py-3 text-sm font-extrabold text-white shadow-lift transition hover:bg-brand-deep active:scale-95 cursor-pointer border border-ink group"
+              aria-label="Ask Plse AI Assistant"
+            >
+              <Sparkles size={16} className="text-volt group-hover:rotate-12 transition-transform" />
+              <span>Ask Plse AI</span>
+            </motion.button>
           </div>
         </div>
       </Container>

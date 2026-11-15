@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, Calendar } from "lucide-react";
 import { fetchWPUpdateBySlug, fetchWPUpdates } from "../../lib/wordpress";
-import { fetchArticleById, extractArticleMeta } from "../../lib/supabase";
+import { fetchArticleById, extractArticleMeta, getArticleAuthor } from "../../lib/supabase";
 
 // Allow slugs not known at build time; revalidate every 60 s
 export const revalidate = 60;
@@ -34,7 +34,7 @@ export async function generateMetadata({
     const articleSlug = sbArticle.slug || sbArticle.url || sbArticle.id;
     const articleUrl = `${baseUrl}/article/${articleSlug}`;
     const images = sbArticle.thumbnail ? [sbArticle.thumbnail] : [`${baseUrl}/og-image.jpg`];
-    const authorName = sbArticle.author_name || meta.authorName || "EVPLSE Editorial";
+    const authorName = getArticleAuthor(sbArticle) || "Editorial Team";
 
     return {
       title: `${sbArticle.title} | EVPLSE`,
@@ -160,7 +160,7 @@ export default async function UpdateDetailPage({
     "dateModified": update.date || new Date().toISOString(),
     "author": {
       "@type": "Person",
-      "name": "EVPLSE Editorial",
+      "name": update.authorName,
     },
     "publisher": {
       "@type": "Organization",
@@ -203,7 +203,7 @@ export default async function UpdateDetailPage({
               <span className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 border border-slate-200">
                 EV
               </span>
-              <span>EVPLSE Editorial</span>
+              <span>{update.authorName}</span>
             </div>
             <span className="w-1 h-1 rounded-full bg-slate-300" />
             <div className="flex items-center gap-1.5">

@@ -180,7 +180,7 @@ export default function ContentPanel({
     setSaving(true);
     const slugVal = form.slug?.trim() || form.url?.trim() || slugify(form.title);
     const authorNameVal = (
-      (editing === "new" ? currentUserName : form.author_name) ||
+      form.author_name ||
       currentUserName ||
       (currentUserEmail ? currentUserEmail.split("@")[0] : "Editorial Team")
     ).trim();
@@ -322,6 +322,18 @@ export default function ContentPanel({
                 placeholder="e.g. 5 Reasons to Buy Tata Nexon EV in 2026"
                 className="mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-medium outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
               />
+            </label>
+
+            {/* Editable article author */}
+            <label className="block sm:col-span-2">
+              <span className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Author Name</span>
+              <input
+                value={form.author_name || ""}
+                onChange={(e) => setForm({ ...form, author_name: e.target.value })}
+                placeholder={currentUserName || "Enter author name"}
+                className="mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-medium outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+              />
+              <p className="mt-1 text-[11px] text-ink-mute">Prefilled from your account display name. You can change it for this article.</p>
             </label>
 
             {/* Custom Slug for this Content */}
@@ -529,8 +541,7 @@ export default function ContentPanel({
               <span className="text-ink-soft hidden sm:inline">|</span>
               <div className="flex items-center gap-1.5 text-xs text-slate-600">
                 <User size={13} className="text-ink-mute shrink-0" />
-                <span>Author: <strong className="text-slate-800">{editing === "new" ? (currentUserName || (currentUserEmail ? currentUserEmail.split("@")[0] : "Team")) : (form.author_name || currentUserName || "Team")}</strong></span>
-                <span className="rounded bg-emerald-100 text-emerald-700 px-1.5 py-0.5 text-[10px] font-bold">Auto</span>
+                <span>Author: <strong className="text-slate-800">{form.author_name || currentUserName || (currentUserEmail ? currentUserEmail.split("@")[0] : "Team")}</strong></span>
               </div>
             </div>
 

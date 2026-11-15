@@ -69,7 +69,7 @@ export async function fetchProductContent(productSlug: string) {
 
 export function extractArticleMeta(rawBody?: string) {
   if (!rawBody) return { authorName: "", authorEmail: "", cleanBody: "" };
-  const match = rawBody.match(/^<!--meta:(\{.*?\})-->\s*/);
+  const match = rawBody.match(/^\s*<!--meta:(\{.*?\})-->\s*/);
   if (match) {
     try {
       const meta = JSON.parse(match[1]);
@@ -81,6 +81,22 @@ export function extractArticleMeta(rawBody?: string) {
     } catch {}
   }
   return { authorName: "", authorEmail: "", cleanBody: rawBody };
+}
+
+/** Resolve the writer consistently across database columns and embedded legacy metadata. */
+export function getArticleAuthor(article: {
+  author_name?: string | null;
+  author_email?: string | null;
+  body?: string | null;
+}) {
+  const columnName = article.author_name?.trim();
+  const { authorName, authorEmail } = extractArticleMeta(article.body || "");
+  const metadataName = authorName.trim();
+  const email = article.author_email?.trim() || authorEmail.trim();
+  const emailName = email
+    ? email.split("@")[0].replace(/[._-]+/g, " ").trim().replace(/\b\w/g, (letter) => letter.toUpperCase())
+    : "";
+  return columnName || metadataName || emailName;
 }
 
 export function stripMarkdown(text: string): string {

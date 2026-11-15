@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, Calendar, Rss, User, Car } from "lucide-react";
 import { fetchWPUpdates } from "../lib/wordpress";
-import { fetchLatestUpdates, extractArticleMeta, stripMarkdown } from "../lib/supabase";
+import { fetchLatestUpdates, extractArticleMeta, getArticleAuthor, stripMarkdown } from "../lib/supabase";
 
 // ISR — revalidate every 60 s; dynamicParams allows slugs not known at build time
 export const revalidate = 60;
@@ -61,7 +61,7 @@ export default async function UpdatesPage() {
     const cleanBody = meta.cleanBody || item.body || "";
     const plainText = stripMarkdown(cleanBody);
     const excerpt = plainText.length > 150 ? plainText.slice(0, 147) + "…" : plainText;
-    const authorName = item.author_name || meta.authorName || "";
+    const authorName = getArticleAuthor(item);
     const authorEmail = item.author_email || meta.authorEmail || "";
     const articleSlug = item.slug || item.url || item.id;
 
@@ -89,7 +89,7 @@ export default async function UpdatesPage() {
     date: item.date,
     excerpt: item.excerpt || "",
     photo: item.photo || "",
-    authorName: "Editorial Team",
+    authorName: item.authorName,
     authorEmail: "",
     productSlug: "",
     source: "wordpress" as const,

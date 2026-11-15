@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircle, X, Sparkles } from 'lucide-react';
+import { X, Sparkles, IndianRupee, ArrowRight } from 'lucide-react';
 import EnquiryForm from './EnquiryForm';
 
 export default function AssistPopup() {
@@ -18,15 +18,23 @@ export default function AssistPopup() {
 
   return (
     <>
-      {/* Floating Button */}
+      {/* Floating EV loan lead card */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 left-6 z-50 bg-brand hover:bg-[#18633e] text-white p-4 rounded-full shadow-[0_0_20px_rgba(31,122,77,0.4)] hover:scale-110 transition-transform flex items-center justify-center group cursor-pointer"
-        aria-label="Need Help"
+        className="fixed bottom-6 left-6 z-50 hidden w-[min(19rem,calc(100vw-2rem))] rounded-2xl border border-emerald-200 bg-white p-4 text-left shadow-[0_8px_32px_rgba(15,60,40,0.2)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_36px_rgba(15,60,40,0.25)] sm:block"
+        aria-label="Register for EV loan assistance"
       >
-        <MessageCircle size={26} />
-        <span className="absolute left-full ml-3 bg-white border border-line text-ink font-bold px-3 py-1.5 rounded-xl text-xs whitespace-nowrap shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-          Need Help?
+        <span className="flex items-start gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-brand">
+            <IndianRupee size={20} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-extrabold leading-snug text-ink">EV loan assistance</span>
+            <span className="mt-1 block text-xs leading-relaxed text-ink-soft">Explore loan approval options with competitive interest rates.</span>
+            <span className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-brand px-3 py-2 text-xs font-bold text-white">
+              Register Now <ArrowRight size={14} />
+            </span>
+          </span>
         </span>
       </button>
 
@@ -52,10 +60,10 @@ export default function AssistPopup() {
                 <div>
                   <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-brand uppercase tracking-wider mb-1">
                     <Sparkles className="w-3.5 h-3.5" />
-                    Instant Support
+                    EV Loan Assistance
                   </div>
-                  <h3 className="text-2xl font-black text-ink">Get Assist</h3>
-                  <p className="text-xs text-[#526B60] font-medium mt-0.5">Leave your details and our EV expert will call you back.</p>
+                  <h3 className="text-2xl font-black text-ink">Find your EV loan</h3>
+                  <p className="text-xs text-[#526B60] font-medium mt-0.5">Share your details and our team will help you explore financing options.</p>
                 </div>
                 <button
                   onClick={() => setIsOpen(false)}
@@ -68,10 +76,9 @@ export default function AssistPopup() {
 
               <div className="p-6 bg-white">
                 <EnquiryForm 
-                  source="Floating Assist"
+                  source="EV Loan Assistance"
                   compact={true}
-                  includeInterest={true}
-                  buttonText="Request Callback"
+                  buttonText="Register Now"
                 />
               </div>
             </motion.div>

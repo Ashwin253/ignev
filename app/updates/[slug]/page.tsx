@@ -159,8 +159,8 @@ export default async function UpdateDetailPage({
     "datePublished": update.date || new Date().toISOString(),
     "dateModified": update.date || new Date().toISOString(),
     "author": {
-      "@type": "Person",
-      "name": update.authorName,
+      "@type": "Organization",
+      "name": "EVPLSE Editorial",
     },
     "publisher": {
       "@type": "Organization",
@@ -203,7 +203,7 @@ export default async function UpdateDetailPage({
               <span className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 border border-slate-200">
                 EV
               </span>
-              <span>{update.authorName}</span>
+              <span>EVPLSE Editorial</span>
             </div>
             <span className="w-1 h-1 rounded-full bg-slate-300" />
             <div className="flex items-center gap-1.5">

@@ -76,13 +76,21 @@ export default function MarkdownEditor({ value, onChange, placeholder, supabase 
     const newText = before + prefix + selection + suffix + after;
     onChange(newText);
 
-    // Re-focus and set cursor position
+    // Re-focus and select the new text, or place the cursor between empty markers.
     setTimeout(() => {
       el.focus();
       if (selection.length > 0) {
         el.setSelectionRange(start + prefix.length, start + prefix.length + selection.length);
-      } else {
+      } else if (suffix.length > 0) {
         el.setSelectionRange(start + prefix.length, start + prefix.length);
+      } else {
+        const lineStart = text.lastIndexOf("\n", start - 1) + 1;
+        const lineEndIndex = text.indexOf("\n", start);
+        const lineEnd = lineEndIndex === -1 ? text.length : lineEndIndex;
+        const line = text.slice(lineStart, lineEnd);
+        const whitespace = line.match(/^\s*/)?.[0].length ?? 0;
+        const cursor = lineStart + whitespace + prefix.length;
+        el.setSelectionRange(cursor, cursor);
       }
     }, 0);
   };
@@ -370,7 +378,7 @@ export default function MarkdownEditor({ value, onChange, placeholder, supabase 
           {mode === "write" ? (
             <>
               <ToolbarButton icon={<Bold size={15} />} onClick={() => insertSyntax("**", "**")} title="Bold" />
-              <ToolbarButton icon={<Italic size={15} />} onClick={() => insertSyntax("_", "_")} title="Italic" />
+              <ToolbarButton icon={<Italic size={15} />} onClick={() => insertSyntax("*", "*")} title="Italic" />
               <div className="w-px h-4 bg-slate-200 mx-1" />
               <ToolbarButton icon={<Heading1 size={15} />} onClick={() => insertSyntax("# ", "")} title="Heading 1" />
               <ToolbarButton icon={<Heading2 size={15} />} onClick={() => insertSyntax("## ", "")} title="Heading 2" />

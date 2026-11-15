@@ -9,11 +9,17 @@ import { PALETTE_PAGES } from "../lib/nav";
 import type { CatalogItem } from "../lib/catalog-types";
 import { getVehiclePhoto } from "../lib/vehicle-images";
 import { itemSlug } from "../lib/format";
+import { catalogFilterUrl } from "../lib/catalog-filters";
 
 type Row =
   | { kind: "vehicle"; key: string; item: CatalogItem; href: string }
   | { kind: "page"; key: string; label: string; desc?: string; href: string; Icon?: any }
   | { kind: "search"; key: string; label: string; href: string };
+
+const POPULAR_SEARCHES = [
+  { label: "Bikes under ₹2 L", href: catalogFilterUrl({ type: "bike" }) + "&price=max-2" },
+  { label: "New car launches", href: "/new-launches?type=cars" },
+];
 
 function score(hay: string, q: string) {
   if (!q) return 0;
@@ -165,6 +171,23 @@ export default function CommandPalette() {
             </div>
 
             <div ref={listRef} className="max-h-[60vh] overflow-y-auto p-2">
+              {!q.trim() && (
+                <div className="px-3 pb-3 pt-2">
+                  <p className="pb-2 text-[11px] font-bold uppercase tracking-wider text-ink-mute">Popular searches</p>
+                  <div className="flex flex-wrap gap-2">
+                    {POPULAR_SEARCHES.map((search) => (
+                      <button
+                        key={search.label}
+                        type="button"
+                        onClick={() => go({ kind: "page", key: search.label, label: search.label, href: search.href })}
+                        className="rounded-full border border-line bg-paper px-3 py-1.5 text-xs font-bold text-ink-soft transition hover:border-brand hover:bg-brand-soft hover:text-brand-deep"
+                      >
+                        {search.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
               {!q.trim() && <p className="px-3 pb-1 pt-2 text-[11px] font-bold uppercase tracking-wider text-ink-mute">Quick links</p>}
               {q.trim() && items === null && <p className="px-3 py-6 text-center text-sm text-ink-mute">Loading vehicles…</p>}
               {rows.map((r, i) => (

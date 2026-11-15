@@ -128,7 +128,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ id: st
   };
 
   return (
-    <article className="min-h-screen bg-[#f8f5f0] text-slate-900 py-28 relative">
+    <article className="min-h-screen bg-[#f8f5f0] text-slate-900 pt-20 pb-16 sm:pt-24 sm:pb-20 relative">
       {/* Schema.org Structured Data for Google Discover & Google Feed */}
       <script
         type="application/ld+json"
@@ -141,7 +141,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ id: st
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 relative z-10">
         
         {/* Navigation / Back Links */}
-        <div className="flex items-center gap-3 mb-8 flex-wrap">
+        <div className="flex items-center gap-3 mb-5 sm:mb-6 flex-wrap">
           <Link href="/updates" className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand hover:text-emerald-600 transition-colors">
             <ArrowLeft size={16} /> Back to Updates
           </Link>
@@ -158,8 +158,8 @@ export default async function ArticlePage({ params }: { params: Promise<{ id: st
         </div>
 
         {/* Header */}
-        <header className="mb-12 text-center max-w-4xl mx-auto">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-slate-950 mb-5 leading-tight">{article.title}</h1>
+        <header className="mb-8 sm:mb-10 text-center max-w-4xl mx-auto">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-slate-950 mb-3 sm:mb-4 leading-[1.1]">{article.title}</h1>
           <div className="flex items-center justify-center gap-3 text-sm font-medium text-slate-500 flex-wrap">
             {authorName && (
               <span className="flex items-center gap-1.5 font-bold text-slate-800">
@@ -182,6 +182,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ id: st
               src={article.thumbnail}
               alt={article.title}
               fill
+              loading="eager"
               className="object-cover"
               unoptimized={!article.thumbnail.includes("supabase.co") && !article.thumbnail.includes("unsplash.com") && !article.thumbnail.includes("evplse.online")}
             />

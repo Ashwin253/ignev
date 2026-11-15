@@ -94,7 +94,7 @@ export function getArticleAuthor(article: {
   const metadataName = authorName.trim();
   const email = article.author_email?.trim() || authorEmail.trim();
   const emailName = email
-    ? email.split("@")[0].replace(/[._-]+/g, " ").trim().replace(/\b\w/g, (letter) => letter.toUpperCase())
+    ? email.split("@")[0].replace(/[._-]+/g, " ").trim().replace(/\b\w/g, (letter: string) => letter.toUpperCase())
     : "";
   return columnName || metadataName || emailName;
 }

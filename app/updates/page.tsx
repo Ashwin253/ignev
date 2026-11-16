@@ -3,9 +3,6 @@ import Image from "next/image";
 import { ArrowLeft, Calendar, Rss, User, Car } from "lucide-react";
 import { fetchWPUpdates } from "../lib/wordpress";
 import { fetchLatestUpdates, fetchLatestClassifiedUpdates, extractArticleMeta, getArticleAuthor, stripMarkdown } from "../lib/supabase";
-import { fetchListingsByEventId } from "../lib/supabase";
-import { toCatalogItem } from "../lib/catalog-map";
-import type { EvListing } from "../lib/wordpress";
 
 // ISR — revalidate every 60 s; dynamicParams allows slugs not known at build time
 export const revalidate = 60;
@@ -121,11 +118,8 @@ export default async function UpdatesPage() {
     }
   }
 
-  const eventIds = [...new Set(combinedUpdates.map((item) => item.eventId).filter((id): id is string => Boolean(id)))];
-  const listingsByEvent = new Map<string, EvListing[]>();
-  await Promise.all(eventIds.map(async (id) => {
-    listingsByEvent.set(id, await fetchListingsByEventId(id));
-  }));
+  const popularIds = new Set(combinedUpdates.slice(0, 3).map((item) => item.id));
+  const newCutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
 
   return (
     <section className="bg-white min-h-screen py-28">
@@ -166,10 +160,8 @@ export default async function UpdatesPage() {
           </div>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {combinedUpdates.map((update) => {
-              const classifiedListings = update.eventId ? listingsByEvent.get(update.eventId) ?? [] : [];
-              return (
-              <div key={update.id} className="space-y-3">
+            {combinedUpdates.map((update) => (
+              <div key={update.id}>
               <Link
                 href={update.href}
                 className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_8px_24px_rgba(15,23,42,0.05)] hover:shadow-[0_16px_40px_rgba(15,23,42,0.1)] transition-all hover:-translate-y-0.5 flex flex-col"
@@ -194,6 +186,18 @@ export default async function UpdatesPage() {
                       <Car size={11} /> {update.productSlug.replace(/-/g, " ")}
                     </span>
                   )}
+                  <div className="absolute right-3 top-3 flex flex-wrap justify-end gap-1.5">
+                    {Number.isFinite(new Date(update.date).getTime()) && new Date(update.date).getTime() >= newCutoff && (
+                      <span className="rounded-full bg-emerald-600 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
+                        New
+                      </span>
+                    )}
+                    {popularIds.has(update.id) && (
+                      <span className="rounded-full bg-amber-400 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-950 shadow-sm">
+                        Popular
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="p-6 flex flex-col flex-1">
                   <div className="flex items-center justify-between gap-2 text-xs text-slate-400 mb-3">
@@ -218,15 +222,8 @@ export default async function UpdatesPage() {
                   )}
                 </div>
               </Link>
-              {classifiedListings.map((listing: EvListing) => {
-                const item = toCatalogItem(listing);
-                return <Link key={listing.id} href={`/product/${listing.slug}`} className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-3 hover:border-emerald-300 hover:shadow-sm">
-                  {item.photo && <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded-xl bg-slate-100"><Image src={item.photo} alt={item.name} fill sizes="96px" className="object-cover" unoptimized /></div>}
-                  <div className="min-w-0"><p className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Related vehicle</p><p className="font-bold text-slate-900">{item.brand} {item.name}</p><p className="text-xs text-slate-500">{item.pricing}</p></div>
-                </Link>;
-              })}
               </div>
-            );})}
+            ))}
           </div>
         )}
       </div>

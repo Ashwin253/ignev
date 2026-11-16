@@ -7,8 +7,11 @@ import EnquiryForm from './EnquiryForm';
 
 export default function AssistPopup() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isCardVisible, setIsCardVisible] = useState(true);
 
   useEffect(() => {
+    setIsCardVisible(window.localStorage.getItem('ev-loan-assistance-hidden') !== 'true');
+
     const handleOpen = () => {
       setIsOpen(true);
     };
@@ -19,24 +22,40 @@ export default function AssistPopup() {
   return (
     <>
       {/* Floating EV loan lead card */}
-      <button
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 left-6 z-50 hidden w-[min(19rem,calc(100vw-2rem))] rounded-2xl border border-emerald-200 bg-white p-4 text-left shadow-[0_8px_32px_rgba(15,60,40,0.2)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_36px_rgba(15,60,40,0.25)] sm:block"
-        aria-label="Register for EV loan assistance"
-      >
-        <span className="flex items-start gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-brand">
-            <IndianRupee size={20} />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-sm font-extrabold leading-snug text-ink">EV loan assistance</span>
-            <span className="mt-1 block text-xs leading-relaxed text-ink-soft">Explore loan approval options with competitive interest rates.</span>
-            <span className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-brand px-3 py-2 text-xs font-bold text-white">
-              Register Now <ArrowRight size={14} />
+      {isCardVisible && (
+        <div className="fixed bottom-6 left-6 z-50 hidden w-[min(19rem,calc(100vw-2rem))] sm:block">
+          <button
+            onClick={() => setIsOpen(true)}
+            className="w-full rounded-2xl border border-emerald-200 bg-white p-4 pr-10 text-left shadow-[0_8px_32px_rgba(15,60,40,0.2)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_36px_rgba(15,60,40,0.25)]"
+            aria-label="Register for EV loan assistance"
+          >
+            <span className="flex items-start gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-brand">
+                <IndianRupee size={20} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-extrabold leading-snug text-ink">EV loan assistance</span>
+                <span className="mt-1 block text-xs leading-relaxed text-ink-soft">Explore loan approval options with competitive interest rates.</span>
+                <span className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-brand px-3 py-2 text-xs font-bold text-white">
+                  Register Now <ArrowRight size={14} />
+                </span>
+              </span>
             </span>
-          </span>
-        </span>
-      </button>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              window.localStorage.setItem('ev-loan-assistance-hidden', 'true');
+              setIsCardVisible(false);
+            }}
+            className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-ink-soft transition hover:bg-slate-200 hover:text-ink"
+            aria-label="Hide EV loan assistance"
+            title="Hide this card"
+          >
+            <X size={15} />
+          </button>
+        </div>
+      )}
 
       {/* Modal Overlay */}
       <AnimatePresence>

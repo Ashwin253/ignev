@@ -189,6 +189,7 @@ export function formatPricing(prices: string[]): string {
 
 export type EvListing = {
   id: string;
+  event_id?: string | null;
   databaseId: number;
   title: string;
   slug: string;

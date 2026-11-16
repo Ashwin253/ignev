@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, CalendarDays, User, ArrowRight, Car, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { fetchArticleById, fetchLatestUpdates, extractArticleMeta, getArticleAuthor, stripMarkdown } from "../../lib/supabase";
 import MarkdownRenderer from "../../components/MarkdownRenderer";
 
@@ -68,7 +68,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function ArticlePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.evplse.com").replace(/\/+$/, "");
-  
+
   const article = await fetchArticleById(id);
   if (!article || !article.is_active) notFound();
 
@@ -78,8 +78,8 @@ export default async function ArticlePage({ params }: { params: Promise<{ id: st
   const articleSlug = article.slug || article.url || article.id;
   const canonicalUrl = `${baseUrl}/article/${articleSlug}`;
 
-  const formattedDate = article.created_at 
-    ? new Date(article.created_at).toLocaleDateString("en-US", { year: 'numeric', month: 'long', day: 'numeric' })
+  const formattedDate = article.created_at
+    ? new Date(article.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
     : "Recently";
 
   // Fetch recent updates for the bottom section (excluding current article)
@@ -127,97 +127,88 @@ export default async function ArticlePage({ params }: { params: Promise<{ id: st
     },
   };
 
+  const shouldSkipOptimization = (src: string) =>
+    !src.includes("supabase.co") && !src.includes("unsplash.com") && !src.includes("evplse.online");
+
   return (
-    <article className="min-h-screen bg-[#f8f5f0] text-slate-900 pt-20 pb-16 sm:pt-24 sm:pb-20 relative">
+    <article className="min-h-screen bg-white text-slate-900 pt-24 pb-24 sm:pt-28">
       {/* Schema.org Structured Data for Google Discover & Google Feed */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* Decorative Ambient Glowing Blurs */}
-      <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#34ebb1]/15 rounded-full blur-[130px] pointer-events-none"></div>
-
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 relative z-10">
-        
-        {/* Navigation / Back Links */}
-        <div className="flex items-center gap-3 mb-5 sm:mb-6 flex-wrap">
-          <Link href="/updates" className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand hover:text-emerald-600 transition-colors">
-            <ArrowLeft size={16} /> Back to Updates
-          </Link>
-          <span className="text-slate-300">•</span>
-          {article.product_slug ? (
-            <Link href={`/product/${article.product_slug}`} className="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">
-              View Vehicle
-            </Link>
-          ) : (
-            <Link href="/" className="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">
-              Home
-            </Link>
-          )}
-        </div>
-
+      <div className="mx-auto max-w-5xl px-5 sm:px-8">
         {/* Header */}
-        <header className="mb-8 sm:mb-10 text-center max-w-4xl mx-auto">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-slate-950 mb-3 sm:mb-4 leading-[1.1]">{article.title}</h1>
-          <div className="flex items-center justify-center gap-3 text-sm font-medium text-slate-500 flex-wrap">
-            {authorName && (
-              <span className="flex items-center gap-1.5 font-bold text-slate-800">
-                <User size={15} className="text-brand" />
-                <span>By {authorName}</span>
-              </span>
+        <header className="mx-auto max-w-3xl">
+          <Link
+            href="/updates"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
+          >
+            <ArrowLeft size={15} /> Updates
+          </Link>
+
+          <h1 className="mt-6 text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-950 leading-[1.1] text-balance">
+            {article.title}
+          </h1>
+
+          <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500">
+            {authorName && <span className="font-semibold text-slate-800">{authorName}</span>}
+            {authorName && <span aria-hidden="true">·</span>}
+            <time dateTime={article.created_at || undefined}>{formattedDate}</time>
+            {article.product_slug && (
+              <>
+                <span aria-hidden="true">·</span>
+                <Link
+                  href={`/product/${article.product_slug}`}
+                  className="font-medium text-brand hover:underline underline-offset-4"
+                >
+                  View vehicle
+                </Link>
+              </>
             )}
-            {authorName && <span className="text-slate-300">•</span>}
-            <div className="flex items-center gap-1.5">
-              <CalendarDays size={14} />
-              <span>Published on {formattedDate}</span>
-            </div>
           </div>
         </header>
 
-        {/* Thumbnail (if any) */}
+        {/* Thumbnail */}
         {article.thumbnail && (
-          <div className="relative aspect-video sm:aspect-[21/9] w-full rounded-3xl overflow-hidden shadow-xl mb-12 bg-slate-100">
+          <div className="relative mt-10 aspect-video sm:aspect-[2/1] w-full overflow-hidden rounded-2xl bg-slate-100">
             <Image
               src={article.thumbnail}
               alt={article.title}
               fill
-              loading="eager"
+              priority
+              sizes="(max-width: 1024px) 100vw, 1024px"
               className="object-cover"
-              unoptimized={!article.thumbnail.includes("supabase.co") && !article.thumbnail.includes("unsplash.com") && !article.thumbnail.includes("evplse.online")}
+              unoptimized={shouldSkipOptimization(article.thumbnail)}
             />
           </div>
         )}
 
-        {/* Content Body */}
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-12 lg:p-14 shadow-sm">
+        {/* Body */}
+        <div className="mx-auto mt-10 max-w-3xl sm:mt-12">
           {displayBody ? (
             <MarkdownRenderer content={displayBody} />
           ) : (
-            <p className="text-slate-500 italic text-center py-10">This article is currently empty.</p>
+            <p className="py-10 text-center italic text-slate-500">This article is currently empty.</p>
           )}
         </div>
 
-        {/* More Recent Updates */}
+        {/* More updates */}
         {recentArticles.length > 0 && (
-          <section className="mt-14 pt-10 border-t border-slate-200/80">
-            <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-              <div>
-                <span className="text-xs font-bold uppercase tracking-wider text-brand flex items-center gap-1.5 mb-1">
-                  <Sparkles size={13} /> More Stories
-                </span>
-                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Recent Updates</h2>
-              </div>
+          <section className="mx-auto mt-16 max-w-3xl border-t border-slate-200 pt-10">
+            <div className="mb-2 flex items-baseline justify-between gap-4">
+              <h2 className="text-xl font-bold tracking-tight text-slate-950">Keep reading</h2>
               <Link
                 href="/updates"
-                className="inline-flex items-center gap-1.5 text-sm font-bold text-brand hover:text-[#0b6346] transition-colors group"
+                className="group inline-flex items-center gap-1 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
               >
-                <span>View all updates</span>
-                <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
+                All updates
+                <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
               </Link>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <ul className="divide-y divide-slate-200">
               {recentArticles.map((item: any) => {
                 const itemMeta = extractArticleMeta(item.body);
                 const itemExcerpt = stripMarkdown(itemMeta.cleanBody || item.body || "").slice(0, 130).trim();
@@ -228,58 +219,39 @@ export default async function ArticlePage({ params }: { params: Promise<{ id: st
                   : "";
 
                 return (
-                  <Link
-                    key={item.id}
-                    href={`/article/${itemSlug}`}
-                    className="group flex flex-col bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
-                  >
-                    {item.thumbnail ? (
-                      <div className="relative aspect-[16/9] w-full overflow-hidden bg-slate-100">
-                        <Image
-                          src={item.thumbnail}
-                          alt={item.title}
-                          fill
-                          sizes="(max-width: 768px) 100vw, 50vw"
-                          className="object-cover group-hover:scale-105 transition-transform duration-500"
-                          unoptimized={!item.thumbnail.includes("supabase.co") && !item.thumbnail.includes("unsplash.com") && !item.thumbnail.includes("evplse.online")}
-                        />
-                        {item.product_slug && (
-                          <span className="absolute top-3 left-3 inline-flex items-center gap-1 rounded-full bg-slate-900/80 backdrop-blur-md px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
-                            <Car size={11} /> {item.product_slug.replace(/-/g, " ")}
-                          </span>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="relative aspect-[16/9] w-full bg-gradient-to-br from-[#34ebb1]/10 to-slate-100 flex items-center justify-center text-slate-400">
-                        <CalendarDays size={28} className="opacity-40" />
-                      </div>
-                    )}
-
-                    <div className="p-6 flex flex-col flex-1">
-                      <div className="flex items-center justify-between text-xs text-slate-400 mb-2.5 gap-2">
-                        {itemDate && <span>{itemDate}</span>}
-                        {itemAuthor && (
-                          <span className="font-semibold text-slate-600 truncate max-w-[160px]">By {itemAuthor}</span>
-                        )}
-                      </div>
-
-                      <h3 className="text-lg font-bold text-slate-900 leading-snug group-hover:text-brand transition-colors line-clamp-2 mb-2">
-                        {item.title}
-                      </h3>
-
-                      {itemExcerpt && (
-                        <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed mt-auto">
-                          {itemExcerpt}
+                  <li key={item.id}>
+                    <Link href={`/article/${itemSlug}`} className="group flex items-center gap-5 py-6">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs text-slate-400">
+                          {[itemAuthor, itemDate].filter(Boolean).join(" · ")}
                         </p>
+                        <h3 className="mt-1 text-lg font-bold leading-snug text-slate-900 line-clamp-2 group-hover:text-brand transition-colors">
+                          {item.title}
+                        </h3>
+                        {itemExcerpt && (
+                          <p className="mt-1.5 text-sm leading-relaxed text-slate-500 line-clamp-2">{itemExcerpt}</p>
+                        )}
+                      </div>
+
+                      {item.thumbnail && (
+                        <div className="relative h-20 w-28 shrink-0 overflow-hidden rounded-xl bg-slate-100 sm:h-24 sm:w-36">
+                          <Image
+                            src={item.thumbnail}
+                            alt={item.title}
+                            fill
+                            sizes="144px"
+                            className="object-cover"
+                            unoptimized={shouldSkipOptimization(item.thumbnail)}
+                          />
+                        </div>
                       )}
-                    </div>
-                  </Link>
+                    </Link>
+                  </li>
                 );
               })}
-            </div>
+            </ul>
           </section>
         )}
-
       </div>
     </article>
   );

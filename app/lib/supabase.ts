@@ -137,6 +137,121 @@ export async function fetchLatestUpdates(limit = 10) {
   }
 }
 
+/** Load active listings assigned to an editorial classification. */
+export async function fetchListingsByEventId(eventId: string, limit = 50) {
+  if (!supabaseEnabled() || !eventId) return [];
+  const { data, error } = await supabase
+    .from("evlistings")
+    .select("*")
+    .eq("event_id", eventId)
+    .or("deleted.is.null,deleted.eq.false")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) {
+    console.warn("fetchListingsByEventId error:", error.message);
+    return [];
+  }
+  if (!data?.length) return [];
+  const variants = await supabase.from("ev_variants").select("*").in("listing_id", data.map((row: any) => row.id));
+  const byListing = new Map<string, EvVariantRow[]>();
+  for (const variant of (variants.data ?? []) as EvVariantRow[]) {
+    const rows = byListing.get(variant.listing_id) ?? [];
+    rows.push(variant);
+    byListing.set(variant.listing_id, rows);
+  }
+  return data.map((row: any) => mapToEvListing(row as EvListingRow, byListing.get(row.id) ?? []));
+}
+
+export async function fetchPublicEventBySlug(slug: string) {
+  if (!supabaseEnabled() || !slug) return null;
+  const { data, error } = await supabase.from("events").select("id,event_id,slug,title,description,hero_image").eq("slug", slug.toLowerCase()).eq("is_active", true).maybeSingle();
+  if (error) {
+    console.warn("fetchPublicEventBySlug error:", error.message);
+    return null;
+  }
+  return data;
+}
+
+export async function fetchEventContent(eventUuid: string) {
+  if (!supabaseEnabled() || !eventUuid) return { stories: [], listings: [], variants: [] };
+  const [storiesResult, listingsResult, variantsResult] = await Promise.all([
+    supabase.from("product_content").select("*").eq("event_uuid", eventUuid).eq("is_active", true).order("created_at", { ascending: false }),
+    supabase.from("evlistings").select("*").eq("event_uuid", eventUuid).or("deleted.is.null,deleted.eq.false").order("created_at", { ascending: false }),
+    supabase.from("ev_variants").select("*, evlistings!inner(id, slug, title, brand, photo, deleted)").eq("event_uuid", eventUuid).order("created_at", { ascending: false }),
+  ]);
+  if (storiesResult.error) console.warn("fetchEventContent stories error:", storiesResult.error.message);
+  if (listingsResult.error) console.warn("fetchEventContent listings error:", listingsResult.error.message);
+  if (variantsResult.error) console.warn("fetchEventContent variants error:", variantsResult.error.message);
+
+  const listings = (listingsResult.data ?? []) as EvListingRow[];
+  const variants = (variantsResult.data ?? []).filter((variant: any) => !variant.evlistings?.deleted);
+  const listingIds = [...new Set([...listings.map((listing) => listing.id), ...variants.map((variant: any) => variant.listing_id)])];
+  let allVariants: EvVariantRow[] = [];
+  if (listingIds.length) {
+    const variantRows = await supabase.from("ev_variants").select("*").in("listing_id", listingIds).order("price");
+    allVariants = (variantRows.data ?? []) as EvVariantRow[];
+  }
+  const byListing = new Map<string, EvVariantRow[]>();
+  for (const variant of allVariants) {
+    const rows = byListing.get(variant.listing_id) ?? [];
+    rows.push(variant);
+    byListing.set(variant.listing_id, rows);
+  }
+  return {
+    stories: storiesResult.data ?? [],
+    listings: listings.map((row) => mapToEvListing(row, byListing.get(row.id) ?? [])),
+    variants,
+  };
+}
+
+/** Load variants directly tagged to an event, with their parent listing details. */
+export async function fetchVariantsByEventId(eventId: string, limit = 100) {
+  if (!supabaseEnabled() || !eventId) return [];
+  const { data, error } = await supabase
+    .from("ev_variants")
+    .select("*, evlistings!inner(id, slug, title, brand, photo, deleted)")
+    .eq("event_id", eventId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) {
+    console.warn("fetchVariantsByEventId error:", error.message);
+    return [];
+  }
+  return (data ?? []).filter((variant: any) => !variant.evlistings?.deleted);
+}
+
+export async function fetchLatestClassifiedUpdates(limit = 100) {
+  if (!supabaseEnabled()) return [];
+  const { data, error } = await supabase
+    .from("product_content")
+    .select("*")
+    .eq("is_active", true)
+    .not("event_id", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) {
+    console.warn("fetchLatestClassifiedUpdates error:", error.message);
+    return [];
+  }
+  return data ?? [];
+}
+
+export async function fetchUpdatesByEventId(eventId: string, limit = 100) {
+  if (!supabaseEnabled() || !eventId) return [];
+  const { data, error } = await supabase
+    .from("product_content")
+    .select("*")
+    .eq("event_id", eventId)
+    .eq("is_active", true)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) {
+    console.warn("fetchUpdatesByEventId error:", error.message);
+    return [];
+  }
+  return data ?? [];
+}
+
 export async function fetchArticleById(idOrSlug: string) {
   if (!supabaseEnabled() || !idOrSlug) return null;
   try {
@@ -150,23 +265,27 @@ export async function fetchArticleById(idOrSlug: string) {
       if (data) return data;
     }
 
-    // Lookup by url (where custom slug is stored)
-    const { data: byUrl } = await supabase
+    // `slug` is a newer optional column and may not exist in every deployed
+    // database yet. Resolve by `url` first because that is the legacy column
+    // used by existing article links.
+    const { data: byUrl, error: urlError } = await supabase
       .from("product_content")
       .select("*")
       .eq("url", idOrSlug)
       .maybeSingle();
     if (byUrl) return byUrl;
+    if (urlError) console.warn("fetchArticleById url lookup error:", urlError.message);
 
     // Lookup by slug column if migration was applied
-    try {
-      const { data: bySlug } = await supabase
-        .from("product_content")
-        .select("*")
-        .eq("slug", idOrSlug)
-        .maybeSingle();
-      if (bySlug) return bySlug;
-    } catch {}
+    const { data: bySlug, error: slugError } = await supabase
+      .from("product_content")
+      .select("*")
+      .eq("slug", idOrSlug)
+      .maybeSingle();
+    if (bySlug) return bySlug;
+    if (slugError && !slugError.message.includes("column product_content.slug does not exist")) {
+      console.warn("fetchArticleById slug lookup error:", slugError.message);
+    }
 
     // Fallback by id directly
     const { data: byId } = await supabase
@@ -207,6 +326,7 @@ export async function fetchProductOffers(brand: string, slug: string) {
 
 export type EvListingRow = {
   id: string;
+  event_id?: string | null;
   slug: string;
   title: string;
   brand: string;

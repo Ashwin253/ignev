@@ -16,6 +16,7 @@ export type ProductContent = {
   author_email?: string;
   body: string;
   product_slug: string;
+  event_id?: string;
   thumbnail?: string;
   is_active: boolean;
 };
@@ -29,6 +30,7 @@ const emptyContent: ProductContent = {
   author_email: "",
   body: "",
   product_slug: "",
+  event_id: "",
   thumbnail: "",
   is_active: true,
 };
@@ -200,6 +202,7 @@ export default function ContentPanel({
       title: form.title.trim(),
       body: fullBody,
       product_slug: form.product_slug?.trim() || "",
+      event_id: form.event_id?.trim().toUpperCase() || null,
       thumbnail: form.thumbnail?.trim() || "",
       is_active: form.is_active,
       type: form.type || "article",
@@ -211,38 +214,12 @@ export default function ContentPanel({
 
     let saveError: any = null;
 
-    const stripUnsupportedColumns = (p: any) => {
-      delete p.slug;
-      delete p.author_name;
-      delete p.author_email;
-    };
-
     if (editing === "new") {
       const res = await supabase.from("product_content").insert(payload);
-      if (
-        res.error?.code === "PGRST204" ||
-        res.error?.message?.includes("slug") ||
-        res.error?.message?.includes("author")
-      ) {
-        stripUnsupportedColumns(payload);
-        const retryRes = await supabase.from("product_content").insert(payload);
-        saveError = retryRes.error;
-      } else {
-        saveError = res.error;
-      }
+      saveError = res.error;
     } else {
       const res = await supabase.from("product_content").update(payload).eq("id", editing);
-      if (
-        res.error?.code === "PGRST204" ||
-        res.error?.message?.includes("slug") ||
-        res.error?.message?.includes("author")
-      ) {
-        stripUnsupportedColumns(payload);
-        const retryRes = await supabase.from("product_content").update(payload).eq("id", editing);
-        saveError = retryRes.error;
-      } else {
-        saveError = res.error;
-      }
+      saveError = res.error;
     }
 
     if (saveError) {
@@ -322,6 +299,18 @@ export default function ContentPanel({
                 placeholder="e.g. 5 Reasons to Buy Tata Nexon EV in 2026"
                 className="mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-medium outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
               />
+            </label>
+
+            {/* Editable article author */}
+            <label className="block">
+              <span className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Event ID</span>
+              <input
+                value={form.event_id || ""}
+                onChange={(e) => setForm({ ...form, event_id: e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, "") })}
+                placeholder="e.g. EICMA2026"
+                className="mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-medium outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+              />
+              <p className="mt-1 text-[11px] text-ink-mute">Groups this story with related vehicle listings.</p>
             </label>
 
             {/* Editable article author */}

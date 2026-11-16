@@ -56,6 +56,7 @@ const convertToLakh = (val: number): number => {
 
 type ListingForm = {
   slug: string; title: string; brand: string; body_type: string; usage_type?: string | null;
+  event_id: string;
   commercial: boolean; has_baas: boolean; launchdate: string | null; photo: string;
   gallery_images: any[]; colors: string[]; types: string[];
   pros: string[]; cons: string[];
@@ -83,6 +84,7 @@ type ListingForm = {
 
 export type VariantForm = {
   id?: string;
+  event_id?: string | null;
   variant_name: string;
   version_name?: string | null;
   launch_date?: string | null;
@@ -138,6 +140,7 @@ export type VariantForm = {
 
 const emptyListing: ListingForm = {
   slug: "", title: "", brand: "", body_type: "", usage_type: null, commercial: false, has_baas: false,
+  event_id: "",
   launchdate: null, photo: "", gallery_images: [], colors: [],
   types: [], pros: [], cons: [], price_bracket: "",
   parent_id: "",
@@ -155,7 +158,7 @@ const emptyListing: ListingForm = {
 };
 
 const emptyVariant: VariantForm = {
-  variant_name: "", version_name: "", launch_date: "", slug: "", model_year: 2026, price: null,
+  variant_name: "", version_name: "", launch_date: "", event_id: "", slug: "", model_year: 2026, price: null,
   usage_type: null, continuing_variant_id: null,
   top_speed: null, battery_capacity_kwh: null, driving_range_km: null,
   charging_time_mins: null, max_power_bhp: null, max_torque_nm: null,
@@ -571,6 +574,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
       const { id, listing_id, created_at, updated_at, variant_name, version_name, model_year, ...rest } = v as any;
       return {
         variant_name: variant_name || "",
+        event_id: rest.event_id || "",
         version_name: version_name || "",
         model_year: model_year || 2026,
         price: rest.price === null || rest.price === undefined ? null : rest.price,
@@ -778,6 +782,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
     const { id, listing_id, created_at, updated_at, variant_name, version_name, model_year, ...rest } = current as any;
     const cleanVariant = {
       variant_name: variant_name || "",
+      event_id: rest.event_id || "",
       version_name: version_name || "",
       model_year: model_year || 2026,
       price: rest.price === null || rest.price === undefined ? null : rest.price,
@@ -1361,6 +1366,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
 
     const loadedForm = {
       slug: l.slug,
+      event_id: (l as any).event_id || "",
       title: l.title,
       brand: l.brand,
       body_type: l.body_type || "",
@@ -1424,6 +1430,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
 
       return {
         ...v,
+        event_id: (v as any).event_id || "",
         id: v.id,
         features: featuresMap.get(v.id) || undefined,
         extra_modes,
@@ -1551,6 +1558,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
 
           const varPayload: any = {
             listing_id: listingId,
+            event_id: v.event_id?.trim().toUpperCase() || null,
             variant_name: v.variant_name,
             version_name: v.version_name || null,
             launch_date: v.launch_date || null,
@@ -2497,6 +2505,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             <>
             {/* Basic fields */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <Field label="Event ID" value={form.event_id} onChange={(v) => setForm({ ...form, event_id: v.trim().toUpperCase() })} placeholder="e.g. EICMA2026" />
               <Field
                 label="Model"
                 value={form.title}
@@ -3411,6 +3420,12 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                       label="Variant Name"
                       value={v.variant_name}
                       onChange={(val) => updateVariantField(i, { variant_name: val })}
+                    />
+                    <MiniInput
+                      label="Event ID (optional)"
+                      value={v.event_id || ""}
+                      placeholder="e.g. EICMA2026"
+                      onChange={(val) => updateVariantField(i, { event_id: val.toUpperCase().replace(/[^A-Z0-9_-]/g, "") })}
                     />
                     <div className="flex flex-col gap-1">
                       <MiniInput

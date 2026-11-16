@@ -1,5 +1,5 @@
 import { MetadataRoute } from 'next';
-import { fetchEvListingsFromSupabase, fetchLatestUpdates } from './lib/supabase';
+import { fetchEvListingsFromSupabase, fetchLatestUpdates, fetchPublicEventsForSitemap } from './lib/supabase';
 import { fetchWPUpdates } from './lib/wordpress';
 
 function safeDate(val: any): Date {
@@ -14,6 +14,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let products: any[] = [];
   let articles: any[] = [];
   let wpArticles: any[] = [];
+  let events: any[] = [];
 
   try {
     products = await fetchEvListingsFromSupabase(500);
@@ -31,6 +32,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     wpArticles = await fetchWPUpdates(100);
   } catch (err) {
     console.warn("Sitemap WP articles fetch error:", err);
+  }
+
+  try {
+    events = await fetchPublicEventsForSitemap();
+  } catch (err) {
+    console.warn("Sitemap events fetch error:", err);
   }
 
   const productUrls: MetadataRoute.Sitemap = (products || [])
@@ -58,6 +65,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: safeDate(wp.date),
       changeFrequency: 'weekly',
       priority: 0.8,
+    }));
+
+  const eventUrls: MetadataRoute.Sitemap = events
+    .filter((event) => event?.slug)
+    .map((event) => ({
+      url: `${baseUrl}/event/${event.slug}`,
+      lastModified: safeDate(event.updated_at),
+      changeFrequency: 'weekly',
+      priority: 0.75,
     }));
 
   const staticUrls: MetadataRoute.Sitemap = [
@@ -129,5 +145,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  return [...staticUrls, ...productUrls, ...articleUrls, ...wpUrls];
+  return [...staticUrls, ...productUrls, ...articleUrls, ...wpUrls, ...eventUrls];
 }

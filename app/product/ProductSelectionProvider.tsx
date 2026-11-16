@@ -15,6 +15,10 @@ type ProductSelectionContextValue = {
 
 const ProductSelectionContext = createContext<ProductSelectionContextValue | null>(null);
 
+function normalizeVariantName(value: string | null | undefined) {
+  return (value || "").trim().replace(/\s+/g, " ").toLocaleLowerCase();
+}
+
 export function ProductSelectionProvider({ item, children }: { item: EvListing; children: React.ReactNode }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [showBaasState, setShowBaasState] = useState(false);
@@ -33,7 +37,8 @@ export function ProductSelectionProvider({ item, children }: { item: EvListing; 
 
     if (variantQuery) {
       const variantsToSearch = initialBaas ? item.baasVariants : item.batteryVariants;
-      const index = variantsToSearch.findIndex((v) => v.modelName === variantQuery);
+      const normalizedQuery = normalizeVariantName(variantQuery);
+      const index = variantsToSearch.findIndex((v) => normalizeVariantName(v.modelName) === normalizedQuery);
       if (index >= 0) {
         setSelectedIndex(index);
       }

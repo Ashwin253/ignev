@@ -172,6 +172,29 @@ export async function fetchPublicEventBySlug(slug: string) {
   return data;
 }
 
+export async function fetchPublicEventsForSitemap() {
+  if (!supabaseEnabled()) return [];
+  const [eventsResult, storiesResult, listingsResult, variantsResult] = await Promise.all([
+    supabase.from("events").select("id,slug,updated_at").eq("is_active", true),
+    supabase.from("product_content").select("event_uuid").eq("is_active", true).not("event_uuid", "is", null),
+    supabase.from("evlistings").select("event_uuid").or("deleted.is.null,deleted.eq.false").not("event_uuid", "is", null),
+    supabase.from("ev_variants").select("event_uuid").not("event_uuid", "is", null),
+  ]);
+  if (eventsResult.error) {
+    console.warn("fetchPublicEventsForSitemap error:", eventsResult.error.message);
+    return [];
+  }
+  const populatedEventIds = new Set<string>();
+  for (const row of [
+    ...(storiesResult.data ?? []),
+    ...(listingsResult.data ?? []),
+    ...(variantsResult.data ?? []),
+  ]) {
+    if (row.event_uuid) populatedEventIds.add(row.event_uuid);
+  }
+  return (eventsResult.data ?? []).filter((event: { id: string }) => populatedEventIds.has(event.id));
+}
+
 export async function fetchEventContent(eventUuid: string) {
   if (!supabaseEnabled() || !eventUuid) return { stories: [], listings: [], variants: [] };
   const [storiesResult, listingsResult, variantsResult] = await Promise.all([
@@ -745,6 +768,29 @@ export async function fetchEvListingsFromSupabase(limit = 50): Promise<EvListing
   return (listings as EvListingRow[]).map((row) =>
     mapToEvListing(row, variantsByListing.get(row.id) ?? [])
   );
+}
+
+export function mapHomepageCacheListings(payload: { listings?: unknown[]; variants?: unknown[] }): EvListing[] {
+  const rows = Array.isArray(payload.listings) ? payload.listings as EvListingRow[] : [];
+  const variants = Array.isArray(payload.variants) ? payload.variants as EvVariantRow[] : [];
+  const variantsByListing = new Map<string, EvVariantRow[]>();
+  for (const variant of variants) {
+    const group = variantsByListing.get(variant.listing_id) ?? [];
+    group.push(variant);
+    variantsByListing.set(variant.listing_id, group);
+  }
+  return rows.map((row) => mapToEvListing(row, variantsByListing.get(row.id) ?? []));
+}
+
+export async function fetchHomepageSectionCache() {
+  if (!supabaseEnabled()) return null;
+  const { data, error } = await supabase
+    .from("homepage_section_cache")
+    .select("payload, updated_at")
+    .eq("cache_key", "homepage")
+    .maybeSingle();
+  if (error || !data?.payload) return null;
+  return data as { payload: { listings?: unknown[]; variants?: unknown[]; quickMatch2LakhSlugs?: string[]; categorySlugs?: Record<string, string[]> }; updated_at: string };
 }
 
 export async function fetchEvListingBySlugFromSupabase(slug: string): Promise<EvListing | null> {

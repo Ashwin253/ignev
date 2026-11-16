@@ -58,6 +58,43 @@ create trigger evlistings_updated_at
   for each row execute function public.update_updated_at();
 
 create index if not exists idx_evlistings_slug on public.evlistings(slug);
+
+-- Homepage snapshot refreshed after team listing saves.
+create table if not exists public.homepage_section_cache (
+  cache_key text primary key,
+  payload jsonb not null default '{}'::jsonb,
+  updated_by uuid references auth.users(id) on delete set null,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.homepage_section_cache enable row level security;
+grant select on public.homepage_section_cache to anon, authenticated;
+grant insert, update on public.homepage_section_cache to authenticated;
+
+create policy "Public read homepage cache"
+  on public.homepage_section_cache for select to anon, authenticated
+  using (true);
+
+create policy "Team refresh homepage cache"
+  on public.homepage_section_cache for all to authenticated
+  using (
+    (select auth.jwt() -> 'app_metadata' ->> 'role') in ('team', 'admin')
+    or (select auth.jwt() ->> 'email') like '%@evezy.com'
+    or exists (
+      select 1 from public.evlistings listing
+      where listing.created_by = (select auth.uid())
+         or (select auth.jwt() ->> 'email') = any(coalesce(listing.editors_emails, '{}'::text[]))
+    )
+  )
+  with check (
+    (select auth.jwt() -> 'app_metadata' ->> 'role') in ('team', 'admin')
+    or (select auth.jwt() ->> 'email') like '%@evezy.com'
+    or exists (
+      select 1 from public.evlistings listing
+      where listing.created_by = (select auth.uid())
+         or (select auth.jwt() ->> 'email') = any(coalesce(listing.editors_emails, '{}'::text[]))
+    )
+  );
 create index if not exists idx_evlistings_brand on public.evlistings(brand);
 
 -- ── Variants Table ───────────────────────────────────────────────────────────

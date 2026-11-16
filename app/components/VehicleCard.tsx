@@ -50,11 +50,13 @@ export default function VehicleCard({
   const shortlist = useShortlist();
 
   const slug = itemSlug(item);
-  const launched = item.upcoming !== undefined ? !item.upcoming : isLaunched(item.launchdate);
+  const launched = item.upcomingVariantName
+    ? true
+    : item.upcoming !== undefined ? !item.upcoming : isLaunched(item.launchdate);
   const { power, torque, battery } = getVehicleCardSpecs(item);
   const inCompare = isInCompare(slug);
   const saved = shortlist.has(slug);
-  const label = `${item.brand} ${item.name}`;
+  const label = `${item.brand} ${item.name}${item.upcomingVariantName ? ` ${item.upcomingVariantName}` : ""}`;
 
   const videoUrl = item.video_links?.[0]?.url;
   const isEmbed = !!videoUrl && /youtube\.com|youtu\.be|vimeo\.com/.test(videoUrl);
@@ -113,7 +115,7 @@ export default function VehicleCard({
             )}
           >
             {launched ? <BadgeCheck size={12} /> : <CalendarClock size={12} />}
-            {launched ? "Available" : "Coming soon"}
+            {item.upcomingVariantName ? "Coming soon" : launched ? "Available" : "Coming soon"}
           </span>
           {item.commercial && (
             <span className="inline-flex items-center gap-1 rounded-full bg-ink/85 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur-md">
@@ -125,7 +127,7 @@ export default function VehicleCard({
         {/* Save */}
         <button
           type="button"
-          onClick={() => shortlist.toggle(slug, label)}
+          onClick={() => shortlist.toggle(slug, label, item)}
           aria-pressed={saved}
           aria-label={saved ? `Remove ${label} from shortlist` : `Save ${label} to shortlist`}
           className={cx(
@@ -167,11 +169,11 @@ export default function VehicleCard({
         <Link href={`/product/${slug}`} className="block">
           <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-brand">{item.brand}</p>
           <div className="mt-1 flex items-start justify-between gap-3">
-            <h3 className="line-clamp-2 min-h-[2.5rem] text-[15px] font-bold leading-tight text-ink group-hover:text-brand-deep" title={item.name}>
-              {item.name}
+            <h3 className="line-clamp-2 min-h-[2.5rem] text-[15px] font-bold leading-tight text-ink group-hover:text-brand-deep" title={label}>
+              {item.upcomingVariantName || item.name}
             </h3>
             <div className="shrink-0 text-right">
-              <p className="text-[17px] font-extrabold leading-none tracking-tight text-ink">{item.pricing || "TBA"}</p>
+              <p className="text-[17px] font-extrabold leading-none tracking-tight text-ink">{item.upcomingVariantName ? item.upcomingVariantPrice || "TBA" : item.pricing || "TBA"}</p>
               {item.baas && <span className="mt-1 inline-block rounded bg-sky-soft px-1.5 py-0.5 text-[9px] font-bold text-[#0a4a30]">BaaS</span>}
             </div>
           </div>

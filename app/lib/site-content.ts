@@ -18,11 +18,13 @@ export type Product = {
 
 export type ComingSoonItem = {
   name: string;
+  variantName?: string;
   brand: string;
   type: string;
   pricing: string;
   launch: string;
   photo: string;
+  slug?: string;
 };
 
 export type SiteContent = {
@@ -65,10 +67,13 @@ async function loadFromSupabase(): Promise<SiteContent> {
 
   for (const l of listings) {
     const isReady = isLaunched(l.launchdate);
+    const upcomingVariants = (l.batteryVariants ?? []).filter((variant) =>
+      variant.usage_type === "Coming Soon" || !isLaunched(variant.launch_date)
+    );
 
     const bucket = bucketType(l.types[0] ?? "");
     
-    if (isReady) {
+    if (isReady || upcomingVariants.length > 0) {
       const product: Product = {
         name:       l.title,
         brand:      l.brand,
@@ -87,14 +92,23 @@ async function loadFromSupabase(): Promise<SiteContent> {
       else if (bucket === "two_wheeler") twoWheelers.push(product);
       else if (bucket === "auto")   autos.push(product);
       else                          cars.push(product);
-    } else {
+    }
+
+    // Keep a launched model available while listing only its future variants here.
+    const variantsToShow = upcomingVariants.length > 0
+      ? upcomingVariants
+      : isReady ? [] : [undefined];
+
+    for (const variant of variantsToShow) {
       const item: ComingSoonItem = {
         name:       l.title,
+        variantName: variant?.modelName,
         brand:      l.brand,
         type:       l.types[0] ?? "",
-        pricing:    formatPricing(l.prices),
-        launch:     formatLaunchDate(l.launchdate),
+        pricing:    variant?.price ? formatPricing([variant.price]) : formatPricing(l.prices),
+        launch:     formatLaunchDate(variant?.launch_date || l.launchdate),
         photo:      l.photo,
+        slug:       l.slug,
       };
 
       if (bucket === "car")         soonCars.push(item);

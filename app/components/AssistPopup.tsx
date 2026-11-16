@@ -5,8 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Sparkles, IndianRupee, ArrowRight } from 'lucide-react';
 import EnquiryForm from './EnquiryForm';
 
-export default function AssistPopup() {
-  const [isOpen, setIsOpen] = useState(false);
+export default function AssistPopup({ openOnMount = false }: { openOnMount?: boolean }) {
+  const [isOpen, setIsOpen] = useState(openOnMount);
   const [isCardVisible, setIsCardVisible] = useState(true);
 
   useEffect(() => {

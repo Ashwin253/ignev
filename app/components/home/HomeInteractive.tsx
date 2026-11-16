@@ -138,12 +138,15 @@ const MATCH_TYPES = [
   { key: "commercial", label: "Commercial" },
 ];
 
-export function QuickMatch({ items }: { items: CatalogItem[] }) {
+export function QuickMatch({ items, precomputedTwoLakh = [] }: { items: CatalogItem[]; precomputedTwoLakh?: CatalogItem[] }) {
   const [budget, setBudget] = useState(2);
   const [type, setType] = useState("all");
 
   const matches = useMemo(() => {
-    return items
+    const source = budget === 2 && type === "all" && precomputedTwoLakh.length
+      ? precomputedTwoLakh
+      : items;
+    return source
       .filter((i) => !i.upcoming)
       .filter((i) => {
         const p = priceLowLakh(i);
@@ -151,7 +154,7 @@ export function QuickMatch({ items }: { items: CatalogItem[] }) {
       })
       .filter((i) => type === "all" || matchesVehicleCategory({ type: i.type, types: i.types, body_type: i.body_type, commercial: i.commercial } as any, type))
       .sort((a, b) => priceLowLakh(b) - priceLowLakh(a));
-  }, [items, budget, type]);
+  }, [items, budget, type, precomputedTwoLakh]);
 
   const max = type === "cars" || type === "commercial" ? 60 : type === "all" ? 40 : 10;
   const step = max > 20 ? 1 : 0.25;

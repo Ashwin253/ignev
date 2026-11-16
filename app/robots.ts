@@ -8,37 +8,37 @@ export default function robots(): MetadataRoute.Robots {
    rules: [
       {
         userAgent: "Googlebot",
-          allow: '/',
+          allow: ['/', '/event/'],
         disallow: '/team',       // Disallow crawling of internal API routes
       },
       {
         userAgent: ["Mediapartners-Google", "Google-Display-Ads-Bot"],
-          allow: '/',
+          allow: ['/', '/event/'],
         disallow: '/team',
     },
       {
         userAgent: "FacebookExternalHit",
-      allow: '/',
+      allow: ['/', '/event/'],
         disallow: '/team',
       },
       {
         userAgent:["GPTBot", "MetaBot", "MetaAdsBot", "MetaBusinessBot","OAI-SearchBot","ChatGPT-User"],
-      allow: '/',
+      allow: ['/', '/event/'],
         disallow: '/team',
       },
       {
         userAgent: "DuckDuckGoBot",    
-      allow: '/',
+      allow: ['/', '/event/'],
         disallow: '/team',
       },
       {
         userAgent: "YandexMobileBot",
-      allow: '/',
+      allow: ['/', '/event/'],
         disallow: '/team',
       },
       {
         userAgent: "Baiduspider",
-      allow: '/',
+      allow: ['/', '/event/'],
         disallow: '/team',
       },
       {
@@ -51,12 +51,12 @@ export default function robots(): MetadataRoute.Robots {
           "BingPreview",
           "SiteAuditBot",
         ],
-      allow: '/',
+      allow: ['/', '/event/'],
         disallow: '/team',
       },
       {
         userAgent: "*",
-      allow: '/',
+      allow: ['/', '/event/'],
         disallow: '/team',
       },
     ],

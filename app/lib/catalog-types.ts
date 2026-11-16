@@ -40,4 +40,6 @@ export type CatalogItem = {
   upcoming?: boolean;
   /** Launch date as epoch ms (0 when unknown) */
   launchTs?: number;
+  upcomingVariantName?: string;
+  upcomingVariantPrice?: string;
 };

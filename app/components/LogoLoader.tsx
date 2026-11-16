@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import facts from "./facts.json";
 
 interface LogoLoaderProps {
@@ -9,46 +9,16 @@ interface LogoLoaderProps {
 }
 
 export default function LogoLoader({ fullscreen = true, message = "Loading..." }: LogoLoaderProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
   const [fact] = useState<string>(() => facts[Math.floor(Math.random() * facts.length)].fact);
-
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.play().catch((err) => {
-        console.log("Autoplay was interrupted/blocked: ", err);
-      });
-    }
-
-  }, []);
 
   const containerClasses = fullscreen
     ? "fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#e3f6ec] transition-colors duration-300"
     : "w-full min-h-[300px] flex flex-col items-center justify-center bg-[#0a4a30] rounded-3xl p-8 border border-white/5 transition-colors duration-300";
 
-  const videoSizeClasses = fullscreen
-    ? "w-64 h-64 md:w-[420px] md:h-[420px] lg:w-[500px] lg:h-[500px] max-w-[90vw] aspect-square"
-    : "h-[30vh] max-h-[160px] aspect-square";
-
   return (
     <div className={containerClasses}>
-      <div className={`relative ${videoSizeClasses} flex items-center justify-center`}>
-        {/* Glow effect behind logo */}
-        <div className="absolute inset-0 bg-[#0f8f56]/20 rounded-full blur-[100px] animate-pulse" />
-        
-        <video
-          ref={videoRef}
-          src="/evplsenobgnew.webm"
-          className="w-full h-full object-contain rounded-full relative z-10"
-          autoPlay
-          loop
-          muted
-          playsInline
-          controls={false}
-        />
-      </div>
-      
-      {/* Loading message & Progress bar */}
-      <div className="mt-6 flex flex-col items-center gap-3 relative z-10 max-w-md px-6 text-center">
+      <div className="flex max-w-md flex-col items-center gap-3 px-6 text-center">
+        <span aria-hidden="true" className={`text-5xl ${fullscreen ? "text-brand" : "text-[#8df0b0]"}`}>⚡</span>
         <span className={`text-xs md:text-sm font-semibold tracking-widest uppercase animate-pulse ${fullscreen ? "text-slate-800" : "text-slate-300"}`}>
           {message}
         </span>

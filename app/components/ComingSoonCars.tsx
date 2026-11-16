@@ -10,6 +10,7 @@ import { getVehiclePhoto } from "../lib/vehicle-images";
 
 export type ComingSoonItem = {
   name: string;
+  variantName?: string;
   brand: string;
   type: string;
   pricing: string;
@@ -86,7 +87,7 @@ export default function ComingSoonCars({ items }: { items: ComingSoonItem[] }) {
                 <div className="relative aspect-16/10 bg-slate-100 overflow-hidden">
                   <Image
                     src={getVehiclePhoto(car.photo, car)}
-                    alt={car.name}
+                    alt={`${car.brand} ${car.name}${car.variantName ? ` ${car.variantName}` : ""}`}
                     fill
                     sizes="(max-width: 768px) 82vw, 25vw"
                     className="object-cover group-hover:scale-110 transition-transform duration-500"
@@ -94,7 +95,7 @@ export default function ComingSoonCars({ items }: { items: ComingSoonItem[] }) {
                   {/* Hover enquire overlay */}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
                     <button
-                      onClick={(e) => { e.preventDefault(); triggerEnquiryModal(`Coming Soon: ${car.brand} ${car.name}`); }}
+                      onClick={(e) => { e.preventDefault(); triggerEnquiryModal(`Coming Soon: ${car.brand} ${car.name}${car.variantName ? ` ${car.variantName}` : ""}`); }}
                       className="opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 bg-white text-slate-900 px-5 py-2 rounded-full text-xs font-bold shadow-xl transition-all flex items-center gap-2"
                     >
                       Enquire Now <ArrowUpRight size={14} />
@@ -114,7 +115,8 @@ export default function ComingSoonCars({ items }: { items: ComingSoonItem[] }) {
                     </span>
                     <span className="text-xs text-slate-400">{car.type}</span>
                   </div>
-                  <h3 className="text-xl font-semibold text-slate-900">{car.name}</h3>
+                  <h3 className="text-xl font-semibold text-slate-900">{car.variantName || car.name}</h3>
+                  {car.variantName && <p className="text-sm font-medium text-slate-500">{car.name} · Coming soon</p>}
                   {car.pricing && (
                     <p className="text-sm font-medium text-slate-700">{car.pricing}</p>
                   )}

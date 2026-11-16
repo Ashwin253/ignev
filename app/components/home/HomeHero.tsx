@@ -95,11 +95,11 @@ function BannerLink({ href, className, label, children }: { href: string; classN
   );
 }
 
-export default function HomeHero({ banners, modelCount }: { banners: HeroBannerLite[]; modelCount: number }) {
-  const slides = (banners && banners.length ? banners : FALLBACK_BANNERS).filter(
+export default function HomeHero({ banners, modelCount, loading = false }: { banners: HeroBannerLite[]; modelCount: number; loading?: boolean }) {
+  const slides = (banners && banners.length ? banners : loading ? [] : FALLBACK_BANNERS).filter(
     (b) => b.imageHorizontal || b.imageVertical || b.videoUrl
   );
-  const list = slides.length ? slides : FALLBACK_BANNERS;
+  const list = slides.length ? slides : loading ? [] : FALLBACK_BANNERS;
   const [idx, setIdx] = useState(0);
   const [paused, setPaused] = useState(false);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -113,7 +113,7 @@ export default function HomeHero({ banners, modelCount }: { banners: HeroBannerL
   }, [paused, list.length]);
 
   const go = (d: number) => setIdx((i) => (i + d + list.length) % list.length);
-  const cur = list[idx % list.length];
+  const cur = list.length ? list[idx % list.length] : FALLBACK_BANNERS[0];
 
   const openSearch = () => {
     window.dispatchEvent(new CustomEvent("open-command-palette"));
@@ -126,7 +126,13 @@ export default function HomeHero({ banners, modelCount }: { banners: HeroBannerL
     >
       <Container className="relative">
         {/* Banner: the hero */}
-        <div
+        {loading ? (
+          <div className="relative h-[60svh] min-h-[320px] max-h-[720px] w-full animate-pulse overflow-hidden rounded-[1.5rem] border border-line bg-slate-200 sm:rounded-[2rem]" aria-label="Loading featured banner" aria-busy="true">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/35 to-transparent motion-safe:animate-[shimmer_1.8s_infinite]" />
+            <div className="absolute bottom-8 left-6 h-5 w-2/3 rounded bg-white/50 sm:left-8" />
+            <div className="absolute bottom-8 right-8 hidden h-11 w-36 rounded-full bg-white/50 sm:block" />
+          </div>
+        ) : <div
           className="group relative h-[60svh] min-h-[320px] max-h-[720px] w-full overflow-hidden rounded-[1.5rem] border border-line bg-gradient-to-br from-brand-soft to-white shadow-lift sm:rounded-[2rem]"
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}
@@ -194,7 +200,7 @@ export default function HomeHero({ banners, modelCount }: { banners: HeroBannerL
               </div>
             </>
           )}
-        </div>
+        </div>}
 
         {/* Headline + actions: compact row under the banner */}
         <div className="mt-8 grid items-center gap-6 lg:grid-cols-12 lg:gap-10">

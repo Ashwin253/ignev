@@ -21,6 +21,8 @@ import BrandsPanel from "./BrandsPanel";
 import VehiclePricingPanel, { DEFAULT_AREA_RULES, calculateAddonAmount, fmtLakh } from "./VehiclePricingPanel";
 
 import { requestFcmToken } from "../lib/firebase";
+import { matchesVehicleCategory } from "../lib/catalog-filters";
+import { DEFAULT_BRAND_RANKS, sortVehiclesByBrandRank } from "../lib/brand-rankings";
 import { useVoiceDictation, MicButton } from "./VoiceInput";
 import { appendExtra, isCheckboxExtra, isExtraChecked, normalizeExtras, type SpecExtraItem } from "../lib/spec-extras";
 
@@ -1235,10 +1237,92 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
     if (error) {
       alert(`Failed to restore: ${error.message}`);
     } else {
+      await refreshHomepageCache();
       fetch("/api/build-summary").catch((e) => console.error("Error rebuilding summary:", e));
       fetchListings();
     }
   };
+
+  async function refreshHomepageCache() {
+    try {
+      const { data: rows, error: listingsError } = await supabase
+        .from("evlistings")
+        .select("*")
+        .or("deleted.is.null,deleted.eq.false")
+        .order("created_at", { ascending: false });
+      if (listingsError) throw listingsError;
+      const listingsToCache = rows ?? [];
+      const listingIds = listingsToCache.map((row: any) => row.id);
+      const variantRows: any[] = [];
+      for (let offset = 0; offset < listingIds.length; offset += 80) {
+        const { data, error } = await supabase
+          .from("ev_variants")
+          .select("*")
+          .in("listing_id", listingIds.slice(offset, offset + 80))
+          .order("price", { ascending: true });
+        if (error) throw error;
+        variantRows.push(...(data ?? []));
+      }
+
+      const listingsById = new Map(listingsToCache.map((row: any) => [row.id, row]));
+      const upcomingTypes = new Set(["coming soon", "announced", "concept", "facelift"]);
+      const quickMatch2LakhSlugs = Array.from(new Map(
+        variantRows
+          .filter((variant) => {
+            const listing = listingsById.get(variant.listing_id) as any;
+            const price = Number(variant.price);
+            return listing && Number.isFinite(price) && price > 0 && price <= 2 &&
+              !upcomingTypes.has(String(variant.usage_type || "").trim().toLowerCase());
+          })
+          .sort((a, b) => Number(a.price) - Number(b.price))
+          .map((variant) => [variant.listing_id, listingsById.get(variant.listing_id)])
+      ).values()).slice(0, 5).map((listing: any) => listing.slug);
+
+      const ranksResult = await supabase.from("brand_rankings").select("*").eq("is_active", true).order("rank", { ascending: true });
+      const rankings = ranksResult.error || !ranksResult.data?.length ? DEFAULT_BRAND_RANKS : ranksResult.data;
+      const isFutureLaunch = (value: unknown) => {
+        const raw = String(value || "").trim().toLowerCase();
+        if (!raw) return false;
+        if (["tba", "coming soon", "announced", "concept", "expected", "unannounced"].some((word) => raw.includes(word))) return true;
+        const year = raw.match(/\b(20\d{2})\b/);
+        if (/^\d{4}$/.test(raw) && year) return Number(year[1]) >= new Date().getFullYear();
+        if (year && Number(year[1]) > new Date().getFullYear()) return true;
+        const date = new Date(raw);
+        return !Number.isNaN(date.getTime()) && date.getTime() > Date.now();
+      };
+      const futureVariantForListing = (listingId: string) => variantRows.filter((variant) => variant.listing_id === listingId && (
+        upcomingTypes.has(String(variant.usage_type || "").trim().toLowerCase()) || isFutureLaunch(variant.launch_date)
+      ));
+      const launchedListings = listingsToCache.filter((listing: any) => {
+        const listingVariants = variantRows.filter((variant) => variant.listing_id === listing.id);
+        const hasUpcomingVariant = futureVariantForListing(listing.id).length > 0;
+        const hasLaunchedVariant = listingVariants.some((variant) =>
+          !upcomingTypes.has(String(variant.usage_type || "").trim().toLowerCase()) && !isFutureLaunch(variant.launch_date)
+        );
+        const modelUpcoming = !!(listing.coming_soon || listing.announced || listing.concept || isFutureLaunch(listing.launchdate));
+        const overallUpcoming = (modelUpcoming && !hasLaunchedVariant) || hasUpcomingVariant;
+        return !overallUpcoming || hasUpcomingVariant;
+      });
+      const categorySlugs: Record<string, string[]> = {};
+      for (const category of ["cars", "bike"]) {
+        const matching = listingsToCache.filter((listing: any) => matchesVehicleCategory(listing, category));
+        const available = launchedListings.filter((listing: any) => matchesVehicleCategory(listing, category));
+        const chosen = sortVehiclesByBrandRank(available.length ? available : matching, category, rankings).slice(0, 8);
+        categorySlugs[category] = chosen.map((listing: any) => listing.slug).filter(Boolean);
+      }
+
+      const { error: cacheError } = await supabase.from("homepage_section_cache").upsert({
+        cache_key: "homepage",
+        payload: { listings: listingsToCache, variants: variantRows, quickMatch2LakhSlugs, categorySlugs },
+        updated_by: user?.id || null,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "cache_key" });
+      if (cacheError) throw cacheError;
+    } catch (error: any) {
+      console.error("Failed to refresh homepage cache:", error);
+      alert(`Listing saved, but homepage cache refresh failed: ${error.message || "Unknown error"}. Run the homepage cache SQL migration, then try saving again.`);
+    }
+  }
 
   const fetchListings = async () => {
     setLoading(true);
@@ -1713,6 +1797,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
         }
       }
     }
+    await refreshHomepageCache();
     // Auto rebuild search summary
     fetch("/api/build-summary").catch((e) => console.error("Error rebuilding summary:", e));
     setSaving(false); setEditing(null); fetchListings();
@@ -1738,7 +1823,9 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
     const { error } = await supabase.from("evlistings").delete().eq("id", id);
     if (error) {
       alert(`Failed to delete: ${error.message}`);
+      return;
     }
+    await refreshHomepageCache();
     
     // Auto rebuild search summary
     fetch("/api/build-summary").catch((e) => console.error("Error rebuilding summary:", e));

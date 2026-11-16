@@ -1,19 +1,15 @@
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Plus_Jakarta_Sans } from "next/font/google";
 import Script from "next/script";
-import { Suspense } from "react";
 import "./globals.css";
 import AddToHomescreen from "./components/AddToHomescreen";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
-import AssistPopup from "./components/AssistPopup";
-import BestOfferPopup from "./components/BestOfferPopup";
+import DeferredGlobalWidgets from "./components/DeferredGlobalWidgets";
 import EnquiryModal from "./components/EnquiryModal";
 import ClarityScript from "./components/ClarityScript";
 import PageTracker from "./components/PageTracker";
-import AiChatPopup from "./components/AiChatPopup";
 import FloatingMobileNav from "./components/FloatingMobileNav";
-import CommandPalette from "./components/CommandPalette";
 import ScrollToTop from "./components/ScrollToTop";
 import Toaster from "./components/ui/Toaster";
 import { CompareProvider } from "./context/CompareContext";
@@ -90,8 +86,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <link rel="alternate" type="application/rss+xml" title="EVPLSE Articles & News" href="https://www.evplse.com/feed" />
         <Script src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4463436920905079" strategy="lazyOnload" crossOrigin="anonymous" />
         <Script src="https://t.contentsquare.net/uxa/11fb40d69f477.js" strategy="lazyOnload" />
-        <Script src="https://news.google.com/swg/js/v1/swg-basic.js" strategy="afterInteractive" />
-        <Script id="swg-basic-init" strategy="afterInteractive">
+        <Script src="https://news.google.com/swg/js/v1/swg-basic.js" strategy="lazyOnload" />
+        <Script id="swg-basic-init" strategy="lazyOnload">
           {`
             (self.SWG_BASIC = self.SWG_BASIC || []).push( basicSubscriptions => {
               basicSubscriptions.init({
@@ -119,17 +115,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                 </main>
                 <Footer />
                 <CompareWidget />
-                <AssistPopup />
-                <BestOfferPopup />
                 <EnquiryModal />
                 <AddToHomescreen />
                 <FloatingMobileNav />
-                <CommandPalette />
+                <DeferredGlobalWidgets />
                 <ScrollToTop />
                 <Toaster />
-                <Suspense fallback={null}>
-                  <AiChatPopup />
-                </Suspense>
               </LocationProvider>
             </ShortlistProvider>
           </CompareProvider>

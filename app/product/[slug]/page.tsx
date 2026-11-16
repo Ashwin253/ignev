@@ -106,7 +106,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   // Fetch applicable offers
   const offers = await fetchProductOffers(item.brand || "", slug);
 
-  const launched    = isLaunched(item.launchdate);
+  const hasLaunchedVariant = item.batteryVariants?.some((variant) =>
+    !["Coming Soon", "Announced", "Concept", "Facelift"].includes(variant.usage_type || "") &&
+    isLaunched(variant.launch_date)
+  ) ?? false;
+  const launched    = isLaunched(item.launchdate) || hasLaunchedVariant;
   const launchLabel = formatLaunchDate(item.launchdate);
 
   const fallbackPhoto = getVehicleFallbackImage(item);

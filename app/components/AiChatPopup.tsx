@@ -9,8 +9,8 @@ import { useFeedback } from "../context/FeedbackContext";
 
 type Message = { role: "user" | "assistant"; content: string };
 
-export default function AiChatPopup({ vehicleContext }: { vehicleContext?: string }) {
-  const [open, setOpen] = useState(false);
+export default function AiChatPopup({ vehicleContext, openOnMount = false }: { vehicleContext?: string; openOnMount?: boolean }) {
+  const [open, setOpen] = useState(openOnMount);
   const [minimized, setMinimized] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");

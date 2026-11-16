@@ -32,9 +32,9 @@ function score(hay: string, q: string) {
   return 0;
 }
 
-export default function CommandPalette() {
+export default function CommandPalette({ openOnMount = false }: { openOnMount?: boolean }) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(openOnMount);
   const [q, setQ] = useState("");
   const [active, setActive] = useState(0);
   const [items, setItems] = useState<CatalogItem[] | null>(null);

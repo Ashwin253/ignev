@@ -74,7 +74,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en" className={`${display.variable} ${body.variable} h-full antialiased`} style={{ colorScheme: "only light" }}>
       <head>
-        <Script src="https://www.googletagmanager.com/gtm.js?id=GTM-5SRW277B" strategy="afterInteractive" />
+        <Script src="https://www.googletagmanager.com/gtm.js?id=GTM-5GGT76LP" strategy="afterInteractive" />
         <Script id="gtm-init" strategy="afterInteractive">
           {`
             window.dataLayer = window.dataLayer || [];
@@ -101,6 +101,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         </Script>
       </head>
       <body className="flex min-h-full flex-col bg-paper text-ink">
+        <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5GGT76LP" height="0" width="0" style={{display:"none",visibility:"hidden"}}></iframe></noscript>
         <ClarityScript />
         <PageTracker />
         <FeedbackProvider>

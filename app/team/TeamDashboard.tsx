@@ -390,7 +390,22 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
   const [editing, setEditing] = useState<string | null>(null);
   const [form, setForm] = useState<ListingForm>(emptyListing);
   const [variants, setVariants] = useState<(VariantForm & { id?: string })[]>([]);
+  const [recentEventIds, setRecentEventIds] = useState<string[]>([]);
   const [copyDetailedVariant, setCopyDetailedVariant] = useState(false);
+
+  const fetchRecentEventIds = async () => {
+    const { data, error } = await supabase
+      .from("events")
+      .select("event_id")
+      .eq("is_active", true)
+      .order("updated_at", { ascending: false })
+      .limit(3);
+    if (error) {
+      console.warn("Fetch recent event IDs error:", error.message);
+      return;
+    }
+    setRecentEventIds((data ?? []).map((event: { event_id: string }) => event.event_id));
+  };
 
   const updateVariantField = (idx: number, updatedFields: Partial<VariantForm>) => {
     setVariants((prev) => {
@@ -1093,6 +1108,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
     if (user) {
       fetchListings();
       fetchDbFuelPrices();
+      fetchRecentEventIds();
 
       const fetchPendingCount = async () => {
         const triggerLocalNotification = (title: string, body: string) => {
@@ -1800,7 +1816,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
     await refreshHomepageCache();
     // Auto rebuild search summary
     fetch("/api/build-summary").catch((e) => console.error("Error rebuilding summary:", e));
-    setSaving(false); setEditing(null); fetchListings();
+    setSaving(false); setEditing(null); fetchListings(); fetchRecentEventIds();
   };
 
   const handleDelete = async (id: string) => {
@@ -2144,6 +2160,8 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             listings={listings}
             currentUserEmail={user.email || ""}
             currentUserName={currentUserName}
+            recentEventIds={recentEventIds}
+            onEventIdSaved={fetchRecentEventIds}
           />
         )}
         {activeSection === "media" && <MediaPanel supabase={supabase} />}
@@ -2592,7 +2610,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             <>
             {/* Basic fields */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <Field label="Event ID" value={form.event_id} onChange={(v) => setForm({ ...form, event_id: v.trim().toUpperCase() })} placeholder="e.g. EICMA2026" />
+              <EventIdField value={form.event_id} onChange={(v) => setForm({ ...form, event_id: v })} recentEventIds={recentEventIds} />
               <Field
                 label="Model"
                 value={form.title}
@@ -3508,11 +3526,11 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                       value={v.variant_name}
                       onChange={(val) => updateVariantField(i, { variant_name: val })}
                     />
-                    <MiniInput
+                    <EventIdField
                       label="Event ID (optional)"
                       value={v.event_id || ""}
-                      placeholder="e.g. EICMA2026"
-                      onChange={(val) => updateVariantField(i, { event_id: val.toUpperCase().replace(/[^A-Z0-9_-]/g, "") })}
+                      recentEventIds={recentEventIds}
+                      onChange={(val) => updateVariantField(i, { event_id: val })}
                     />
                     <div className="flex flex-col gap-1">
                       <MiniInput
@@ -5518,6 +5536,26 @@ function Field({ label, value, onChange, placeholder }: { label: string; value: 
     r.start(); setMicActive(true);
   };
   return (<label className="block"><span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-800">{label}</span><div className="mt-1 flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2.5"><input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="flex-1 text-sm sm:text-base font-semibold text-slate-900 outline-none bg-transparent" /><button type="button" onClick={startMic} className={`shrink-0 h-6 w-6 rounded-full flex items-center justify-center transition-all ${micActive ? "bg-rose-500 text-white animate-pulse" : "bg-slate-100 text-ink-mute hover:bg-emerald-100 hover:text-emerald-600"}`}>{micActive ? <MicOff size={10} /> : <Mic size={10} />}</button></div></label>);
+}
+
+function EventIdField({ label = "Event ID", value, onChange, recentEventIds }: { label?: string; value: string; onChange: (value: string) => void; recentEventIds: string[] }) {
+  const listId = `recent-event-ids-${label.replace(/[^a-z0-9]/gi, "").toLowerCase()}`;
+  return (
+    <label className="block">
+      <span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-800">{label}</span>
+      <input
+        list={listId}
+        value={value}
+        onChange={(e) => onChange(e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, ""))}
+        placeholder="e.g. EICMA2026"
+        className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm sm:text-base font-semibold text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+      />
+      <datalist id={listId}>
+        {recentEventIds.map((eventId) => <option key={eventId} value={eventId} />)}
+      </datalist>
+      {recentEventIds.length > 0 && <p className="mt-1 text-[11px] text-ink-mute">Recent: {recentEventIds.join(", ")}</p>}
+    </label>
+  );
 }
 
 function MiniInput({ label, value, onChange, placeholder, onBlur }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; onBlur?: () => void }) {

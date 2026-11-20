@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Pencil, X, Save, Loader2, FileText, Upload, Image as ImageIcon, Sparkles, RefreshCw, ExternalLink, Car, User, AlertTriangle, CheckCircle } from "lucide-react";
+import { Plus, Trash2, Pencil, X, Save, Loader2, FileText, Upload, Image as ImageIcon, Sparkles, RefreshCw, ExternalLink, Car, User, AlertTriangle, CheckCircle, Search, ChevronRight } from "lucide-react";
 import MarkdownEditor from "./MarkdownEditor";
 import { extractArticleMeta } from "../lib/supabase";
+import { preprocessMarkdown } from "../lib/markdownUtils";
 export { extractArticleMeta };
 
 export type ProductContent = {
@@ -50,6 +51,8 @@ interface ContentPanelProps {
   listings?: Array<{ id: string; slug: string; title: string; brand: string }>;
   currentUserEmail?: string;
   currentUserName?: string;
+  recentEventIds?: string[];
+  onEventIdSaved?: () => void | Promise<void>;
 }
 
 export default function ContentPanel({
@@ -57,6 +60,8 @@ export default function ContentPanel({
   listings = [],
   currentUserEmail = "",
   currentUserName = "",
+  recentEventIds = [],
+  onEventIdSaved,
 }: ContentPanelProps) {
   const [contents, setContents] = useState<(ProductContent & { id: string })[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,6 +72,10 @@ export default function ContentPanel({
   const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
   const [isCustomSlugEdited, setIsCustomSlugEdited] = useState(false);
   const [thumbnailDim, setThumbnailDim] = useState<{ width: number; height: number } | null>(null);
+
+  // Vehicle picker modal
+  const [showVehiclePicker, setShowVehiclePicker] = useState(false);
+  const [vehicleSearch, setVehicleSearch] = useState("");
 
   useEffect(() => {
     fetchContents();
@@ -192,7 +201,8 @@ export default function ContentPanel({
       ""
     ).trim();
 
-    const cleanBodyText = extractArticleMeta(form.body).cleanBody;
+    const rawClean = extractArticleMeta(form.body).cleanBody;
+    const cleanBodyText = preprocessMarkdown(rawClean);
     const metaHeader = (authorNameVal || authorEmailVal)
       ? `<!--meta:${JSON.stringify({ author_name: authorNameVal, author_email: authorEmailVal })}-->\n\n`
       : "";
@@ -231,6 +241,7 @@ export default function ContentPanel({
     setSaving(false);
     setEditing(null);
     fetchContents();
+    if (payload.event_id) await onEventIdSaved?.();
   };
 
   const handleDelete = async (id: string) => {
@@ -260,6 +271,146 @@ export default function ContentPanel({
 
   return (
     <div className="space-y-6">
+
+      {/* ── Vehicle Picker Modal ── */}
+      {showVehiclePicker && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+          <div className="w-full max-w-2xl max-h-[80vh] rounded-2xl bg-white shadow-2xl border border-slate-200 flex flex-col animate-in fade-in zoom-in-95 duration-150">
+
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                  <Car size={18} />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-950">Pick Associated Vehicle</h3>
+                  <p className="text-xs text-slate-500">{listings.length} vehicles · click a row to select</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowVehiclePicker(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Search */}
+            <div className="px-4 py-3 border-b border-slate-100 shrink-0">
+              <div className="relative">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                <input
+                  autoFocus
+                  type="text"
+                  value={vehicleSearch}
+                  onChange={(e) => setVehicleSearch(e.target.value)}
+                  placeholder="Search brand, model or slug…"
+                  className="w-full pl-8 pr-4 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                />
+              </div>
+            </div>
+
+            {/* Table */}
+            <div className="overflow-y-auto flex-1">
+              <table className="w-full text-sm border-collapse">
+                <thead className="sticky top-0 bg-slate-50 border-b border-slate-200 z-10">
+                  <tr>
+                    <th className="text-left px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 w-32">Brand</th>
+                    <th className="text-left px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">Model</th>
+                    <th className="text-left px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 hidden sm:table-cell">Slug</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {listings
+                    .filter((l) => {
+                      const q = vehicleSearch.toLowerCase();
+                      if (!q) return true;
+                      return (
+                        l.brand?.toLowerCase().includes(q) ||
+                        l.title?.toLowerCase().includes(q) ||
+                        l.slug?.toLowerCase().includes(q)
+                      );
+                    })
+                    .sort((a, b) => {
+                      const ba = a.brand?.toLowerCase() || "";
+                      const bb = b.brand?.toLowerCase() || "";
+                      if (ba !== bb) return ba.localeCompare(bb);
+                      return (a.title?.toLowerCase() || "").localeCompare(b.title?.toLowerCase() || "");
+                    })
+                    .map((l) => {
+                      const isSelected = form.product_slug === l.slug;
+                      return (
+                        <tr
+                          key={l.id || l.slug}
+                          onClick={() => {
+                            setForm({ ...form, product_slug: l.slug });
+                            setShowVehiclePicker(false);
+                          }}
+                          className={`cursor-pointer transition-colors ${
+                            isSelected
+                              ? "bg-emerald-50 hover:bg-emerald-100"
+                              : "hover:bg-slate-50"
+                          }`}
+                        >
+                          <td className="px-4 py-2.5 font-semibold text-slate-700 whitespace-nowrap">
+                            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold ${isSelected ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"}`}>
+                              {l.brand}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2.5 text-slate-800 font-medium">
+                            <span className="flex items-center gap-1.5">
+                              {isSelected && <span className="text-emerald-500 text-xs">✓</span>}
+                              {l.title}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2.5 font-mono text-[11px] text-slate-400 hidden sm:table-cell">
+                            {l.slug}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  {listings.filter((l) => {
+                    const q = vehicleSearch.toLowerCase();
+                    if (!q) return false;
+                    return !(
+                      l.brand?.toLowerCase().includes(q) ||
+                      l.title?.toLowerCase().includes(q) ||
+                      l.slug?.toLowerCase().includes(q)
+                    );
+                  }).length === listings.length && (
+                    <tr>
+                      <td colSpan={3} className="px-4 py-8 text-center text-sm text-slate-400">
+                        No vehicles match "<span className="font-semibold">{vehicleSearch}</span>"
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Footer */}
+            <div className="px-5 py-3 border-t border-slate-100 flex items-center justify-between gap-3 shrink-0 bg-slate-50/60 rounded-b-2xl">
+              <span className="text-[11px] text-slate-400">
+                {vehicleSearch
+                  ? `${listings.filter((l) => {
+                      const q = vehicleSearch.toLowerCase();
+                      return l.brand?.toLowerCase().includes(q) || l.title?.toLowerCase().includes(q) || l.slug?.toLowerCase().includes(q);
+                    }).length} of ${listings.length} shown`
+                  : `${listings.length} vehicles`}
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowVehiclePicker(false)}
+                className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100 transition"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Top Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -305,11 +456,16 @@ export default function ContentPanel({
             <label className="block">
               <span className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Event ID</span>
               <input
+                list="content-recent-event-ids"
                 value={form.event_id || ""}
                 onChange={(e) => setForm({ ...form, event_id: e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, "") })}
                 placeholder="e.g. EICMA2026"
                 className="mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-medium outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
               />
+              <datalist id="content-recent-event-ids">
+                {recentEventIds.map((eventId) => <option key={eventId} value={eventId} />)}
+              </datalist>
+              {recentEventIds.length > 0 && <p className="mt-1 text-[11px] text-ink-mute">Recent: {recentEventIds.join(", ")}</p>}
               <p className="mt-1 text-[11px] text-ink-mute">Groups this story with related vehicle listings.</p>
             </label>
 
@@ -356,30 +512,51 @@ export default function ContentPanel({
 
             {/* Associated Vehicle (Replaced confusing Product Slug) */}
             <div className="block">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between mb-1.5">
                 <span className="text-xs font-extrabold text-slate-700 uppercase tracking-wider flex items-center gap-1">
                   <Car size={13} className="text-ink-mute" /> Associated Vehicle (Optional)
                 </span>
-                {matchedVehicle && (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600">
-                    ✓ {matchedVehicle.brand} {matchedVehicle.title}
-                  </span>
+                {form.product_slug && (
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, product_slug: "" })}
+                    className="text-[11px] font-bold text-rose-500 hover:text-rose-600 flex items-center gap-0.5 transition"
+                    title="Clear vehicle"
+                  >
+                    <X size={11} /> Clear
+                  </button>
                 )}
               </div>
-              <input
-                list="vehicle-slug-options"
-                value={form.product_slug}
-                onChange={(e) => setForm({ ...form, product_slug: e.target.value })}
-                placeholder="Select or enter vehicle slug (e.g. tata-nexon-ev)..."
-                className="mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-medium outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
-              />
-              <datalist id="vehicle-slug-options">
-                {listings.map((l) => (
-                  <option key={l.id || l.slug} value={l.slug}>
-                    {l.brand} {l.title} ({l.slug})
-                  </option>
-                ))}
-              </datalist>
+
+              {/* Selected vehicle badge or empty state */}
+              <button
+                type="button"
+                onClick={() => { setShowVehiclePicker(true); setVehicleSearch(""); }}
+                className={`w-full text-left rounded-xl border px-3.5 py-2.5 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-emerald-100 flex items-center justify-between gap-2 ${
+                  matchedVehicle
+                    ? "bg-emerald-50 border-emerald-300 text-emerald-900"
+                    : "bg-white border-slate-300 text-ink-mute hover:border-emerald-400"
+                }`}
+              >
+                {matchedVehicle ? (
+                  <span className="flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 shrink-0">
+                      <Car size={12} />
+                    </span>
+                    <span>
+                      <span className="font-bold text-emerald-900">{matchedVehicle.brand}</span>
+                      {" "}<span className="text-emerald-800">{matchedVehicle.title}</span>
+                      <span className="ml-2 text-[11px] font-mono text-emerald-600 bg-emerald-100 rounded px-1.5 py-0.5">{matchedVehicle.slug}</span>
+                    </span>
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2 text-ink-mute">
+                    <Car size={14} className="shrink-0" />
+                    <span>Click to pick a vehicle…</span>
+                  </span>
+                )}
+                <ChevronRight size={15} className="shrink-0 text-slate-400" />
+              </button>
               <p className="mt-1 text-[11px] text-ink-mute">
                 Links this content to that car/bike page. Leave empty if this is a general EV guide.
               </p>
@@ -422,7 +599,7 @@ export default function ContentPanel({
                   )}
                 </div>
 
-                <label className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-white hover:bg-emerald-600 transition cursor-pointer shrink-0 shadow-sm">
+                <label className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 transition cursor-pointer shrink-0 shadow-sm">
                   {uploadingThumbnail ? (
                     <>
                       <Loader2 size={14} className="animate-spin" /> Uploading...

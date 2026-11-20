@@ -271,3 +271,20 @@ input:-webkit-autofill:focus {
 .bg-ink { background-color: var(--color-ink, #0e1b14); }
 .text-ink { color: var(--color-ink, #0e1b14); }
 
+/* Editorial image-and-text blocks inserted from the team Markdown editor. */
+.magazine-block {
+  display: grid;
+  align-items: center;
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+.magazine-photo-text, .magazine-text-photo { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.magazine-text-photo-text { grid-template-columns: minmax(0, 1fr) minmax(180px, 0.85fr) minmax(0, 1fr); }
+.magazine-image { width: 100%; min-height: 220px; max-height: 420px; object-fit: cover; border-radius: 1rem; }
+.magazine-copy { font-size: 1rem; line-height: 1.8; color: var(--color-ink-soft); }
+.magazine-copy p { margin: 0; }
+@media (max-width: 700px) {
+  .magazine-photo-text, .magazine-text-photo, .magazine-text-photo-text { grid-template-columns: 1fr; }
+  .magazine-image { min-height: 180px; }
+}
+

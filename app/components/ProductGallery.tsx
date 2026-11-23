@@ -253,6 +253,29 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
   const actualVideoUrl = isVideo ? currentMedia.replace("video::", "") : "";
   const isYoutubeOrVimeo = isVideo && (actualVideoUrl.includes("youtube.com") || actualVideoUrl.includes("youtu.be") || actualVideoUrl.includes("vimeo.com"));
   const isDirectVideo = isVideo && !isYoutubeOrVimeo;
+  const currentVariantFeaturedPhoto = item?.featured_photos?.find((photo) =>
+    photo.url === currentMedia &&
+    ((activeVariant?.id && photo.variantId === activeVariant.id) ||
+      (!photo.variantId && activeVariant?.modelName && photo.variantName === activeVariant.modelName))
+  );
+  const defaultFeaturedPhoto = item?.featured_photos?.find((photo) =>
+    photo.url === currentMedia && !photo.variantId && !photo.variantName
+  );
+  const currentVariantGalleryPhoto = item?.gallery_raw?.find((photo) =>
+    photo.url === currentMedia &&
+    ((activeVariant?.id && photo.variantId === activeVariant.id) ||
+      (!photo.variantId && activeVariant?.modelName && photo.variantName === activeVariant.modelName))
+  );
+  const defaultGalleryPhoto = item?.gallery_raw?.find((photo) =>
+    photo.url === currentMedia && !photo.variantId && !photo.variantName
+  );
+  const currentGalleryDescription = !isVideo
+    ? currentVariantFeaturedPhoto?.description?.trim() ||
+      currentVariantGalleryPhoto?.description?.trim() ||
+      defaultFeaturedPhoto?.description?.trim() ||
+      defaultGalleryPhoto?.description?.trim() ||
+      ""
+    : "";
 
   return (
     <div className="flex flex-col gap-4 w-full max-w-full overflow-hidden">
@@ -421,6 +444,13 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
             </motion.div>
           )}
         </AnimatePresence>
+
+        {currentGalleryDescription && (
+          <div className="pointer-events-none absolute bottom-5 left-5 z-20 max-w-[75%] rounded-2xl rounded-bl-sm bg-black/75 px-4 py-2.5 text-sm font-medium leading-snug text-white shadow-lg backdrop-blur-sm">
+            {currentGalleryDescription}
+            <span aria-hidden="true" className="absolute -bottom-1 left-4 h-3 w-3 rotate-45 bg-black/75" />
+          </div>
+        )}
 
         {/* Prev / Next arrows */}
         {resolvedPhotos.length > 1 && (

@@ -215,8 +215,8 @@ export type EvListing = {
   discontinued_date?: string | null;
   featured?: boolean;
   video_links?: Array<{ url: string; title?: string; variantId?: string | null; variantName?: string | null }>;
-  featured_photos?: Array<{ url: string; variantId?: string | null; variantName?: string | null }>;
-  gallery_raw?: Array<{ url: string; type?: string; colorCode?: string; variantId?: string | null; variantName?: string | null }>;
+  featured_photos?: Array<{ url: string; variantId?: string | null; variantName?: string | null; description?: string | null }>;
+  gallery_raw?: Array<{ url: string; type?: string; colorCode?: string; variantId?: string | null; variantName?: string | null; description?: string | null }>;
   // OpenFields top-level fields (JSON strings parsed client-side)
   batteryVariants: BatteryVariant[];
   // batteryVariants: BatteryVariant[]; // Standard

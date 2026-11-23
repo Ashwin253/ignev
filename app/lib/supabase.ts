@@ -32,6 +32,8 @@ export async function fetchHeroBanners() {
       .from("hero_banners")
       .select("*")
       .eq("is_active", true)
+      .or("label.is.null,label.neq.offer_popup")
+      .order("order_index", { ascending: true })
       .order("created_at", { ascending: false });
     if (error) {
       console.warn("fetchHeroBanners error:", error.message);
@@ -375,7 +377,7 @@ export type EvListingRow = {
   launchdate: string | null;
   photo: string;
   images_360?: string[] | string | null;
-  gallery_images: Array<string | { url: string; type?: string; colorCode?: string }>;
+  gallery_images: Array<string | { url: string; type?: string; colorCode?: string; variantId?: string | null; variantName?: string | null; description?: string | null }>;
   colors: string[];
   types: string[];
   pros: string[];
@@ -385,7 +387,7 @@ export type EvListingRow = {
   discontinued?: boolean;
   discontinued_date?: string | null;
   video_links?: Array<{ url: string; title?: string; variantId?: string | null; variantName?: string | null }>;
-  featured_photos?: Array<{ url: string; variantId?: string | null; variantName?: string | null }>;
+  featured_photos?: Array<{ url: string; variantId?: string | null; variantName?: string | null; description?: string | null }>;
   city_pricing?: Array<{
     id?: string;
     location_name: string;

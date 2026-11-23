@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { fetchHeroBanners } from "../../lib/supabase";
 import { toInternalHref } from "../../lib/links";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {

@@ -38,7 +38,7 @@ export default function HomeDataLoader({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch("/api/homepage-hero", { signal: controller.signal })
+    fetch("/api/homepage-hero", { signal: controller.signal, cache: "no-store" })
       .then((response) => {
         if (!response.ok) throw new Error("Homepage banners request failed");
         return response.json();

@@ -3260,7 +3260,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                     <p className="text-xs font-bold uppercase tracking-wider text-slate-600">Gallery</p>
                     <button
                       type="button"
-                      onClick={() => setForm({ ...form, gallery_images: [...form.gallery_images, { url: "", type: "", colorCode: "", variantId: null }] })}
+                      onClick={() => setForm({ ...form, gallery_images: [...form.gallery_images, { url: "", type: "", colorCode: "", variantId: null, variantName: null, description: "" }] })}
                       className="text-xs font-bold text-emerald-600 hover:text-emerald-700 cursor-pointer"
                     >
                       + Add Image
@@ -3275,6 +3275,8 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                       const colorCode = isObj ? (item as any).colorCode || "" : "";
                       const variantId = isObj ? (item as any).variantId || "" : "";
                       const variantName = isObj ? (item as any).variantName || "" : "";
+                      const description = isObj && typeof (item as any).description === "string" ? (item as any).description : "";
+                      const galleryItem = isObj ? item : { url };
 
                       return (
                         <div key={idx} className="flex flex-col gap-2 rounded-lg border border-slate-200 bg-white p-3">
@@ -3294,7 +3296,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                                   if (data) {
                                     const { data: u } = supabase.storage.from("evphotos").getPublicUrl(data.path);
                                     const arr = [...form.gallery_images];
-                                    arr[idx] = { url: u.publicUrl, type: imgType, colorCode, variantId, variantName };
+                                    arr[idx] = { ...galleryItem, url: u.publicUrl, type: imgType, colorCode, variantId, variantName };
                                     setForm({ ...form, gallery_images: arr });
                                   }
                                 }}
@@ -3306,7 +3308,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                                 value={url}
                                 onChange={(e) => {
                                   const arr = [...form.gallery_images];
-                                  arr[idx] = { url: e.target.value, type: imgType, colorCode, variantId, variantName };
+                                  arr[idx] = { ...galleryItem, url: e.target.value, type: imgType, colorCode, variantId, variantName };
                                   setForm({ ...form, gallery_images: arr });
                                 }}
                                 className="flex-1 min-w-0 rounded border border-slate-200 px-2.5 py-1 text-xs outline-none"
@@ -3328,7 +3330,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                                 value={imgType}
                                 onChange={(e) => {
                                   const arr = [...form.gallery_images];
-                                  arr[idx] = { url, type: e.target.value, colorCode, variantId, variantName };
+                                  arr[idx] = { ...galleryItem, url, type: e.target.value, colorCode, variantId, variantName };
                                   setForm({ ...form, gallery_images: arr });
                                 }}
                                 className="rounded border border-slate-200 px-2 py-1 text-xs outline-none bg-slate-50"
@@ -3347,7 +3349,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                                   value={colorCode}
                                   onChange={(e) => {
                                     const arr = [...form.gallery_images];
-                                    arr[idx] = { url, type: imgType, colorCode: e.target.value, variantId, variantName };
+                                    arr[idx] = { ...galleryItem, url, type: imgType, colorCode: e.target.value, variantId, variantName };
                                     setForm({ ...form, gallery_images: arr });
                                   }}
                                   className="rounded border border-slate-200 px-2 py-1 text-xs outline-none bg-slate-50"
@@ -3369,7 +3371,8 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                                   const selectedVal = e.target.value;
                                   const selectedVar = variants.find(v => v.id === selectedVal || v.variant_name === selectedVal);
                                   const arr = [...form.gallery_images];
-                                  arr[idx] = { 
+                                  arr[idx] = {
+                                    ...galleryItem,
                                     url, 
                                     type: imgType, 
                                     colorCode, 
@@ -3387,6 +3390,21 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                               </select>
                             </div>
                           </div>
+
+                          <label className="block border-t border-slate-100 pt-2">
+                            <span className="text-[10px] font-bold text-ink-mute uppercase">Description:</span>
+                            <textarea
+                              value={description}
+                              onChange={(e) => {
+                                const arr = [...form.gallery_images];
+                                arr[idx] = { ...galleryItem, description: e.target.value };
+                                setForm({ ...form, gallery_images: arr });
+                              }}
+                              rows={2}
+                              placeholder="Shown as a caption on the product image"
+                              className="mt-1 w-full resize-y rounded border border-slate-200 px-2.5 py-1.5 text-xs outline-none focus:border-emerald-500"
+                            />
+                          </label>
                           
                           {/* Image Toolkit (4 Actions) */}
                           {url && (
@@ -3463,7 +3481,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                           const { data } = await supabase.storage.from("evphotos").upload(path, file, { upsert: true });
                           if (data) {
                             const { data: u } = supabase.storage.from("evphotos").getPublicUrl(data.path);
-                            urls.push({ url: u.publicUrl, type: "", colorCode: "", variantId: null });
+                            urls.push({ url: u.publicUrl, type: "", colorCode: "", variantId: null, variantName: null, description: "" });
                           }
                         }
                         setForm({ ...form, gallery_images: [...form.gallery_images, ...urls] });

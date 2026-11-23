@@ -50,6 +50,8 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
   const [loading, setLoading] = useState(true);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [savingDescriptionId, setSavingDescriptionId] = useState<string | null>(null);
+  const [descriptionDrafts, setDescriptionDrafts] = useState<Record<string, string>>({});
   const [bgType, setBgType] = useState<"checkerboard" | "white" | "dark">("checkerboard");
 
   // Client-side AI background removal states
@@ -992,6 +994,56 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
     setDeletingId(null);
   };
 
+  const handleSaveDescription = async (item: ImageItem) => {
+    const listing = listings.find((entry) => entry.id === item.listingId);
+    if (!listing) return;
+    if (item.type !== "gallery" && item.type !== "featured") return;
+
+    setSavingDescriptionId(item.id);
+    try {
+      const sourceImages = item.type === "gallery" ? listing.gallery_images : listing.featured_photos;
+      const rawImages = Array.isArray(sourceImages)
+        ? [...sourceImages]
+        : JSON.parse(typeof sourceImages === "string" ? sourceImages : "[]");
+      if (!Array.isArray(rawImages) || item.index < 0 || item.index >= rawImages.length || rawImages[item.index] == null) {
+        throw new Error("This image is no longer available. Refresh the media manager and try again.");
+      }
+
+      const imageEntry = rawImages[item.index];
+      const updatedEntry = typeof imageEntry === "string" ? { url: imageEntry } : { ...imageEntry };
+      const currentDescription = typeof item.rawItem === "object" && item.rawItem !== null && typeof item.rawItem.description === "string"
+        ? item.rawItem.description
+        : "";
+      const description = (descriptionDrafts[item.id] ?? currentDescription).trim();
+
+      if (description) {
+        updatedEntry.description = description;
+      } else {
+        delete updatedEntry.description;
+      }
+      rawImages[item.index] = updatedEntry;
+      const updatePayload = item.type === "gallery"
+        ? { gallery_images: rawImages }
+        : { featured_photos: rawImages };
+
+      const { error } = await supabase
+        .from("evlistings")
+        .update(updatePayload)
+        .eq("id", item.listingId);
+      if (error) {
+        alert("Failed to save image description: " + error.message);
+        return;
+      }
+
+      setDescriptionDrafts((drafts) => ({ ...drafts, [item.id]: description }));
+      await fetchListings();
+    } catch (error) {
+      alert("Failed to save image description: " + (error instanceof Error ? error.message : String(error)));
+    } finally {
+      setSavingDescriptionId(null);
+    }
+  };
+
   return (
     <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
@@ -1142,6 +1194,9 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
               const sig = getFileSignature(img);
               const ext = getFileExtension(img.url);
               const filename = `${sig}.${ext}`;
+              const existingDescription = typeof img.rawItem === "object" && img.rawItem !== null && typeof img.rawItem.description === "string"
+                ? img.rawItem.description
+                : "";
 
               return (
                 <div 
@@ -1220,6 +1275,30 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
                         {sig}
                       </p>
                     </div>
+
+                    {(img.type === "gallery" || img.type === "featured") && (
+                      <div className="mt-4 border-t border-slate-100 pt-3">
+                        <label className="block">
+                          <span className="text-[10px] font-bold text-slate-600">Product image description</span>
+                          <textarea
+                            value={descriptionDrafts[img.id] ?? existingDescription}
+                            onChange={(event) => setDescriptionDrafts((drafts) => ({ ...drafts, [img.id]: event.target.value }))}
+                            rows={2}
+                            placeholder="Optional caption shown on the product image"
+                            className="mt-1 w-full resize-y rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-xs outline-none focus:border-emerald-500"
+                          />
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => handleSaveDescription(img)}
+                          disabled={savingDescriptionId !== null}
+                          className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-[10px] font-bold text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
+                        >
+                          {savingDescriptionId === img.id && <Loader2 size={12} className="animate-spin" />}
+                          Save description
+                        </button>
+                      </div>
+                    )}
 
                     {/* Actions Panel (2x2 Grid) */}
                     <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-slate-100">

@@ -209,7 +209,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         <ProductNav title={`${item.brand} ${item.title}`.trim()} sections={sections}>
           {/* ── Variants and EMI sections ── */}
           {(item.batteryVariants?.length || item.prices?.length) ? (
-            <div className="grid items-start gap-8 md:gap-10 md:pt-16 lg:grid-cols-2">
+            <div className="grid items-start gap-8 md:gap-10 md:pt-16">
               {item.batteryVariants?.length ? (
                 <ProductSectionPanel id="variants">
                   <div className="pt-8 md:pt-0">

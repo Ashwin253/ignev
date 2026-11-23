@@ -22,6 +22,9 @@ const TABS = [
   { key: "commercial", label: "Commercial", icon: Truck },
 ] as const;
 
+/** Left/right padding that lines the rail up with the 1240px page container. */
+const RAIL_PAD = "max(1rem, calc((100% - 1240px) / 2 + 2rem))";
+
 export function Showcase({ byCategory }: { byCategory: Record<string, CatalogItem[]> }) {
   const firstWithItems = TABS.find((t) => byCategory[t.key]?.length)?.key ?? "cars";
   const [tab, setTab] = useState<string>(firstWithItems);
@@ -66,10 +69,16 @@ export function Showcase({ byCategory }: { byCategory: Record<string, CatalogIte
         </div>
 
         {items.length ? (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {items.map((it) => (
-              <VehicleCard key={itemSlug(it)} item={it} />
-            ))}
+          <div className="-mx-4 sm:mx-0">
+            <div className="no-scrollbar snap-x snap-mandatory overflow-x-auto sm:overflow-visible" style={{ scrollPaddingLeft: RAIL_PAD }}>
+              <div className="flex w-max gap-5 px-4 pb-6 sm:grid sm:w-full sm:grid-cols-2 sm:px-0 sm:pb-0 lg:grid-cols-4">
+                {items.map((it) => (
+                  <div key={itemSlug(it)} className="w-[280px] shrink-0 snap-start sm:w-auto">
+                    <VehicleCard item={it} className="h-full" />
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         ) : (
           <div className="rounded-3xl border border-dashed border-line-strong bg-white p-12 text-center font-medium text-ink-soft">No vehicles in this category yet.</div>
@@ -88,9 +97,6 @@ export function Showcase({ byCategory }: { byCategory: Record<string, CatalogIte
 /* ------------------------------------------------------------------ */
 /* Horizontal rail (new launches / upcoming)                           */
 /* ------------------------------------------------------------------ */
-/** Left/right padding that lines the rail up with the 1240px page container. */
-const RAIL_PAD = "max(1rem, calc((100% - 1240px) / 2 + 2rem))";
-
 export function Rail({
   eyebrow,
   title,
@@ -326,15 +332,15 @@ export function SavingsTeaser() {
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-3 gap-3 text-center">
+            <div className="mt-6 grid grid-cols-1 gap-2">
               {[
                 { l: "Saved / month", v: monthly },
                 { l: "Saved / year", v: yearly },
                 { l: "Saved in 5 yrs", v: fiveYear },
               ].map((s) => (
-                <div key={s.l} className="rounded-2xl bg-white/15 border border-white/20 px-2 py-3.5">
-                  <p className="font-display text-lg font-extrabold text-white sm:text-2xl">₹{inr(s.v)}</p>
-                  <p className="mt-1 text-[11px] font-extrabold text-volt">{s.l}</p>
+                <div key={s.l} className="flex items-center justify-between gap-4 rounded-2xl border border-white/20 bg-white/15 px-4 py-3.5">
+                  <p className="text-[11px] font-extrabold text-volt">{s.l}</p>
+                  <p className="whitespace-nowrap font-display text-lg font-extrabold text-white sm:text-2xl">₹{inr(s.v)}</p>
                 </div>
               ))}
             </div>

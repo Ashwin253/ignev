@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { animate, useInView } from "framer-motion";
-import { BatteryCharging, Check, ChevronDown, Gauge, Plus, Ruler, Send, Timer, Zap, Wind } from "lucide-react";
+import { BatteryCharging, Check, ChevronDown, Gauge, Plus, Ruler, Send, Star, Timer, Zap, Wind } from "lucide-react";
 import type { EvListing } from "../lib/wordpress";
 import { getVehicleCardSpecs } from "../lib/listing-specs";
 import { emiPerMonth, inr } from "../lib/format";
@@ -30,7 +30,22 @@ const chargeText = (mins: number) => {
 /* ---------------------------------------------------------------- */
 /* Sticky section navigation with scroll-spy                          */
 /* ---------------------------------------------------------------- */
-export function ProductNav({ sections, title }: { sections: Array<{ id: string; label: string }>; title: string }) {
+type ProductSectionsContextValue = {
+  active: string;
+  setActive: (id: string) => void;
+};
+
+const ProductSectionsContext = createContext<ProductSectionsContextValue | null>(null);
+
+export function ProductNav({
+  sections,
+  title,
+  children,
+}: {
+  sections: Array<{ id: string; label: string }>;
+  title: string;
+  children: ReactNode;
+}) {
   const [active, setActive] = useState(sections[0]?.id ?? "");
   const barRef = useRef<HTMLDivElement>(null);
 
@@ -61,31 +76,68 @@ export function ProductNav({ sections, title }: { sections: Array<{ id: string; 
     window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 130, behavior: "smooth" });
   };
 
+  const selectSection = (id: string) => {
+    setActive(id);
+    requestAnimationFrame(() => go(id));
+  };
+
   return (
-    <div className="sticky top-[var(--header-h)] z-30 -mx-4 mt-10 border-y border-line bg-white/90 backdrop-blur-xl sm:-mx-6 lg:-mx-8">
-      <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
-        <p className="hidden shrink-0 truncate text-sm font-extrabold text-ink xl:block xl:max-w-[220px]">{title}</p>
-        <div ref={barRef} className="no-scrollbar flex flex-1 gap-1 overflow-x-auto py-2.5" role="tablist" aria-label="Product sections">
-          {sections.map((s) => (
-            <button
-              key={s.id}
-              data-id={s.id}
-              onClick={() => go(s.id)}
-              role="tab"
-              aria-selected={active === s.id}
-              className={cx(
-                "shrink-0 rounded-full px-4 py-2 text-sm font-bold transition-all",
-                active === s.id ? "bg-brand text-white shadow-glow" : "text-ink-soft hover:bg-brand-soft hover:text-brand-deep",
-              )}
+    <ProductSectionsContext.Provider value={{ active, setActive }}>
+      <div className="sticky top-[var(--header-h)] z-30 -mx-4 mt-10 border-y border-line bg-white/90 backdrop-blur-xl sm:-mx-6 lg:-mx-8">
+        <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
+          <p className="hidden shrink-0 truncate text-sm font-extrabold text-ink xl:block xl:max-w-[220px]">{title}</p>
+          <div className="relative min-w-0 flex-1 md:hidden">
+            <select
+              value={active}
+              onChange={(event) => selectSection(event.target.value)}
+              aria-label="Product section"
+              aria-controls={`${active}-panel`}
+              className="w-full appearance-none rounded-full border border-brand bg-brand-soft/40 py-3 pl-4 pr-10 text-base font-extrabold text-brand-deep shadow-sm focus:outline-none focus:ring-2 focus:ring-brand/40"
             >
-              {s.label}
-            </button>
-          ))}
+              {sections.map((section) => (
+                <option key={section.id} value={section.id}>{section.label}</option>
+              ))}
+            </select>
+            <ChevronDown size={18} aria-hidden="true" className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-brand" />
+          </div>
+          <div ref={barRef} className="no-scrollbar hidden flex-1 gap-1 overflow-x-auto py-2.5 md:flex" role="tablist" aria-label="Product sections">
+            {sections.map((s) => (
+              <button
+                key={s.id}
+                id={`${s.id}-tab`}
+                data-id={s.id}
+                onClick={() => selectSection(s.id)}
+                role="tab"
+                aria-controls={`${s.id}-panel`}
+                aria-selected={active === s.id}
+                className={cx(
+                  "shrink-0 rounded-full px-4 py-2.5 text-sm font-extrabold transition-all",
+                  active === s.id ? "bg-brand text-white shadow-glow" : "text-ink-soft hover:bg-brand-soft hover:text-brand-deep",
+                )}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
         </div>
-        <button onClick={() => triggerEnquiryModal(title)} className={btn("ink", "sm", "hidden shrink-0 md:inline-flex")}>
-          Get best offer
-        </button>
       </div>
+      {children}
+    </ProductSectionsContext.Provider>
+  );
+}
+
+export function ProductSectionPanel({ id, children }: { id: string; children: ReactNode }) {
+  const context = useContext(ProductSectionsContext);
+  if (!context) throw new Error("Product section panels must be inside ProductNav");
+
+  return (
+    <div
+      id={`${id}-panel`}
+      role="tabpanel"
+      aria-labelledby={`${id}-tab`}
+      className={context.active === id ? "block" : "hidden md:block"}
+    >
+      {children}
     </div>
   );
 }
@@ -108,7 +160,13 @@ function CountUp({ value, decimals = 0 }: { value: number; decimals?: number }) 
 /* ---------------------------------------------------------------- */
 /* Highlights ribbon — reacts to the selected variant                 */
 /* ---------------------------------------------------------------- */
-export function ProductHighlights({ item }: { item: EvListing }) {
+export function ProductHighlights({
+  item,
+  mediaRating,
+}: {
+  item: EvListing;
+  mediaRating: { ratingValue: number; ratingCount: number } | null;
+}) {
   const { activeVariants, selectedIndex, selectedVariantName } = useProductSelection();
   const v = activeVariants[selectedIndex] ?? item.batteryVariants?.[0];
 
@@ -130,7 +188,7 @@ export function ProductHighlights({ item }: { item: EvListing }) {
     return out;
   }, [item, v, selectedVariantName]);
 
-  if (!stats.length && !item.pros?.length) return null;
+  if (!stats.length && !item.pros?.length && !mediaRating) return null;
 
   return (
     <section id="highlights" className="scroll-mt-32 pt-12">
@@ -139,7 +197,7 @@ export function ProductHighlights({ item }: { item: EvListing }) {
         Key highlights{selectedVariantName && <span className="text-ink-mute"> · {selectedVariantName}</span>}
       </h2>
 
-      {stats.length > 0 && (
+      {(stats.length > 0 || mediaRating) && (
         <div className="mt-7 grid grid-cols-2 gap-px overflow-hidden rounded-[2rem] bg-white/15 bg-gradient-to-br from-brand-deep via-[#0b5b3a] to-brand p-px shadow-lift md:grid-cols-3 xl:grid-cols-6">
           {stats.map((s) => (
             <div key={s.label} className="bg-gradient-to-br from-brand-deep to-[#0c5a3b] p-5 sm:p-6">
@@ -151,6 +209,17 @@ export function ProductHighlights({ item }: { item: EvListing }) {
               <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.14em] text-emerald-100/70">{s.label}</p>
             </div>
           ))}
+          {mediaRating && (
+            <div className="bg-gradient-to-br from-brand-deep to-[#0c5a3b] p-5 sm:p-6">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 text-volt"><Star size={20} fill="currentColor" /></span>
+              <p className="mt-5 font-display text-3xl font-extrabold leading-none text-white sm:text-[2.2rem]">
+                {mediaRating.ratingValue.toFixed(1)}
+                <span className="ml-1 text-sm font-bold text-emerald-200">/ 5</span>
+              </p>
+              <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.14em] text-emerald-100/70">Media rating</p>
+              <p className="mt-1 text-[11px] font-medium text-emerald-100/70">{mediaRating.ratingCount} ratings</p>
+            </div>
+          )}
         </div>
       )}
 
@@ -176,63 +245,91 @@ export function ProductHighlights({ item }: { item: EvListing }) {
 export function ProductVariants({ item, title }: { item: EvListing; title: string }) {
   const { activeVariants, selectedIndex, setSelectedIndex, showBaas } = useProductSelection();
   if (!activeVariants.length) return null;
+  const variants = activeVariants.map((v, i) => ({
+    v,
+    name: v.modelName || (v.capacity ? `${v.capacity} kWh` : `Variant ${i + 1}`),
+    selected: i === selectedIndex,
+    price: showBaas ? (v.baseprice ? `₹${toLakh(v.baseprice).toFixed(2)} L` : v.price_baas ? `₹${v.price_baas}/km` : "—") : v.price ? `₹${toLakh(v.price).toFixed(2)} L` : "TBA",
+  }));
 
   return (
     <div id="variants" className="scroll-mt-32">
       <Eyebrow>Choose your variant</Eyebrow>
       <h2 className="mt-3 text-3xl font-extrabold text-ink sm:text-4xl">Variants &amp; prices</h2>
-      <div className="mt-6 overflow-hidden rounded-3xl border border-line bg-white shadow-card">
+      <div className="mt-6 space-y-3 md:hidden">
+        {variants.map(({ v, name, selected, price }, i) => (
+          <article key={i} className={cx("overflow-hidden rounded-2xl border transition", selected ? "border-brand bg-brand-soft/30" : "border-line bg-white")}>
+            <button
+              type="button"
+              onClick={() => setSelectedIndex(i)}
+              aria-pressed={selected}
+              className="flex w-full items-center gap-3 p-4 text-left"
+            >
+              <span className={cx("grid h-5 w-5 shrink-0 place-items-center rounded-full border-2", selected ? "border-brand bg-brand text-white" : "border-line-strong")}>
+                {selected && <Check size={11} strokeWidth={3.5} />}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-extrabold text-ink">{name}</span>
+                {v.discontinued && <span className="mt-0.5 block text-[11px] font-bold text-coral">Discontinued</span>}
+              </span>
+              <span className="shrink-0 text-right">
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-ink-mute">Price</span>
+                <span className="block text-sm font-extrabold text-ink">{price}</span>
+              </span>
+            </button>
+            <div className="grid grid-cols-2 gap-3 border-t border-line px-4 py-4">
+              <Cell label="Battery" value={v.capacity ? `${v.capacity} kWh` : "—"} />
+              <Cell label="Range" value={v.range ? `${v.range} km` : "—"} />
+              <Cell label="Charging" value={v.charge ? chargeText(num(v.charge)) : "—"} />
+            </div>
+            <div className="px-4 pb-4">
+              <button
+                onClick={() => triggerEnquiryModal(`${title} – ${name}`)}
+                className={btn(selected ? "primary" : "outline", "sm", "w-full")}
+              >
+                Get quote <Send size={13} />
+              </button>
+            </div>
+          </article>
+        ))}
+      </div>
+      <div className="mt-6 hidden overflow-hidden rounded-3xl border border-line bg-white shadow-card md:block">
         <div className="overflow-x-auto">
-          <div className="min-w-[500px]">
-            <div className="hidden grid-cols-[1.6fr_1fr_1fr_1fr_1.2fr_auto] gap-4 border-b border-line bg-paper px-6 py-3 text-[11px] font-extrabold uppercase tracking-wider text-ink-mute md:grid">
+          <div className="min-w-[700px]">
+            <div className="hidden grid-cols-[1.6fr_1fr_1fr_1fr_1.2fr] gap-4 border-b border-line bg-paper px-6 py-3 text-[11px] font-extrabold uppercase tracking-wider text-ink-mute md:grid">
               <span>Variant</span>
               <span>Battery</span>
               <span>Range</span>
               <span>Charging</span>
               <span>{showBaas ? "Starting rate" : "Starting at"}</span>
-              <span className="w-28" />
             </div>
-            {activeVariants.map((v, i) => {
-              const name = v.modelName || (v.capacity ? `${v.capacity} kWh` : `Variant ${i + 1}`);
-              const selected = i === selectedIndex;
-              const price = showBaas ? (v.baseprice ? `₹${toLakh(v.baseprice).toFixed(2)} L` : v.price_baas ? `₹${v.price_baas}/km` : "—") : v.price ? `₹${toLakh(v.price).toFixed(2)} L` : "TBA";
-              return (
-                <div
-                  key={i}
-                  onClick={() => setSelectedIndex(i)}
-                  className={cx(
-                    "grid cursor-pointer gap-3 border-b border-line px-5 py-4 transition last:border-0 md:grid-cols-[1.6fr_1fr_1fr_1fr_1.2fr_auto] md:items-center md:gap-4 md:px-6",
-                    selected ? "bg-brand-soft/60" : "hover:bg-paper",
-                  )}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className={cx("grid h-5 w-5 shrink-0 place-items-center rounded-full border-2", selected ? "border-brand bg-brand text-white" : "border-line-strong")}>
-                      {selected && <Check size={11} strokeWidth={3.5} />}
-                    </span>
-                    <div>
-                      <p className="font-extrabold text-ink">{name}</p>
-                      {v.discontinued && <p className="text-[11px] font-bold text-coral">Discontinued</p>}
-                    </div>
+            {variants.map(({ v, name, selected, price }, i) => (
+              <div
+                key={i}
+                onClick={() => setSelectedIndex(i)}
+                className={cx(
+                  "grid cursor-pointer gap-3 border-b border-line px-5 py-4 transition last:border-0 md:grid-cols-[1.6fr_1fr_1fr_1fr_1.2fr] md:items-center md:gap-4 md:px-6",
+                  selected ? "bg-brand-soft/60" : "hover:bg-paper",
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <span className={cx("grid h-5 w-5 shrink-0 place-items-center rounded-full border-2", selected ? "border-brand bg-brand text-white" : "border-line-strong")}>
+                    {selected && <Check size={11} strokeWidth={3.5} />}
+                  </span>
+                  <div>
+                    <p className="font-extrabold text-ink">{name}</p>
+                    {v.discontinued && <p className="text-[11px] font-bold text-coral">Discontinued</p>}
                   </div>
-                  <Cell label="Battery" value={v.capacity ? `${v.capacity} kWh` : "—"} />
-                  <Cell label="Range" value={v.range ? `${v.range} km` : "—"} />
-                  <Cell label="Charging" value={v.charge ? chargeText(num(v.charge)) : "—"} />
-                  <p className="text-lg font-extrabold text-ink md:text-base">
-                    <span className="mr-2 text-[11px] font-bold uppercase tracking-wider text-ink-mute md:hidden">Price</span>
-                    {price}
-                  </p>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      triggerEnquiryModal(`${title} – ${name}`);
-                    }}
-                    className={btn(selected ? "primary" : "outline", "sm", "w-full md:w-28")}
-                  >
-                    Get quote <Send size={13} />
-                  </button>
                 </div>
-              );
-            })}
+                <Cell label="Battery" value={v.capacity ? `${v.capacity} kWh` : "—"} />
+                <Cell label="Range" value={v.range ? `${v.range} km` : "—"} />
+                <Cell label="Charging" value={v.charge ? chargeText(num(v.charge)) : "—"} />
+                <p className="text-lg font-extrabold text-ink md:text-base">
+                  <span className="mr-2 text-[11px] font-bold uppercase tracking-wider text-ink-mute md:hidden">Price</span>
+                  {price}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -271,21 +368,21 @@ export function ProductEmi({ title }: { title: string }) {
     <div id="emi" className="scroll-mt-32">
       <Eyebrow>Finance</Eyebrow>
       <h2 className="mt-3 text-3xl font-extrabold text-ink sm:text-4xl">EMI calculator</h2>
-      <div className="mt-6 flex flex-col gap-6 rounded-3xl border border-line bg-white p-5 shadow-card sm:p-7">
+      <div className="mt-6 flex min-w-0 flex-col gap-6 rounded-3xl border border-line bg-white p-4 shadow-card sm:p-7">
         <div className="space-y-6">
           <Slider label="Down payment" display={`${down}% · ₹${inr(price * (down / 100))}`} min={0} max={60} step={5} value={down} onChange={setDown} />
           <Slider label="Tenure" display={`${months} months`} min={12} max={84} step={6} value={months} onChange={setMonths} />
           <Slider label="Interest rate" display={`${rate.toFixed(1)}% p.a.`} min={7} max={15} step={0.5} value={rate} onChange={setRate} />
         </div>
-        <div className="rounded-2xl bg-gradient-to-br from-brand-deep to-[#0c5a3b] p-6 text-white">
+        <div className="min-w-0 rounded-2xl bg-gradient-to-br from-brand-deep to-[#0c5a3b] p-4 text-white sm:p-6">
           <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-emerald-100/70">Monthly EMI</p>
           <p className="mt-1 font-display text-4xl font-extrabold sm:text-5xl">₹{inr(emi)}</p>
           <div className="mt-5 h-2.5 overflow-hidden rounded-full bg-white/15">
             <div className="h-full rounded-full bg-volt" style={{ width: `${pctPrincipal}%` }} />
           </div>
-          <div className="mt-3 flex justify-between text-xs font-semibold text-emerald-100/80">
+          <div className="mt-3 grid gap-1 text-xs font-semibold text-emerald-100/80 sm:grid-cols-2 sm:gap-3">
             <span>Principal ₹{inr(principal)}</span>
-            <span>Interest ₹{inr(interest)}</span>
+            <span className="sm:text-right">Interest ₹{inr(interest)}</span>
           </div>
           <button onClick={() => triggerEnquiryModal(`EMI Offers: ${title} – ₹${inr(emi)}/mo`)} className={btn("volt", "md", "mt-6 w-full")}>
             Get loan offers <Send size={15} />
@@ -300,9 +397,9 @@ export function ProductEmi({ title }: { title: string }) {
 function Slider({ label, display, min, max, step, value, onChange }: { label: string; display: string; min: number; max: number; step: number; value: number; onChange: (n: number) => void }) {
   return (
     <div>
-      <div className="flex items-baseline justify-between">
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
         <span className="text-[11px] font-extrabold uppercase tracking-wider text-ink-mute">{label}</span>
-        <span className="text-sm font-extrabold text-ink">{display}</span>
+        <span className="text-sm font-extrabold text-ink sm:text-right">{display}</span>
       </div>
       <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(parseFloat(e.target.value))} aria-label={label} className="mt-3 h-2 w-full cursor-pointer appearance-none rounded-full bg-line accent-[#0f8f56]" />
     </div>

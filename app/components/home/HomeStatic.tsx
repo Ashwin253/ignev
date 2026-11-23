@@ -82,7 +82,7 @@ const WHY = [
 
 export function WhySection() {
   return (
-    <section className="py-14 sm:py-20">
+    <section className="hidden py-14 sm:py-20 md:block">
       <Container>
         <SectionHeading eyebrow="Why EVPLSE" title="Why EVPLSE?" description="Trust isn't claimed — it's built into how the platform works." />
         <div className="grid gap-5 md:grid-cols-3">

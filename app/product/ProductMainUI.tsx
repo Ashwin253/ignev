@@ -641,7 +641,7 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
         type="button"
         onClick={() => openOfferEnquiry("Latest Offers")}
         aria-label={`Get latest offers for ${item.brand} ${item.title}`}
-        className="fixed bottom-[calc(145px+env(safe-area-inset-bottom))] right-4 z-[110] inline-flex h-14 w-14 items-center justify-center rounded-full border border-emerald-200 bg-white text-emerald-800 shadow-xl transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 sm:w-auto sm:gap-2.5 sm:rounded-2xl sm:border-emerald-700 sm:bg-emerald-600 sm:px-4 sm:text-white sm:hover:bg-emerald-700 md:bottom-6 md:right-6"
+        className="fixed bottom-[calc(80px+env(safe-area-inset-bottom))] right-4 z-[110] inline-flex h-14 w-14 items-center justify-center rounded-full border border-emerald-200 bg-white text-emerald-800 shadow-xl transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 sm:w-auto sm:gap-2.5 sm:rounded-2xl sm:border-emerald-700 sm:bg-emerald-600 sm:px-4 sm:text-white sm:hover:bg-emerald-700 md:bottom-6 md:right-6"
       >
         <DotLottieReact
           src="/Giftpremiumanimation.lottie"

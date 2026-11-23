@@ -60,7 +60,7 @@ const STEPS = [
 
 export function HowItWorks() {
   return (
-    <section className="bg-white py-16 sm:py-24">
+    <section className="hidden bg-white py-16 sm:py-24 md:block">
       <Container>
         <SectionHeading align="center" eyebrow="How it works" title={<>From curious to <span className="text-gradient">confident</span> in four steps</>} description="A simple path that keeps you in control." />
         <div className="relative grid gap-5 md:grid-cols-4">

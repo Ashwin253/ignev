@@ -1,5 +1,5 @@
 import ProductExtras from "../ProductExtras";
-import { ProductNav, ProductHighlights, ProductVariants, ProductEmi, ProductFaq } from "../ProductSections";
+import { ProductNav, ProductSectionPanel, ProductHighlights, ProductVariants, ProductEmi, ProductFaq } from "../ProductSections";
 import { buildProductFaqs } from "../../lib/product-faq";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -121,7 +121,15 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const photos = item.galleryImages.length > 0
     ? item.galleryImages
     : item.photo ? [item.photo] : [fallbackPhoto];
-
+  const sections = [
+    ...(item.batteryVariants?.length ? [{ id: "variants", label: "Variants & price" }] : []),
+    ...(item.prices?.length ? [{ id: "emi", label: "EMI" }] : []),
+    { id: "specs", label: "Specifications" },
+    ...(mediaRatings.length > 0 ? [{ id: "media-ratings", label: "Media rating" }] : []),
+    { id: "faq", label: "FAQs" },
+    { id: "similar", label: "Similar EVs" },
+  ];
+  const faqs = buildProductFaqs(item);
 
 
   return (
@@ -193,75 +201,78 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </div>
 
             {/* Interactive Area (Battery Selection, Tabs, Ownership) */}
-            <ProductExtras slug={slug} title={`${item.brand} ${item.title}`.trim()} price={item.prices?.[0] ? formatPricing(item.prices) : undefined} />
+            <ProductExtras slug={slug} />
             <ProductMainUI item={item} slug={slug} dbFuelPrices={dbFuelPrices} content={productContent} offers={offers} />
           </div>
         </div>
-        <ProductNav
-          title={`${item.brand} ${item.title}`.trim()}
-          sections={[
-            { id: "highlights", label: "Highlights" },
-            ...(item.batteryVariants?.length ? [{ id: "variants", label: "Variants & price" }] : []),
-            ...(item.prices?.length ? [{ id: "emi", label: "EMI" }] : []),
-            { id: "specs", label: "Specifications" },
-            ...(mediaRatings.length > 0 ? [{ id: "media-ratings", label: "Media rating" }] : []),
-            { id: "faq", label: "FAQs" },
-            { id: "similar", label: "Similar EVs" },
-          ]}
-        />
-        <ProductHighlights item={item} />
-
-        {/* ── Variants + EMI (Equal 50/50 width) ── */}
-        <div className="grid gap-8 lg:gap-10 pt-16 lg:grid-cols-2 items-start">
-          <ProductVariants item={item} title={`${item.brand} ${item.title}`.trim()} />
-          <ProductEmi title={`${item.brand} ${item.title}`.trim()} />
-        </div>
-
-        {/* ── Detailed Specs + Pros/Cons ── */}
-        <div id="specs" className="scroll-mt-32 pt-4">
-          <ProductDetails item={item} />
-        </div>
-        <ProductMediaRatings item={item} ratings={mediaRatings} />
-        </ProductSelectionProvider>
-
-        {(() => {
-          const faqs = buildProductFaqs(item);
-          return (
-            <>
-              {faqs.length > 0 && (
-                <script
-                  type="application/ld+json"
-                  dangerouslySetInnerHTML={{
-                    __html: JSON.stringify({
-                      "@context": "https://schema.org",
-                      "@type": "FAQPage",
-                      mainEntity: faqs.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
-                    }),
-                  }}
-                />
-              )}
-              <ProductFaq faqs={faqs} />
-            </>
-          );
-        })()}
-{/* ── Ownership — full width below the 2-col grid ── */}
-        {/* <ProductOwnershipSection item={item} /> */}
-
-        {/* Related */}
-        <div id="similar" className="scroll-mt-32" />
-        <Suspense fallback={
-          <div className="mt-20 sm:mt-32">
-            <h2 className="mb-6 text-2xl font-black text-zinc-900 ">More like this</h2>
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-              <ProductSkeleton />
-              <div className="hidden sm:block"><ProductSkeleton /></div>
-              <div className="hidden sm:block"><ProductSkeleton /></div>
-              <div className="hidden sm:block"><ProductSkeleton /></div>
+        <ProductHighlights item={item} mediaRating={mediaRatingSummary} />
+        <ProductNav title={`${item.brand} ${item.title}`.trim()} sections={sections}>
+          {/* ── Variants and EMI sections ── */}
+          {(item.batteryVariants?.length || item.prices?.length) ? (
+            <div className="grid items-start gap-8 md:gap-10 md:pt-16 lg:grid-cols-2">
+              {item.batteryVariants?.length ? (
+                <ProductSectionPanel id="variants">
+                  <div className="pt-8 md:pt-0">
+                    <ProductVariants item={item} title={`${item.brand} ${item.title}`.trim()} />
+                  </div>
+                </ProductSectionPanel>
+              ) : null}
+              {item.prices?.length ? (
+                <ProductSectionPanel id="emi">
+                  <div className="pt-8 md:pt-0">
+                    <ProductEmi title={`${item.brand} ${item.title}`.trim()} />
+                  </div>
+                </ProductSectionPanel>
+              ) : null}
             </div>
-          </div>
-        }>
-          <RelatedListings slug={slug} currentItem={item} />
-        </Suspense>
+          ) : null}
+
+          {/* ── Detailed Specs + Pros/Cons ── */}
+          <ProductSectionPanel id="specs">
+            <div id="specs" className="scroll-mt-32 pt-4">
+              <ProductDetails item={item} />
+            </div>
+          </ProductSectionPanel>
+          <ProductSectionPanel id="media-ratings">
+            <ProductMediaRatings item={item} ratings={mediaRatings} />
+          </ProductSectionPanel>
+          {faqs.length > 0 && (
+            <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{
+                __html: JSON.stringify({
+                  "@context": "https://schema.org",
+                  "@type": "FAQPage",
+                  mainEntity: faqs.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+                }),
+              }}
+            />
+          )}
+          <ProductSectionPanel id="faq">
+            <ProductFaq faqs={faqs} />
+          </ProductSectionPanel>
+
+          {/* ── Ownership — full width below the 2-col grid ── */}
+          {/* <ProductOwnershipSection item={item} /> */}
+
+          <ProductSectionPanel id="similar">
+            <div id="similar" className="scroll-mt-32" />
+            <Suspense fallback={
+              <div className="mt-20 sm:mt-32">
+                <h2 className="mb-6 text-2xl font-black text-zinc-900 ">More like this</h2>
+                <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                  <ProductSkeleton />
+                  <div className="hidden sm:block"><ProductSkeleton /></div>
+                  <div className="hidden sm:block"><ProductSkeleton /></div>
+                  <div className="hidden sm:block"><ProductSkeleton /></div>
+                </div>
+              </div>
+            }>
+              <RelatedListings slug={slug} currentItem={item} />
+            </Suspense>
+          </ProductSectionPanel>
+        </ProductNav>
+        </ProductSelectionProvider>
       </div>
     </section>
   );

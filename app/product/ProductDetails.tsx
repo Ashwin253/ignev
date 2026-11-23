@@ -100,7 +100,6 @@ export default function ProductDetails({ item }: { item: EvListing }) {
   const customFields = (item.variantCustomFields?.find((v) => v.variantName === selectedVariant)?? item.variantCustomFields?.[0])?.fields;
   const customFieldRows = sectionFieldRows(customFields);
   const customFieldChecks = sectionCheckboxLabels(customFields);
-
   const feat = item.variantFeatures?.find((f) => f.variantName === selectedVariant)?? item.variantFeatures?.[0];
   const showFeatures = feat && hasFeatureContent(feat);
   if (item.slug === 'mg-m9') console.log("MG M9 FEATURES:", JSON.stringify(feat, null, 2));

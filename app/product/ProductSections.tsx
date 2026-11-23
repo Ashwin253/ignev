@@ -287,7 +287,7 @@ export function ProductEmi({ title }: { title: string }) {
             <span>Principal ₹{inr(principal)}</span>
             <span>Interest ₹{inr(interest)}</span>
           </div>
-          <button onClick={() => triggerEnquiryModal(`${title} – EMI ₹${inr(emi)}/mo`)} className={btn("volt", "md", "mt-6 w-full")}>
+          <button onClick={() => triggerEnquiryModal(`EMI Offers: ${title} – ₹${inr(emi)}/mo`)} className={btn("volt", "md", "mt-6 w-full")}>
             Get loan offers <Send size={15} />
           </button>
           <p className="mt-3 text-[11px] leading-snug text-emerald-100/60">Indicative on ex-showroom price. Final rate depends on lender and profile.</p>

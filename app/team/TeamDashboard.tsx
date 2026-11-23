@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { Plus, Pencil, Trash2, LogOut, Save, X, Loader2, ChevronDown, ChevronUp, MessageSquare, Mic, MicOff, Sparkles, Copy, Clipboard, Eye, Zap, Crop, FlipHorizontal, Download } from "lucide-react";
+import { Plus, Pencil, Trash2, LogOut, Save, X, Loader2, ChevronDown, ChevronUp, MessageSquare, Mic, MicOff, Sparkles, Copy, Clipboard, Eye, Zap, Crop, FlipHorizontal, Download, CalendarDays } from "lucide-react";
 import type { EvListingRow, EvVariantRow } from "../lib/supabase";
 import CropModal from "./CropModal";
 import LeadsPanel from "./LeadsPanel";
@@ -19,6 +19,7 @@ import ApprovalsPanel from "./ApprovalsPanel";
 import VehicleApprovalsPanel from "./VehicleApprovalsPanel";
 import BrandsPanel from "./BrandsPanel";
 import VehiclePricingPanel, { DEFAULT_AREA_RULES, calculateAddonAmount, fmtLakh } from "./VehiclePricingPanel";
+import RatingsPanel from "./RatingsPanel";
 
 import { requestFcmToken } from "../lib/firebase";
 import { matchesVehicleCategory } from "../lib/catalog-filters";
@@ -60,7 +61,7 @@ type ListingForm = {
   slug: string; title: string; brand: string; body_type: string; usage_type?: string | null;
   event_id: string;
   commercial: boolean; has_baas: boolean; launchdate: string | null; photo: string;
-  gallery_images: any[]; colors: string[]; types: string[];
+  gallery_images: any[]; images_360: string[]; colors: string[]; types: string[];
   pros: string[]; cons: string[];
   price_bracket: string;
   parent_id?: string;
@@ -143,7 +144,7 @@ export type VariantForm = {
 const emptyListing: ListingForm = {
   slug: "", title: "", brand: "", body_type: "", usage_type: null, commercial: false, has_baas: false,
   event_id: "",
-  launchdate: null, photo: "", gallery_images: [], colors: [],
+  launchdate: null, photo: "", gallery_images: [], images_360: Array(8).fill(""), colors: [],
   types: [], pros: [], cons: [], price_bracket: "",
   parent_id: "",
   editors_emails: [],
@@ -456,7 +457,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
 
   const [activeSection, setActiveSection] = useState<"listings" | "all_listings" | "brands" | "leads" | "foryou_leads" | "prices" | "vehicle_pricing" | "analytics" | "map" | "banners" | "content" | "offers" | "media" | "chargers" | "approvals" | "vehicle_approvals" | "protest">("listings");
   // Sub-tabs that live inside merged sections
-  const [listingsSubTab, setListingsSubTab] = useState<"editor" | "pricing" | "brands">("editor");
+  const [listingsSubTab, setListingsSubTab] = useState<"editor" | "pricing" | "brands" | "ratings">("editor");
   const [enquiriesSubTab, setEnquiriesSubTab] = useState<"general" | "foryou">("general");
   const [approvalsSubTab, setApprovalsSubTab] = useState<"b2b" | "vehicle">("b2b");
   const [selectedModelId, setSelectedModelId] = useState<string>("");
@@ -1462,7 +1463,16 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
     const rawFeaturedPhotos = safeParseJson((l as any).featured_photos, []);
     const rawVideoLinks = safeParseJson((l as any).video_links, []);
     const rawGalleryImages = safeParseJson(l.gallery_images, []);
+    const raw360Images = safeParseJson((l as any).images_360, []);
+    const saved360Images = Array.isArray(raw360Images) ? raw360Images : [];
     const rawCityPricing = safeParseJson((l as any).city_pricing, []);
+    const images360Form = Array.from({ length: 8 }, (_, index) => {
+      const sourceIndex = saved360Images.length === 4
+        ? index % 2 === 0 ? index / 2 : -1
+        : index;
+      const image = sourceIndex >= 0 ? saved360Images[sourceIndex] : undefined;
+      return typeof image === "string" ? image : "";
+    });
 
     const loadedForm = {
       slug: l.slug,
@@ -1476,6 +1486,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
       launchdate: l.launchdate,
       photo: l.photo,
       gallery_images: rawGalleryImages,
+      images_360: images360Form,
       colors: l.colors ?? [],
       types: Array.isArray((l as any).types)
         ? (l as any).types
@@ -2331,6 +2342,12 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                 🚗 EV Listings
               </button>
               <button
+                onClick={() => setListingsSubTab("ratings")}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${listingsSubTab === "ratings" ? "bg-white text-ink shadow-md" : "text-slate-600 hover:text-slate-900 hover:bg-white/70"}`}
+              >
+                ⭐ Media Ratings
+              </button>
+              <button
                 onClick={() => setListingsSubTab("pricing")}
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${listingsSubTab === "pricing" ? "bg-white text-ink shadow-md" : "text-slate-600 hover:text-slate-900 hover:bg-white/70"}`}
               >
@@ -2345,7 +2362,9 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             </div>
           </div>
         )}
-        {listingsSubTab === "pricing" && !editing ? (
+        {listingsSubTab === "ratings" && !editing ? (
+          <RatingsPanel supabase={supabase} listings={activeListings} />
+        ) : listingsSubTab === "pricing" && !editing ? (
           <VehiclePricingPanel
             supabase={supabase}
             userEmail={user?.email || ""}
@@ -2812,7 +2831,10 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
               </label>
               <label className="block">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-700">Launch Date</span>
-                <input type="text" placeholder="e.g. 2024, Oct 2024, 2024-10-15" value={form.launchdate ?? ""} onChange={(e) => setForm({ ...form, launchdate: e.target.value || null })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none placeholder:text-ink-mute" />
+                <div className="relative mt-1 flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 focus-within:ring-2 focus-within:ring-emerald-100">
+                  <input type="text" placeholder="e.g. 2024, Oct 2024, 2024-10-15" value={form.launchdate ?? ""} onChange={(e) => setForm({ ...form, launchdate: e.target.value || null })} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-ink-mute" />
+                  <LaunchDatePickerButton value={form.launchdate ?? ""} label="launch date" onChange={(value) => setForm({ ...form, launchdate: value || null })} />
+                </div>
               </label>
               <label className="block">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-700">Parent Model (Optional)</span>
@@ -3451,6 +3473,84 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                   </div>
                 </div>
 
+                {/* Eight-frame exterior turntable */}
+                <div className="rounded-xl border-2 border-slate-300 bg-slate-200 p-4">
+                  <div className="mb-3">
+                    <p className="text-xs font-bold uppercase tracking-wider text-slate-600">360° Exterior View</p>
+                    <p className="mt-1 text-[11px] text-slate-500">
+                      Add all eight photos in clockwise order, starting at Front. The four main views remain available while intermediate photos are missing.
+                    </p>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    {["Front", "Front-right", "Right", "Right-end (rear-right)", "Rear", "End-left (rear-left)", "Left", "Left-start (front-left)"].map((position, index) => (
+                      <div key={position} className="space-y-2 rounded-lg border border-slate-200 bg-white p-3">
+                        <p className="text-xs font-bold text-slate-700">{index + 1}. {position}</p>
+                        {form.images_360[index] ? (
+                          <img
+                            src={form.images_360[index]}
+                            alt={`${position} 360 frame preview`}
+                            className="h-28 w-full rounded-md border border-slate-200 bg-slate-50 object-contain"
+                          />
+                        ) : (
+                          <div className="flex h-28 items-center justify-center rounded-md border border-dashed border-slate-300 bg-slate-50 text-xs text-slate-400">
+                            No image
+                          </div>
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          aria-label={`Upload ${position} 360 frame`}
+                          onChange={async (event) => {
+                            const file = event.target.files?.[0];
+                            if (!file) return;
+                            const listingFolder = form.slug.replace(/[^a-zA-Z0-9_-]/g, "") || "new-listing";
+                            const fileName = file.name.replace(/[^a-zA-Z0-9._-]/g, "");
+                            const path = `evlistings/${listingFolder}/360-${index}-${Date.now()}-${fileName}`;
+                            const { data, error } = await supabase.storage.from("evphotos").upload(path, file, { upsert: true });
+                            if (error) {
+                              alert(`360 frame upload failed: ${error.message}`);
+                              return;
+                            }
+                            const publicUrl = supabase.storage.from("evphotos").getPublicUrl(data.path).data.publicUrl;
+                            setForm((current) => {
+                              const images = [...current.images_360];
+                              images[index] = publicUrl;
+                              return { ...current, images_360: images };
+                            });
+                            event.target.value = "";
+                          }}
+                          className="w-full text-[10px] cursor-pointer file:mr-2 file:rounded-md file:border-0 file:bg-emerald-50 file:px-2 file:py-1 file:font-bold file:text-emerald-700"
+                        />
+                        <input
+                          type="url"
+                          value={form.images_360[index] || ""}
+                          onChange={(event) => {
+                            const images = [...form.images_360];
+                            images[index] = event.target.value;
+                            setForm({ ...form, images_360: images });
+                          }}
+                          placeholder="Or paste image URL"
+                          aria-label={`${position} 360 frame URL`}
+                          className="w-full rounded border border-slate-200 px-2 py-1.5 text-xs outline-none"
+                        />
+                        {form.images_360[index] && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const images = [...form.images_360];
+                              images[index] = "";
+                              setForm({ ...form, images_360: images });
+                            }}
+                            className="text-xs font-semibold text-rose-700 hover:text-rose-800"
+                          >
+                            Remove frame
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
 
               </div>
             )}
@@ -3594,7 +3694,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                       })()}
                     </div>
                     <MiniInput label="Version/Refresh" value={v.version_name || ""} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], version_name: val }; setVariants(arr); }} />
-                    <MiniInput label="Launch Date" placeholder="e.g. 2024, Oct 2024" value={v.launch_date || ""} onChange={(val) => updateVariantField(i, { launch_date: val })} />
+                    <MiniInput label="Launch Date" placeholder="e.g. 2024, Oct 2024" value={v.launch_date || ""} onChange={(val) => updateVariantField(i, { launch_date: val })} datePicker />
                     <MiniInput label="Model Year" value={String(v.model_year)} onChange={(val) => updateVariantField(i, { model_year: cleanInt(val, 2026) })} />
                     <MiniInput label="Price (Lakh)" value={String(v.price || "")} onChange={(val) => { const arr = [...variants]; arr[i] = { ...arr[i], price: cleanPriceLakh(val) }; setVariants(arr); }} />
                   </div>
@@ -5558,7 +5658,42 @@ function EventIdField({ label = "Event ID", value, onChange, recentEventIds }: {
   );
 }
 
-function MiniInput({ label, value, onChange, placeholder, onBlur }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; onBlur?: () => void }) {
+function LaunchDatePickerButton({ value, label, onChange }: { value: string; label: string; onChange: (value: string) => void }) {
+  const dateInputRef = useRef<HTMLInputElement>(null);
+  const dateValue = /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : "";
+
+  const openDatePicker = () => {
+    const dateInput = dateInputRef.current;
+    if (!dateInput) return;
+    if (typeof dateInput.showPicker === "function") dateInput.showPicker();
+    else dateInput.click();
+  };
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={openDatePicker}
+        aria-label={`Choose ${label} from calendar`}
+        title="Choose date from calendar"
+        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-ink-mute transition hover:bg-emerald-100 hover:text-emerald-600"
+      >
+        <CalendarDays size={14} />
+      </button>
+      <input
+        ref={dateInputRef}
+        type="date"
+        value={dateValue}
+        onChange={(event) => onChange(event.target.value)}
+        aria-hidden="true"
+        tabIndex={-1}
+        className="pointer-events-none absolute right-0 top-0 h-px w-px opacity-0"
+      />
+    </>
+  );
+}
+
+function MiniInput({ label, value, onChange, placeholder, onBlur, datePicker = false }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; onBlur?: () => void; datePicker?: boolean }) {
   const [micActive, setMicActive] = useState(false);
   const [localValue, setLocalValue] = useState(value);
 
@@ -5592,7 +5727,7 @@ function MiniInput({ label, value, onChange, placeholder, onBlur }: { label: str
     r.onend = () => setMicActive(false); r.onerror = () => setMicActive(false);
     r.start(); setMicActive(true);
   };
-  return (<label className="block"><span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-800">{label}</span><div className="mt-1 flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2.5 py-2"><input value={localValue} onChange={(e) => { setLocalValue(e.target.value); onChange(e.target.value); }} onBlur={() => { if (onBlur) onBlur(); }} placeholder={placeholder} className="flex-1 text-sm sm:text-base font-semibold text-slate-900 outline-none bg-transparent min-w-0" /><button type="button" onClick={startMic} className={`shrink-0 h-5 w-5 rounded-full flex items-center justify-center transition-all ${micActive ? "bg-rose-500 text-white animate-pulse" : "bg-slate-100 text-ink-mute hover:bg-emerald-100 hover:text-emerald-600"}`}>{micActive ? <MicOff size={9} /> : <Mic size={9} />}</button></div></label>);
+  return (<label className="block"><span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-800">{label}</span><div className="relative mt-1 flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2.5 py-2"><input value={localValue} onChange={(e) => { setLocalValue(e.target.value); onChange(e.target.value); }} onBlur={() => { if (onBlur) onBlur(); }} placeholder={placeholder} className="flex-1 text-sm sm:text-base font-semibold text-slate-900 outline-none bg-transparent min-w-0" />{datePicker && <LaunchDatePickerButton value={localValue} label={label.toLowerCase()} onChange={(date) => { setLocalValue(date); onChange(date); }} />}<button type="button" onClick={startMic} className={`shrink-0 h-5 w-5 rounded-full flex items-center justify-center transition-all ${micActive ? "bg-rose-500 text-white animate-pulse" : "bg-slate-100 text-ink-mute hover:bg-emerald-100 hover:text-emerald-600"}`}>{micActive ? <MicOff size={9} /> : <Mic size={9} />}</button></div></label>);
 }
 
 function VariantExtrasEditor({

@@ -82,7 +82,7 @@ export default function Header() {
         <div className="mx-auto flex h-[72px] max-w-[1240px] items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
           {/* Logo */}
           <Link href="/" className="flex shrink-0 items-center" aria-label="EVPLSE home">
-            <Image src="/evplsenewlogo.png" alt="EVPLSE" width={160} height={40} priority className="h-9 w-auto sm:h-10" style={{ width: "auto" }} />
+            <Image src="/evplsenewlogo.png" alt="EVPLSE" width={192} height={52} priority className="h-9 w-auto sm:h-10" style={{ width: "auto" }} />
           </Link>
 
           {/* Desktop nav */}

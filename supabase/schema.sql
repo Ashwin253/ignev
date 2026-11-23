@@ -34,6 +34,7 @@ create table if not exists public.evlistings (
   discontinued_date text default null,
   video_links jsonb default '[]',
   featured_photos jsonb default '[]',
+  images_360 jsonb not null default '[]'::jsonb,
   city_pricing jsonb default '[]',
   parent_id uuid references public.evlistings(id) on delete set null,
   created_by uuid references auth.users(id) default auth.uid(),
@@ -41,6 +42,9 @@ create table if not exists public.evlistings (
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
+
+comment on column public.evlistings.images_360 is
+  'Clockwise exterior image URLs: Front, Front-right, Right, Right-end, Rear, End-left, Left, Left-start. Four-frame legacy arrays are also supported.';
 
 alter table public.evlistings enable row level security;
 
@@ -153,6 +157,115 @@ create trigger ev_variants_updated_at
   for each row execute function public.update_updated_at();
 
 create index if not exists idx_ev_variants_listing on public.ev_variants(listing_id);
+
+-- ── Media Ratings Table ──────────────────────────────────────────────────────
+
+create unique index if not exists idx_ev_variants_listing_id_id
+  on public.ev_variants (listing_id, id);
+
+create table if not exists public.ev_media_sources (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  website_url text,
+  logo_url text,
+  created_at timestamptz not null default now(),
+  constraint ev_media_sources_name_check check (length(trim(name)) > 0),
+  constraint ev_media_sources_website_url_check check (website_url is null or website_url ~* '^https?://'),
+  constraint ev_media_sources_logo_url_check check (logo_url is null or logo_url ~* '^https?://')
+);
+
+create unique index if not exists idx_ev_media_sources_name
+  on public.ev_media_sources (lower(trim(name)));
+
+insert into public.ev_media_sources (name, website_url, logo_url)
+values
+  ('Autocar India', 'https://www.autocarindia.com', null),
+  ('CarWale', 'https://www.carwale.com', null),
+  ('ZigWheels', 'https://www.zigwheels.com', 'https://images.zigcdn.com/images/fav-icon.ico'),
+  ('CarDekho', 'https://www.cardekho.com', 'https://stimg.cardekho.com/pwa/img/Desktop-logo.svg'),
+  ('EVO India', 'https://www.evoindia.com', null),
+  ('Overdrive', 'https://www.overdrive.in', null),
+  ('RushLane', 'https://www.rushlane.com', null),
+  ('MotorBeam', 'https://www.motorbeam.com', null)
+on conflict ((lower(trim(name)))) do nothing;
+
+alter table public.ev_media_sources enable row level security;
+revoke all on table public.ev_media_sources from anon, authenticated;
+grant select on table public.ev_media_sources to anon, authenticated;
+grant insert, update on table public.ev_media_sources to authenticated;
+
+create policy "Public read vehicle media sources"
+  on public.ev_media_sources for select
+  to anon, authenticated
+  using (true);
+
+create policy "Authenticated insert vehicle media sources"
+  on public.ev_media_sources for insert
+  to authenticated
+  with check (true);
+
+create policy "Authenticated update vehicle media sources"
+  on public.ev_media_sources for update
+  to authenticated
+  using (true)
+  with check (true);
+
+create table if not exists public.ev_media_ratings (
+  id uuid primary key default gen_random_uuid(),
+  listing_id uuid not null references public.evlistings(id) on delete cascade,
+  variant_id uuid,
+  source_id uuid not null references public.ev_media_sources(id) on delete restrict,
+  source_name text not null,
+  rating_value numeric(6, 2) not null,
+  rating_max numeric(6, 2) not null default 5,
+  review_url text,
+  created_at timestamptz not null default now(),
+  constraint ev_media_ratings_variant_listing_fkey
+    foreign key (listing_id, variant_id)
+    references public.ev_variants (listing_id, id)
+    on delete cascade,
+  constraint ev_media_ratings_source_name_check check (length(trim(source_name)) > 0),
+  constraint ev_media_ratings_rating_check check (
+    rating_value >= 0 and rating_max > 0 and rating_value <= rating_max
+  )
+);
+
+create unique index if not exists idx_ev_media_ratings_listing_source
+  on public.ev_media_ratings (listing_id, lower(trim(source_name)))
+  where variant_id is null;
+create unique index if not exists idx_ev_media_ratings_listing_variant_source
+  on public.ev_media_ratings (listing_id, variant_id, lower(trim(source_name)))
+  where variant_id is not null;
+create index if not exists idx_ev_media_ratings_listing
+  on public.ev_media_ratings (listing_id);
+create index if not exists idx_ev_media_ratings_listing_variant
+  on public.ev_media_ratings (listing_id, variant_id);
+
+alter table public.ev_media_ratings enable row level security;
+revoke all on table public.ev_media_ratings from anon, authenticated;
+grant select on public.ev_media_ratings to anon, authenticated;
+grant insert, update, delete on public.ev_media_ratings to authenticated;
+
+create policy "Public read vehicle media ratings"
+  on public.ev_media_ratings for select
+  to anon, authenticated
+  using (true);
+
+create policy "Authenticated insert vehicle media ratings"
+  on public.ev_media_ratings for insert
+  to authenticated
+  with check (true);
+
+create policy "Authenticated update vehicle media ratings"
+  on public.ev_media_ratings for update
+  to authenticated
+  using (true)
+  with check (true);
+
+create policy "Authenticated delete vehicle media ratings"
+  on public.ev_media_ratings for delete
+  to authenticated
+  using (true);
 
 -- ── Variant Features Table ───────────────────────────────────────────────────
 

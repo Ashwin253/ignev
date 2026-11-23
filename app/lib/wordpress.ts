@@ -227,6 +227,7 @@ export type EvListing = {
   cons: string[];
   colors: string[];           // hex codes e.g. ["673ab7", "b7673a"]
   galleryImages: string[];    // full image URLs
+  images360?: string[];       // ordered clockwise exterior frames; legacy four-frame sets are supported
   energyComparison: EnergyCompareEntry[];
   batterySpecs: BatterySpec[];
   chargingSpecs: ChargingSpec[];
@@ -750,6 +751,7 @@ function mapRestListing(p: RestEvlisting): EvListing {
     realWorldRange: num("real_world_range") ?? num("realWorldRange"),
     batteryTypes: arr("battery_type"),
     colors: parseJsonArray<string>(str("colorTestText") || str("colors") || str("color_test_text")),
+    images360: [],
     pros,
     cons,
     batteryVariants: standardVariants, // Standard only

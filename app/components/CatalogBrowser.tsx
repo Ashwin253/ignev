@@ -153,7 +153,8 @@ export default function CatalogBrowser({
     searchParams.get("upcoming") === "true" ? "upcoming" : searchParams.get("avail") === "true" ? "launched" : "all",
   );
   const [baasOnly, setBaasOnly] = useState(searchParams.get("baas") === "true");
-  const [sort, setSort] = useState<SortKey>((searchParams.get("sort") as SortKey) || "popular");
+  const defaultSort: SortKey = forceNewLaunches ? "newest" : "popular";
+  const [sort, setSort] = useState<SortKey>((searchParams.get("sort") as SortKey) || defaultSort);
   const [view, setView] = useState<"grid" | "list">("grid");
 
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -188,8 +189,8 @@ export default function CatalogBrowser({
     setUsage(searchParams.get("usage") ?? "all");
     setAvailability(searchParams.get("upcoming") === "true" ? "upcoming" : searchParams.get("avail") === "true" ? "launched" : "all");
     setBaasOnly(searchParams.get("baas") === "true");
-    setSort((searchParams.get("sort") as SortKey) || "popular");
-  }, [searchParams]);
+    setSort((searchParams.get("sort") as SortKey) || defaultSort);
+  }, [searchParams, defaultSort]);
 
   /* Data: pages pass the full set; fall back to the API if they passed nothing */
   useEffect(() => {

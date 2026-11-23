@@ -1128,7 +1128,7 @@ export default function EcosystemSection({
           {/* Hero Left Content: Directly on Natural Webpage Background */}
           <div className="lg:col-span-5 space-y-4 sm:space-y-6">
             <h1 className="text-2xl sm:text-4xl lg:text-6xl font-bold tracking-tight leading-[1.08] text-[#0A2A1E] dark:text-white">
-              India's <span className="text-[#1F7A4D] dark:text-[#8FE24A]">Trusted</span> Electric Mobility Platform.
+              India's <span className="text-[#1F7A4D] dark:text-[#8FE24A]">largest</span> Electric Mobility Platform.
             </h1>
 
             {/* Unified Search Capsule (Hidden in mobile view, visible on tablet/desktop) */}

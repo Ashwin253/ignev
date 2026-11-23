@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import type { EvListing, BatteryVariant, BatterySpec, ChargingSpec } from "./wordpress";
+import { normalizeVehicleMediaRatings, type VehicleMediaRating } from "./media-ratings";
 
 // ── Supabase Client (server-side) ────────────────────────────────────────────
 
@@ -344,6 +345,21 @@ export async function fetchProductOffers(brand: string, slug: string) {
   }
 }
 
+export async function fetchVehicleMediaRatings(listingId: string): Promise<VehicleMediaRating[]> {
+  if (!supabaseEnabled() || !listingId) return [];
+  const { data, error } = await supabase
+    .from("ev_media_ratings")
+    .select("id, listing_id, variant_id, source_id, source_name, rating_value, rating_max, review_url, created_at, media_source:ev_media_sources(id, name, website_url, logo_url)")
+    .eq("listing_id", listingId)
+    .order("source_name", { ascending: true });
+
+  if (error) {
+    console.warn("fetchVehicleMediaRatings error:", error.message);
+    return [];
+  }
+  return normalizeVehicleMediaRatings(data ?? []);
+}
+
 // ── Database Row Types ───────────────────────────────────────────────────────
 
 
@@ -358,6 +374,7 @@ export type EvListingRow = {
   commercial: boolean;
   launchdate: string | null;
   photo: string;
+  images_360?: string[] | string | null;
   gallery_images: Array<string | { url: string; type?: string; colorCode?: string }>;
   colors: string[];
   types: string[];
@@ -506,6 +523,15 @@ function mapToEvListing(row: EvListingRow, variants: EvVariantRow[], features?: 
   const galleryUrls = (row.gallery_images ?? []).map((item) =>
     typeof item === "string" ? item : (item as any).url ?? ""
   ).filter(Boolean);
+  const images360 = typeof row.images_360 === "string"
+    ? (() => {
+        try {
+          return JSON.parse(row.images_360 as string);
+        } catch {
+          return [];
+        }
+      })()
+    : row.images_360;
 
   // Standard variants (all)
   const standardVariants: BatteryVariant[] = variants.map((v) => {
@@ -654,6 +680,9 @@ function mapToEvListing(row: EvListingRow, variants: EvVariantRow[], features?: 
     cons: row.cons ?? [],
     colors: row.colors ?? [],
     galleryImages: galleryUrls,
+    images360: Array.isArray(images360)
+      ? images360.map((url) => typeof url === "string" ? url : "")
+      : [],
     gallery_raw: (() => {
       const parsed = typeof row.gallery_images === "string" ? (() => { try { return JSON.parse(row.gallery_images); } catch { return []; } })() : row.gallery_images;
       return Array.isArray(parsed) ? parsed : [];

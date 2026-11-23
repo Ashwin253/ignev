@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { fetchEvListingsFromSupabase } from "../../lib/supabase";
 import { toCatalogItem } from "../../lib/catalog-map";
 
-export const revalidate = 300;
+export const revalidate = 60;
 
 export async function GET() {
   try {

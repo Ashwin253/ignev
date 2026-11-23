@@ -2,17 +2,42 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { ChevronLeft, ChevronRight, Palette, LayoutGrid, Maximize, Play, ImageIcon, ExternalLink } from "lucide-react";
+import dynamic from "next/dynamic";
+import { ChevronLeft, ChevronRight, Palette, LayoutGrid, Maximize, Play, ImageIcon, ExternalLink, Rotate3D, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useProductSelection } from "../product/ProductSelectionProvider";
 import type { EvListing } from "../lib/wordpress";
 import { getVehicleFallbackImage } from "../lib/vehicle-images";
+import "@cloudimage/360-view/css";
+
+const Cloudimage360Viewer = dynamic(
+  () => import("./Vehicle360Viewer"),
+  {
+    ssr: false,
+    loading: () => (
+      <div
+        aria-label="Loading 360-degree viewer"
+        className="aspect-[16/9] w-full animate-pulse bg-slate-100"
+      />
+    ),
+  }
+);
 
 interface ProductGalleryProps {
   photos: string[];
   name: string;
   colors?: string[];
   item?: EvListing;
+}
+
+function isValid360FrameSet(images: string[]) {
+  return (images.length === 4 || images.length === 8) && images.every((url) => {
+    try {
+      return ["http:", "https:"].includes(new URL(url).protocol);
+    } catch {
+      return false;
+    }
+  });
 }
 
 function getEmbedUrl(url: string) {
@@ -58,7 +83,26 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
   const [showColors, setShowColors] = useState(false);
   const [showThumbs, setShowThumbs] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [is360Open, setIs360Open] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const saved360Images = item?.images360 ?? [];
+  const eightFrameImages = saved360Images.slice(0, 8);
+  const fourFrameImages = saved360Images.length >= 8
+    ? [saved360Images[0], saved360Images[2], saved360Images[4], saved360Images[6]]
+    : saved360Images.length === 4 ? saved360Images : [];
+  const turntableImages = isValid360FrameSet(eightFrameImages)
+    ? eightFrameImages
+    : isValid360FrameSet(fourFrameImages) ? fourFrameImages : [];
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/+$/, "");
+  const viewerImages = turntableImages.map((url) => {
+    if (supabaseUrl && url.startsWith(`${supabaseUrl}/storage/v1/object/`)) {
+      // Cloudimage appends a fractional width query that Supabase Storage rejects.
+      const params = new URLSearchParams({ url, w: "1200", q: "75" });
+      return `/_next/image?${params.toString()}`;
+    }
+    return url;
+  });
+  const has360View = turntableImages.length > 0;
 
   useEffect(() => {
     setMounted(true);
@@ -131,6 +175,15 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
   useEffect(() => {
     setCurrent(0);
   }, [activeVariant?.id]);
+
+  useEffect(() => {
+    if (!is360Open) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIs360Open(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [is360Open]);
 
   // Listen for color-triggered image switch
   useEffect(() => {
@@ -294,6 +347,40 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
           document.body
         )}
 
+        {mounted && is360Open && has360View && createPortal(
+          <div
+            className="fixed inset-0 z-[100000] flex items-center justify-center overflow-y-auto bg-black/90 p-3 backdrop-blur-sm sm:p-6"
+            onClick={() => setIs360Open(false)}
+          >
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="vehicle-360-title"
+              className="my-auto flex max-h-[calc(100dvh-1.5rem)] w-full max-w-4xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl sm:max-h-[calc(100dvh-3rem)]"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-4 py-3 sm:px-6">
+                <div>
+                  <h2 id="vehicle-360-title" className="font-extrabold text-slate-900">{name} 360° view</h2>
+                  <p className="text-xs text-slate-500">Drag left or right to rotate the vehicle.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIs360Open(false)}
+                  aria-label="Close 360-degree viewer"
+                  className="rounded-full p-2 text-slate-600 hover:bg-slate-100"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="min-h-0 w-full flex-1 bg-slate-50">
+                <Cloudimage360Viewer images={viewerImages} />
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+
         <AnimatePresence initial={false} custom={direction} mode="wait">
           {!isVideo ? (
             <motion.img
@@ -386,6 +473,19 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
             </button>
           )}
 
+          {has360View && (
+            <button
+              type="button"
+              onClick={() => { setIs360Open(true); setShowColors(false); setShowThumbs(false); }}
+              aria-label="View vehicle in 360 degrees"
+              title="View 360°"
+              className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-2 text-[10px] font-bold text-slate-700 shadow-md transition-all hover:bg-slate-50"
+            >
+              <Rotate3D size={13} />
+              360°
+            </button>
+          )}
+
           {/* Photos button (Usually hidden on md, but keeping logic consistent) */}
           {resolvedPhotos.length > 1 && (
             <button
@@ -475,6 +575,18 @@ export default function ProductGallery({ photos, name, colors = [], item }: Prod
             >
               <Palette size={14} />
               Colors
+            </button>
+          )}
+
+          {has360View && (
+            <button
+              type="button"
+              onClick={() => { setIs360Open(true); setShowColors(false); setShowThumbs(false); }}
+              aria-label="View vehicle in 360 degrees"
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50"
+            >
+              <Rotate3D size={14} />
+              360° View
             </button>
           )}
 

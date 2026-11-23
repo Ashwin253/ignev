@@ -4,7 +4,7 @@ import { buildProductFaqs } from "../../lib/product-faq";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
-  ArrowLeft,
+  ArrowLeft, Star,
   ArrowRight,
   BadgeCheck, CalendarDays, Zap,
 } from "lucide-react";
@@ -19,12 +19,15 @@ import {
   isElectricBikeListing,
   isElectricScooterListing,
 } from "../../lib/catalog-filters";
-import { fetchEvListingBySlugFromSupabase, fetchEvListingsFromSupabase, fetchProductContent, fetchProductOffers, supabase } from "../../lib/supabase";
+import { fetchEvListingBySlugFromSupabase, fetchEvListingsFromSupabase, fetchProductContent, fetchProductOffers, fetchVehicleMediaRatings, supabase } from "../../lib/supabase";
 import ProductGallery from "../../components/ProductGallery";
 import ProductMainUI from "../ProductMainUI";
+import ProductMediaRatings from "../ProductMediaRatings";
 import { ProductSelectionProvider } from "../ProductSelectionProvider";
 import MoreLikeThisSection from "../MoreLikeThisSection";
 import dynamic from "next/dynamic";
+import VehicleJsonLd from "../../components/VehicleJsonLd";
+import { getMediaRatingSummary } from "../../lib/media-ratings";
 
 const ProductDetailsSkeleton = () => (
   <div className="mt-16 rounded-3xl border-2 border-slate-300 bg-slate-100  px-5 py-8 md:px-10 md:py-10 shadow-sm animate-pulse">
@@ -100,11 +103,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     console.error("Error fetching fuel prices:", err);
   }
 
-  // Fetch linked product content (articles/videos)
-  const productContent = await fetchProductContent(slug);
-
-  // Fetch applicable offers
-  const offers = await fetchProductOffers(item.brand || "", slug);
+  const [productContent, offers, mediaRatings] = await Promise.all([
+    fetchProductContent(slug),
+    fetchProductOffers(item.brand || "", slug),
+    fetchVehicleMediaRatings(item.id),
+  ]);
+  const mediaRatingSummary = getMediaRatingSummary(mediaRatings);
 
   const hasLaunchedVariant = item.batteryVariants?.some((variant) =>
     !["Coming Soon", "Announced", "Concept", "Facelift"].includes(variant.usage_type || "") &&
@@ -120,63 +124,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
 
 
-  // Find pricing range for JSON-LD schema
-  const priceVals = item.prices ? item.prices.map((p) => parseFloat(p.replace(/[^\d.]/g, ""))).filter(n => !isNaN(n)) : [];
-  const minPrice = priceVals.length > 0 ? Math.min(...priceVals) : null;
-  const maxPrice = priceVals.length > 0 ? Math.max(...priceVals) : null;
-
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    "name": `${item.brand} ${item.title}`,
-    "image": photos,
-    "description": `${item.brand} ${item.title} — Electric ${item.types[0] || "vehicle"}.` +
-      (item.pros && item.pros.length > 0 ? ` Highlights: ${item.pros.slice(0, 3).join(", ")}.` : ""),
-    "brand": {
-      "@type": "Brand",
-      "name": item.brand
-    },
-    "category": item.types[0] || "Electric Vehicle",
-    ...(minPrice !== null && {
-      "offers": {
-        "@type": "AggregateOffer",
-        "priceCurrency": "INR",
-        "lowPrice": minPrice * 100000,
-        ...(maxPrice !== null && { "highPrice": maxPrice * 100000 }),
-        "offerCount": item.batteryVariants ? item.batteryVariants.length : 1,
-        "availability": launched ? "https://schema.org/InStock" : "https://schema.org/PreOrder"
-      }
-    }),
-    "additionalProperty": [
-      ...(item.topSpeed ? [{
-        "@type": "PropertyValue",
-        "name": "Top Speed",
-        "value": `${item.topSpeed} km/h`
-      }] : []),
-      ...(item.batteryVariants && item.batteryVariants[0]?.range ? [{
-        "@type": "PropertyValue",
-        "name": "Driving Range",
-        "value": `${item.batteryVariants[0].range} km`
-      }] : []),
-      ...(item.batteryVariants && item.batteryVariants[0]?.capacity ? [{
-        "@type": "PropertyValue",
-        "name": "Battery Capacity",
-        "value": `${item.batteryVariants[0].capacity} kWh`
-      }] : [])
-    ]
-  };
-
   return (
     <section className="min-h-screen bg-white text-zinc-900  py-28 overflow-x-hidden relative transition-colors duration-300">
       {/* Decorative Ambient Glowing Blurs */}
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#a5e6d1]/15 rounded-full blur-[130px] pointer-events-none"></div>
       <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-[#a5e6d1]/10 rounded-full blur-[130px] pointer-events-none"></div>
 
-      {/* JSON-LD Schema for AI Crawlers / SEO */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <VehicleJsonLd item={item} promotions={offers} mediaRatings={mediaRatings} launched={launched} photos={photos} />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 overflow-hidden relative z-10">
 
         {/* Breadcrumb row */}
@@ -209,18 +163,32 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <div className="flex items-center gap-3">
                 <h1 className="text-3xl font-extrabold tracking-tight text-ink md:text-5xl">{item.title}</h1>
               </div>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${launched ? "bg-brand-soft text-brand-deep" : "bg-ink text-white"}`}>
-                  <span className={`h-1.5 w-1.5 rounded-full ${launched ? "bg-brand" : "bg-volt"}`} /> {launched ? "Available now" : launchLabel || "Coming soon"}
-                </span>
-                {item.types?.slice(0, 2).map((t) => (
-                  <span key={t} className="rounded-full border border-line-strong bg-white px-3 py-1 text-xs font-bold text-ink-soft">{t}</span>
-                ))}
-                {(item.body_type || (item as any).bodyType) && (
-                  <span className="rounded-full border border-line-strong bg-white px-3 py-1 text-xs font-bold text-ink-soft">{item.body_type || (item as any).bodyType}</span>
+              <div className="mt-3 space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${launched ? "bg-brand-soft text-brand-deep" : "bg-ink text-white"}`}>
+                    <span className={`h-1.5 w-1.5 rounded-full ${launched ? "bg-brand" : "bg-volt"}`} /> {launched ? "Available now" : launchLabel || "Coming soon"}
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {item.types?.slice(0, 2).map((t) => (
+                    <span key={t} className="rounded-full border border-line-strong bg-white px-3 py-1 text-xs font-bold text-ink-soft">{t}</span>
+                  ))}
+                  {(item.body_type || (item as any).bodyType) && (
+                    <span className="rounded-full border border-line-strong bg-white px-3 py-1 text-xs font-bold text-ink-soft">{item.body_type || (item as any).bodyType}</span>
+                  )}
+                  {item.baas && <span className="rounded-full bg-brand-deep px-3 py-1 text-xs font-bold text-white">BaaS available</span>}
+                </div>
+                {mediaRatingSummary && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span
+                      title={`Normalized average across the model and variants from ${mediaRatingSummary.ratingCount} media ${mediaRatingSummary.ratingCount === 1 ? "rating" : "ratings"}`}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-bold text-amber-800"
+                    >
+                      <Star size={12} fill="currentColor" />
+                      {mediaRatingSummary.ratingValue.toFixed(1)} / 5 <span className="font-semibold text-amber-700">Media rating</span>
+                    </span>
+                  </div>
                 )}
-                {item.baas && <span className="rounded-full bg-brand-deep px-3 py-1 text-xs font-bold text-white">BaaS available</span>}
-                <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-xs font-bold text-brand ring-1 ring-brand/30">✓ Verified specs</span>
               </div>
             </div>
 
@@ -236,6 +204,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             ...(item.batteryVariants?.length ? [{ id: "variants", label: "Variants & price" }] : []),
             ...(item.prices?.length ? [{ id: "emi", label: "EMI" }] : []),
             { id: "specs", label: "Specifications" },
+            ...(mediaRatings.length > 0 ? [{ id: "media-ratings", label: "Media rating" }] : []),
             { id: "faq", label: "FAQs" },
             { id: "similar", label: "Similar EVs" },
           ]}
@@ -252,6 +221,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         <div id="specs" className="scroll-mt-32 pt-4">
           <ProductDetails item={item} />
         </div>
+        <ProductMediaRatings item={item} ratings={mediaRatings} />
         </ProductSelectionProvider>
 
         {(() => {

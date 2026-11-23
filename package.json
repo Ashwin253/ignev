@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@cashfreepayments/cashfree-js": "1.0.7",
+    "@cloudimage/360-view": "^4.10.0",
     "@formspree/react": "^3.0.0",
     "@imgly/background-removal": "^1.7.0",
     "@lottiefiles/dotlottie-react": "^0.19.3",

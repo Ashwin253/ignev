@@ -77,6 +77,7 @@ function renderHeroMedia(banner: HeroBannerLite, isPriority: boolean) {
         src={banner.imageHorizontal || banner.imageVertical}
         alt={banner.details || banner.label || "EVPLSE featured banner"}
         className="h-full w-full object-cover"
+        loading={isPriority ? "eager" : "lazy"}
         fetchPriority={isPriority ? "high" : "auto"}
       />
     </picture>
@@ -211,7 +212,7 @@ export default function HomeHero({ banners, modelCount, loading = false }: { ban
               transition={{ delay: 0.05, duration: 0.5 }}
               className="hidden text-3xl font-extrabold leading-[1.1] text-ink sm:block sm:text-4xl lg:text-[2.75rem]"
             >
-              India&apos;s <span className="text-gradient">trusted</span> electric mobility platform.
+              India&apos;s <span className="text-gradient">largest</span> electric mobility platform.
             </motion.h1>
             <div className="mt-4 hidden flex-wrap items-center gap-x-6 gap-y-2 text-sm font-semibold text-ink-soft sm:flex">
               <span className="inline-flex items-center gap-2"><BadgeCheck size={18} className="text-brand" /> {modelCount > 0 ? `${modelCount}+ verified models` : "Verified information"}</span>

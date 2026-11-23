@@ -9,7 +9,7 @@ import CompareButton from "./CompareButton";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  ArrowLeft, Gauge, Tag, Shield,
+  ArrowLeft, Gauge, Tag, Shield, RefreshCw, Calculator,
   BatteryCharging, Fuel, Zap, ChevronDown, Share2, Navigation, X, MapPin,
 } from "lucide-react";
 import type { EvListing } from "../lib/wordpress";
@@ -163,6 +163,10 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
 
   const cleanPrice = (val?: string | null) => val? val.replace(/[₹,a-zA-Z\s]/g, "") : "";
   const activeVariant = activeVariants?.[selectedIndex];
+  const openOfferEnquiry = (offer: "Latest Offers" | "Exchange Benefits" | "EMI Offers") => {
+    const vehicle = `${item.brand} ${item.title}${activeVariant?.modelName ? ` – ${activeVariant.modelName}` : ""}`;
+    triggerEnquiryModal(`${offer}: ${vehicle}`);
+  };
   const isPriceBlank = activeVariant ? (activeVariant.price === "" || activeVariant.price === null || activeVariant.price === undefined) : false;
   const isFuture = useMemo(() => {
     if (!activeVariant) return false;
@@ -295,7 +299,7 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
     }
 
     const timer = setTimeout(() => {
-      triggerEnquiryModal(`Offers: ${item.brand} ${item.title}`);
+      triggerEnquiryModal(`Latest Offers: ${item.brand} ${item.title}`);
       try {
         sessionStorage.setItem(sessionKey, "true");
       } catch (_) {}
@@ -433,13 +437,32 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
 
                   <div className="w-[60%] flex justify-end">
                     <button
-                      onClick={() => triggerEnquiryModal(`Offers: ${item.brand} ${item.title}`)}
-                      className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-600 px-3.5 py-3 sm:py-3.5 text-xs sm:text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:-translate-y-0.5 active:translate-y-0 transition cursor-pointer"
+                      onClick={() => openOfferEnquiry("Latest Offers")}
+                      className="inline-flex w-auto items-center justify-center gap-1.5 rounded-xl border border-emerald-200 bg-white px-3 py-2.5 text-xs font-bold text-emerald-800 transition hover:bg-emerald-50"
                     >
-                      <DotLottieReact src="/Giftpremiumanimation.lottie" loop autoplay className="h-6 w-6 shrink-0" />
-                      <span className="truncate">For Latest Offers</span>
+                      <DotLottieReact src="/Giftpremiumanimation.lottie" loop autoplay className="h-5 w-5 shrink-0" />
+                      <span className="truncate">Latest Offers</span>
                     </button>
                   </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => openOfferEnquiry("Exchange Benefits")}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-brand-deep bg-brand-deep px-3 py-3 text-xs font-extrabold text-white shadow-md shadow-brand-deep/20 transition hover:bg-brand"
+                  >
+                    <RefreshCw size={14} />
+                    Exchange Benefits
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => openOfferEnquiry("EMI Offers")}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-brand-deep bg-brand-deep px-3 py-3 text-xs font-extrabold text-white shadow-md shadow-brand-deep/20 transition hover:bg-brand"
+                  >
+                    <Calculator size={14} />
+                    EMI Offers
+                  </button>
                 </div>
 
                 {/* 80% width small text center : EMI start */}
@@ -613,6 +636,22 @@ export default function ProductMainUI({ item, slug, dbFuelPrices = [], content =
           </div>
         </div>
       )}
+
+      <button
+        type="button"
+        onClick={() => openOfferEnquiry("Latest Offers")}
+        aria-label={`Get latest offers for ${item.brand} ${item.title}`}
+        className="fixed bottom-[calc(145px+env(safe-area-inset-bottom))] right-4 z-[110] inline-flex h-14 w-14 items-center justify-center rounded-full border border-emerald-200 bg-white text-emerald-800 shadow-xl transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 sm:w-auto sm:gap-2.5 sm:rounded-2xl sm:border-emerald-700 sm:bg-emerald-600 sm:px-4 sm:text-white sm:hover:bg-emerald-700 md:bottom-6 md:right-6"
+      >
+        <DotLottieReact
+          src="/Giftpremiumanimation.lottie"
+          loop
+          autoplay
+          aria-hidden="true"
+          className="h-9 w-9 shrink-0 sm:h-6 sm:w-6"
+        />
+        <span className="hidden text-sm font-bold sm:inline">Latest Offers</span>
+      </button>
     </div>
   );
 }

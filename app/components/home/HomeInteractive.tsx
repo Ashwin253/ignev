@@ -67,8 +67,8 @@ export function Showcase({ byCategory }: { byCategory: Record<string, CatalogIte
 
         {items.length ? (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {items.map((it, i) => (
-              <VehicleCard key={itemSlug(it)} item={it} priority={i < 4} />
+            {items.map((it) => (
+              <VehicleCard key={itemSlug(it)} item={it} />
             ))}
           </div>
         ) : (

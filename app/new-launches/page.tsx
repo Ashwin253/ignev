@@ -5,8 +5,8 @@ import AutoLoadOfferModal from "../components/AutoLoadOfferModal";
 import { Container, PageHero } from "../components/ui/kit";
 import { getCatalogData } from "../lib/catalog-data";
 
-// ISR — revalidate every 5 minutes
-export const revalidate = 300;
+// Refresh recent launch listings regularly.
+export const revalidate = 60;
 
 export const metadata = {
   title: "New EV Launches | EVPLSE",

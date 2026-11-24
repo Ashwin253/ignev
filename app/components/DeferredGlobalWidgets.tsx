@@ -3,30 +3,30 @@
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 
-const AssistPopup = dynamic(() => import("./AssistPopup"), { ssr: false });
+const AskPlseWidget = dynamic(() => import("./AskPlseWidget"), { ssr: false });
 const BestOfferPopup = dynamic(() => import("./BestOfferPopup"), { ssr: false });
-const AiChatPopup = dynamic(() => import("./AiChatPopup"), { ssr: false });
 const CommandPalette = dynamic(() => import("./CommandPalette"), { ssr: false });
 
+type WidgetTab = "chat" | "assist";
+
 export default function DeferredGlobalWidgets() {
-  const [loadAssist, setLoadAssist] = useState(false);
+  const [loadWidget, setLoadWidget] = useState(false);
   const [loadOffer, setLoadOffer] = useState(false);
-  const [loadChat, setLoadChat] = useState(false);
   const [loadPalette, setLoadPalette] = useState(false);
-  const [openAssist, setOpenAssist] = useState(false);
-  const [openChat, setOpenChat] = useState(false);
+  const [openSignal, setOpenSignal] = useState<{ tab: WidgetTab; n: number } | null>(null);
   const [openPalette, setOpenPalette] = useState(false);
   const paletteLoaded = useRef(false);
+  const signalCount = useRef(0);
 
   useEffect(() => {
-    const onAssist = () => {
-      setOpenAssist(true);
-      setLoadAssist(true);
+    // Each open event bumps the counter so repeat opens re-trigger the widget.
+    const open = (tab: WidgetTab) => {
+      signalCount.current += 1;
+      setOpenSignal({ tab, n: signalCount.current });
+      setLoadWidget(true);
     };
-    const onChat = () => {
-      setOpenChat(true);
-      setLoadChat(true);
-    };
+    const onAssist = () => open("assist");
+    const onChat = () => open("chat");
     const onPalette = () => {
       setOpenPalette(true);
       paletteLoaded.current = true;
@@ -54,7 +54,7 @@ export default function DeferredGlobalWidgets() {
     window.addEventListener("keydown", onKey);
 
     const idle = window.setTimeout(() => {
-      setLoadAssist(true);
+      setLoadWidget(true);
       setLoadOffer(true);
     }, 3000);
 
@@ -69,9 +69,8 @@ export default function DeferredGlobalWidgets() {
 
   return (
     <>
-      {loadAssist && <AssistPopup openOnMount={openAssist} />}
+      {loadWidget && <AskPlseWidget openSignal={openSignal} />}
       {loadOffer && <BestOfferPopup />}
-      {loadChat && <AiChatPopup openOnMount={openChat} />}
       {loadPalette && <CommandPalette openOnMount={openPalette} />}
     </>
   );

@@ -14,6 +14,7 @@ export const VEHICLE_TYPES: NavLink[] = [
 ];
 
 export const DISCOVER: NavLink[] = [
+  { label: "Used EVs", href: "/used", desc: "Certified pre-owned EVs", icon: Car },
   { label: "New launches", href: "/new-launches", desc: "Just hit the market", icon: Sparkles },
   { label: "Upcoming EVs", href: "/upcoming", desc: "Launching soon", icon: CalendarClock },
   { label: "Offers & discounts", href: "/offers", desc: "Bank & city deals", icon: Percent },
@@ -28,6 +29,7 @@ export const TOOLS: NavLink[] = [
 ];
 
 export const SERVICES: NavLink[] = [
+  { label: "Used EVs marketplace", href: "/used", desc: "360° tour & certified health", icon: Car },
   { label: "EV insurance", href: "/service/insurance", desc: "Battery & motor cover", icon: ShieldCheck },
   { label: "Vehicle scrapping", href: "/service/scrap", desc: "Scrap value & waiver", icon: Recycle },
   { label: "Accessories shop", href: "/shop", desc: "Chargers, dashcams & more", icon: ShoppingBag },

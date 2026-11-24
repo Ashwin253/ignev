@@ -25,6 +25,24 @@ export function getSupabaseConfig() {
   return { url: supabaseUrl, anonKey: supabaseAnonKey };
 }
 
+// A client that acts as the signed-in user, so RLS policies that target the
+// `authenticated` role apply. API routes receive the browser session's access
+// token and use this for writes (the shared `supabase` client is anonymous).
+export function supabaseAsUser(accessToken: string) {
+  if (!supabaseUrl || !supabaseAnonKey || !accessToken) return null;
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    global: { headers: { Authorization: `Bearer ${accessToken}` } },
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
+// Extract a bearer token from an incoming request, if present.
+export function bearerToken(req: Request): string | null {
+  const header = req.headers.get("authorization") || "";
+  const match = header.match(/^Bearer\s+(.+)$/i);
+  return match ? match[1].trim() : null;
+}
+
 export async function fetchHeroBanners() {
   if (!supabaseEnabled()) return [];
   try {

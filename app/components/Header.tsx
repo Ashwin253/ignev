@@ -93,6 +93,7 @@ export default function Header() {
             <button onMouseEnter={() => openMega("tools")} onFocus={() => openMega("tools")} onClick={() => setMega(mega === "tools" ? null : "tools")} className={navBtn(is("/tools") || mega === "tools")} aria-expanded={mega === "tools"}>
               Tools <ChevronDown size={14} className={`transition-transform ${mega === "tools" ? "rotate-180" : ""}`} />
             </button>
+            <Link href="/used" className={navBtn(is("/used"))} onMouseEnter={() => openMega(null)}>Used EVs</Link>
             <Link href="/charging-station" className={navBtn(is("/charging-station") || is("/map"))} onMouseEnter={() => openMega(null)}>Charging</Link>
             <button onMouseEnter={() => openMega("services")} onFocus={() => openMega("services")} onClick={() => setMega(mega === "services" ? null : "services")} className={navBtn(is("/service") || is("/shop") || is("/sell-ev") || mega === "services")} aria-expanded={mega === "services"}>
               Services <ChevronDown size={14} className={`transition-transform ${mega === "services" ? "rotate-180" : ""}`} />
@@ -279,7 +280,8 @@ export default function Header() {
               </Accordion>
 
               <div className="grid grid-cols-2 gap-2 pt-2">
-                <Link href="/charging-station" className="rounded-2xl border border-line bg-paper px-4 py-3.5 text-sm font-bold text-ink">Charging map</Link>
+                <Link href="/used" className="rounded-2xl border border-line bg-paper px-4 py-3.5 text-sm font-bold text-ink">Used EVs</Link>
+            <Link href="/charging-station" className="rounded-2xl border border-line bg-paper px-4 py-3.5 text-sm font-bold text-ink">Charging map</Link>
                 <Link href="/updates" className="rounded-2xl border border-line bg-paper px-4 py-3.5 text-sm font-bold text-ink">News &amp; reviews</Link>
                 <Link href="/shortlist" className="rounded-2xl border border-line bg-paper px-4 py-3.5 text-sm font-bold text-ink">Shortlist ({slugs.length})</Link>
                 <Link href={user ? "/profile" : "/login"} className="rounded-2xl border border-line bg-paper px-4 py-3.5 text-sm font-bold text-ink">{user ? "My profile" : "Login / Sign up"}</Link>

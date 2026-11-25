@@ -22,6 +22,7 @@ import BrandsPanel from "./BrandsPanel";
 import VehiclePricingPanel, { DEFAULT_AREA_RULES, calculateAddonAmount, fmtLakh } from "./VehiclePricingPanel";
 import RatingsPanel from "./RatingsPanel";
 import UsedVehiclesPanel from "./UsedVehiclesPanel";
+import ShopPanel from "./ShopPanel";
 
 import { requestFcmToken } from "../lib/firebase";
 import { matchesVehicleCategory } from "../lib/catalog-filters";
@@ -457,7 +458,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
     }
   };
 
-  const [activeSection, setActiveSection] = useState<"listings" | "all_listings" | "used" | "brands" | "leads" | "foryou_leads" | "prices" | "vehicle_pricing" | "analytics" | "map" | "banners" | "content" | "offers" | "media" | "chargers" | "approvals" | "vehicle_approvals" | "protest">("listings");
+  const [activeSection, setActiveSection] = useState<"listings" | "all_listings" | "used" | "shop" | "brands" | "leads" | "foryou_leads" | "prices" | "vehicle_pricing" | "analytics" | "map" | "banners" | "content" | "offers" | "media" | "chargers" | "approvals" | "vehicle_approvals" | "protest">("listings");
   // Sub-tabs that live inside merged sections
   const [listingsSubTab, setListingsSubTab] = useState<"editor" | "pricing" | "brands" | "ratings">("editor");
   const [enquiriesSubTab, setEnquiriesSubTab] = useState<"general" | "foryou">("general");
@@ -2027,6 +2028,9 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             <button onClick={() => { setActiveSection("used"); }} className={`inline-flex items-center gap-1 sm:gap-2 rounded-xl border px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold transition-colors ${activeSection === "used" ? "border-slate-900 bg-white text-ink shadow-sm" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>
               🚗 Used EVs
             </button>
+            <button onClick={() => { setActiveSection("shop"); }} className={`inline-flex items-center gap-1 sm:gap-2 rounded-xl border px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-bold transition-colors ${activeSection === "shop" ? "border-slate-900 bg-white text-ink shadow-sm" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>
+              🛒 Shop
+            </button>
           </div>
         </div>
 
@@ -2049,6 +2053,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
             <option value="listings">EV Listings</option>
             <option value="all_listings">📑 All Listings</option>
             <option value="used">🚗 Used Vehicles</option>
+            <option value="shop">🛒 Shop</option>
             <option value="leads">Enquiries {pendingEnquiriesCount > 0 ? `(${pendingEnquiriesCount} new)` : ""}</option>
             {/* <option value="prices">⛽ Fuel Prices</option> */}
             <option value="analytics">📊 Analytics</option>
@@ -2069,6 +2074,10 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
           <button onClick={() => { setActiveSection("used"); }}
             className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${activeSection === "used" ? "bg-white text-ink shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-955 border border-slate-300"}`}>
             🚗 Used EVs
+          </button>
+          <button onClick={() => { setActiveSection("shop"); }}
+            className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 ${activeSection === "shop" ? "bg-white text-ink shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-955 border border-slate-300"}`}>
+            🛒 Shop
           </button>
           <button onClick={() => setActiveSection("leads")}
             className={`flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-all shrink-0 relative ${activeSection === "leads" ? "bg-white text-ink shadow-md" : "bg-slate-100 text-slate-800 hover:bg-slate-300 hover:text-slate-955 border border-slate-300"}`}>
@@ -2187,6 +2196,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
         )}
         {activeSection === "media" && <MediaPanel supabase={supabase} />}
         {activeSection === "used" && <UsedVehiclesPanel supabase={supabase} userEmail={user.email || ""} />}
+        {activeSection === "shop" && <ShopPanel supabase={supabase} userEmail={user.email || ""} />}
         {activeSection === "all_listings" && (
           <div className="mb-6 rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-100 bg-slate-50 flex flex-wrap justify-between items-center gap-3">

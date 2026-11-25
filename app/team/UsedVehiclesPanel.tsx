@@ -7,6 +7,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { UsedVehicle, UsedVehicleSourceType, UsedVehicleStatus, UsedVehicleCtaAction, UsedVehicleMediaImage, MediaImageCategory } from "../lib/used-vehicles";
 import { formatUsedVehiclePrice } from "../lib/used-vehicles";
 import { UPLOAD_CACHE_CONTROL } from "../lib/storage";
+import { authedFetch } from "../lib/authed-fetch";
 
 interface UsedVehiclesPanelProps {
   supabase: SupabaseClient | null;
@@ -46,15 +47,7 @@ const deriveMediaTitle = (name: string) =>
 
 // Attach the signed-in user's access token so the API can write through RLS
 // policies that target the `authenticated` role.
-async function authedFetch(supabase: SupabaseClient | null, url: string, init?: RequestInit) {
-  const headers = new Headers(init?.headers);
-  if (supabase) {
-    const { data } = await supabase.auth.getSession();
-    const token = data?.session?.access_token;
-    if (token) headers.set("Authorization", `Bearer ${token}`);
-  }
-  return fetch(url, { ...init, headers });
-}
+
 
 // Extract a human-readable message from an unknown caught value
 const toErrorMessage = (err: unknown, fallback: string) =>

@@ -28,6 +28,7 @@ import MoreLikeThisSection from "../MoreLikeThisSection";
 import dynamic from "next/dynamic";
 import VehicleJsonLd from "../../components/VehicleJsonLd";
 import { getMediaRatingSummary } from "../../lib/media-ratings";
+import { formatShopPrice, getShopProductsForVehicleSlug, type ShopProduct } from "../../lib/shop";
 
 const ProductDetailsSkeleton = () => (
   <div className="mt-16 rounded-3xl border-2 border-slate-300 bg-slate-100  px-5 py-8 md:px-10 md:py-10 shadow-sm animate-pulse">
@@ -103,10 +104,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     console.error("Error fetching fuel prices:", err);
   }
 
-  const [productContent, offers, mediaRatings] = await Promise.all([
+  const [productContent, offers, mediaRatings, compatibleShopProducts] = await Promise.all([
     fetchProductContent(slug),
     fetchProductOffers(item.brand || "", slug),
     fetchVehicleMediaRatings(item.id),
+    getShopProductsForVehicleSlug(item.slug || slug),
   ]);
   const mediaRatingSummary = getMediaRatingSummary(mediaRatings);
 
@@ -123,8 +125,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     : item.photo ? [item.photo] : [fallbackPhoto];
   const sections = [
     ...(item.batteryVariants?.length ? [{ id: "variants", label: "Variants & price" }] : []),
-    ...(item.prices?.length ? [{ id: "emi", label: "EMI" }] : []),
     { id: "specs", label: "Specifications" },
+    ...(item.prices?.length ? [{ id: "emi", label: "EMI" }] : []),
+    ...(compatibleShopProducts.length ? [{ id: "shop", label: "Accessories & spare parts" }] : []),
     ...(mediaRatings.length > 0 ? [{ id: "media-ratings", label: "Media rating" }] : []),
     { id: "faq", label: "FAQs" },
     { id: "similar", label: "Similar EVs" },
@@ -207,23 +210,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </div>
         <ProductHighlights item={item} mediaRating={mediaRatingSummary} />
         <ProductNav title={`${item.brand} ${item.title}`.trim()} sections={sections}>
-          {/* ── Variants and EMI sections ── */}
-          {(item.batteryVariants?.length || item.prices?.length) ? (
+          {/* ── Variants ── */}
+          {item.batteryVariants?.length ? (
             <div className="grid items-start gap-8 md:gap-10 md:pt-16">
-              {item.batteryVariants?.length ? (
-                <ProductSectionPanel id="variants">
-                  <div className="pt-8 md:pt-0">
-                    <ProductVariants item={item} title={`${item.brand} ${item.title}`.trim()} />
-                  </div>
-                </ProductSectionPanel>
-              ) : null}
-              {item.prices?.length ? (
-                <ProductSectionPanel id="emi">
-                  <div className="pt-8 md:pt-0">
-                    <ProductEmi title={`${item.brand} ${item.title}`.trim()} />
-                  </div>
-                </ProductSectionPanel>
-              ) : null}
+              <ProductSectionPanel id="variants">
+                <div className="pt-8 md:pt-0">
+                  <ProductVariants item={item} title={`${item.brand} ${item.title}`.trim()} />
+                </div>
+              </ProductSectionPanel>
             </div>
           ) : null}
 
@@ -233,6 +227,18 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <ProductDetails item={item} />
             </div>
           </ProductSectionPanel>
+          {item.prices?.length ? (
+            <ProductSectionPanel id="emi">
+              <div className="pt-8 md:pt-0">
+                <ProductEmi title={`${item.brand} ${item.title}`.trim()} />
+              </div>
+            </ProductSectionPanel>
+          ) : null}
+          {compatibleShopProducts.length > 0 && (
+            <ProductSectionPanel id="shop">
+              <CompatibleShopProducts products={compatibleShopProducts} vehicleName={`${item.brand} ${item.title}`.trim()} />
+            </ProductSectionPanel>
+          )}
           <ProductSectionPanel id="media-ratings">
             <ProductMediaRatings item={item} ratings={mediaRatings} />
           </ProductSectionPanel>
@@ -273,6 +279,54 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </ProductSectionPanel>
         </ProductNav>
         </ProductSelectionProvider>
+      </div>
+    </section>
+  );
+}
+
+function CompatibleShopProducts({ products, vehicleName }: { products: ShopProduct[]; vehicleName: string }) {
+  return (
+    <section id="shop" className="scroll-mt-32 pt-16">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-brand">EVPLSE Shop</p>
+          <h2 className="mt-2 text-3xl font-extrabold text-ink">Accessories & spare parts for {vehicleName}</h2>
+          <p className="mt-2 text-sm text-ink-soft">Quick access to accessories and parts selected for this model.</p>
+        </div>
+        <Link href="/shop" className="shrink-0 text-sm font-extrabold text-brand hover:text-brand-deep hover:underline">
+          View all products →
+        </Link>
+      </div>
+      <div className="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {products.map((product) => {
+          const onSale = Boolean(product.mrp && product.mrp > product.price);
+          return (
+            <Link
+              key={product.id}
+              href={`/shop?product=${encodeURIComponent(product.slug)}`}
+              className="group overflow-hidden rounded-3xl border border-line bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lift"
+            >
+              <div className="aspect-square bg-slate-100 p-3">
+                {product.image ? (
+                  // Shop images may be hosted outside the Next Image allowlist.
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={product.image} alt={product.name} className="h-full w-full object-contain" />
+                ) : (
+                  <div className="flex h-full items-center justify-center text-sm font-bold text-slate-400">EVPLSE Shop</div>
+                )}
+              </div>
+              <div className="p-5">
+                <p className="text-xs font-bold uppercase tracking-wider text-brand">{product.category}</p>
+                <h3 className="mt-2 font-extrabold text-ink">{product.name}</h3>
+                {product.description && <p className="mt-2 line-clamp-2 text-sm leading-6 text-ink-soft">{product.description}</p>}
+                <div className="mt-4 flex items-center gap-2">
+                  <span className="text-lg font-extrabold text-ink">{formatShopPrice(product.price)}</span>
+                  {onSale && product.mrp && <span className="text-sm text-ink-mute line-through">{formatShopPrice(product.mrp)}</span>}
+                </div>
+              </div>
+            </Link>
+          );
+        })}
       </div>
     </section>
   );

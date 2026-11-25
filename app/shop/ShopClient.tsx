@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingCart, ShoppingBag, PackageX, Wrench, Car, Shirt } from "lucide-react";
@@ -20,8 +20,31 @@ const TYPE_ICON: Record<ShopProductType, React.ReactNode> = {
   merch: <Shirt size={12} />,
 };
 
-export default function ShopClient({ products }: { products: ShopProduct[] }) {
+export default function ShopClient({
+  products,
+  productSlug,
+}: {
+  products: ShopProduct[];
+  productSlug?: string;
+}) {
   const [activeProduct, setActiveProduct] = useState<CheckoutProduct | null>(null);
+  const [selectedVehicleSlug, setSelectedVehicleSlug] = useState("");
+  const vehicleOptions = useMemo(() => {
+    const options = new Map<string, string>();
+    for (const product of products) {
+      if (!product.vehicle_slug) continue;
+      options.set(product.vehicle_slug, product.vehicle_model || product.vehicle_slug);
+    }
+    return [...options.entries()]
+      .map(([slug, label]) => ({ slug, label }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [products]);
+  const productMatches = productSlug
+    ? products.filter((product) => product.slug === productSlug || product.id === productSlug)
+    : products;
+  const visibleProducts = selectedVehicleSlug
+    ? productMatches.filter((product) => product.vehicle_slug === selectedVehicleSlug)
+    : productMatches;
 
   const openCheckout = (p: ShopProduct) =>
     setActiveProduct({
@@ -34,22 +57,47 @@ export default function ShopClient({ products }: { products: ShopProduct[] }) {
       onSale: Boolean(p.mrp && p.mrp > p.price),
     });
 
-  if (products.length === 0) {
+  if (productMatches.length === 0) {
     return (
       <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50/60 py-20 text-center">
         <ShoppingBag size={40} className="mx-auto mb-4 text-slate-300" />
-        <h3 className="text-lg font-bold text-slate-800">No products in the shop yet</h3>
+        <h3 className="text-lg font-bold text-slate-800">{productSlug ? "This product is unavailable" : "No products in the shop yet"}</h3>
         <p className="mt-1 text-sm text-slate-500">
-          The team is stocking the shelves — check back soon.
+          {productSlug ? "It may be out of stock or no longer listed." : "The team is stocking the shelves — check back soon."}
         </p>
+        {productSlug && <Link href="/shop" className="mt-5 inline-flex text-sm font-bold text-emerald-700 hover:underline">View all shop products →</Link>}
       </div>
     );
   }
 
   return (
     <>
+      {productSlug && (
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+          <span>Showing the selected product.</span>
+          <Link href="/shop" className="font-bold text-emerald-700 hover:underline">View all products →</Link>
+        </div>
+      )}
+      {!productSlug && vehicleOptions.length > 0 && (
+        <div className="mb-6 flex flex-col gap-2 sm:max-w-sm">
+          <label htmlFor="shop-vehicle-filter" className="text-sm font-bold text-slate-700">
+            Filter by vehicle model
+          </label>
+          <select
+            id="shop-vehicle-filter"
+            value={selectedVehicleSlug}
+            onChange={(event) => setSelectedVehicleSlug(event.target.value)}
+            className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-800 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+          >
+            <option value="">All vehicles and models</option>
+            {vehicleOptions.map((vehicle) => (
+              <option key={vehicle.slug} value={vehicle.slug}>{vehicle.label}</option>
+            ))}
+          </select>
+        </div>
+      )}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {products.map((product, index) => {
+        {visibleProducts.map((product, index) => {
           const outOfStock = product.stock <= 0;
           const onSale = Boolean(product.mrp && product.mrp > product.price);
 

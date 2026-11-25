@@ -8,8 +8,14 @@ export const metadata = {
   description: "Premium EV accessories, spare parts and merchandise. Cash on delivery across India.",
 };
 
-export default async function ShopPage() {
+export default async function ShopPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ product?: string | string[] }>;
+}) {
   const products = await getShopProducts();
+  const { product } = await searchParams;
+  const productSlug = typeof product === "string" ? product : undefined;
 
   return (
     <section className="min-h-screen bg-white py-28">
@@ -28,7 +34,7 @@ export default async function ShopPage() {
           </div>
         </div>
 
-        <ShopClient products={products} />
+        <ShopClient products={products} productSlug={productSlug} />
       </div>
     </section>
   );

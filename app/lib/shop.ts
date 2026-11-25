@@ -191,6 +191,33 @@ export async function getShopProducts(): Promise<ShopProduct[]> {
   }
 }
 
+/** Active shop products assigned to an EV model page in Team Shop. */
+export async function getShopProductsForVehicleSlug(vehicleSlug: string): Promise<ShopProduct[]> {
+  if (!supabaseEnabled()) return [];
+
+  const cleanSlug = decodeURIComponent(vehicleSlug)
+    .trim()
+    .replace(/^\/+|\/+$/g, "")
+    .replace(/^product\//i, "");
+  if (!cleanSlug) return [];
+
+  try {
+    const { data, error } = await supabase
+      .from("shop_products")
+      .select("*")
+      .eq("is_active", true)
+      .ilike("vehicle_slug", cleanSlug)
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    return (data || []).map(mapRowToShopProduct);
+  } catch (e) {
+    console.warn("[Shop] Could not load model-specific products:", e);
+    return [];
+  }
+}
+
 export async function getShopProductBySlug(slugOrId: string): Promise<ShopProduct | null> {
   if (!supabaseEnabled()) return null;
   const clean = decodeURIComponent(slugOrId).trim();

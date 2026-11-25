@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { UPLOAD_CACHE_CONTROL } from "../lib/storage";
 import {
   X,
   Check,
@@ -248,7 +249,7 @@ export default function BannerCropModal({
       const rawPath = `banners/${timestamp}-cropped.png`;
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from("evphotos")
-        .upload(rawPath, new File([blob], "cropped.png", { type: "image/png" }), { upsert: true });
+        .upload(rawPath, new File([blob], "cropped.png", { type: "image/png" }), { cacheControl: UPLOAD_CACHE_CONTROL, upsert: true });
 
       if (uploadError) throw new Error(uploadError.message);
 
@@ -269,7 +270,7 @@ export default function BannerCropModal({
             const avifPath = `banners/${timestamp}-cropped.avif`;
             const { data: avifData, error: avifError } = await supabase.storage
               .from("evphotos")
-              .upload(avifPath, new File([avifBlob], "cropped.avif", { type: "image/avif" }), { upsert: true });
+              .upload(avifPath, new File([avifBlob], "cropped.avif", { type: "image/avif" }), { cacheControl: UPLOAD_CACHE_CONTROL, upsert: true });
 
             if (!avifError && avifData) {
               finalPublicUrl = supabase.storage.from("evphotos").getPublicUrl(avifData.path).data.publicUrl;

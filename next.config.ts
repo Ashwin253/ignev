@@ -15,11 +15,16 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ["192.168.137.1"],
 
   images: {
-    // Prefer AVIF then WebP — smaller files, same quality
-    formats: ["image/avif", "image/webp"],
+    // Single output format: WebP only. AVIF compresses ~20% smaller but takes
+    // ~50% longer to encode, and Next caches one variant per format — so
+    // dropping AVIF halves the stored/generated variants.
+    formats: ["image/webp"],
 
-    // Aggressive caching — images don't change often
-    minimumCacheTTL: 60 * 60 * 24 * 7, // 7 days
+    // Cache optimized images for 31 days. Vercel uses whichever is larger:
+    // this value or the upstream Cache-Control header. Supabase Storage sends
+    // a short max-age, so this applies immediately to already-uploaded files
+    // without re-uploading them.
+    minimumCacheTTL: 60 * 60 * 24 * 31, // 2678400s
 
     remotePatterns: [
       { protocol: "https", hostname: "imgd.aeplcdn.com" },
@@ -31,7 +36,12 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "eulermotors.com" },
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "evplse.online" },
-      { protocol: "https", hostname: "ijkofkibmxlqwolknosi.supabase.co" },
+      // Supabase Storage: only public objects, not the whole project host.
+      {
+        protocol: "https",
+        hostname: "ijkofkibmxlqwolknosi.supabase.co",
+        pathname: "/storage/v1/object/public/**",
+      },
       { protocol: "https", hostname: "m.media-amazon.com" },
     ],
   },

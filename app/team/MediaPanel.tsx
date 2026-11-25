@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import { UPLOAD_CACHE_CONTROL } from "../lib/storage";
 import { 
   Download, Trash2, Upload, Search, Loader2, RefreshCw, X, CheckCircle, Sparkles, Crop, FlipHorizontal, FileImage, Maximize2
 } from "lucide-react";
@@ -328,7 +329,7 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
 
       try {
         const path = `vehicles/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.\-]/g, "")}`;
-        const { data, error } = await supabase.storage.from("evphotos").upload(path, file, { upsert: true });
+        const { data, error } = await supabase.storage.from("evphotos").upload(path, file, { cacheControl: UPLOAD_CACHE_CONTROL, upsert: true });
 
         if (error) {
           setBulkLog((prev) => [
@@ -513,7 +514,7 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
       const file = new File([blob], filename, { type: "image/png" });
       const path = `vehicles/${Date.now()}-${sig}-superres.png`;
 
-      const { data, error } = await supabase.storage.from("evphotos").upload(path, file, { upsert: true });
+      const { data, error } = await supabase.storage.from("evphotos").upload(path, file, { cacheControl: UPLOAD_CACHE_CONTROL, upsert: true });
       if (error) throw new Error("Storage upload failed: " + error.message);
 
       const publicUrl = supabase.storage.from("evphotos").getPublicUrl(data.path).data.publicUrl;
@@ -631,7 +632,7 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
 
       const file = new File([blob], filename, { type: "image/png" });
       const path = `vehicles/${Date.now()}-${sig}.png`;
-      const { data, error } = await supabase.storage.from("evphotos").upload(path, file, { upsert: true });
+      const { data, error } = await supabase.storage.from("evphotos").upload(path, file, { cacheControl: UPLOAD_CACHE_CONTROL, upsert: true });
 
       if (error) {
         alert("Upload failed: " + error.message);
@@ -733,7 +734,7 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
       const filename = `${sig}-flipped.png`;
       const path = `vehicles/${Date.now()}-${sig}.png`;
       
-      const { data, error } = await supabase.storage.from("evphotos").upload(path, new File([blob], filename, { type: "image/png" }), { upsert: true });
+      const { data, error } = await supabase.storage.from("evphotos").upload(path, new File([blob], filename, { type: "image/png" }), { cacheControl: UPLOAD_CACHE_CONTROL, upsert: true });
 
       if (error) {
         alert("Upload failed: " + error.message);
@@ -820,7 +821,7 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
       // 2. Upload to Supabase Storage
       const { data, error } = await supabase.storage
         .from("evphotos")
-        .upload(path, new File([avifBlob], filename, { type: "image/avif" }), { upsert: true });
+        .upload(path, new File([avifBlob], filename, { type: "image/avif" }), { cacheControl: UPLOAD_CACHE_CONTROL, upsert: true });
 
       if (error) {
         alert("Upload of AVIF image failed: " + error.message);
@@ -888,7 +889,7 @@ export default function MediaPanel({ supabase }: { supabase: any }) {
     setUploadingId(item.id);
     try {
       const path = `vehicles/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.\-]/g, "")}`;
-      const { data, error } = await supabase.storage.from("evphotos").upload(path, file, { upsert: true });
+      const { data, error } = await supabase.storage.from("evphotos").upload(path, file, { cacheControl: UPLOAD_CACHE_CONTROL, upsert: true });
 
       if (error) {
         alert("Upload failed: " + error.message);

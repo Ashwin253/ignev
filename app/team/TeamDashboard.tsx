@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from "react";
 import { createClient } from "@supabase/supabase-js";
+import { UPLOAD_CACHE_CONTROL } from "../lib/storage";
 import { Plus, Pencil, Trash2, LogOut, Save, X, Loader2, ChevronDown, ChevronUp, MessageSquare, Mic, MicOff, Sparkles, Copy, Clipboard, Eye, Zap, Crop, FlipHorizontal, Download, CalendarDays } from "lucide-react";
 import type { EvListingRow, EvVariantRow } from "../lib/supabase";
 import CropModal from "./CropModal";
@@ -1001,7 +1002,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
 
       const file = new File([blob], filename, { type: "image/png" });
       const path = `evlistings/${form.slug || Date.now()}/${filename}`;
-      const { data, error } = await supabase.storage.from("evphotos").upload(path, file, { upsert: true });
+      const { data, error } = await supabase.storage.from("evphotos").upload(path, file, { cacheControl: UPLOAD_CACHE_CONTROL, upsert: true });
 
       if (error) {
         alert("Upload failed: " + error.message);
@@ -1053,7 +1054,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
       const filename = `flip-${Date.now()}.png`;
       const path = `evlistings/${form.slug || Date.now()}/${filename}`;
       
-      const { data, error } = await supabase.storage.from("evphotos").upload(path, new File([blob], filename, { type: "image/png" }), { upsert: true });
+      const { data, error } = await supabase.storage.from("evphotos").upload(path, new File([blob], filename, { type: "image/png" }), { cacheControl: UPLOAD_CACHE_CONTROL, upsert: true });
 
       if (error) {
         alert("Upload failed: " + error.message);
@@ -3074,7 +3075,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                                       const file = e.target.files?.[0];
                                       if (!file) return;
                                       const path = `evlistings/${form.slug || Date.now()}/featured-${Date.now()}-${file.name}`;
-                                      const { data } = await supabase.storage.from("evphotos").upload(path, file, { upsert: true });
+                                      const { data } = await supabase.storage.from("evphotos").upload(path, file, { cacheControl: UPLOAD_CACHE_CONTROL, upsert: true });
                                       if (data) {
                                         const { data: u } = supabase.storage.from("evphotos").getPublicUrl(data.path);
                                         const arr = [...form.featured_photos];
@@ -3302,7 +3303,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                                   const file = e.target.files?.[0];
                                   if (!file) return;
                                   const path = `evlistings/${form.slug || Date.now()}/gallery-${Date.now()}-${file.name}`;
-                                  const { data } = await supabase.storage.from("evphotos").upload(path, file, { upsert: true });
+                                  const { data } = await supabase.storage.from("evphotos").upload(path, file, { cacheControl: UPLOAD_CACHE_CONTROL, upsert: true });
                                   if (data) {
                                     const { data: u } = supabase.storage.from("evphotos").getPublicUrl(data.path);
                                     const arr = [...form.gallery_images];
@@ -3488,7 +3489,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                         const urls: any[] = [];
                         for (const file of files) {
                           const path = `evlistings/${form.slug || Date.now()}/gallery-${Date.now()}-${file.name}`;
-                          const { data } = await supabase.storage.from("evphotos").upload(path, file, { upsert: true });
+                          const { data } = await supabase.storage.from("evphotos").upload(path, file, { cacheControl: UPLOAD_CACHE_CONTROL, upsert: true });
                           if (data) {
                             const { data: u } = supabase.storage.from("evphotos").getPublicUrl(data.path);
                             urls.push({ url: u.publicUrl, type: "", colorCode: "", variantId: null, variantName: null, description: "" });
@@ -3534,7 +3535,7 @@ export default function TeamDashboard({ supabaseUrl, supabaseAnonKey }: { supaba
                             const listingFolder = form.slug.replace(/[^a-zA-Z0-9_-]/g, "") || "new-listing";
                             const fileName = file.name.replace(/[^a-zA-Z0-9._-]/g, "");
                             const path = `evlistings/${listingFolder}/360-${index}-${Date.now()}-${fileName}`;
-                            const { data, error } = await supabase.storage.from("evphotos").upload(path, file, { upsert: true });
+                            const { data, error } = await supabase.storage.from("evphotos").upload(path, file, { cacheControl: UPLOAD_CACHE_CONTROL, upsert: true });
                             if (error) {
                               alert(`360 frame upload failed: ${error.message}`);
                               return;

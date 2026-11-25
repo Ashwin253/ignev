@@ -6,6 +6,7 @@ import { Car, Plus, Search, Edit3, Trash2, Eye, ShieldCheck, X, RotateCw, Refres
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { UsedVehicle, UsedVehicleSourceType, UsedVehicleStatus, UsedVehicleCtaAction, UsedVehicleMediaImage, MediaImageCategory } from "../lib/used-vehicles";
 import { formatUsedVehiclePrice } from "../lib/used-vehicles";
+import { UPLOAD_CACHE_CONTROL } from "../lib/storage";
 
 interface UsedVehiclesPanelProps {
   supabase: SupabaseClient | null;
@@ -156,7 +157,7 @@ export default function UsedVehiclesPanel({ supabase, userEmail }: UsedVehiclesP
       try {
         const cleanFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, "") || "photo.jpg";
         const path = `used/${folder}/${newMedia.category}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${cleanFileName}`;
-        const { data, error } = await supabase.storage.from("evphotos").upload(path, file, { upsert: true });
+        const { data, error } = await supabase.storage.from("evphotos").upload(path, file, { cacheControl: UPLOAD_CACHE_CONTROL, upsert: true });
         if (error) throw error;
         const publicUrl = supabase.storage.from("evphotos").getPublicUrl(data.path).data.publicUrl;
         added.push({
@@ -399,7 +400,7 @@ export default function UsedVehiclesPanel({ supabase, userEmail }: UsedVehiclesP
     const cleanFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, "");
     const path = `used/${folder}/${Date.now()}-${cleanFileName}`;
 
-    const { data, error } = await supabase.storage.from("evphotos").upload(path, file, { upsert: true });
+    const { data, error } = await supabase.storage.from("evphotos").upload(path, file, { cacheControl: UPLOAD_CACHE_CONTROL, upsert: true });
     if (error) {
       alert(`Upload failed: ${error.message}`);
       return;

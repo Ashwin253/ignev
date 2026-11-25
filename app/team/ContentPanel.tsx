@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { UPLOAD_CACHE_CONTROL } from "../lib/storage";
 import { Plus, Trash2, Pencil, X, Save, Loader2, FileText, Upload, Image as ImageIcon, Sparkles, RefreshCw, ExternalLink, Car, User, AlertTriangle, CheckCircle, Search, ChevronRight } from "lucide-react";
 import MarkdownEditor from "./MarkdownEditor";
 import { extractArticleMeta } from "../lib/supabase";
@@ -166,7 +167,7 @@ export default function ContentPanel({
     try {
       const cleanName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "");
       const path = `content/thumbnails/${Date.now()}-${cleanName}`;
-      const { data, error } = await supabase.storage.from("evphotos").upload(path, file, { upsert: true });
+      const { data, error } = await supabase.storage.from("evphotos").upload(path, file, { cacheControl: UPLOAD_CACHE_CONTROL, upsert: true });
 
       if (error) {
         alert("Upload failed: " + error.message);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { UPLOAD_CACHE_CONTROL } from "../lib/storage";
 import { Plus, Trash2, Pencil, X, Save, Loader2, GripVertical, ArrowUp, ArrowDown, Crop, Smartphone } from "lucide-react";
 import BannerCropModal, { BannerCropField } from "./BannerCropModal";
 
@@ -52,7 +53,7 @@ export default function BannersPanel({ supabase }: { supabase: any }) {
 
     setUploadingField(field);
     const path = `banners/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.\-]/g, "")}`;
-    const { data, error } = await supabase.storage.from("evphotos").upload(path, file, { upsert: true });
+    const { data, error } = await supabase.storage.from("evphotos").upload(path, file, { cacheControl: UPLOAD_CACHE_CONTROL, upsert: true });
 
     if (error) {
       alert("Upload failed: " + error.message);
@@ -126,7 +127,7 @@ export default function BannersPanel({ supabase }: { supabase: any }) {
       const path = `banners/${Date.now()}-converted.avif`;
       const { data, error } = await supabase.storage
         .from("evphotos")
-        .upload(path, new File([avifBlob], "converted.avif", { type: "image/avif" }), { upsert: true });
+        .upload(path, new File([avifBlob], "converted.avif", { type: "image/avif" }), { cacheControl: UPLOAD_CACHE_CONTROL, upsert: true });
       if (error) throw new Error(error.message);
       const publicUrl = supabase.storage.from("evphotos").getPublicUrl(data.path).data.publicUrl;
       setForm({ ...form, [field]: publicUrl });

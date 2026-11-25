@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
+import { UPLOAD_CACHE_CONTROL } from "../lib/storage";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
@@ -342,7 +343,7 @@ export default function MarkdownEditor({ value, onChange, placeholder, supabase 
     try {
       const cleanName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "");
       const path = `content/articles/${Date.now()}-${cleanName}`;
-      const { data, error } = await supabase.storage.from("evphotos").upload(path, file, { upsert: true });
+      const { data, error } = await supabase.storage.from("evphotos").upload(path, file, { cacheControl: UPLOAD_CACHE_CONTROL, upsert: true });
       if (error) {
         alert("Image upload failed: " + error.message);
         return null;

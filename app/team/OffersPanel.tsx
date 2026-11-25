@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { UPLOAD_CACHE_CONTROL } from "../lib/storage";
 import { Plus, Trash2, Pencil, X, Save, Loader2, Tag, CalendarDays } from "lucide-react";
 
 export type Offer = {
@@ -40,7 +41,7 @@ export default function OffersPanel({ supabase, uniqueBrands = [] }: { supabase:
 
     setUploadingImage(true);
     const path = `offers/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.\-]/g, "")}`;
-    const { data, error } = await supabase.storage.from("evphotos").upload(path, file, { upsert: true });
+    const { data, error } = await supabase.storage.from("evphotos").upload(path, file, { cacheControl: UPLOAD_CACHE_CONTROL, upsert: true });
 
     if (error) {
       alert("Upload failed: " + error.message);

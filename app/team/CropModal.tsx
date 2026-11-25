@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { UPLOAD_CACHE_CONTROL } from "../lib/storage";
 import { X, Check, Loader2, ZoomIn, ZoomOut, RotateCcw, Move } from "lucide-react";
 
 interface ImageItem {
@@ -234,7 +235,7 @@ export default function CropModal({
       const filename = `${sig}-cropped.png`;
       const path = `vehicles/${Date.now()}-${sig}.png`;
       
-      const { data, error } = await supabase.storage.from("evphotos").upload(path, new File([blob], filename, { type: "image/png" }), { upsert: true });
+      const { data, error } = await supabase.storage.from("evphotos").upload(path, new File([blob], filename, { type: "image/png" }), { cacheControl: UPLOAD_CACHE_CONTROL, upsert: true });
 
       if (error) {
         alert("Upload failed: " + error.message);

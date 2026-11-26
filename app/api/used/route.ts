@@ -51,6 +51,7 @@ export async function POST(req: Request) {
     const brand = String(body.brand).toUpperCase().trim();
     const model = String(body.model || body.title).trim();
     const year = Number(body.year) || new Date().getFullYear();
+    const listingType = body.listing_type === "inventory" ? "inventory" : "detailed";
     const rawSlug = (body.slug || `${year}-${brand}-${model}-${body.variant || ""}-${body.city || "noida"}`)
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
@@ -69,6 +70,8 @@ export async function POST(req: Request) {
       body_type: body.body_type || "SUV",
       odometer_km: Number(body.odometer_km) || 0,
       ownership: body.ownership || "1st Owner",
+      listing_type: listingType,
+      stock_left: listingType === "inventory" ? Math.max(0, Number(body.stock_left) || 0) : 0,
       price: Number(body.price) || 0,
       original_price: body.original_price ? Number(body.original_price) : null,
       emi_starting: body.emi_starting ? Number(body.emi_starting) : Math.round((Number(body.price) || 0) * 0.0195),

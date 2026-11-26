@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { RotateCw, Maximize2, X, ChevronLeft, ChevronRight, Eye, ShieldCheck, Sparkles, Image as ImageIcon, Info } from "lucide-react";
@@ -47,7 +47,16 @@ export default function UsedVehicleGallery({
     const list: GalleryItem[] = [];
     const seenUrls = new Set<string>();
 
-    // 1. Add categorized media images first (they contain rich descriptions)
+    // 1. Always lead with the main cover photo. The 360° tour is opt-in.
+    if (photo && !seenUrls.has(photo)) {
+      seenUrls.add(photo);
+      list.push({
+        url: photo,
+        category: "outside",
+      });
+    }
+
+    // 2. Add categorized media images after the main cover.
     if (Array.isArray(mediaImages) && mediaImages.length > 0) {
       mediaImages.forEach((m) => {
         if (m.url && !seenUrls.has(m.url)) {
@@ -62,26 +71,13 @@ export default function UsedVehicleGallery({
       });
     }
 
-    // 2. Add main cover if not seen
-    if (photo && !seenUrls.has(photo)) {
-      seenUrls.add(photo);
-      list.push({
-        url: photo,
-        category: "outside",
-        title: "Main Exterior Profile",
-        description: "Official vehicle exterior profile view.",
-      });
-    }
-
-    // 3. Add any additional gallery images
-    (galleryImages || []).forEach((img, idx) => {
+    // 3. Add any additional gallery images.
+    (galleryImages || []).forEach((img) => {
       if (img && !seenUrls.has(img)) {
         seenUrls.add(img);
         list.push({
           url: img,
           category: "outside",
-          title: `Vehicle View ${idx + 1}`,
-          description: "Inspected vehicle photograph.",
         });
       }
     });
@@ -90,8 +86,6 @@ export default function UsedVehicleGallery({
       list.push({
         url: "/vehicles/tatanexonev.webp",
         category: "outside",
-        title: "Vehicle View",
-        description: "Standard model photo.",
       });
     }
 
@@ -103,10 +97,23 @@ export default function UsedVehicleGallery({
   const insideCount = items.filter((i) => i.category === "inside").length;
 
   const [activeTab, setActiveTab] = useState<"360" | "all" | "outside" | "inside">(
-    has360 ? "360" : insideCount > 0 ? "outside" : "all"
+    "all"
   );
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
   const [fullscreenOpen, setFullscreenOpen] = useState(false);
+
+  useEffect(() => {
+    if (!fullscreenOpen) return;
+    document.body.dataset.usedGalleryFullscreen = "true";
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setFullscreenOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      delete document.body.dataset.usedGalleryFullscreen;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [fullscreenOpen]);
 
   // Filtered photos based on active category
   const displayPhotos = useMemo(() => {
@@ -254,37 +261,6 @@ export default function UsedVehicleGallery({
               {selectedPhotoIndex + 1} / {displayPhotos.length}
             </div>
 
-            {/* Inside/Outside Category Badge & Description Overlay */}
-            {(activePhoto?.title || activePhoto?.description) && (
-              <div className="absolute bottom-3 left-3 right-3 z-10 rounded-2xl bg-slate-950/80 p-3 sm:p-3.5 text-white shadow-lg backdrop-blur-md border border-white/10">
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-white ${
-                      activePhoto.category === "inside"
-                        ? "bg-indigo-600"
-                        : activePhoto.category === "outside"
-                        ? "bg-emerald-700"
-                        : activePhoto.category === "tyres"
-                        ? "bg-amber-600"
-                        : "bg-slate-700"
-                    }`}
-                  >
-                    {activePhoto.category === "inside" ? "Inside (Interior)" : activePhoto.category === "outside" ? "Outside (Exterior)" : activePhoto.category}
-                  </span>
-                  {activePhoto.title && (
-                    <h5 className="font-extrabold text-xs sm:text-sm text-white line-clamp-1">
-                      {activePhoto.title}
-                    </h5>
-                  )}
-                </div>
-
-                {activePhoto.description && (
-                  <p className="mt-1 text-[11px] sm:text-xs text-slate-200 line-clamp-2 leading-relaxed">
-                    {activePhoto.description}
-                  </p>
-                )}
-              </div>
-            )}
           </div>
         )}
       </div>
@@ -331,22 +307,17 @@ export default function UsedVehicleGallery({
 
       {/* Fullscreen Modal with Description */}
       {fullscreenOpen && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-black/95 p-4 text-white">
-          <div className="flex items-center justify-between pb-3">
+        <div className="fixed inset-0 z-[9999] flex flex-col bg-black/95 p-4 text-white">
+          <div className="flex items-center justify-between pb-3 pr-12">
             <div>
               <h4 className="text-sm font-bold">{title}</h4>
-              {activePhoto && (
-                <p className="text-xs text-slate-400 capitalize">
-                  {activePhoto.category}: {activePhoto.title}
-                </p>
-              )}
             </div>
             <button
               onClick={() => setFullscreenOpen(false)}
-              className="rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition"
+              className="fixed right-4 top-4 z-[60] inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-2 text-xs font-bold text-white shadow-lg backdrop-blur-sm transition hover:bg-white/30"
               aria-label="Close fullscreen"
             >
-              <X size={20} />
+              <X size={18} /> <span>Close</span>
             </button>
           </div>
 
@@ -365,11 +336,6 @@ export default function UsedVehicleGallery({
             )}
           </div>
 
-          {activePhoto?.description && activeTab !== "360" && (
-            <div className="mt-2 rounded-xl bg-white/10 p-3 text-xs text-slate-200 text-center max-w-2xl mx-auto">
-              <strong>{activePhoto.title}:</strong> {activePhoto.description}
-            </div>
-          )}
         </div>
       )}
     </div>

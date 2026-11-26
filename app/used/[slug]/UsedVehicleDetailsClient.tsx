@@ -26,8 +26,15 @@ export default function UsedVehicleDetailsClient({
   const [activeInspectionTab, setActiveInspectionTab] = useState<number | null>(0);
   const [downPaymentPercent, setDownPaymentPercent] = useState<number>(20);
   const [loanTenureYears, setLoanTenureYears] = useState<number>(5);
+  const [activeVisualCategory, setActiveVisualCategory] = useState<"all" | "outside" | "inside" | "tyres" | "details">("all");
+  const [showAllVisuals, setShowAllVisuals] = useState(false);
 
   const price = vehicle.price || 900000;
+  const isInventory = vehicle.listing_type === "inventory";
+  const mediaImages = vehicle.media_images || [];
+  const visibleVisuals = activeVisualCategory === "all"
+    ? mediaImages
+    : mediaImages.filter((item) => item.category === activeVisualCategory);
   const downPayment = Math.round((price * downPaymentPercent) / 100);
   const loanAmount = price - downPayment;
   const interestRateAnnual = 0.095; // 9.5% per annum
@@ -90,8 +97,10 @@ export default function UsedVehicleDetailsClient({
 
           {/* Quick Overview Badges (Spinny Style) */}
           <div className="rounded-3xl border border-slate-200 bg-white p-5 sm:p-6 shadow-xs">
-            <h2 className="text-base font-extrabold text-slate-900 mb-4">Vehicle Overview</h2>
+            <h2 className="text-base font-extrabold text-slate-900 mb-4">{isInventory ? "Inventory Overview" : "Vehicle Overview"}</h2>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+              {isInventory && <div className="rounded-2xl border border-violet-100 bg-violet-50 p-3.5"><span className="text-[11px] font-bold uppercase text-violet-500">Stock left</span><p className="mt-0.5 text-sm font-extrabold text-violet-900">{vehicle.stock_left} {vehicle.stock_left === 1 ? "unit" : "units"}</p></div>}
+              {!isInventory && <>
               <div className="rounded-2xl bg-slate-50 p-3.5 border border-slate-100">
                 <span className="text-[11px] font-bold uppercase text-slate-400">Reg. Year</span>
                 <p className="mt-0.5 text-sm font-extrabold text-slate-800">
@@ -147,6 +156,7 @@ export default function UsedVehicleDetailsClient({
                   2 Keys • Clean RC
                 </p>
               </div>
+              </>}
             </div>
           </div>
 
@@ -314,23 +324,32 @@ export default function UsedVehicleDetailsClient({
           )}
 
           {/* Inside & Outside Photo Inspection Gallery */}
-          {vehicle.media_images && vehicle.media_images.length > 0 && (
+          {mediaImages.length > 0 && (
             <div className="rounded-3xl border border-slate-200 bg-white p-5 sm:p-6 shadow-xs">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4 mb-4">
                 <div>
                   <span className="text-xs font-extrabold uppercase tracking-wider text-emerald-700">Detailed Visuals</span>
                   <h3 className="text-lg font-extrabold text-slate-900">
-                    Inside &amp; Outside Inspection Photos ({vehicle.media_images.length})
+                    Inside &amp; Outside Inspection Photos ({mediaImages.length})
                   </h3>
                 </div>
-                <p className="text-xs text-slate-500">Every key angle photographed and verified with condition notes.</p>
+                <p className="text-xs text-slate-500">Browse photos by area.</p>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                {vehicle.media_images.map((item, idx) => (
-                  <div key={idx} className="group overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5 space-y-2.5 transition hover:shadow-md hover:bg-white">
+              <div className="mb-4 flex flex-wrap gap-2" role="tablist" aria-label="Inspection photo categories">
+                {(["all", "outside", "inside", "tyres", "details"] as const).map((category) => {
+                  const count = category === "all" ? mediaImages.length : mediaImages.filter((item) => item.category === category).length;
+                  if (!count) return null;
+                  const label = category === "all" ? "All" : category === "outside" ? "Outside" : category === "inside" ? "Inside" : category === "tyres" ? "Tyres" : "Details";
+                  return <button key={category} type="button" role="tab" aria-selected={activeVisualCategory === category} onClick={() => { setActiveVisualCategory(category); setShowAllVisuals(false); }} className={`rounded-full px-3 py-1.5 text-xs font-bold transition ${activeVisualCategory === category ? "bg-slate-900 text-white" : "border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900"}`}>{label} ({count})</button>;
+                })}
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                {visibleVisuals.slice(0, showAllVisuals ? undefined : 4).map((item, idx) => (
+                  <div key={`${item.url}-${idx}`} className="group overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/70 p-2.5 transition hover:bg-white hover:shadow-md">
                     <div className="relative aspect-[16/10] w-full overflow-hidden rounded-xl bg-slate-200">
-                      <img src={item.url} alt={item.title} className="h-full w-full object-cover transition duration-300 group-hover:scale-103" />
+                      <img src={item.url} alt={`${item.category} inspection photo`} className="h-full w-full object-cover transition duration-300 group-hover:scale-103" />
                       <span className={`absolute left-2.5 top-2.5 rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-white shadow-xs ${
                         item.category === "inside"
                           ? "bg-indigo-600"
@@ -343,16 +362,14 @@ export default function UsedVehicleDetailsClient({
                         {item.category === "inside" ? "Inside (Interior)" : item.category === "outside" ? "Outside (Exterior)" : item.category}
                       </span>
                     </div>
-
-                    <div>
-                      <h4 className="font-extrabold text-sm text-slate-900">{item.title}</h4>
-                      {item.description && (
-                        <p className="mt-1 text-xs text-slate-600 leading-relaxed">{item.description}</p>
-                      )}
-                    </div>
                   </div>
                 ))}
               </div>
+              {visibleVisuals.length > 4 && (
+                <button type="button" onClick={() => setShowAllVisuals((current) => !current)} className="mt-4 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-extrabold text-slate-700 transition hover:bg-slate-100">
+                  {showAllVisuals ? "Show less" : `View ${visibleVisuals.length - 4} more`}
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -375,7 +392,7 @@ export default function UsedVehicleDetailsClient({
             {/* Title */}
             <h1 className="text-2xl font-black text-slate-900">{vehicle.title}</h1>
             <p className="mt-1 text-xs font-semibold text-slate-500">
-              {vehicle.odometer_km.toLocaleString()} km • {vehicle.ownership} • {vehicle.city}
+              {isInventory ? `${vehicle.stock_left} ${vehicle.stock_left === 1 ? "unit" : "units"} currently available • ${vehicle.city}` : `${vehicle.odometer_km.toLocaleString()} km • ${vehicle.ownership} • ${vehicle.city}`}
             </p>
 
             {/* Price Row */}

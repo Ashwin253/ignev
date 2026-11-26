@@ -579,6 +579,8 @@ create table if not exists public.used_vehicles (
   body_type text default 'SUV',
   odometer_km integer not null default 0,
   ownership text not null default '1st Owner',
+  listing_type text not null default 'detailed' check (listing_type in ('detailed', 'inventory')),
+  stock_left integer not null default 0 check (stock_left >= 0),
   price integer not null, -- in INR (e.g. 945000)
   original_price integer default null, -- Ex-showroom new price
   emi_starting integer default null, -- Monthly EMI starting amount

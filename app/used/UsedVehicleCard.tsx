@@ -17,6 +17,7 @@ export default function UsedVehicleCard({ vehicle }: UsedVehicleCardProps) {
   const [modalType, setModalType] = useState<"test_drive" | "enquire">("test_drive");
 
   const has360 = Array.isArray(vehicle.images_360) && vehicle.images_360.filter(Boolean).length >= 4;
+  const isInventory = vehicle.listing_type === "inventory";
   const mainPhoto = vehicle.photo || (vehicle.gallery_images && vehicle.gallery_images[0]) || "/vehicles/tatanexonev.webp";
 
   const sourceConfig = {
@@ -106,12 +107,12 @@ export default function UsedVehicleCard({ vehicle }: UsedVehicleCardProps) {
 
             {/* Key Specs Pills */}
             <div className="mb-3 flex flex-wrap items-center gap-1.5 text-[11px] font-bold text-slate-600">
-              <span className="rounded-md bg-slate-100 px-2 py-1">
-                {vehicle.odometer_km.toLocaleString()} km
-              </span>
-              <span className="rounded-md bg-slate-100 px-2 py-1">
-                {vehicle.ownership}
-              </span>
+              {isInventory ? (
+                <span className="rounded-md bg-violet-100 px-2 py-1 text-violet-800">{vehicle.stock_left} {vehicle.stock_left === 1 ? "unit" : "units"} left</span>
+              ) : <>
+                <span className="rounded-md bg-slate-100 px-2 py-1">{vehicle.odometer_km.toLocaleString()} km</span>
+                <span className="rounded-md bg-slate-100 px-2 py-1">{vehicle.ownership}</span>
+              </>}
               <span className="rounded-md bg-emerald-50 text-emerald-800 px-2 py-1 flex items-center gap-1">
                 <Zap size={11} /> Pure EV
               </span>

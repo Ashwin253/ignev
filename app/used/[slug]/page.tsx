@@ -26,7 +26,9 @@ export async function generateMetadata({
   }
 
   const cleanTitle = `Used ${vehicle.title} (${vehicle.year}) in ${vehicle.city} | ${formatUsedVehiclePrice(vehicle.price)}`;
-  const cleanDesc = `Buy pre-owned ${vehicle.title} with 360° virtual tour, ${vehicle.odometer_km.toLocaleString()} km driven, ${vehicle.battery_health_percentage || 94}% battery health (SoH). 200-point inspected in ${vehicle.city}.`;
+  const cleanDesc = vehicle.listing_type === "inventory"
+    ? `Browse ${vehicle.stock_left} matching used ${vehicle.title} units currently available in ${vehicle.city}, with battery health and pricing details.`
+    : `Buy pre-owned ${vehicle.title} with 360° virtual tour, ${vehicle.odometer_km.toLocaleString()} km driven, ${vehicle.battery_health_percentage || 94}% battery health (SoH). 200-point inspected in ${vehicle.city}.`;
 
   return {
     title: cleanTitle,

@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { Car, Plus, Search, Edit3, Trash2, Eye, ShieldCheck, X, RotateCw, RefreshCw, Loader2 } from "lucide-react";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { UsedVehicle, UsedVehicleSourceType, UsedVehicleStatus, UsedVehicleCtaAction, UsedVehicleMediaImage, MediaImageCategory } from "../lib/used-vehicles";
+import type { UsedVehicle, UsedVehicleSourceType, UsedVehicleStatus, UsedVehicleCtaAction, UsedVehicleListingType, UsedVehicleMediaImage, UsedVehicleInspectionItem, MediaImageCategory } from "../lib/used-vehicles";
 import { formatUsedVehiclePrice } from "../lib/used-vehicles";
 import { UPLOAD_CACHE_CONTROL } from "../lib/storage";
 import { authedFetch } from "../lib/authed-fetch";
@@ -63,6 +63,8 @@ const EMPTY_FORM: Partial<UsedVehicle> = {
   body_type: "SUV",
   odometer_km: 25000,
   ownership: "1st Owner",
+  listing_type: "detailed",
+  stock_left: 0,
   price: 950000,
   original_price: 1550000,
   emi_starting: 18500,
@@ -321,6 +323,32 @@ export default function UsedVehiclesPanel({ supabase, userEmail }: UsedVehiclesP
     }
   };
 
+  const updateInspectionItem = (index: number, patch: Partial<UsedVehicleInspectionItem>) => {
+    setForm((current) => ({
+      ...current,
+      inspection_summary: (current.inspection_summary || []).map((item, itemIndex) =>
+        itemIndex === index ? { ...item, ...patch } : item
+      ),
+    }));
+  };
+
+  const addInspectionItem = () => {
+    setForm((current) => ({
+      ...current,
+      inspection_summary: [
+        ...(current.inspection_summary || []),
+        { category: "New inspection category", status: "Passed", rating: 5, notes: "" },
+      ],
+    }));
+  };
+
+  const removeInspectionItem = (index: number) => {
+    setForm((current) => ({
+      ...current,
+      inspection_summary: (current.inspection_summary || []).filter((_, itemIndex) => itemIndex !== index),
+    }));
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.title || !form.brand || !form.price) {
@@ -565,7 +593,7 @@ export default function UsedVehiclesPanel({ supabase, userEmail }: UsedVehiclesP
                     <th className="p-3">Vehicle</th>
                     <th className="p-3">Source</th>
                     <th className="p-3">Price</th>
-                    <th className="p-3">Odometer / City</th>
+                    <th className="p-3">Vehicle / City</th>
                     <th className="p-3">Battery Health</th>
                     <th className="p-3">360°</th>
                     <th className="p-3">Status</th>
@@ -614,7 +642,7 @@ export default function UsedVehiclesPanel({ supabase, userEmail }: UsedVehiclesP
                         </td>
 
                         <td className="p-3 text-slate-600">
-                          <p className="font-semibold">{v.odometer_km.toLocaleString()} km</p>
+                          <p className="font-semibold">{v.listing_type === "inventory" ? `${v.stock_left} ${v.stock_left === 1 ? "unit" : "units"} left` : `${v.odometer_km.toLocaleString()} km`}</p>
                           <p className="text-[11px] text-slate-400">{v.city}</p>
                         </td>
 
@@ -782,8 +810,48 @@ export default function UsedVehiclesPanel({ supabase, userEmail }: UsedVehiclesP
             </div>
           </div>
 
+          {/* Listing format determines whether this is one traceable vehicle or model-level stock. */}
+          <div className="rounded-2xl border border-violet-200 bg-violet-50/50 p-4">
+            <h4 className="mb-3 text-xs font-black uppercase tracking-wider text-violet-900">2. Listing Format</h4>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className={`cursor-pointer rounded-xl border p-3 ${form.listing_type !== "inventory" ? "border-violet-500 bg-white" : "border-violet-100 bg-white/60"}`}>
+                <input type="radio" name="listing_type" className="sr-only" checked={form.listing_type !== "inventory"} onChange={() => setForm({ ...form, listing_type: "detailed" })} />
+                <span className="block text-xs font-black text-slate-900">Detailed vehicle</span>
+                <span className="mt-1 block text-[11px] text-slate-600">One specific vehicle with its registration, owner and odometer details.</span>
+              </label>
+              <label className={`cursor-pointer rounded-xl border p-3 ${form.listing_type === "inventory" ? "border-violet-500 bg-white" : "border-violet-100 bg-white/60"}`}>
+                <input type="radio" name="listing_type" className="sr-only" checked={form.listing_type === "inventory"} onChange={() => setForm({ ...form, listing_type: "inventory" })} />
+                <span className="block text-xs font-black text-slate-900">Model inventory</span>
+                <span className="mt-1 block text-[11px] text-slate-600">One listing for matching units of the same model; per-vehicle registration is not collected.</span>
+              </label>
+            </div>
+            {form.listing_type === "inventory" && (
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                <div>
+                  <label className="text-[11px] font-bold text-slate-700">Stock left</label>
+                  <input type="number" min="0" value={form.stock_left ?? 0} onChange={(e) => setForm({ ...form, stock_left: Math.max(0, Number(e.target.value)) })} className="mt-1 w-full rounded-xl border border-violet-200 bg-white p-2 text-xs font-bold" />
+                </div>
+                <div className="sm:col-span-2 rounded-xl bg-white/70 p-3 text-[11px] text-slate-600">The public listing will show the remaining stock instead of unique odometer and ownership information.</div>
+              </div>
+            )}
+          </div>
+
+          {form.listing_type === "inventory" && (
+            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <h4 className="mb-3 text-xs font-black uppercase tracking-wider text-slate-700">3. Inventory Model Details</h4>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div><label className="text-[11px] font-bold text-slate-600">Title</label><input type="text" required value={form.title || ""} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g. Tata Nexon EV XZ Plus" className="mt-1 w-full rounded-xl border border-slate-300 p-2 text-xs font-bold" /></div>
+                <div><label className="text-[11px] font-bold text-slate-600">Brand</label><input type="text" required value={form.brand || ""} onChange={(e) => setForm({ ...form, brand: e.target.value.toUpperCase() })} className="mt-1 w-full rounded-xl border border-slate-300 p-2 text-xs font-bold uppercase" /></div>
+                <div><label className="text-[11px] font-bold text-slate-600">Model</label><input type="text" value={form.model || ""} onChange={(e) => setForm({ ...form, model: e.target.value })} className="mt-1 w-full rounded-xl border border-slate-300 p-2 text-xs" /></div>
+                <div><label className="text-[11px] font-bold text-slate-600">Variant</label><input type="text" value={form.variant || ""} onChange={(e) => setForm({ ...form, variant: e.target.value })} className="mt-1 w-full rounded-xl border border-slate-300 p-2 text-xs" /></div>
+                <div><label className="text-[11px] font-bold text-slate-600">Model Year</label><input type="number" value={form.year || 2022} onChange={(e) => setForm({ ...form, year: Number(e.target.value) })} className="mt-1 w-full rounded-xl border border-slate-300 p-2 text-xs" /></div>
+                <div><label className="text-[11px] font-bold text-slate-600">City</label><input type="text" value={form.city || ""} onChange={(e) => setForm({ ...form, city: e.target.value })} className="mt-1 w-full rounded-xl border border-slate-300 p-2 text-xs" /></div>
+              </div>
+            </div>
+          )}
+
           {/* Vehicle Basic Info */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-4">
+          {form.listing_type !== "inventory" && <div className="rounded-2xl border border-slate-200 bg-white p-4">
             <h4 className="text-xs font-black uppercase tracking-wider text-slate-700 mb-3">
               2. Vehicle Basics &amp; Registration
             </h4>
@@ -936,13 +1004,14 @@ export default function UsedVehiclesPanel({ supabase, userEmail }: UsedVehiclesP
                 />
               </div>
             </div>
-          </div>
+          </div>}
 
-          {/* Pricing & EV Specs */}
+          {/* Pricing & EV Battery & Motor Health Report */}
           <div className="rounded-2xl border border-slate-200 bg-white p-4">
             <h4 className="text-xs font-black uppercase tracking-wider text-slate-700 mb-3">
-              3. Pricing &amp; Electric Vehicle Specifications
+              3. Pricing &amp; EV Battery &amp; Motor Health Report
             </h4>
+            <p className="mb-3 text-xs text-slate-500">Enter the battery condition, driving range, charging and motor details shown in the vehicle&apos;s public health report.</p>
             <div className="grid gap-3 sm:grid-cols-3">
               <div>
                 <label className="text-[11px] font-bold text-slate-600">Selling Price (₹)</label>
@@ -1045,6 +1114,32 @@ export default function UsedVehiclesPanel({ supabase, userEmail }: UsedVehiclesP
                 />
               </div>
             </div>
+          </div>
+
+          {/* 200-Point Inspection Report */}
+          <div className="rounded-2xl border border-amber-200 bg-amber-50/40 p-4">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h4 className="text-xs font-black uppercase tracking-wider text-amber-900">4. 200-Point Inspection Report</h4>
+                <p className="mt-1 text-xs text-slate-600">Add the inspection categories, outcomes and notes shown on the vehicle page.</p>
+              </div>
+              <div className="flex items-center gap-2 rounded-xl border border-amber-200 bg-white px-3 py-2">
+                <label className="text-[11px] font-bold text-slate-700">Overall rating / 5</label>
+                <input type="number" min="0" max="5" step="0.1" value={form.inspection_rating ?? ""} onChange={(e) => setForm({ ...form, inspection_rating: Number(e.target.value) })} className="w-14 bg-transparent text-xs font-black text-amber-900 outline-none" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              {(form.inspection_summary || []).map((item, index) => (
+                <div key={`${item.category}-${index}`} className="grid gap-2 rounded-xl border border-amber-100 bg-white p-3 sm:grid-cols-[1.3fr_0.8fr_0.42fr_1.6fr_auto] sm:items-center">
+                  <input value={item.category} onChange={(e) => updateInspectionItem(index, { category: e.target.value })} placeholder="Inspection category" className="rounded-lg border border-slate-300 p-2 text-xs font-bold" />
+                  <select value={item.status} onChange={(e) => updateInspectionItem(index, { status: e.target.value as UsedVehicleInspectionItem["status"] })} className="rounded-lg border border-slate-300 bg-white p-2 text-xs font-bold"><option value="Passed">Passed</option><option value="Attention">Attention</option><option value="Needs Repair">Needs Repair</option></select>
+                  <input type="number" min="0" max="5" step="0.1" value={item.rating ?? ""} onChange={(e) => updateInspectionItem(index, { rating: Number(e.target.value) })} aria-label={`Rating for ${item.category || "inspection category"}`} className="rounded-lg border border-slate-300 p-2 text-xs font-bold" />
+                  <input value={item.notes} onChange={(e) => updateInspectionItem(index, { notes: e.target.value })} placeholder="Inspection notes" className="rounded-lg border border-slate-300 p-2 text-xs" />
+                  <button type="button" onClick={() => removeInspectionItem(index)} className="rounded-lg px-2 py-2 text-[11px] font-bold text-rose-600 hover:bg-rose-50">Remove</button>
+                </div>
+              ))}
+            </div>
+            <button type="button" onClick={addInspectionItem} className="mt-3 inline-flex items-center gap-1.5 rounded-xl border border-amber-300 bg-white px-3 py-2 text-xs font-bold text-amber-900 hover:bg-amber-100"><Plus size={14} /> Add inspection category</button>
           </div>
 
           {/* Media & 8-Photo Angle 360 Exterior View */}

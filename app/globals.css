@@ -288,3 +288,7 @@ input:-webkit-autofill:focus {
   .magazine-image { min-height: 180px; }
 }
 
+/* Fullscreen used-vehicle media owns the viewport; keep the site chrome out of its way. */
+body[data-used-gallery-fullscreen="true"] > * header {
+  display: none !important;
+}

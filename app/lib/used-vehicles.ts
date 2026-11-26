@@ -3,6 +3,7 @@ import { supabase, supabaseEnabled } from "./supabase";
 export type UsedVehicleSourceType = "direct" | "dealer" | "customer";
 export type UsedVehicleStatus = "available" | "booked" | "sold" | "under_inspection";
 export type UsedVehicleCtaAction = "both" | "test_drive" | "enquire";
+export type UsedVehicleListingType = "detailed" | "inventory";
 export type MediaImageCategory = "outside" | "inside" | "tyres" | "details";
 
 export interface UsedVehicleMediaImage {
@@ -40,6 +41,10 @@ export interface UsedVehicle {
   body_type: string; // e.g. "SUV", "Sedan", "Hatchback", "Scooter", "Bike"
   odometer_km: number; // e.g. 32450
   ownership: string; // e.g. "1st Owner", "2nd Owner"
+  /** Detailed listings describe one vehicle; inventory listings represent matching units. */
+  listing_type: UsedVehicleListingType;
+  /** Number of matching units still available for inventory listings. */
+  stock_left: number;
   price: number; // in INR e.g. 945000 (9.45 Lakh)
   original_price?: number | null; // e.g. 1599000
   emi_starting?: number | null; // e.g. 18450
@@ -130,6 +135,8 @@ export function mapRowToUsedVehicle(row: any): UsedVehicle {
     body_type: row.body_type || "SUV",
     odometer_km: Number(row.odometer_km) || 0,
     ownership: row.ownership || "1st Owner",
+    listing_type: (row.listing_type as UsedVehicleListingType) || "detailed",
+    stock_left: Math.max(0, Number(row.stock_left) || 0),
     price: Number(row.price) || 0,
     original_price: row.original_price ? Number(row.original_price) : null,
     emi_starting: row.emi_starting ? Number(row.emi_starting) : Math.round((Number(row.price) || 0) * 0.0195),
@@ -259,20 +266,46 @@ export async function getUsedVehicles(filters?: UsedVehicleFilters): Promise<Use
 
 // Fetch a single used vehicle by slug or id
 export async function getUsedVehicleBySlug(slugOrId: string): Promise<UsedVehicle | null> {
-  const clean = decodeURIComponent(slugOrId).trim().toLowerCase();
+  const requested = decodeURIComponent(slugOrId).trim();
+  const clean = requested.toLowerCase();
 
   // Try DB first
   if (supabaseEnabled()) {
     try {
-      const { data, error } = await supabase
+      // Query the catalog's slug exactly as linked. Manual entries can use
+      // mixed case, which must not be lowercased before an equality query.
+      let { data, error } = await supabase
         .from("used_vehicles")
         .select("*")
-        .or(`slug.eq.${clean},id.eq.${clean}`)
+        .eq("slug", requested)
         .maybeSingle();
 
       if (!error && data) {
         return mapRowToUsedVehicle(data);
       }
+
+      // Retain support for older generated lowercase slugs.
+      if (!error && requested !== clean) {
+        ({ data, error } = await supabase
+          .from("used_vehicles")
+          .select("*")
+          .eq("slug", clean)
+          .maybeSingle());
+        if (data) return mapRowToUsedVehicle(data);
+      }
+
+      // The helper is also used by the API. Only query the UUID column when
+      // the input is actually a UUID, so normal slugs cannot invalidate it.
+      if (!error && /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(requested)) {
+        ({ data, error } = await supabase
+          .from("used_vehicles")
+          .select("*")
+          .eq("id", requested)
+          .maybeSingle());
+        if (data) return mapRowToUsedVehicle(data);
+      }
+
+      if (error) throw error;
     } catch (e) {
       console.warn("[UsedVehicle] Error fetching by slug from DB:", e);
     }

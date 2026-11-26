@@ -27,6 +27,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     const allowed = [
       "title", "brand", "model", "variant", "year", "reg_month_year", "body_type",
       "odometer_km", "ownership", "price", "original_price", "emi_starting",
+      "listing_type", "stock_left",
       "city", "state", "rto", "registration_number", "color",
       "battery_capacity_kwh", "battery_health_percentage", "real_range_km", "certified_range_km",
       "charging_time_hours", "fast_charging_minutes", "motor_power_ps", "motor_torque_nm",
@@ -40,6 +41,8 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     for (const key of allowed) {
       if (key in body) {
         if (key === "brand") updates[key] = String(body[key]).toUpperCase().trim();
+        else if (key === "listing_type") updates[key] = body[key] === "inventory" ? "inventory" : "detailed";
+        else if (key === "stock_left") updates[key] = Math.max(0, Number(body[key]) || 0);
         else updates[key] = body[key];
       }
     }

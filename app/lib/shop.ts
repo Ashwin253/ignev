@@ -3,6 +3,8 @@ import { supabase, supabaseEnabled } from "./supabase";
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export type ShopProductType = "accessory" | "vehicle" | "spare_part" | "merch";
+export type ShopFitmentType = "model_specific" | "all_4_wheelers" | "all_vehicles";
+export type ShopProductOrigin = "branded" | "aftermarket";
 
 export const SHOP_PRODUCT_TYPES: { value: ShopProductType; label: string; hint: string }[] = [
   { value: "accessory", label: "Accessory", hint: "Generic EV accessory (chargers, mats, dashcams…)" },
@@ -43,6 +45,8 @@ export interface ShopProduct {
   brand: string;
   vehicle_model: string;
   vehicle_slug: string;
+  fitment_type: ShopFitmentType;
+  product_origin: ShopProductOrigin;
   price: number;
   mrp: number | null;
   sku: string;
@@ -131,6 +135,8 @@ export function mapRowToShopProduct(row: Record<string, unknown>): ShopProduct {
     brand: String(row.brand || ""),
     vehicle_model: String(row.vehicle_model || ""),
     vehicle_slug: String(row.vehicle_slug || ""),
+    fitment_type: row.fitment_type === "all_4_wheelers" || row.fitment_type === "all_vehicles" ? row.fitment_type : "model_specific",
+    product_origin: row.product_origin === "aftermarket" ? "aftermarket" : "branded",
     price: Number(row.price) || 0,
     mrp: row.mrp === null || row.mrp === undefined ? null : Number(row.mrp),
     sku: String(row.sku || ""),
@@ -240,7 +246,7 @@ export async function getShopProductBySlug(slugOrId: string): Promise<ShopProduc
 
 const PRODUCT_FIELDS = [
   "name", "description", "product_type", "category", "brand",
-  "vehicle_model", "vehicle_slug", "price", "mrp", "sku", "stock",
+  "vehicle_model", "vehicle_slug", "fitment_type", "product_origin", "price", "mrp", "sku", "stock",
   "image", "gallery_images", "specs", "highlights", "is_active",
   "featured", "cod_available", "sort_order", "slug",
 ] as const;
@@ -274,6 +280,8 @@ export function normalizeShopProductPayload(body: Record<string, unknown>) {
 
   if (typeof payload.name === "string") payload.name = payload.name.trim();
   if (typeof payload.brand === "string") payload.brand = payload.brand.trim();
+  if (payload.fitment_type !== "all_4_wheelers" && payload.fitment_type !== "all_vehicles") payload.fitment_type = "model_specific";
+  if (payload.product_origin !== "aftermarket") payload.product_origin = "branded";
   if (typeof payload.slug === "string" && payload.slug.trim()) {
     payload.slug = slugifyShopProduct(payload.slug);
   }

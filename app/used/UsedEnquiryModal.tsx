@@ -101,7 +101,7 @@ export default function UsedEnquiryModal({
 
           <h3 className="mt-1 text-lg font-extrabold text-slate-900">{vehicle.title}</h3>
           <p className="text-xs font-semibold text-slate-500">
-            {formatUsedVehiclePrice(vehicle.price)} • {vehicle.odometer_km.toLocaleString()} km • {vehicle.city}
+            {formatUsedVehiclePrice(vehicle.price)} • {vehicle.listing_type === "inventory" ? `${vehicle.stock_left} ${vehicle.stock_left === 1 ? "unit" : "units"} left` : `${vehicle.odometer_km.toLocaleString()} km`} • {vehicle.city}
           </p>
         </div>
 

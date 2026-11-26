@@ -85,7 +85,7 @@ export default function UsedVehicleDetailsClient({
       {/* 2-Column Main Layout: Gallery & Details (Left 1.2fr, Sidebar 0.8fr) */}
       <div className="grid gap-8 lg:grid-cols-[1.25fr_0.85fr]">
         {/* Left Column: Gallery & Core Details */}
-        <div className="space-y-8">
+        <div className="min-w-0 space-y-8">
           {/* Gallery with 360 & Inside/Outside photos */}
           <UsedVehicleGallery
             title={vehicle.title}
@@ -375,7 +375,7 @@ export default function UsedVehicleDetailsClient({
         </div>
 
         {/* Right Sticky Sidebar: Pricing, Hub & CTAs */}
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           <div className="sticky top-24 rounded-3xl border border-slate-200 bg-white p-6 shadow-lg">
             {/* Source Tag */}
             <div className="mb-3 flex items-center justify-between">

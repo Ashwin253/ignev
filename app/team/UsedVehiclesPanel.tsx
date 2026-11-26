@@ -128,6 +128,8 @@ export default function UsedVehiclesPanel({ supabase, userEmail }: UsedVehiclesP
   const [stagedMedia, setStagedMedia] = useState<StagedMediaItem[]>([]);
   const [urlDraft, setUrlDraft] = useState("");
   const [uploadingMedia, setUploadingMedia] = useState(false);
+  const [uploadingGallery, setUploadingGallery] = useState(false);
+  const [galleryUrlDraft, setGalleryUrlDraft] = useState("");
 
   // Reset any pending step-5 uploads when opening the form
   const resetMediaComposer = () => {
@@ -229,6 +231,64 @@ export default function UsedVehiclesPanel({ supabase, userEmail }: UsedVehiclesP
       const arr = [...(prev.media_images || [])];
       arr.splice(idx, 1);
       return { ...prev, media_images: arr };
+    });
+  };
+
+  const handleUploadMultipleGalleryFiles = async (files: FileList) => {
+    if (!supabase) {
+      alert("Supabase storage client not connected.");
+      return;
+    }
+    const fileArray = Array.from(files);
+    if (fileArray.length === 0) return;
+
+    setUploadingGallery(true);
+    const uploadedUrls: string[] = [];
+
+    for (const file of fileArray) {
+      try {
+        const folder = (form.brand || "used").toLowerCase().replace(/[^a-z0-9]/g, "");
+        const cleanFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, "");
+        const path = `used/${folder}/gallery-${Date.now()}-${cleanFileName}`;
+        const { data, error } = await supabase.storage.from("evphotos").upload(path, file, { cacheControl: UPLOAD_CACHE_CONTROL, upsert: true });
+        if (!error && data) {
+          const publicUrl = supabase.storage.from("evphotos").getPublicUrl(data.path).data.publicUrl;
+          uploadedUrls.push(publicUrl);
+        }
+      } catch (err: any) {
+        console.warn("Upload gallery file failed:", err);
+      }
+    }
+
+    if (uploadedUrls.length > 0) {
+      setForm((prev) => ({
+        ...prev,
+        gallery_images: [...(prev.gallery_images || []), ...uploadedUrls],
+      }));
+    }
+    setUploadingGallery(false);
+  };
+
+  const handleAddGalleryUrls = () => {
+    if (!galleryUrlDraft.trim()) return;
+    const urls = galleryUrlDraft
+      .split(/[\n,]+/)
+      .map((u) => u.trim())
+      .filter(Boolean);
+    if (urls.length > 0) {
+      setForm((prev) => ({
+        ...prev,
+        gallery_images: [...(prev.gallery_images || []), ...urls],
+      }));
+      setGalleryUrlDraft("");
+    }
+  };
+
+  const handleRemoveGalleryPhoto = (index: number) => {
+    setForm((prev) => {
+      const arr = [...(prev.gallery_images || [])];
+      arr.splice(index, 1);
+      return { ...prev, gallery_images: arr };
     });
   };
 
@@ -1181,6 +1241,104 @@ export default function UsedVehiclesPanel({ supabase, userEmail }: UsedVehiclesP
                   />
                 </div>
               </div>
+            </div>
+
+            {/* Multiple Gallery Photos List */}
+            <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                <div>
+                  <label className="text-xs font-bold text-slate-800">Gallery Photos (Add multiple photos to list)</label>
+                  <p className="text-[11px] text-slate-500">
+                    Select multiple image files at once to upload in batch, or paste multiple image URLs.
+                  </p>
+                </div>
+                <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-extrabold text-emerald-800">
+                  {(form.gallery_images || []).length} Photos in Gallery
+                </span>
+              </div>
+
+              {/* Upload & URL Input Row */}
+              <div className="flex flex-col sm:flex-row items-center gap-3">
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  disabled={uploadingGallery}
+                  onChange={(e) => {
+                    if (e.target.files) handleUploadMultipleGalleryFiles(e.target.files);
+                    e.target.value = "";
+                  }}
+                  className="text-xs file:mr-2 file:rounded-md file:border-0 file:bg-emerald-600 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-white hover:file:bg-emerald-700 cursor-pointer"
+                />
+
+                <div className="flex w-full flex-1 items-center gap-2">
+                  <input
+                    type="text"
+                    value={galleryUrlDraft}
+                    onChange={(e) => setGalleryUrlDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddGalleryUrls();
+                      }
+                    }}
+                    placeholder="Or paste multiple image URLs (comma or newline separated)"
+                    className="w-full rounded-lg border border-slate-300 bg-white p-1.5 text-xs"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddGalleryUrls}
+                    disabled={!galleryUrlDraft.trim()}
+                    className="shrink-0 rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-bold text-white hover:bg-black disabled:opacity-40"
+                  >
+                    Add to List
+                  </button>
+                </div>
+              </div>
+
+              {uploadingGallery && (
+                <p className="mt-2 flex items-center gap-1.5 text-xs font-bold text-emerald-700">
+                  <Loader2 size={13} className="animate-spin" /> Uploading gallery photos in batch...
+                </p>
+              )}
+
+              {/* Gallery List Thumbnails Grid */}
+              {(form.gallery_images || []).length > 0 && (
+                <div className="mt-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                      Photos in List (Click trash on any image to remove):
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setForm((prev) => ({ ...prev, gallery_images: [] }))}
+                      className="text-[11px] font-bold text-rose-600 hover:text-rose-800"
+                    >
+                      Clear All Photos
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2.5">
+                    {form.gallery_images?.map((url, idx) => (
+                      <div key={idx} className="group relative aspect-[16/11] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xs">
+                        <img src={url} alt={`Gallery photo ${idx + 1}`} className="h-full w-full object-cover" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveGalleryPhoto(idx)}
+                            className="rounded-full bg-rose-600 p-1 text-white hover:bg-rose-700"
+                            title="Remove photo"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                        <span className="absolute bottom-1 left-1 rounded bg-black/60 px-1 text-[9px] font-bold text-white">
+                          #{idx + 1}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* 360 8-angle Grid */}

@@ -13,8 +13,6 @@ import {
   formatShopPrice,
   type ShopProduct,
   type ShopProductType,
-  type ShopFitmentType,
-  type ShopProductOrigin,
   type ShopOrder,
   type ShopOrderStatus,
   type ShopSpec,
@@ -37,8 +35,6 @@ interface ProductForm {
   brand: string;
   vehicle_model: string;
   vehicle_slug: string;
-  fitment_type: ShopFitmentType;
-  product_origin: ShopProductOrigin;
   price: string;
   mrp: string;
   sku: string;
@@ -62,8 +58,6 @@ const EMPTY_FORM: ProductForm = {
   brand: "",
   vehicle_model: "",
   vehicle_slug: "",
-  fitment_type: "all_vehicles",
-  product_origin: "branded",
   price: "",
   mrp: "",
   sku: "",
@@ -212,8 +206,6 @@ export default function ShopPanel({ supabase }: ShopPanelProps) {
       brand: product.brand,
       vehicle_model: product.vehicle_model,
       vehicle_slug: product.vehicle_slug,
-      fitment_type: product.fitment_type,
-      product_origin: product.product_origin,
       price: String(product.price),
       mrp: product.mrp === null ? "" : String(product.mrp),
       sku: product.sku,
@@ -300,8 +292,6 @@ export default function ShopPanel({ supabase }: ShopPanelProps) {
         brand: form.brand.trim(),
         vehicle_model: form.vehicle_model.trim(),
         vehicle_slug: form.vehicle_slug.trim().replace(/^\/+|\/+$/g, "").replace(/^product\//, ""),
-        fitment_type: form.vehicle_slug.trim() ? "model_specific" : form.fitment_type,
-        product_origin: form.product_origin,
         price: Number(form.price),
         mrp: form.mrp === "" ? null : Number(form.mrp),
         sku: form.sku.trim(),
@@ -691,28 +681,6 @@ export default function ShopPanel({ supabase }: ShopPanelProps) {
                 />
                 <span className="mt-1 block text-[10px] text-slate-400">Links to /product/&lt;slug&gt;</span>
               </label>
-              {!form.vehicle_slug.trim() && (
-                <div className="space-y-3 rounded-xl border border-violet-200 bg-violet-50/50 p-3">
-                  <div>
-                    <p className="text-xs font-bold text-violet-950">General product details</p>
-                    <p className="mt-0.5 text-[11px] text-violet-800">No model page slug is set, so choose who the product supports and its source.</p>
-                  </div>
-                  <label className="block">
-                    <span className="mb-1 block text-xs font-semibold text-slate-600">Vehicle support</span>
-                    <select value={form.fitment_type} onChange={(e) => setField("fitment_type", e.target.value as ShopFitmentType)} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-emerald-500">
-                      <option value="all_vehicles">Supports all vehicle types</option>
-                      <option value="all_4_wheelers">Supports all 4-wheelers</option>
-                    </select>
-                  </label>
-                  <label className="block">
-                    <span className="mb-1 block text-xs font-semibold text-slate-600">Product source</span>
-                    <select value={form.product_origin} onChange={(e) => setField("product_origin", e.target.value as ShopProductOrigin)} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-emerald-500">
-                      <option value="branded">Branded / OEM</option>
-                      <option value="aftermarket">After-market</option>
-                    </select>
-                  </label>
-                </div>
-              )}
               <label className="block">
                 <span className="mb-1 block text-xs font-semibold text-slate-600">Sort order</span>
                 <input

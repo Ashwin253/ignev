@@ -121,16 +121,9 @@ export async function POST(req: Request) {
         continue;
       }
 
-      // Legacy path: numeric/unknown ids keep their submitted details.
-      const price = Number(raw.price) || 0;
-      if (price <= 0 || !raw.name) continue;
-      items.push({
-        productId: productId || "legacy",
-        name: String(raw.name),
-        price,
-        qty,
-        image: raw.image ? String(raw.image) : "",
-      });
+      // Every shop product is database-backed now. Ignore unknown ids instead of
+      // trusting a client-supplied name and price.
+      continue;
     }
 
     if (items.length === 0) {

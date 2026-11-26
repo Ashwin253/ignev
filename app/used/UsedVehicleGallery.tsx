@@ -267,7 +267,7 @@ export default function UsedVehicleGallery({
 
       {/* Thumbnails Row */}
       {displayPhotos.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto border-t border-slate-100 bg-slate-50/50 p-3">
+        <div className="flex w-full min-w-0 gap-2 overflow-x-auto border-t border-slate-100 bg-slate-50/50 p-3">
           {has360 && (
             <button
               type="button"
